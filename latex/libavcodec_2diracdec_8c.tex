@@ -1,0 +1,1745 @@
+\hypertarget{libavcodec_2diracdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/diracdec.c File Reference}
+\label{libavcodec_2diracdec_8c}\index{E:/github/ffmpeg/libavcodec/diracdec.c@{E:/github/ffmpeg/libavcodec/diracdec.c}}
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}golomb.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dirac\+\_\+arith.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dirac\+\_\+vlc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpeg12data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/mpegvideo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpegvideoencdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dirac\+\_\+dwt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dirac.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}diractab.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}diracdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}videodsp.\+h\char`\"{}}\newline
+Include dependency graph for diracdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}}
+\item 
+struct \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}}
+\item 
+struct \mbox{\hyperlink{struct_sub_band}{Sub\+Band}}
+\item 
+struct \mbox{\hyperlink{struct_plane}{Plane}}
+\item 
+struct \mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}}
+\item 
+struct \mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a1f99d0554a99a0d366962c6d0a764032}{M\+A\+X\+\_\+\+R\+E\+F\+E\+R\+E\+N\+C\+E\+\_\+\+F\+R\+A\+M\+ES}}~8
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a16027d8acc5301e440cefa086eb9db2a}{M\+A\+X\+\_\+\+D\+E\+L\+AY}}~5         /$\ast$ limit \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}} \mbox{\hyperlink{mxfenc_8c_a41cdb4a229a3d71837d607124f8a07a4}{profile}} \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}} coding (T\+O\+D\+O\+: \mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}} coding) $\ast$/
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a5b4055201d2d8170e179b1ceaa438b9c}{M\+A\+X\+\_\+\+F\+R\+A\+M\+ES}}~(\mbox{\hyperlink{libavcodec_2diracdec_8c_a1f99d0554a99a0d366962c6d0a764032}{M\+A\+X\+\_\+\+R\+E\+F\+E\+R\+E\+N\+C\+E\+\_\+\+F\+R\+A\+M\+ES}} + \mbox{\hyperlink{evrcdec_8c_a16027d8acc5301e440cefa086eb9db2a}{M\+A\+X\+\_\+\+D\+E\+L\+AY}} + 1)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a4661702e637fb46008f42db389c83e04}{M\+A\+X\+\_\+\+Q\+U\+A\+NT}}~255        /$\ast$ \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}} \mbox{\hyperlink{libavcodec_2g726_8c_a543cd89a6890b4c9eca252bee9c9429f}{quant}} \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} VC-\/2 $\ast$/
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_af8a1d2ed31f7c9a00fec46a798edb61b}{M\+A\+X\+\_\+\+B\+L\+O\+C\+K\+S\+I\+ZE}}~32    /$\ast$ maximum xblen/yblen we support $\ast$/
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_af6722c56143b81bddeb805e3980858d2}{D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+R\+E\+F1}}~1
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a6a8a90dc55d56812575aa92ea7a98366}{D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+R\+E\+F2}}~2
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a6b50a2dbf44abfc3c360c271ff2aeed6}{D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+G\+L\+O\+B\+AL}}~4
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_aba7dedd7a7e2912556069b84f6b08e16}{D\+E\+L\+A\+Y\+E\+D\+\_\+\+P\+I\+C\+\_\+\+R\+EF}}~4
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a0b261d56f629b5479affb8cd20b43c02}{C\+A\+L\+C\+\_\+\+P\+A\+D\+D\+I\+NG}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  depth)~    (((\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} + (1 $<$$<$ depth) -\/ 1) $>$$>$ depth) $<$$<$ depth)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_aa75ebd943d797fa17c4a288ddaa50eba}{D\+I\+V\+R\+N\+D\+UP}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) -\/ 1) / (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}))
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a27e136c56317589437a2121f3dbc57bd}{S\+I\+G\+N\+\_\+\+C\+TX}}(x)~(\mbox{\hyperlink{dirac__arith_8h_a6f6f870917184fbefd8440ece096e77ca00743652d5c140874c9a0d8732bbeb00}{C\+T\+X\+\_\+\+S\+I\+G\+N\+\_\+\+Z\+E\+RO}} + ((x) $>$ 0) -\/ ((x) $<$ 0))
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_acf70ff632502e37da7dbaa761df1a90a}{U\+N\+P\+A\+C\+K\+\_\+\+A\+R\+I\+TH}}(n,  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_ad005d55a3a640f22b8ed513fd4aa96f2}{I\+N\+T\+R\+A\+\_\+\+D\+C\+\_\+\+P\+R\+ED}}(n,  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a98c43c8a62a3288e97809e7c752fca33}{P\+A\+R\+S\+E\+\_\+\+V\+A\+L\+U\+ES}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  x,  gb,  ebits,  buf1,  buf2)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a15e63c7b7e6f394a9cce228929bad44e}{C\+H\+E\+C\+K\+E\+D\+R\+E\+AD}}(dst,  \mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}},  errmsg)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a33ce2c8148de5c9f68b8c140ccf619eb}{R\+O\+L\+L\+O\+FF}}(\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2diracdec_8c_a085346cba8b4c4c964b5eb64101a7b43}{D\+A\+T\+A\+\_\+\+U\+N\+I\+T\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE}}~13
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a2339806ad07ca95016f6ef6789b49915}{Sub\+Band}}
+\item 
+typedef struct \mbox{\hyperlink{struct_plane}{Plane}} \mbox{\hyperlink{libavcodec_2diracdec_8c_aac80d51bb4ccb9ad14c927e2ea8894e2}{Plane}}
+\item 
+typedef struct \mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ac7b4122df08f67f2c053c879465afd56}{Dirac\+Slice}}
+\item 
+typedef struct \mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a94dbc6ba58bd026eadf553d94361e8a3}{Dirac\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a033df50ed55f82ef01c7f321a3be87b6}{Slice\+Coeffs}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2e}{dirac\+\_\+subband}} \{ \newline
+\mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea80ffebbee85a3a8fe5ff82079ea0332b}{subband\+\_\+ll}} = 0, 
+\mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea7fb53e3e62736af3f6fc986153bb25dc}{subband\+\_\+hl}} = 1, 
+\mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eafb6f3eb638035c0def4783b164d81b06}{subband\+\_\+lh}} = 2, 
+\mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eadc43a2a062d874c99aee4fe8a43d223f}{subband\+\_\+hh}} = 3, 
+\newline
+\mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eaee3bdeeb1a1e080a61e25c53aa941391}{subband\+\_\+nb}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a9e59bf9049ce8b4c97b683b85a34ea9f}{divide3}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x)
+\item 
+static \mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$ \mbox{\hyperlink{libavcodec_2diracdec_8c_a12c0041849d7dfd197f6343762b33312}{remove\+\_\+frame}} (\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$framelist\mbox{[}$\,$\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} picnum)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ac5ed4730b680063a1f1810a08d4e6e8c}{add\+\_\+frame}} (\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$framelist\mbox{[}$\,$\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} maxframes, \mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a45dd7a5b11e0b78ffffb5485bc3bc521}{alloc\+\_\+sequence\+\_\+buffers}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a958e84421650b1d9a6d4d2eb51c9a7f2}{alloc\+\_\+buffers}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a249638f79537ac44180aaba75952424c}{free\+\_\+sequence\+\_\+buffers}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a640af427e4187904b9ba4b76d762c477}{dirac\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc}{dirac\+\_\+decode\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_afe23b76533446ffd389067d03eb9b360}{dirac\+\_\+decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06}{coeff\+\_\+unpack\+\_\+golomb}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} qfactor, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} qoffset)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5}{codeblock}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_dirac_arith}{Dirac\+Arith}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{snow_8txt_a7c18a837a38b8c96472a1d0abe1711d1}{left}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} right, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} top, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bottom, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockcnt\+\_\+one, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+arith)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ac1a103753855a031ae22b152d0423820}{decode\+\_\+subband\+\_\+internal}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+arith)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a428f9b4f3f20f3402fb8481285cb9949}{decode\+\_\+subband\+\_\+arith}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a435263d23ef652273d9c8f9407a23ae9}{decode\+\_\+subband\+\_\+golomb}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a1f9e78bb3e8ac57dc6f301e36cce4fe5}{decode\+\_\+component}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a60ab0ea212ec6b8cf479736b02c609b0}{decode\+\_\+subband}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2g726_8c_a543cd89a6890b4c9eca252bee9c9429f}{quant}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} slice\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} slice\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bits\+\_\+end, \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$\mbox{\hyperlink{vf__xfade_8c_a180fe8ca7166807bd5620993b31db453}{b1}}, \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$\mbox{\hyperlink{vf__xfade_8c_a1ec8ff9bd16da9be666575ef43488411}{b2}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a833539c7d54fbc72c01ff24762fa8bf0}{decode\+\_\+lowdelay\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a2a355f5367fbe98356741995c3143e4e}{subband\+\_\+coeffs}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} p, \mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}\mbox{[}\mbox{\hyperlink{dirac_8h_a5a5d8c67c6041d3f765f183deb9919ff}{M\+A\+X\+\_\+\+D\+W\+T\+\_\+\+L\+E\+V\+E\+LS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a8ee8ce1514289c50611c804156b30aa0}{decode\+\_\+hq\+\_\+slice}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}} $\ast$slice, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$tmp\+\_\+buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a059764fc4134ff43cba8844e74fc9dfa}{decode\+\_\+hq\+\_\+slice\+\_\+row}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} threadnr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_aaa9d00f5deecef8ae7dfe289b25469d0}{decode\+\_\+lowdelay}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a1c0c591dd6b330b0c7ba2f3dd3bffb45}{init\+\_\+planes}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a223983da3d9e9529b6fae368a4139437}{dirac\+\_\+unpack\+\_\+prediction\+\_\+parameters}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ae2b880ae9d01cf1897d8d15b2c7de610}{dirac\+\_\+unpack\+\_\+idwt\+\_\+params}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ad270c0f600ca74f45292a1436d36a90c}{pred\+\_\+sbsplit}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$sbsplit, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a80e8591f0915570c295711763b554692}{pred\+\_\+block\+\_\+mode}} (\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} refmask)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a0c0b6c78463768276c6dc19b0af5826e}{pred\+\_\+block\+\_\+dc}} (\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a9d79c772142036cdc3ee3c5c64d433b2}{pred\+\_\+mv}} (\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_acf8a6abcedf89f4ea050b6c12596b5e3}{global\+\_\+mv}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a67244182b20868420d63a7b7b797ac4c}{decode\+\_\+block\+\_\+params}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_arith}{Dirac\+Arith}} arith\mbox{[}8\mbox{]}, \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ab0e9b6ae757b815bf44a7c0656e1129f}{propagate\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a0ec1f7b39c5f06c062b600b159c97d60}{dirac\+\_\+unpack\+\_\+block\+\_\+motion\+\_\+data}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_abba89017a0b8aef3a4defd8fe9c20a9e}{weight}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blen, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a8b95ae83d97db70f4d66039d627c6123}{init\+\_\+obmc\+\_\+weight\+\_\+row}} (\mbox{\hyperlink{struct_plane}{Plane}} $\ast$p, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$obmc\+\_\+weight, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{snow_8txt_a7c18a837a38b8c96472a1d0abe1711d1}{left}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} right, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wy)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a66c6736ecbbb653eb8f41c08bd09bf11}{init\+\_\+obmc\+\_\+weight}} (\mbox{\hyperlink{struct_plane}{Plane}} $\ast$p, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$obmc\+\_\+weight, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{snow_8txt_a7c18a837a38b8c96472a1d0abe1711d1}{left}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} right, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} top, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bottom)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_acca130ad3f5763df7e0dbefae9630ae8}{init\+\_\+obmc\+\_\+weights}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_plane}{Plane}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} by)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ab609330f1d31b95a4f8d41ca14390924}{mc\+\_\+subpel}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}\mbox{[}5\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a86ff0479548c1e5804bd6964ffbc705c}{add\+\_\+dc}} (uint16\+\_\+t $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{audio__convert_8c_a431c7653c1fc679a567aaabfc1101b3a}{dc}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$obmc\+\_\+weight, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} xblen, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yblen)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_aa121af51ad65f15a5755268b94c30c34}{block\+\_\+mc}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, uint16\+\_\+t $\ast$mctmp, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$obmc\+\_\+weight, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dstx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dsty)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ac458c479568c30049fe415e8e33716c9}{mc\+\_\+row}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, uint16\+\_\+t $\ast$mctmp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dsty)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ae9cedc0f04787a8e1c18133ca843198b}{select\+\_\+dsp\+\_\+funcs}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} xblen, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yblen)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a8b56e2073d7228ff2c1bd7e1de878cab}{interpolate\+\_\+refplane}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a8f1b4f7e12ca4abfc4df0b0c93ac1b22}{dirac\+\_\+decode\+\_\+frame\+\_\+internal}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_af8dd60a672baa233d43bb7595c2f5c8b}{get\+\_\+buffer\+\_\+with\+\_\+edge}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a24c235e0661b9539ada7a404c0b5304a}{dirac\+\_\+decode\+\_\+picture\+\_\+header}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_aa1d8e8e2298a4cc9fcf9bfd937bab766}{get\+\_\+delayed\+\_\+pic}} (\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$picture, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a8c75a595ac2ac48bfd1213bd90f1ceeb}{dirac\+\_\+decode\+\_\+data\+\_\+unit}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a855a60718fee8fc93d70fb598b2d0053}{dirac\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{libavutil_2thread_8h_a1d348e4becc9580dfa760add5c9d1139}{A\+V\+Once}} \mbox{\hyperlink{libavcodec_2diracdec_8c_af867c3494eb5f1b2908b367a3fa5c052}{dirac\+\_\+arith\+\_\+init}} = \mbox{\hyperlink{libavutil_2thread_8h_acfec46d8ab71dae8e901ee384378df32}{A\+V\+\_\+\+O\+N\+C\+E\+\_\+\+I\+N\+IT}}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{libavcodec_2diracdec_8c_a29635eba891ab70f6f89b4e02dbbdb60}{epel\+\_\+weights}} \mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2diracdec_8c_ad3853523e5bc3894949cde5b4be1a6d6}{ff\+\_\+dirac\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Dirac \mbox{\hyperlink{struct_decoder}{Decoder}} \begin{DoxyAuthor}{Author}
+Marco Gerards \href{mailto:marco@gnu.org}{\texttt{ marco@gnu.\+org}}, David Conrad, Jordi Ortiz \href{mailto:nenjordi@gmail.com}{\texttt{ nenjordi@gmail.\+com}} 
+\end{DoxyAuthor}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a0b261d56f629b5479affb8cd20b43c02}\label{libavcodec_2diracdec_8c_a0b261d56f629b5479affb8cd20b43c02}} 
+\index{diracdec.c@{diracdec.c}!CALC\_PADDING@{CALC\_PADDING}}
+\index{CALC\_PADDING@{CALC\_PADDING}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{CALC\_PADDING}{CALC\_PADDING}}
+{\footnotesize\ttfamily \#define C\+A\+L\+C\+\_\+\+P\+A\+D\+D\+I\+NG(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  }\item[{}]{depth }\end{DoxyParamCaption})~    (((\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} + (1 $<$$<$ depth) -\/ 1) $>$$>$ depth) $<$$<$ depth)}
+
+
+
+Definition at line 69 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a15e63c7b7e6f394a9cce228929bad44e}\label{libavcodec_2diracdec_8c_a15e63c7b7e6f394a9cce228929bad44e}} 
+\index{diracdec.c@{diracdec.c}!CHECKEDREAD@{CHECKEDREAD}}
+\index{CHECKEDREAD@{CHECKEDREAD}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{CHECKEDREAD}{CHECKEDREAD}}
+{\footnotesize\ttfamily \#define C\+H\+E\+C\+K\+E\+D\+R\+E\+AD(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}},  }\item[{}]{errmsg }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    tmp = \mbox{\hyperlink{golomb_8h_ac0928cd9c45384860a57d8a7e5c3da5f}{get\_interleaved\_ue\_golomb}}(gb); \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}}) \{ \(\backslash\)}
+\DoxyCodeLine{        av\_log(\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>avctx, \mbox{\hyperlink{group__lavu__log__constants_gaffe151ff4cd8a24b2e77ac8d9616c85c}{AV\_LOG\_ERROR}}, errmsg); \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}}; \(\backslash\)}
+\DoxyCodeLine{    \}\(\backslash\)}
+\DoxyCodeLine{    dst = tmp;}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a085346cba8b4c4c964b5eb64101a7b43}\label{libavcodec_2diracdec_8c_a085346cba8b4c4c964b5eb64101a7b43}} 
+\index{diracdec.c@{diracdec.c}!DATA\_UNIT\_HEADER\_SIZE@{DATA\_UNIT\_HEADER\_SIZE}}
+\index{DATA\_UNIT\_HEADER\_SIZE@{DATA\_UNIT\_HEADER\_SIZE}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DATA\_UNIT\_HEADER\_SIZE}{DATA\_UNIT\_HEADER\_SIZE}}
+{\footnotesize\ttfamily \#define D\+A\+T\+A\+\_\+\+U\+N\+I\+T\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE~13}
+
+Dirac Specification -\/$>$ 9.\+6 Parse Info Header Syntax. parse\+\_\+info() 4 byte start code + byte parse code + 4 byte size + 4 byte previous size 
+
+Definition at line 2115 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aba7dedd7a7e2912556069b84f6b08e16}\label{libavcodec_2diracdec_8c_aba7dedd7a7e2912556069b84f6b08e16}} 
+\index{diracdec.c@{diracdec.c}!DELAYED\_PIC\_REF@{DELAYED\_PIC\_REF}}
+\index{DELAYED\_PIC\_REF@{DELAYED\_PIC\_REF}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DELAYED\_PIC\_REF}{DELAYED\_PIC\_REF}}
+{\footnotesize\ttfamily \#define D\+E\+L\+A\+Y\+E\+D\+\_\+\+P\+I\+C\+\_\+\+R\+EF~4}
+
+Value of \mbox{\hyperlink{struct_picture_a5fbe85ca795cfaab84a31e0fb0cc57d4}{Picture.\+reference}} when \mbox{\hyperlink{struct_picture}{Picture}} is not a reference picture, but is held for delayed output. 
+
+Definition at line 67 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a6b50a2dbf44abfc3c360c271ff2aeed6}\label{libavcodec_2diracdec_8c_a6b50a2dbf44abfc3c360c271ff2aeed6}} 
+\index{diracdec.c@{diracdec.c}!DIRAC\_REF\_MASK\_GLOBAL@{DIRAC\_REF\_MASK\_GLOBAL}}
+\index{DIRAC\_REF\_MASK\_GLOBAL@{DIRAC\_REF\_MASK\_GLOBAL}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DIRAC\_REF\_MASK\_GLOBAL}{DIRAC\_REF\_MASK\_GLOBAL}}
+{\footnotesize\ttfamily \#define D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+G\+L\+O\+B\+AL~4}
+
+
+
+Definition at line 61 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_af6722c56143b81bddeb805e3980858d2}\label{libavcodec_2diracdec_8c_af6722c56143b81bddeb805e3980858d2}} 
+\index{diracdec.c@{diracdec.c}!DIRAC\_REF\_MASK\_REF1@{DIRAC\_REF\_MASK\_REF1}}
+\index{DIRAC\_REF\_MASK\_REF1@{DIRAC\_REF\_MASK\_REF1}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DIRAC\_REF\_MASK\_REF1}{DIRAC\_REF\_MASK\_REF1}}
+{\footnotesize\ttfamily \#define D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+R\+E\+F1~1}
+
+Dirac\+Block-\/$>$ref flags, if set then the block does MC from the given ref 
+
+Definition at line 59 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a6a8a90dc55d56812575aa92ea7a98366}\label{libavcodec_2diracdec_8c_a6a8a90dc55d56812575aa92ea7a98366}} 
+\index{diracdec.c@{diracdec.c}!DIRAC\_REF\_MASK\_REF2@{DIRAC\_REF\_MASK\_REF2}}
+\index{DIRAC\_REF\_MASK\_REF2@{DIRAC\_REF\_MASK\_REF2}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DIRAC\_REF\_MASK\_REF2}{DIRAC\_REF\_MASK\_REF2}}
+{\footnotesize\ttfamily \#define D\+I\+R\+A\+C\+\_\+\+R\+E\+F\+\_\+\+M\+A\+S\+K\+\_\+\+R\+E\+F2~2}
+
+
+
+Definition at line 60 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aa75ebd943d797fa17c4a288ddaa50eba}\label{libavcodec_2diracdec_8c_aa75ebd943d797fa17c4a288ddaa50eba}} 
+\index{diracdec.c@{diracdec.c}!DIVRNDUP@{DIVRNDUP}}
+\index{DIVRNDUP@{DIVRNDUP}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DIVRNDUP}{DIVRNDUP}}
+{\footnotesize\ttfamily \#define D\+I\+V\+R\+N\+D\+UP(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) -\/ 1) / (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}))}
+
+
+
+Definition at line 72 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ad005d55a3a640f22b8ed513fd4aa96f2}\label{libavcodec_2diracdec_8c_ad005d55a3a640f22b8ed513fd4aa96f2}} 
+\index{diracdec.c@{diracdec.c}!INTRA\_DC\_PRED@{INTRA\_DC\_PRED}}
+\index{INTRA\_DC\_PRED@{INTRA\_DC\_PRED}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{INTRA\_DC\_PRED}{INTRA\_DC\_PRED}}
+{\footnotesize\ttfamily \#define I\+N\+T\+R\+A\+\_\+\+D\+C\+\_\+\+P\+R\+ED(\begin{DoxyParamCaption}\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{void} intra\_dc\_prediction\_\#\#n(\mbox{\hyperlink{struct_sub_band}{SubBand}} *\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}) \(\backslash\)}
+\DoxyCodeLine{    \{ \(\backslash\)}
+\DoxyCodeLine{        type *buf = (\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}}*)\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>ibuf; \(\backslash\)}
+\DoxyCodeLine{        \textcolor{keywordtype}{int} x, y; \(\backslash\)}
+\DoxyCodeLine{        \(\backslash\)}
+\DoxyCodeLine{        \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{for}} (x = 1; x < \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>width; x++) \(\backslash\)}
+\DoxyCodeLine{            buf[x] += buf[x-\/1]; \(\backslash\)}
+\DoxyCodeLine{        buf += (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift)); \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{        \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{        for}} (y = 1; y < \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>height; y++) \{ \(\backslash\)}
+\DoxyCodeLine{            buf[0] += buf[-\/(\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift))]; \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{            \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{            for}} (x = 1; x < \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>width; x++) \{ \(\backslash\)}
+\DoxyCodeLine{                int \mbox{\hyperlink{siprdata_8h_a3cce87604695942e930d8853d9cad953}{pred}} = buf[x -\/ 1] + buf[x -\/ (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift))] + buf[x -\/ (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift))-\/1]; \(\backslash\)}
+\DoxyCodeLine{                buf[x]  += \mbox{\hyperlink{libavcodec_2diracdec_8c_a9e59bf9049ce8b4c97b683b85a34ea9f}{divide3}}(\mbox{\hyperlink{siprdata_8h_a3cce87604695942e930d8853d9cad953}{pred}}); \(\backslash\)}
+\DoxyCodeLine{            \} \(\backslash\)}
+\DoxyCodeLine{            buf += (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift)); \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+
+\end{DoxyCode}
+Dirac Specification -\/$>$ 13.\+3 intra\+\_\+dc\+\_\+prediction(band) 
+
+Definition at line 569 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_af8a1d2ed31f7c9a00fec46a798edb61b}\label{libavcodec_2diracdec_8c_af8a1d2ed31f7c9a00fec46a798edb61b}} 
+\index{diracdec.c@{diracdec.c}!MAX\_BLOCKSIZE@{MAX\_BLOCKSIZE}}
+\index{MAX\_BLOCKSIZE@{MAX\_BLOCKSIZE}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BLOCKSIZE}{MAX\_BLOCKSIZE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+L\+O\+C\+K\+S\+I\+ZE~32    /$\ast$ maximum xblen/yblen we support $\ast$/}
+
+
+
+Definition at line 54 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a16027d8acc5301e440cefa086eb9db2a}\label{libavcodec_2diracdec_8c_a16027d8acc5301e440cefa086eb9db2a}} 
+\index{diracdec.c@{diracdec.c}!MAX\_DELAY@{MAX\_DELAY}}
+\index{MAX\_DELAY@{MAX\_DELAY}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_DELAY}{MAX\_DELAY}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+D\+E\+L\+AY~5         /$\ast$ limit \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}} \mbox{\hyperlink{mxfenc_8c_a41cdb4a229a3d71837d607124f8a07a4}{profile}} \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}} coding (T\+O\+D\+O\+: \mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}} coding) $\ast$/}
+
+
+
+Definition at line 51 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a5b4055201d2d8170e179b1ceaa438b9c}\label{libavcodec_2diracdec_8c_a5b4055201d2d8170e179b1ceaa438b9c}} 
+\index{diracdec.c@{diracdec.c}!MAX\_FRAMES@{MAX\_FRAMES}}
+\index{MAX\_FRAMES@{MAX\_FRAMES}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_FRAMES}{MAX\_FRAMES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+F\+R\+A\+M\+ES~(\mbox{\hyperlink{libavcodec_2diracdec_8c_a1f99d0554a99a0d366962c6d0a764032}{M\+A\+X\+\_\+\+R\+E\+F\+E\+R\+E\+N\+C\+E\+\_\+\+F\+R\+A\+M\+ES}} + \mbox{\hyperlink{evrcdec_8c_a16027d8acc5301e440cefa086eb9db2a}{M\+A\+X\+\_\+\+D\+E\+L\+AY}} + 1)}
+
+
+
+Definition at line 52 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a4661702e637fb46008f42db389c83e04}\label{libavcodec_2diracdec_8c_a4661702e637fb46008f42db389c83e04}} 
+\index{diracdec.c@{diracdec.c}!MAX\_QUANT@{MAX\_QUANT}}
+\index{MAX\_QUANT@{MAX\_QUANT}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_QUANT}{MAX\_QUANT}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+Q\+U\+A\+NT~255        /$\ast$ \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}} \mbox{\hyperlink{libavcodec_2g726_8c_a543cd89a6890b4c9eca252bee9c9429f}{quant}} \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} VC-\/2 $\ast$/}
+
+
+
+Definition at line 53 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a1f99d0554a99a0d366962c6d0a764032}\label{libavcodec_2diracdec_8c_a1f99d0554a99a0d366962c6d0a764032}} 
+\index{diracdec.c@{diracdec.c}!MAX\_REFERENCE\_FRAMES@{MAX\_REFERENCE\_FRAMES}}
+\index{MAX\_REFERENCE\_FRAMES@{MAX\_REFERENCE\_FRAMES}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_REFERENCE\_FRAMES}{MAX\_REFERENCE\_FRAMES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+R\+E\+F\+E\+R\+E\+N\+C\+E\+\_\+\+F\+R\+A\+M\+ES~8}
+
+The spec limits this to 3 for frame coding, but in practice can be as high as 6 
+
+Definition at line 50 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a98c43c8a62a3288e97809e7c752fca33}\label{libavcodec_2diracdec_8c_a98c43c8a62a3288e97809e7c752fca33}} 
+\index{diracdec.c@{diracdec.c}!PARSE\_VALUES@{PARSE\_VALUES}}
+\index{PARSE\_VALUES@{PARSE\_VALUES}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{PARSE\_VALUES}{PARSE\_VALUES}}
+{\footnotesize\ttfamily \#define P\+A\+R\+S\+E\+\_\+\+V\+A\+L\+U\+ES(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{x,  }\item[{}]{gb,  }\item[{}]{ebits,  }\item[{}]{buf1,  }\item[{}]{buf2 }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *buf = (\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *)buf1; \(\backslash\)}
+\DoxyCodeLine{    buf[x] = \mbox{\hyperlink{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06}{coeff\_unpack\_golomb}}(gb, qfactor, qoffset); \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{get__bits_8h_aac3f793480c01f793f2acc9eba031ff5}{get\_bits\_count}}(gb) >= ebits) \(\backslash\)}
+\DoxyCodeLine{        return; \(\backslash\)}
+\DoxyCodeLine{    if (buf2) \{ \(\backslash\)}
+\DoxyCodeLine{        buf = (\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *)buf2; \(\backslash\)}
+\DoxyCodeLine{        buf[x] = \mbox{\hyperlink{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06}{coeff\_unpack\_golomb}}(gb, qfactor, qoffset); \(\backslash\)}
+\DoxyCodeLine{        if (\mbox{\hyperlink{get__bits_8h_aac3f793480c01f793f2acc9eba031ff5}{get\_bits\_count}}(gb) >= ebits) \(\backslash\)}
+\DoxyCodeLine{            return; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+
+\end{DoxyCode}
+
+
+Definition at line 710 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a33ce2c8148de5c9f68b8c140ccf619eb}\label{libavcodec_2diracdec_8c_a33ce2c8148de5c9f68b8c140ccf619eb}} 
+\index{diracdec.c@{diracdec.c}!ROLLOFF@{ROLLOFF}}
+\index{ROLLOFF@{ROLLOFF}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{ROLLOFF}{ROLLOFF}}
+{\footnotesize\ttfamily \#define R\+O\+L\+L\+O\+FF(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}} == 1 ? ((\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}) ? 5 : 3) :        \(\backslash\)}
+\DoxyCodeLine{    (1 + (6*(\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}) + \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}} -\/ 1) / (2*\mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}} -\/ 1))}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a27e136c56317589437a2121f3dbc57bd}\label{libavcodec_2diracdec_8c_a27e136c56317589437a2121f3dbc57bd}} 
+\index{diracdec.c@{diracdec.c}!SIGN\_CTX@{SIGN\_CTX}}
+\index{SIGN\_CTX@{SIGN\_CTX}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{SIGN\_CTX}{SIGN\_CTX}}
+{\footnotesize\ttfamily \#define S\+I\+G\+N\+\_\+\+C\+TX(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(\mbox{\hyperlink{dirac__arith_8h_a6f6f870917184fbefd8440ece096e77ca00743652d5c140874c9a0d8732bbeb00}{C\+T\+X\+\_\+\+S\+I\+G\+N\+\_\+\+Z\+E\+RO}} + ((x) $>$ 0) -\/ ((x) $<$ 0))}
+
+
+
+Definition at line 448 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_acf70ff632502e37da7dbaa761df1a90a}\label{libavcodec_2diracdec_8c_acf70ff632502e37da7dbaa761df1a90a}} 
+\index{diracdec.c@{diracdec.c}!UNPACK\_ARITH@{UNPACK\_ARITH}}
+\index{UNPACK\_ARITH@{UNPACK\_ARITH}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{UNPACK\_ARITH}{UNPACK\_ARITH}}
+{\footnotesize\ttfamily \#define U\+N\+P\+A\+C\+K\+\_\+\+A\+R\+I\+TH(\begin{DoxyParamCaption}\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{void} coeff\_unpack\_arith\_\#\#n(\mbox{\hyperlink{struct_dirac_arith}{DiracArith}} *\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}, \textcolor{keywordtype}{int} qfactor, \textcolor{keywordtype}{int} qoffset, \(\backslash\)}
+\DoxyCodeLine{                                              \mbox{\hyperlink{struct_sub_band}{SubBand}} *\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}, \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *buf, \textcolor{keywordtype}{int} x, \textcolor{keywordtype}{int} y) \(\backslash\)}
+\DoxyCodeLine{    \{ \(\backslash\)}
+\DoxyCodeLine{        int sign, sign\_pred = 0, pred\_ctx = \mbox{\hyperlink{dirac__arith_8h_a6f6f870917184fbefd8440ece096e77ca2664e87d7319fd6bda57f19b076efe16}{CTX\_ZPZN\_F1}}; \(\backslash\)}
+\DoxyCodeLine{        unsigned \mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}; \(\backslash\)}
+\DoxyCodeLine{        const \textcolor{keywordtype}{int} mstride = -\/(\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>pshift)); \(\backslash\)}
+\DoxyCodeLine{        if (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>parent) \{ \(\backslash\)}
+\DoxyCodeLine{            const \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *pbuf = (\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *)\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>parent-\/>ibuf; \(\backslash\)}
+\DoxyCodeLine{            \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}} = \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>parent-\/>stride >> (1+\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>parent-\/>pshift); \(\backslash\)}
+\DoxyCodeLine{            pred\_ctx += !!pbuf[\mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}} * (y>>1) + (x>>1)] << 1; \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{        if (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>orientation == \mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea7fb53e3e62736af3f6fc986153bb25dc}{subband\_hl}}) \(\backslash\)}
+\DoxyCodeLine{            sign\_pred = buf[mstride]; \(\backslash\)}
+\DoxyCodeLine{        if (x) \{ \(\backslash\)}
+\DoxyCodeLine{            pred\_ctx += !(buf[-\/1] | buf[mstride] | buf[-\/1 + mstride]); \(\backslash\)}
+\DoxyCodeLine{            if (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>orientation == \mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eafb6f3eb638035c0def4783b164d81b06}{subband\_lh}}) \(\backslash\)}
+\DoxyCodeLine{                sign\_pred = buf[-\/1]; \(\backslash\)}
+\DoxyCodeLine{        \} \textcolor{keywordflow}{else} \{ \(\backslash\)}
+\DoxyCodeLine{            pred\_ctx += !buf[mstride]; \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{        coeff = \mbox{\hyperlink{dirac__arith_8h_a255cca7c7eb77c80feb7c6b4ac1097a8}{dirac\_get\_arith\_uint}}(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}, pred\_ctx, \mbox{\hyperlink{dirac__arith_8h_a6f6f870917184fbefd8440ece096e77ca29a92205fd251eb49ed617373d929bd1}{CTX\_COEFF\_DATA}}); \(\backslash\)}
+\DoxyCodeLine{        if (\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}) \{ \(\backslash\)}
+\DoxyCodeLine{            coeff = (\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}} * qfactor + qoffset) >> 2; \(\backslash\)}
+\DoxyCodeLine{            sign  = \mbox{\hyperlink{dirac__arith_8h_a9939ad07037837c5a2961833447f7502}{dirac\_get\_arith\_bit}}(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}, \mbox{\hyperlink{libavcodec_2diracdec_8c_a27e136c56317589437a2121f3dbc57bd}{SIGN\_CTX}}(sign\_pred)); \(\backslash\)}
+\DoxyCodeLine{            coeff = (\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}} \string^ -\/sign) + sign; \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{        *buf = \mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+
+\end{DoxyCode}
+
+
+Definition at line 450 of file diracdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a94dbc6ba58bd026eadf553d94361e8a3}\label{libavcodec_2diracdec_8c_a94dbc6ba58bd026eadf553d94361e8a3}} 
+\index{diracdec.c@{diracdec.c}!DiracContext@{DiracContext}}
+\index{DiracContext@{DiracContext}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DiracContext}{DiracContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} \mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}}}
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ac7b4122df08f67f2c053c879465afd56}\label{libavcodec_2diracdec_8c_ac7b4122df08f67f2c053c879465afd56}} 
+\index{diracdec.c@{diracdec.c}!DiracSlice@{DiracSlice}}
+\index{DiracSlice@{DiracSlice}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{DiracSlice}{DiracSlice}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}} \mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}}}
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aac80d51bb4ccb9ad14c927e2ea8894e2}\label{libavcodec_2diracdec_8c_aac80d51bb4ccb9ad14c927e2ea8894e2}} 
+\index{diracdec.c@{diracdec.c}!Plane@{Plane}}
+\index{Plane@{Plane}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{Plane}{Plane}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_plane}{Plane}} \mbox{\hyperlink{struct_plane}{Plane}}}
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a033df50ed55f82ef01c7f321a3be87b6}\label{libavcodec_2diracdec_8c_a033df50ed55f82ef01c7f321a3be87b6}} 
+\index{diracdec.c@{diracdec.c}!SliceCoeffs@{SliceCoeffs}}
+\index{SliceCoeffs@{SliceCoeffs}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{SliceCoeffs}{SliceCoeffs}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}} \mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}}}
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a2339806ad07ca95016f6ef6789b49915}\label{libavcodec_2diracdec_8c_a2339806ad07ca95016f6ef6789b49915}} 
+\index{diracdec.c@{diracdec.c}!SubBand@{SubBand}}
+\index{SubBand@{SubBand}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{SubBand}{SubBand}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_sub_band}{Sub\+Band}} \mbox{\hyperlink{struct_sub_band}{Sub\+Band}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2e}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2e}} 
+\index{diracdec.c@{diracdec.c}!dirac\_subband@{dirac\_subband}}
+\index{dirac\_subband@{dirac\_subband}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_subband}{dirac\_subband}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2e}{dirac\+\_\+subband}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{subband\_ll@{subband\_ll}!diracdec.c@{diracdec.c}}\index{diracdec.c@{diracdec.c}!subband\_ll@{subband\_ll}}}\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea80ffebbee85a3a8fe5ff82079ea0332b}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea80ffebbee85a3a8fe5ff82079ea0332b}} 
+subband\+\_\+ll&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{subband\_hl@{subband\_hl}!diracdec.c@{diracdec.c}}\index{diracdec.c@{diracdec.c}!subband\_hl@{subband\_hl}}}\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea7fb53e3e62736af3f6fc986153bb25dc}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2ea7fb53e3e62736af3f6fc986153bb25dc}} 
+subband\+\_\+hl&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{subband\_lh@{subband\_lh}!diracdec.c@{diracdec.c}}\index{diracdec.c@{diracdec.c}!subband\_lh@{subband\_lh}}}\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eafb6f3eb638035c0def4783b164d81b06}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eafb6f3eb638035c0def4783b164d81b06}} 
+subband\+\_\+lh&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{subband\_hh@{subband\_hh}!diracdec.c@{diracdec.c}}\index{diracdec.c@{diracdec.c}!subband\_hh@{subband\_hh}}}\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eadc43a2a062d874c99aee4fe8a43d223f}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eadc43a2a062d874c99aee4fe8a43d223f}} 
+subband\+\_\+hh&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{subband\_nb@{subband\_nb}!diracdec.c@{diracdec.c}}\index{diracdec.c@{diracdec.c}!subband\_nb@{subband\_nb}}}\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eaee3bdeeb1a1e080a61e25c53aa941391}\label{libavcodec_2diracdec_8c_ae881cad13ff8e89978469871f6abec2eaee3bdeeb1a1e080a61e25c53aa941391}} 
+subband\+\_\+nb&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 241 of file diracdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a86ff0479548c1e5804bd6964ffbc705c}\label{libavcodec_2diracdec_8c_a86ff0479548c1e5804bd6964ffbc705c}} 
+\index{diracdec.c@{diracdec.c}!add\_dc@{add\_dc}}
+\index{add\_dc@{add\_dc}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_dc()}{add\_dc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+dc (\begin{DoxyParamCaption}\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{obmc\+\_\+weight,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{xblen,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{yblen }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1740 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a86ff0479548c1e5804bd6964ffbc705c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ac5ed4730b680063a1f1810a08d4e6e8c}\label{libavcodec_2diracdec_8c_ac5ed4730b680063a1f1810a08d4e6e8c}} 
+\index{diracdec.c@{diracdec.c}!add\_frame@{add\_frame}}
+\index{add\_frame@{add\_frame}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_frame()}{add\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} add\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$}]{framelist\mbox{[}$\,$\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{maxframes,  }\item[{\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$}]{frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 273 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ac5ed4730b680063a1f1810a08d4e6e8c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a958e84421650b1d9a6d4d2eb51c9a7f2}\label{libavcodec_2diracdec_8c_a958e84421650b1d9a6d4d2eb51c9a7f2}} 
+\index{diracdec.c@{diracdec.c}!alloc\_buffers@{alloc\_buffers}}
+\index{alloc\_buffers@{alloc\_buffers}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_buffers()}{alloc\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alloc\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 322 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a958e84421650b1d9a6d4d2eb51c9a7f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a958e84421650b1d9a6d4d2eb51c9a7f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a45dd7a5b11e0b78ffffb5485bc3bc521}\label{libavcodec_2diracdec_8c_a45dd7a5b11e0b78ffffb5485bc3bc521}} 
+\index{diracdec.c@{diracdec.c}!alloc\_sequence\_buffers@{alloc\_sequence\_buffers}}
+\index{alloc\_sequence\_buffers@{alloc\_sequence\_buffers}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_sequence\_buffers()}{alloc\_sequence\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alloc\+\_\+sequence\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 284 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a45dd7a5b11e0b78ffffb5485bc3bc521_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a45dd7a5b11e0b78ffffb5485bc3bc521_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aa121af51ad65f15a5755268b94c30c34}\label{libavcodec_2diracdec_8c_aa121af51ad65f15a5755268b94c30c34}} 
+\index{diracdec.c@{diracdec.c}!block\_mc@{block\_mc}}
+\index{block\_mc@{block\_mc}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{block\_mc()}{block\_mc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} block\+\_\+mc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{uint16\+\_\+t $\ast$}]{mctmp,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{obmc\+\_\+weight,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dstx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dsty }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1756 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_aa121af51ad65f15a5755268b94c30c34_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_aa121af51ad65f15a5755268b94c30c34_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5}\label{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5}} 
+\index{diracdec.c@{diracdec.c}!codeblock@{codeblock}}
+\index{codeblock@{codeblock}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{codeblock()}{codeblock()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} codeblock (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$}]{b,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_dirac_arith}{Dirac\+Arith}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{left,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{right,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{top,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bottom,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockcnt\+\_\+one,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+arith }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Decode the coeffs in the rectangle defined by left, right, top, bottom \mbox{[}D\+I\+R\+A\+C\+\_\+\+S\+TD\mbox{]} 13.\+4.\+3.\+2 Codeblock unpacking loop. \mbox{\hyperlink{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5}{codeblock()}} 
+
+Definition at line 487 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a7c36b53b4fc31a724fc11c50427aa4b5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06}\label{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06}} 
+\index{diracdec.c@{diracdec.c}!coeff\_unpack\_golomb@{coeff\_unpack\_golomb}}
+\index{coeff\_unpack\_golomb@{coeff\_unpack\_golomb}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{coeff\_unpack\_golomb()}{coeff\_unpack\_golomb()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coeff\+\_\+unpack\+\_\+golomb (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{qfactor,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{qoffset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 439 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_af02e8ce387eebdcc403a767f4be45d06_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a67244182b20868420d63a7b7b797ac4c}\label{libavcodec_2diracdec_8c_a67244182b20868420d63a7b7b797ac4c}} 
+\index{diracdec.c@{diracdec.c}!decode\_block\_params@{decode\_block\_params}}
+\index{decode\_block\_params@{decode\_block\_params}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_block\_params()}{decode\_block\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+block\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_arith}{Dirac\+Arith}}}]{arith\mbox{[}8\mbox{]},  }\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1441 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a67244182b20868420d63a7b7b797ac4c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a67244182b20868420d63a7b7b797ac4c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a1f9e78bb3e8ac57dc6f301e36cce4fe5}\label{libavcodec_2diracdec_8c_a1f9e78bb3e8ac57dc6f301e36cce4fe5}} 
+\index{diracdec.c@{diracdec.c}!decode\_component@{decode\_component}}
+\index{decode\_component@{decode\_component}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_component()}{decode\_component()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+component (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{comp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ \mbox{[}D\+I\+R\+A\+C\+\_\+\+S\+TD\mbox{]} 13.\+4.\+1 core\+\_\+transform\+\_\+data() 
+
+Definition at line 656 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a1f9e78bb3e8ac57dc6f301e36cce4fe5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a1f9e78bb3e8ac57dc6f301e36cce4fe5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a8ee8ce1514289c50611c804156b30aa0}\label{libavcodec_2diracdec_8c_a8ee8ce1514289c50611c804156b30aa0}} 
+\index{diracdec.c@{diracdec.c}!decode\_hq\_slice@{decode\_hq\_slice}}
+\index{decode\_hq\_slice@{decode\_hq\_slice}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_hq\_slice()}{decode\_hq\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+hq\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_slice}{Dirac\+Slice}} $\ast$}]{slice,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{tmp\+\_\+buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+V\+C-\/2 Specification -\/$>$ 13.\+5.\+3 hq\+\_\+slice(sx,sy) 
+
+Definition at line 841 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8ee8ce1514289c50611c804156b30aa0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8ee8ce1514289c50611c804156b30aa0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a059764fc4134ff43cba8844e74fc9dfa}\label{libavcodec_2diracdec_8c_a059764fc4134ff43cba8844e74fc9dfa}} 
+\index{diracdec.c@{diracdec.c}!decode\_hq\_slice\_row@{decode\_hq\_slice\_row}}
+\index{decode\_hq\_slice\_row@{decode\_hq\_slice\_row}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_hq\_slice\_row()}{decode\_hq\_slice\_row()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+hq\+\_\+slice\+\_\+row (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{threadnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 915 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a059764fc4134ff43cba8844e74fc9dfa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a059764fc4134ff43cba8844e74fc9dfa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aaa9d00f5deecef8ae7dfe289b25469d0}\label{libavcodec_2diracdec_8c_aaa9d00f5deecef8ae7dfe289b25469d0}} 
+\index{diracdec.c@{diracdec.c}!decode\_lowdelay@{decode\_lowdelay}}
+\index{decode\_lowdelay@{decode\_lowdelay}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_lowdelay()}{decode\_lowdelay()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+lowdelay (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 13.\+5.\+1 low\+\_\+delay\+\_\+transform\+\_\+data() 
+
+Definition at line 930 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_aaa9d00f5deecef8ae7dfe289b25469d0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_aaa9d00f5deecef8ae7dfe289b25469d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a833539c7d54fbc72c01ff24762fa8bf0}\label{libavcodec_2diracdec_8c_a833539c7d54fbc72c01ff24762fa8bf0}} 
+\index{diracdec.c@{diracdec.c}!decode\_lowdelay\_slice@{decode\_lowdelay\_slice}}
+\index{decode\_lowdelay\_slice@{decode\_lowdelay\_slice}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_lowdelay\_slice()}{decode\_lowdelay\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+lowdelay\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 13.\+5.\+2 Slices. slice(sx,sy) 
+
+Definition at line 774 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a833539c7d54fbc72c01ff24762fa8bf0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a833539c7d54fbc72c01ff24762fa8bf0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a60ab0ea212ec6b8cf479736b02c609b0}\label{libavcodec_2diracdec_8c_a60ab0ea212ec6b8cf479736b02c609b0}} 
+\index{diracdec.c@{diracdec.c}!decode\_subband@{decode\_subband}}
+\index{decode\_subband@{decode\_subband}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subband()}{decode\_subband()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+subband (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{quant,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{slice\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{slice\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bits\+\_\+end,  }\item[{\mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$}]{b1,  }\item[{\mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$}]{b2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 722 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a60ab0ea212ec6b8cf479736b02c609b0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a60ab0ea212ec6b8cf479736b02c609b0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a428f9b4f3f20f3402fb8481285cb9949}\label{libavcodec_2diracdec_8c_a428f9b4f3f20f3402fb8481285cb9949}} 
+\index{diracdec.c@{diracdec.c}!decode\_subband\_arith@{decode\_subband\_arith}}
+\index{decode\_subband\_arith@{decode\_subband\_arith}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subband\_arith()}{decode\_subband\_arith()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subband\+\_\+arith (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 639 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a428f9b4f3f20f3402fb8481285cb9949_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a428f9b4f3f20f3402fb8481285cb9949_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a435263d23ef652273d9c8f9407a23ae9}\label{libavcodec_2diracdec_8c_a435263d23ef652273d9c8f9407a23ae9}} 
+\index{diracdec.c@{diracdec.c}!decode\_subband\_golomb@{decode\_subband\_golomb}}
+\index{decode\_subband\_golomb@{decode\_subband\_golomb}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subband\_golomb()}{decode\_subband\_golomb()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subband\+\_\+golomb (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 645 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a435263d23ef652273d9c8f9407a23ae9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a435263d23ef652273d9c8f9407a23ae9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ac1a103753855a031ae22b152d0423820}\label{libavcodec_2diracdec_8c_ac1a103753855a031ae22b152d0423820}} 
+\index{diracdec.c@{diracdec.c}!decode\_subband\_internal@{decode\_subband\_internal}}
+\index{decode\_subband\_internal@{decode\_subband\_internal}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subband\_internal()}{decode\_subband\_internal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subband\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_sub_band}{Sub\+Band}} $\ast$}]{b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+arith }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 13.\+4.\+2 Non-\/skipped subbands. \mbox{\hyperlink{libavcodec_2diracdec_8c_a2a355f5367fbe98356741995c3143e4e}{subband\+\_\+coeffs()}} 
+
+Definition at line 597 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ac1a103753855a031ae22b152d0423820_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ac1a103753855a031ae22b152d0423820_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a8c75a595ac2ac48bfd1213bd90f1ceeb}\label{libavcodec_2diracdec_8c_a8c75a595ac2ac48bfd1213bd90f1ceeb}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_data\_unit@{dirac\_decode\_data\_unit}}
+\index{dirac\_decode\_data\_unit@{dirac\_decode\_data\_unit}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_data\_unit()}{dirac\_decode\_data\_unit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+data\+\_\+unit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2119 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8c75a595ac2ac48bfd1213bd90f1ceeb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{libavcodec_2diracdec_8c_a8c75a595ac2ac48bfd1213bd90f1ceeb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_afe23b76533446ffd389067d03eb9b360}\label{libavcodec_2diracdec_8c_afe23b76533446ffd389067d03eb9b360}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_end@{dirac\_decode\_end}}
+\index{dirac\_decode\_end@{dirac\_decode\_end}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_end()}{dirac\_decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 424 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_afe23b76533446ffd389067d03eb9b360_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc}\label{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_flush@{dirac\_decode\_flush}}
+\index{dirac\_decode\_flush@{dirac\_decode\_flush}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_flush()}{dirac\_decode\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dirac\+\_\+decode\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 416 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=311pt]{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a855a60718fee8fc93d70fb598b2d0053}\label{libavcodec_2diracdec_8c_a855a60718fee8fc93d70fb598b2d0053}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_frame@{dirac\_decode\_frame}}
+\index{dirac\_decode\_frame@{dirac\_decode\_frame}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_frame()}{dirac\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2261 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a855a60718fee8fc93d70fb598b2d0053_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a8f1b4f7e12ca4abfc4df0b0c93ac1b22}\label{libavcodec_2diracdec_8c_a8f1b4f7e12ca4abfc4df0b0c93ac1b22}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_frame\_internal@{dirac\_decode\_frame\_internal}}
+\index{dirac\_decode\_frame\_internal@{dirac\_decode\_frame\_internal}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_frame\_internal()}{dirac\_decode\_frame\_internal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+frame\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 13.\+0 \mbox{\hyperlink{struct_transform}{Transform}} data syntax. transform\+\_\+data() 
+
+Definition at line 1869 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8f1b4f7e12ca4abfc4df0b0c93ac1b22_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8f1b4f7e12ca4abfc4df0b0c93ac1b22_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a640af427e4187904b9ba4b76d762c477}\label{libavcodec_2diracdec_8c_a640af427e4187904b9ba4b76d762c477}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_init@{dirac\_decode\_init}}
+\index{dirac\_decode\_init@{dirac\_decode\_init}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_init()}{dirac\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 385 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavcodec_2diracdec_8c_a640af427e4187904b9ba4b76d762c477_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a24c235e0661b9539ada7a404c0b5304a}\label{libavcodec_2diracdec_8c_a24c235e0661b9539ada7a404c0b5304a}} 
+\index{diracdec.c@{diracdec.c}!dirac\_decode\_picture\_header@{dirac\_decode\_picture\_header}}
+\index{dirac\_decode\_picture\_header@{dirac\_decode\_picture\_header}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_decode\_picture\_header()}{dirac\_decode\_picture\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+decode\+\_\+picture\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 11.\+1.\+1 \mbox{\hyperlink{struct_picture}{Picture}} Header. \mbox{\hyperlink{cbs__mpeg2__syntax__template_8c_a1714291aad361363d8a042cfeab4b98f}{picture\+\_\+header()}} 
+
+Definition at line 1996 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a24c235e0661b9539ada7a404c0b5304a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a24c235e0661b9539ada7a404c0b5304a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a0ec1f7b39c5f06c062b600b159c97d60}\label{libavcodec_2diracdec_8c_a0ec1f7b39c5f06c062b600b159c97d60}} 
+\index{diracdec.c@{diracdec.c}!dirac\_unpack\_block\_motion\_data@{dirac\_unpack\_block\_motion\_data}}
+\index{dirac\_unpack\_block\_motion\_data@{dirac\_unpack\_block\_motion\_data}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_unpack\_block\_motion\_data()}{dirac\_unpack\_block\_motion\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+unpack\+\_\+block\+\_\+motion\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$
+\begin{DoxyEnumerate}
+\item \mbox{\hyperlink{struct_block}{Block}} motion data syntax 
+\end{DoxyEnumerate}
+
+Definition at line 1500 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a0ec1f7b39c5f06c062b600b159c97d60_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a0ec1f7b39c5f06c062b600b159c97d60_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae2b880ae9d01cf1897d8d15b2c7de610}\label{libavcodec_2diracdec_8c_ae2b880ae9d01cf1897d8d15b2c7de610}} 
+\index{diracdec.c@{diracdec.c}!dirac\_unpack\_idwt\_params@{dirac\_unpack\_idwt\_params}}
+\index{dirac\_unpack\_idwt\_params@{dirac\_unpack\_idwt\_params}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_unpack\_idwt\_params()}{dirac\_unpack\_idwt\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+unpack\+\_\+idwt\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Dirac Specification -\/$>$ 11.\+3 Wavelet transform data. wavelet\+\_\+transform() 
+
+Definition at line 1230 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ae2b880ae9d01cf1897d8d15b2c7de610_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ae2b880ae9d01cf1897d8d15b2c7de610_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a223983da3d9e9529b6fae368a4139437}\label{libavcodec_2diracdec_8c_a223983da3d9e9529b6fae368a4139437}} 
+\index{diracdec.c@{diracdec.c}!dirac\_unpack\_prediction\_parameters@{dirac\_unpack\_prediction\_parameters}}
+\index{dirac\_unpack\_prediction\_parameters@{dirac\_unpack\_prediction\_parameters}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_unpack\_prediction\_parameters()}{dirac\_unpack\_prediction\_parameters()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dirac\+\_\+unpack\+\_\+prediction\+\_\+parameters (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Unpack the motion compensation parameters Dirac Specification -\/$>$ 11.\+2 \mbox{\hyperlink{struct_picture}{Picture}} prediction data. picture\+\_\+prediction() 
+
+Definition at line 1102 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a223983da3d9e9529b6fae368a4139437_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a223983da3d9e9529b6fae368a4139437_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a9e59bf9049ce8b4c97b683b85a34ea9f}\label{libavcodec_2diracdec_8c_a9e59bf9049ce8b4c97b683b85a34ea9f}} 
+\index{diracdec.c@{diracdec.c}!divide3@{divide3}}
+\index{divide3@{divide3}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{divide3()}{divide3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} divide3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 250 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a9e59bf9049ce8b4c97b683b85a34ea9f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a249638f79537ac44180aaba75952424c}\label{libavcodec_2diracdec_8c_a249638f79537ac44180aaba75952424c}} 
+\index{diracdec.c@{diracdec.c}!free\_sequence\_buffers@{free\_sequence\_buffers}}
+\index{free\_sequence\_buffers@{free\_sequence\_buffers}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{free\_sequence\_buffers()}{free\_sequence\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+sequence\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 351 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a249638f79537ac44180aaba75952424c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a249638f79537ac44180aaba75952424c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_af8dd60a672baa233d43bb7595c2f5c8b}\label{libavcodec_2diracdec_8c_af8dd60a672baa233d43bb7595c2f5c8b}} 
+\index{diracdec.c@{diracdec.c}!get\_buffer\_with\_edge@{get\_buffer\_with\_edge}}
+\index{get\_buffer\_with\_edge@{get\_buffer\_with\_edge}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_buffer\_with\_edge()}{get\_buffer\_with\_edge()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+buffer\+\_\+with\+\_\+edge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1966 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_af8dd60a672baa233d43bb7595c2f5c8b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_af8dd60a672baa233d43bb7595c2f5c8b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_aa1d8e8e2298a4cc9fcf9bfd937bab766}\label{libavcodec_2diracdec_8c_aa1d8e8e2298a4cc9fcf9bfd937bab766}} 
+\index{diracdec.c@{diracdec.c}!get\_delayed\_pic@{get\_delayed\_pic}}
+\index{get\_delayed\_pic@{get\_delayed\_pic}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_delayed\_pic()}{get\_delayed\_pic()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+delayed\+\_\+pic (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{picture,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2084 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_aa1d8e8e2298a4cc9fcf9bfd937bab766_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=307pt]{libavcodec_2diracdec_8c_aa1d8e8e2298a4cc9fcf9bfd937bab766_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_acf8a6abcedf89f4ea050b6c12596b5e3}\label{libavcodec_2diracdec_8c_acf8a6abcedf89f4ea050b6c12596b5e3}} 
+\index{diracdec.c@{diracdec.c}!global\_mv@{global\_mv}}
+\index{global\_mv@{global\_mv}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{global\_mv()}{global\_mv()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} global\+\_\+mv (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1425 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_acf8a6abcedf89f4ea050b6c12596b5e3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a66c6736ecbbb653eb8f41c08bd09bf11}\label{libavcodec_2diracdec_8c_a66c6736ecbbb653eb8f41c08bd09bf11}} 
+\index{diracdec.c@{diracdec.c}!init\_obmc\_weight@{init\_obmc\_weight}}
+\index{init\_obmc\_weight@{init\_obmc\_weight}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{init\_obmc\_weight()}{init\_obmc\_weight()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+obmc\+\_\+weight (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_plane}{Plane}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{obmc\+\_\+weight,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{left,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{right,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{top,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bottom }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1586 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a66c6736ecbbb653eb8f41c08bd09bf11_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a66c6736ecbbb653eb8f41c08bd09bf11_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a8b95ae83d97db70f4d66039d627c6123}\label{libavcodec_2diracdec_8c_a8b95ae83d97db70f4d66039d627c6123}} 
+\index{diracdec.c@{diracdec.c}!init\_obmc\_weight\_row@{init\_obmc\_weight\_row}}
+\index{init\_obmc\_weight\_row@{init\_obmc\_weight\_row}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{init\_obmc\_weight\_row()}{init\_obmc\_weight\_row()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+obmc\+\_\+weight\+\_\+row (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_plane}{Plane}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{obmc\+\_\+weight,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{left,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{right,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{wy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1572 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=272pt]{libavcodec_2diracdec_8c_a8b95ae83d97db70f4d66039d627c6123_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8b95ae83d97db70f4d66039d627c6123_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_acca130ad3f5763df7e0dbefae9630ae8}\label{libavcodec_2diracdec_8c_acca130ad3f5763df7e0dbefae9630ae8}} 
+\index{diracdec.c@{diracdec.c}!init\_obmc\_weights@{init\_obmc\_weights}}
+\index{init\_obmc\_weights@{init\_obmc\_weights}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{init\_obmc\_weights()}{init\_obmc\_weights()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+obmc\+\_\+weights (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_plane}{Plane}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{by }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1605 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_acca130ad3f5763df7e0dbefae9630ae8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_acca130ad3f5763df7e0dbefae9630ae8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a1c0c591dd6b330b0c7ba2f3dd3bffb45}\label{libavcodec_2diracdec_8c_a1c0c591dd6b330b0c7ba2f3dd3bffb45}} 
+\index{diracdec.c@{diracdec.c}!init\_planes@{init\_planes}}
+\index{init\_planes@{init\_planes}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{init\_planes()}{init\_planes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+planes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1048 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a1c0c591dd6b330b0c7ba2f3dd3bffb45_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a8b56e2073d7228ff2c1bd7e1de878cab}\label{libavcodec_2diracdec_8c_a8b56e2073d7228ff2c1bd7e1de878cab}} 
+\index{diracdec.c@{diracdec.c}!interpolate\_refplane@{interpolate\_refplane}}
+\index{interpolate\_refplane@{interpolate\_refplane}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_refplane()}{interpolate\_refplane()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} interpolate\+\_\+refplane (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1828 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{libavcodec_2diracdec_8c_a8b56e2073d7228ff2c1bd7e1de878cab_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a8b56e2073d7228ff2c1bd7e1de878cab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ac458c479568c30049fe415e8e33716c9}\label{libavcodec_2diracdec_8c_ac458c479568c30049fe415e8e33716c9}} 
+\index{diracdec.c@{diracdec.c}!mc\_row@{mc\_row}}
+\index{mc\_row@{mc\_row}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{mc\_row()}{mc\_row()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mc\+\_\+row (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{uint16\+\_\+t $\ast$}]{mctmp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dsty }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1792 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ac458c479568c30049fe415e8e33716c9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ac458c479568c30049fe415e8e33716c9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ab609330f1d31b95a4f8d41ca14390924}\label{libavcodec_2diracdec_8c_ab609330f1d31b95a4f8d41ca14390924}} 
+\index{diracdec.c@{diracdec.c}!mc\_subpel@{mc\_subpel}}
+\index{mc\_subpel@{mc\_subpel}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{mc\_subpel()}{mc\_subpel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mc\+\_\+subpel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\mbox{[}5\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+For block x,y, determine which of the hpel planes to do bilinear interpolation from and set src\mbox{[}\mbox{]} to the location in each hpel plane to MC from.
+
+\begin{DoxyReturn}{Returns}
+the index of the put\+\_\+dirac\+\_\+pixels\+\_\+tab function to use 0 for 1 plane (fpel,hpel), 1 for 2 planes (qpel), 2 for 4 planes (qpel), and 3 for epel 
+\end{DoxyReturn}
+
+
+Definition at line 1645 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ab609330f1d31b95a4f8d41ca14390924_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ab609330f1d31b95a4f8d41ca14390924_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a0c0b6c78463768276c6dc19b0af5826e}\label{libavcodec_2diracdec_8c_a0c0b6c78463768276c6dc19b0af5826e}} 
+\index{diracdec.c@{diracdec.c}!pred\_block\_dc@{pred\_block\_dc}}
+\index{pred\_block\_dc@{pred\_block\_dc}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{pred\_block\_dc()}{pred\_block\_dc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pred\+\_\+block\+\_\+dc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1356 of file diracdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=242pt]{libavcodec_2diracdec_8c_a0c0b6c78463768276c6dc19b0af5826e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a0c0b6c78463768276c6dc19b0af5826e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a80e8591f0915570c295711763b554692}\label{libavcodec_2diracdec_8c_a80e8591f0915570c295711763b554692}} 
+\index{diracdec.c@{diracdec.c}!pred\_block\_mode@{pred\_block\_mode}}
+\index{pred\_block\_mode@{pred\_block\_mode}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{pred\_block\_mode()}{pred\_block\_mode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+block\+\_\+mode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{refmask }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1340 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a80e8591f0915570c295711763b554692_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a9d79c772142036cdc3ee3c5c64d433b2}\label{libavcodec_2diracdec_8c_a9d79c772142036cdc3ee3c5c64d433b2}} 
+\index{diracdec.c@{diracdec.c}!pred\_mv@{pred\_mv}}
+\index{pred\_mv@{pred\_mv}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{pred\_mv()}{pred\_mv()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pred\+\_\+mv (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1389 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a9d79c772142036cdc3ee3c5c64d433b2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ad270c0f600ca74f45292a1436d36a90c}\label{libavcodec_2diracdec_8c_ad270c0f600ca74f45292a1436d36a90c}} 
+\index{diracdec.c@{diracdec.c}!pred\_sbsplit@{pred\_sbsplit}}
+\index{pred\_sbsplit@{pred\_sbsplit}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{pred\_sbsplit()}{pred\_sbsplit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+sbsplit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{sbsplit,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1326 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ad270c0f600ca74f45292a1436d36a90c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ab0e9b6ae757b815bf44a7c0656e1129f}\label{libavcodec_2diracdec_8c_ab0e9b6ae757b815bf44a7c0656e1129f}} 
+\index{diracdec.c@{diracdec.c}!propagate\_block\_data@{propagate\_block\_data}}
+\index{propagate\_block\_data@{propagate\_block\_data}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{propagate\_block\_data()}{propagate\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} propagate\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_block}{Dirac\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Copies the current block to the other blocks covered by the current superblock split mode 
+
+Definition at line 1481 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ab0e9b6ae757b815bf44a7c0656e1129f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a12c0041849d7dfd197f6343762b33312}\label{libavcodec_2diracdec_8c_a12c0041849d7dfd197f6343762b33312}} 
+\index{diracdec.c@{diracdec.c}!remove\_frame@{remove\_frame}}
+\index{remove\_frame@{remove\_frame}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{remove\_frame()}{remove\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}}$\ast$ remove\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_frame}{Dirac\+Frame}} $\ast$}]{framelist\mbox{[}$\,$\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{picnum }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 255 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a12c0041849d7dfd197f6343762b33312_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ae9cedc0f04787a8e1c18133ca843198b}\label{libavcodec_2diracdec_8c_ae9cedc0f04787a8e1c18133ca843198b}} 
+\index{diracdec.c@{diracdec.c}!select\_dsp\_funcs@{select\_dsp\_funcs}}
+\index{select\_dsp\_funcs@{select\_dsp\_funcs}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{select\_dsp\_funcs()}{select\_dsp\_funcs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} select\+\_\+dsp\+\_\+funcs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{xblen,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{yblen }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1808 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_ae9cedc0f04787a8e1c18133ca843198b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a2a355f5367fbe98356741995c3143e4e}\label{libavcodec_2diracdec_8c_a2a355f5367fbe98356741995c3143e4e}} 
+\index{diracdec.c@{diracdec.c}!subband\_coeffs@{subband\_coeffs}}
+\index{subband\_coeffs@{subband\_coeffs}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{subband\_coeffs()}{subband\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subband\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_dirac_context}{Dirac\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{p,  }\item[{\mbox{\hyperlink{struct_slice_coeffs}{Slice\+Coeffs}}}]{c\mbox{[}\+M\+A\+X\+\_\+\+D\+W\+T\+\_\+\+L\+E\+V\+E\+L\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 820 of file diracdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2diracdec_8c_a2a355f5367fbe98356741995c3143e4e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_abba89017a0b8aef3a4defd8fe9c20a9e}\label{libavcodec_2diracdec_8c_abba89017a0b8aef3a4defd8fe9c20a9e}} 
+\index{diracdec.c@{diracdec.c}!weight@{weight}}
+\index{weight@{weight}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{weight()}{weight()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} weight (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blen,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1560 of file diracdec.\+c.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_af867c3494eb5f1b2908b367a3fa5c052}\label{libavcodec_2diracdec_8c_af867c3494eb5f1b2908b367a3fa5c052}} 
+\index{diracdec.c@{diracdec.c}!dirac\_arith\_init@{dirac\_arith\_init}}
+\index{dirac\_arith\_init@{dirac\_arith\_init}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{dirac\_arith\_init}{dirac\_arith\_init}}
+{\footnotesize\ttfamily \mbox{\hyperlink{libavutil_2thread_8h_a1d348e4becc9580dfa760add5c9d1139}{A\+V\+Once}} dirac\+\_\+arith\+\_\+init = \mbox{\hyperlink{libavutil_2thread_8h_acfec46d8ab71dae8e901ee384378df32}{A\+V\+\_\+\+O\+N\+C\+E\+\_\+\+I\+N\+IT}}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 383 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_a29635eba891ab70f6f89b4e02dbbdb60}\label{libavcodec_2diracdec_8c_a29635eba891ab70f6f89b4e02dbbdb60}} 
+\index{diracdec.c@{diracdec.c}!epel\_weights@{epel\_weights}}
+\index{epel\_weights@{epel\_weights}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{epel\_weights}{epel\_weights}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} epel\+\_\+weights\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\{ 16,  0,  0,  0 \},}
+\DoxyCodeLine{     \{ 12,  4,  0,  0 \},}
+\DoxyCodeLine{     \{  8,  8,  0,  0 \},}
+\DoxyCodeLine{     \{  4, 12,  0,  0 \}\},}
+\DoxyCodeLine{    \{\{ 12,  0,  4,  0 \},}
+\DoxyCodeLine{     \{  9,  3,  3,  1 \},}
+\DoxyCodeLine{     \{  6,  6,  2,  2 \},}
+\DoxyCodeLine{     \{  3,  9,  1,  3 \}\},}
+\DoxyCodeLine{    \{\{  8,  0,  8,  0 \},}
+\DoxyCodeLine{     \{  6,  2,  6,  2 \},}
+\DoxyCodeLine{     \{  4,  4,  4,  4 \},}
+\DoxyCodeLine{     \{  2,  6,  2,  6 \}\},}
+\DoxyCodeLine{    \{\{  4,  0, 12,  0 \},}
+\DoxyCodeLine{     \{  3,  1,  9,  3 \},}
+\DoxyCodeLine{     \{  2,  2,  6,  6 \},}
+\DoxyCodeLine{     \{  1,  3,  3,  9 \}\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1618 of file diracdec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2diracdec_8c_ad3853523e5bc3894949cde5b4be1a6d6}\label{libavcodec_2diracdec_8c_ad3853523e5bc3894949cde5b4be1a6d6}} 
+\index{diracdec.c@{diracdec.c}!ff\_dirac\_decoder@{ff\_dirac\_decoder}}
+\index{ff\_dirac\_decoder@{ff\_dirac\_decoder}!diracdec.c@{diracdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_dirac\_decoder}{ff\_dirac\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+dirac\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}dirac"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}BBC Dirac VC-\/2"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea00d5e8ca007d62fe704bb22b2be7b556}{AV\_CODEC\_ID\_DIRAC}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavcodec_2diracdec_8c_a94dbc6ba58bd026eadf553d94361e8a3}{DiracContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2diracdec_8c_a640af427e4187904b9ba4b76d762c477}{dirac\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2diracdec_8c_afe23b76533446ffd389067d03eb9b360}{dirac\_decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2diracdec_8c_a855a60718fee8fc93d70fb598b2d0053}{dirac\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}} | \mbox{\hyperlink{group__lavc__core_ga7c4f386d1d6df0214eb35f2be1c82779}{AV\_CODEC\_CAP\_SLICE\_THREADS}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_a93962007020d71a3541778040d30413f}{FF\_CODEC\_CAP\_INIT\_THREADSAFE}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{libavcodec_2diracdec_8c_a09d1421348adb8d166f4f1e644d270bc}{dirac\_decode\_flush}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2357 of file diracdec.\+c.
+

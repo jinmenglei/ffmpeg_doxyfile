@@ -1,0 +1,991 @@
+\hypertarget{vf__colorconstancy_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+colorconstancy.c File Reference}
+\label{vf__colorconstancy_8c}\index{E:/github/ffmpeg/libavfilter/vf\_colorconstancy.c@{E:/github/ffmpeg/libavfilter/vf\_colorconstancy.c}}
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+Include dependency graph for vf\+\_\+colorconstancy.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_ada6bcd52a09fdcb149587be4540433ac}{G\+R\+E\+Y\+\_\+\+E\+D\+GE}}~\char`\"{}greyedge\char`\"{}
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_ae42978afd835c3a1f70d409a1b5f5a39}{S\+Q\+R\+T3}}~1.\+73205080757
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a015f94555ae101091453e7bbea527259}{N\+U\+M\+\_\+\+P\+L\+A\+N\+ES}}~3
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_ad420b6f5c916391182689f09aaab3135}{M\+A\+X\+\_\+\+D\+I\+F\+F\+\_\+\+O\+RD}}~2
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a905b7a3b91de7205a3e885861006e7e2}{M\+A\+X\+\_\+\+M\+E\+T\+A\+\_\+\+D\+A\+TA}}~4
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_aaf06a3762adb0aa04b8a5f8f016ca5e9}{M\+A\+X\+\_\+\+D\+A\+TA}}~4
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a55d3af17e4a92094e48022f54acbc37c}{I\+N\+D\+E\+X\+\_\+\+T\+E\+MP}}~0
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a1956e78524bcd62209fad6429680b7f4}{I\+N\+D\+E\+X\+\_\+\+DX}}~1
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a4da04304549afd8aa4325c2eaa1ad5f6}{I\+N\+D\+E\+X\+\_\+\+DY}}~2
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a8d8e264efde380b2e75e0d5bd9e23c18}{I\+N\+D\+E\+X\+\_\+\+D\+XY}}~3
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a1f2fb57f6726f61ee372e70e8167cbd8}{I\+N\+D\+E\+X\+\_\+\+N\+O\+RM}}~\mbox{\hyperlink{vf__colorconstancy_8c_a1956e78524bcd62209fad6429680b7f4}{I\+N\+D\+E\+X\+\_\+\+DX}}
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_aa7dec7c97b993a8e6d889ff666a86d7d}{I\+N\+D\+E\+X\+\_\+\+S\+RC}}~0
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a8575e46531f4ade71cdff437ccb5d913}{I\+N\+D\+E\+X\+\_\+\+D\+ST}}~1
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a7dbdf288bd3fbcc3b4efc2cd135e363c}{I\+N\+D\+E\+X\+\_\+\+O\+RD}}~2
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a823aa5bebe4b4b836619cae12751b8a5}{I\+N\+D\+E\+X\+\_\+\+D\+IR}}~3
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a51ff0602a601f3a1c43d30f1e945539c}{D\+I\+R\+\_\+X}}~0
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a116c2bebfbe08d064de758a5b3f1e32c}{D\+I\+R\+\_\+Y}}~1
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a2c923246c124a3f75f861b76c3e779ea}{G\+I\+N\+DX}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})~( (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}) -\/ ((\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}) $>$$>$ 2) )
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}{C\+L\+A\+MP}}(x,  mx)~av\+\_\+clip((x), 0, (mx-\/1))
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a5663c089d455065601c7d8e77b207f97}{I\+N\+D\+X2D}}(\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}},  \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})~( (\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $\ast$ (\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}) + (\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) )
+\item 
+\#define \mbox{\hyperlink{vf__colorconstancy_8c_a173cbe72d39a82b31126bc5800ce147a}{G\+A\+U\+SS}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  sr,  sc,  sls,  sh,  sw,  \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}})~( (\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})\mbox{[} \mbox{\hyperlink{vf__colorconstancy_8c_a5663c089d455065601c7d8e77b207f97}{I\+N\+D\+X2D}}(\mbox{\hyperlink{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}{C\+L\+A\+MP}}((sr), (sh)), \mbox{\hyperlink{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}{C\+L\+A\+MP}}((sc), (sw)), (sls)) \mbox{]} $\ast$ (\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) )
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__colorconstancy_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}} \mbox{\hyperlink{vf__colorconstancy_8c_a4180620683d0f41501c2a82b1c74ab55}{Color\+Constancy\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_ab688f8c440c3040d7d109dd6582626f2}{set\+\_\+gauss}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__colorconstancy_8c_ac0289207a73911ce01782d44c5c8d3a9}{cleanup\+\_\+derivative\+\_\+buffers}} (\mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+buff, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+planes)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a6a2ed522b247f3a752ca0b0f08d01c4f}{setup\+\_\+derivative\+\_\+buffers}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_adcb274317bc47e4c2265c042afd16777}{slice\+\_\+get\+\_\+derivative}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a82fb0bfa838a6d7077582a243df4aa7e}{slice\+\_\+normalize}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{vf__colorconstancy_8c_a0748ac837c9e0d72f749c6248474856d}{get\+\_\+deriv}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ord, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dir, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+threads)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_aa3db9a46971f59c126ee3f13e9b23c36}{get\+\_\+derivative}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_afb4c7f64671a07cde1a0e70a2d0498fb}{filter\+\_\+slice\+\_\+grey\+\_\+edge}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a6da4fdc0f5f45796d215e8ecde707d78}{filter\+\_\+grey\+\_\+edge}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__colorconstancy_8c_a32a3d205eb2d1c79111654141491f89f}{normalize\+\_\+light}} (double $\ast$light)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_ad8c58a5cea6f425e9c0ba94afd9d4200}{illumination\+\_\+estimation}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a197bdbe101c9811682363a49fd989108}{diagonal\+\_\+transformation}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__colorconstancy_8c_abb911309faab3205dbd2adc3109cb9a4}{chromatic\+\_\+adaptation}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_ab290697598353560db0c6e0131573103}{config\+\_\+props}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__colorconstancy_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__colorconstancy_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__colorconstancy_8c_a0543f05d5a62f99ea7a4aeb28de204db}{colorconstancy\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__colorconstancy_8c_a98b12828eeebca789ec2b574c33768b3}{colorconstancy\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Color Constancy filter
+
+\begin{DoxySeeAlso}{See also}
+\href{http://colorconstancy.com/}{\texttt{ http\+://colorconstancy.\+com/}}
+\end{DoxySeeAlso}
+{\bfseries [J]}. van de Weijer, Th. Gevers, A. Gijsenij \char`\"{}\+Edge-\/\+Based Color Constancy\char`\"{}. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}\label{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!CLAMP@{CLAMP}}
+\index{CLAMP@{CLAMP}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{CLAMP}{CLAMP}}
+{\footnotesize\ttfamily \#define C\+L\+A\+MP(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{mx }\end{DoxyParamCaption})~av\+\_\+clip((x), 0, (mx-\/1))}
+
+
+
+Definition at line 232 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a51ff0602a601f3a1c43d30f1e945539c}\label{vf__colorconstancy_8c_a51ff0602a601f3a1c43d30f1e945539c}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!DIR\_X@{DIR\_X}}
+\index{DIR\_X@{DIR\_X}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{DIR\_X}{DIR\_X}}
+{\footnotesize\ttfamily \#define D\+I\+R\+\_\+X~0}
+
+
+
+Definition at line 60 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a116c2bebfbe08d064de758a5b3f1e32c}\label{vf__colorconstancy_8c_a116c2bebfbe08d064de758a5b3f1e32c}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!DIR\_Y@{DIR\_Y}}
+\index{DIR\_Y@{DIR\_Y}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{DIR\_Y}{DIR\_Y}}
+{\footnotesize\ttfamily \#define D\+I\+R\+\_\+Y~1}
+
+
+
+Definition at line 61 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__colorconstancy_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 93 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a173cbe72d39a82b31126bc5800ce147a}\label{vf__colorconstancy_8c_a173cbe72d39a82b31126bc5800ce147a}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!GAUSS@{GAUSS}}
+\index{GAUSS@{GAUSS}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{GAUSS}{GAUSS}}
+{\footnotesize\ttfamily \#define G\+A\+U\+SS(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  }\item[{}]{sr,  }\item[{}]{sc,  }\item[{}]{sls,  }\item[{}]{sh,  }\item[{}]{sw,  }\item[{}]{\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}} }\end{DoxyParamCaption})~( (\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})\mbox{[} \mbox{\hyperlink{vf__colorconstancy_8c_a5663c089d455065601c7d8e77b207f97}{I\+N\+D\+X2D}}(\mbox{\hyperlink{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}{C\+L\+A\+MP}}((sr), (sh)), \mbox{\hyperlink{vf__colorconstancy_8c_adfbf9d2d0c24d78aa426f827a22949ce}{C\+L\+A\+MP}}((sc), (sw)), (sls)) \mbox{]} $\ast$ (\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) )}
+
+
+
+Definition at line 234 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a2c923246c124a3f75f861b76c3e779ea}\label{vf__colorconstancy_8c_a2c923246c124a3f75f861b76c3e779ea}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!GINDX@{GINDX}}
+\index{GINDX@{GINDX}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{GINDX}{GINDX}}
+{\footnotesize\ttfamily \#define G\+I\+N\+DX(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})~( (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}) -\/ ((\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}) $>$$>$ 2) )}
+
+
+
+Definition at line 95 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_ada6bcd52a09fdcb149587be4540433ac}\label{vf__colorconstancy_8c_ada6bcd52a09fdcb149587be4540433ac}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!GREY\_EDGE@{GREY\_EDGE}}
+\index{GREY\_EDGE@{GREY\_EDGE}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{GREY\_EDGE}{GREY\_EDGE}}
+{\footnotesize\ttfamily \#define G\+R\+E\+Y\+\_\+\+E\+D\+GE~\char`\"{}greyedge\char`\"{}}
+
+
+
+Definition at line 42 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a823aa5bebe4b4b836619cae12751b8a5}\label{vf__colorconstancy_8c_a823aa5bebe4b4b836619cae12751b8a5}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_DIR@{INDEX\_DIR}}
+\index{INDEX\_DIR@{INDEX\_DIR}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_DIR}{INDEX\_DIR}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+D\+IR~3}
+
+
+
+Definition at line 59 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a8575e46531f4ade71cdff437ccb5d913}\label{vf__colorconstancy_8c_a8575e46531f4ade71cdff437ccb5d913}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_DST@{INDEX\_DST}}
+\index{INDEX\_DST@{INDEX\_DST}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_DST}{INDEX\_DST}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+D\+ST~1}
+
+
+
+Definition at line 57 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a1956e78524bcd62209fad6429680b7f4}\label{vf__colorconstancy_8c_a1956e78524bcd62209fad6429680b7f4}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_DX@{INDEX\_DX}}
+\index{INDEX\_DX@{INDEX\_DX}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_DX}{INDEX\_DX}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+DX~1}
+
+
+
+Definition at line 52 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a8d8e264efde380b2e75e0d5bd9e23c18}\label{vf__colorconstancy_8c_a8d8e264efde380b2e75e0d5bd9e23c18}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_DXY@{INDEX\_DXY}}
+\index{INDEX\_DXY@{INDEX\_DXY}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_DXY}{INDEX\_DXY}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+D\+XY~3}
+
+
+
+Definition at line 54 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a4da04304549afd8aa4325c2eaa1ad5f6}\label{vf__colorconstancy_8c_a4da04304549afd8aa4325c2eaa1ad5f6}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_DY@{INDEX\_DY}}
+\index{INDEX\_DY@{INDEX\_DY}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_DY}{INDEX\_DY}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+DY~2}
+
+
+
+Definition at line 53 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a1f2fb57f6726f61ee372e70e8167cbd8}\label{vf__colorconstancy_8c_a1f2fb57f6726f61ee372e70e8167cbd8}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_NORM@{INDEX\_NORM}}
+\index{INDEX\_NORM@{INDEX\_NORM}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_NORM}{INDEX\_NORM}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+N\+O\+RM~\mbox{\hyperlink{vf__colorconstancy_8c_a1956e78524bcd62209fad6429680b7f4}{I\+N\+D\+E\+X\+\_\+\+DX}}}
+
+
+
+Definition at line 55 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a7dbdf288bd3fbcc3b4efc2cd135e363c}\label{vf__colorconstancy_8c_a7dbdf288bd3fbcc3b4efc2cd135e363c}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_ORD@{INDEX\_ORD}}
+\index{INDEX\_ORD@{INDEX\_ORD}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_ORD}{INDEX\_ORD}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+O\+RD~2}
+
+
+
+Definition at line 58 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_aa7dec7c97b993a8e6d889ff666a86d7d}\label{vf__colorconstancy_8c_aa7dec7c97b993a8e6d889ff666a86d7d}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_SRC@{INDEX\_SRC}}
+\index{INDEX\_SRC@{INDEX\_SRC}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_SRC}{INDEX\_SRC}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+S\+RC~0}
+
+
+
+Definition at line 56 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a55d3af17e4a92094e48022f54acbc37c}\label{vf__colorconstancy_8c_a55d3af17e4a92094e48022f54acbc37c}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDEX\_TEMP@{INDEX\_TEMP}}
+\index{INDEX\_TEMP@{INDEX\_TEMP}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDEX\_TEMP}{INDEX\_TEMP}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+X\+\_\+\+T\+E\+MP~0}
+
+
+
+Definition at line 51 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a5663c089d455065601c7d8e77b207f97}\label{vf__colorconstancy_8c_a5663c089d455065601c7d8e77b207f97}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!INDX2D@{INDX2D}}
+\index{INDX2D@{INDX2D}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{INDX2D}{INDX2D}}
+{\footnotesize\ttfamily \#define I\+N\+D\+X2D(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}},  }\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}} }\end{DoxyParamCaption})~( (\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $\ast$ (\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}) + (\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) )}
+
+
+
+Definition at line 233 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_aaf06a3762adb0aa04b8a5f8f016ca5e9}\label{vf__colorconstancy_8c_aaf06a3762adb0aa04b8a5f8f016ca5e9}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!MAX\_DATA@{MAX\_DATA}}
+\index{MAX\_DATA@{MAX\_DATA}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_DATA}{MAX\_DATA}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+D\+A\+TA~4}
+
+
+
+Definition at line 49 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_ad420b6f5c916391182689f09aaab3135}\label{vf__colorconstancy_8c_ad420b6f5c916391182689f09aaab3135}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!MAX\_DIFF\_ORD@{MAX\_DIFF\_ORD}}
+\index{MAX\_DIFF\_ORD@{MAX\_DIFF\_ORD}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_DIFF\_ORD}{MAX\_DIFF\_ORD}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+D\+I\+F\+F\+\_\+\+O\+RD~2}
+
+
+
+Definition at line 47 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a905b7a3b91de7205a3e885861006e7e2}\label{vf__colorconstancy_8c_a905b7a3b91de7205a3e885861006e7e2}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!MAX\_META\_DATA@{MAX\_META\_DATA}}
+\index{MAX\_META\_DATA@{MAX\_META\_DATA}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_META\_DATA}{MAX\_META\_DATA}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+M\+E\+T\+A\+\_\+\+D\+A\+TA~4}
+
+
+
+Definition at line 48 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a015f94555ae101091453e7bbea527259}\label{vf__colorconstancy_8c_a015f94555ae101091453e7bbea527259}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!NUM\_PLANES@{NUM\_PLANES}}
+\index{NUM\_PLANES@{NUM\_PLANES}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_PLANES}{NUM\_PLANES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+P\+L\+A\+N\+ES~3}
+
+
+
+Definition at line 46 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__colorconstancy_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}}, x)}
+
+
+
+Definition at line 92 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_ae42978afd835c3a1f70d409a1b5f5a39}\label{vf__colorconstancy_8c_ae42978afd835c3a1f70d409a1b5f5a39}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!SQRT3@{SQRT3}}
+\index{SQRT3@{SQRT3}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{SQRT3}{SQRT3}}
+{\footnotesize\ttfamily \#define S\+Q\+R\+T3~1.\+73205080757}
+
+
+
+Definition at line 44 of file vf\+\_\+colorconstancy.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a4180620683d0f41501c2a82b1c74ab55}\label{vf__colorconstancy_8c_a4180620683d0f41501c2a82b1c74ab55}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!ColorConstancyContext@{ColorConstancyContext}}
+\index{ColorConstancyContext@{ColorConstancyContext}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{ColorConstancyContext}{ColorConstancyContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}} \mbox{\hyperlink{struct_color_constancy_context}{Color\+Constancy\+Context}}}
+
+Common struct for all algorithms contexts. \mbox{\Hypertarget{vf__colorconstancy_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__colorconstancy_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+Used for passing data between threads. 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__colorconstancy_8c_abb911309faab3205dbd2adc3109cb9a4}\label{vf__colorconstancy_8c_abb911309faab3205dbd2adc3109cb9a4}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!chromatic\_adaptation@{chromatic\_adaptation}}
+\index{chromatic\_adaptation@{chromatic\_adaptation}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{chromatic\_adaptation()}{chromatic\_adaptation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} chromatic\+\_\+adaptation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Main control function for correcting scene illumination based on estimated illumination.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em in} & holds frame to correct \\
+\hline
+{\em out} & holds corrected frame \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 626 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_abb911309faab3205dbd2adc3109cb9a4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=290pt]{vf__colorconstancy_8c_abb911309faab3205dbd2adc3109cb9a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_ac0289207a73911ce01782d44c5c8d3a9}\label{vf__colorconstancy_8c_ac0289207a73911ce01782d44c5c8d3a9}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!cleanup\_derivative\_buffers@{cleanup\_derivative\_buffers}}
+\index{cleanup\_derivative\_buffers@{cleanup\_derivative\_buffers}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{cleanup\_derivative\_buffers()}{cleanup\_derivative\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} cleanup\+\_\+derivative\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+buff,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+planes }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Frees up buffers used by grey edge for storing derivatives final and intermidiate results. Number of buffers and number of planes for last buffer are given so it can be safely called at allocation failure instances.
+
+
+\begin{DoxyParams}{Parameters}
+{\em td} & holds the buffers. \\
+\hline
+{\em nb\+\_\+buff} & number of buffers to be freed. \\
+\hline
+{\em nb\+\_\+planes} & number of planes for last buffer to be freed. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 188 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_ac0289207a73911ce01782d44c5c8d3a9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_ab290697598353560db0c6e0131573103}\label{vf__colorconstancy_8c_ab290697598353560db0c6e0131573103}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!config\_props@{config\_props}}
+\index{config\_props@{config\_props}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{config\_props()}{config\_props()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+props (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 649 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_ab290697598353560db0c6e0131573103_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a197bdbe101c9811682363a49fd989108}\label{vf__colorconstancy_8c_a197bdbe101c9811682363a49fd989108}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!diagonal\_transformation@{diagonal\_transformation}}
+\index{diagonal\_transformation@{diagonal\_transformation}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{diagonal\_transformation()}{diagonal\_transformation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} diagonal\+\_\+transformation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Performs simple correction via diagonal transformation model.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em arg} & data to be passed between threads. \\
+\hline
+{\em jobnr} & current job nubmer. \\
+\hline
+{\em nb\+\_\+jobs} & total number of jobs.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0. 
+\end{DoxyReturn}
+
+
+Definition at line 591 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a197bdbe101c9811682363a49fd989108_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a197bdbe101c9811682363a49fd989108_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{vf__colorconstancy_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 677 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a6da4fdc0f5f45796d215e8ecde707d78}\label{vf__colorconstancy_8c_a6da4fdc0f5f45796d215e8ecde707d78}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!filter\_grey\_edge@{filter\_grey\_edge}}
+\index{filter\_grey\_edge@{filter\_grey\_edge}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{filter\_grey\_edge()}{filter\_grey\_edge()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+grey\+\_\+edge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Main control function for grey edge algorithm.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em in} & frame to perfrom grey edge on.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 in case of success, a negative value corresponding to an A\+V\+E\+R\+R\+OR code in case of failure. 
+\end{DoxyReturn}
+
+
+Definition at line 486 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a6da4fdc0f5f45796d215e8ecde707d78_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a6da4fdc0f5f45796d215e8ecde707d78_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_afb4c7f64671a07cde1a0e70a2d0498fb}\label{vf__colorconstancy_8c_afb4c7f64671a07cde1a0e70a2d0498fb}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!filter\_slice\_grey\_edge@{filter\_slice\_grey\_edge}}
+\index{filter\_slice\_grey\_edge@{filter\_slice\_grey\_edge}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice\_grey\_edge()}{filter\_slice\_grey\_edge()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice\+\_\+grey\+\_\+edge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\hyperlink{struct_slice}{Slice}} function for grey edge algorithm that does partial summing/maximizing of gaussian derivatives.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em arg} & data to be passed between threads. \\
+\hline
+{\em jobnr} & current job nubmer. \\
+\hline
+{\em nb\+\_\+jobs} & total number of jobs.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0. 
+\end{DoxyReturn}
+
+
+Definition at line 437 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_afb4c7f64671a07cde1a0e70a2d0498fb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_afb4c7f64671a07cde1a0e70a2d0498fb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a0748ac837c9e0d72f749c6248474856d}\label{vf__colorconstancy_8c_a0748ac837c9e0d72f749c6248474856d}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!get\_deriv@{get\_deriv}}
+\index{get\_deriv@{get\_deriv}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{get\_deriv()}{get\_deriv()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} get\+\_\+deriv (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ord,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dir,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dim,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+threads }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Utility function for setting up differentiation data/metadata.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em td} & to be used for passing data between threads. \\
+\hline
+{\em ord} & ord of differentiation. \\
+\hline
+{\em dir} & direction of differentiation. \\
+\hline
+{\em src} & index of source used for differentiation. \\
+\hline
+{\em dst} & index destination used for saving differentiation result. \\
+\hline
+{\em dim} & maximum dimension in current direction. \\
+\hline
+{\em nb\+\_\+threads} & number of threads to use. \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 363 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a0748ac837c9e0d72f749c6248474856d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a0748ac837c9e0d72f749c6248474856d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_aa3db9a46971f59c126ee3f13e9b23c36}\label{vf__colorconstancy_8c_aa3db9a46971f59c126ee3f13e9b23c36}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!get\_derivative@{get\_derivative}}
+\index{get\_derivative@{get\_derivative}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{get\_derivative()}{get\_derivative()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+derivative (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Main control function for calculating gaussian derivatives.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em td} & holds the buffers used for storing results.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 in case of success, a negative value corresponding to an A\+V\+E\+R\+R\+OR code in case of failure. 
+\end{DoxyReturn}
+
+
+Definition at line 381 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_aa3db9a46971f59c126ee3f13e9b23c36_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_aa3db9a46971f59c126ee3f13e9b23c36_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_ad8c58a5cea6f425e9c0ba94afd9d4200}\label{vf__colorconstancy_8c_ad8c58a5cea6f425e9c0ba94afd9d4200}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!illumination\_estimation@{illumination\_estimation}}
+\index{illumination\_estimation@{illumination\_estimation}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{illumination\_estimation()}{illumination\_estimation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} illumination\+\_\+estimation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Redirects to corresponding algorithm estimation function and performs normalization after estimation.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em in} & frame to perfrom estimation on.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 in case of success, a negative value corresponding to an A\+V\+E\+R\+R\+OR code in case of failure. 
+\end{DoxyReturn}
+
+
+Definition at line 565 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_ad8c58a5cea6f425e9c0ba94afd9d4200_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{vf__colorconstancy_8c_ad8c58a5cea6f425e9c0ba94afd9d4200_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a32a3d205eb2d1c79111654141491f89f}\label{vf__colorconstancy_8c_a32a3d205eb2d1c79111654141491f89f}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!normalize\_light@{normalize\_light}}
+\index{normalize\_light@{normalize\_light}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{normalize\_light()}{normalize\_light()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} normalize\+\_\+light (\begin{DoxyParamCaption}\item[{double $\ast$}]{light }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Normalizes estimated illumination since only illumination vector direction is required for color constancy.
+
+
+\begin{DoxyParams}{Parameters}
+{\em light} & the estimated illumination to be normalized in place \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 534 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a32a3d205eb2d1c79111654141491f89f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__colorconstancy_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 637 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__colorconstancy_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_ab688f8c440c3040d7d109dd6582626f2}\label{vf__colorconstancy_8c_ab688f8c440c3040d7d109dd6582626f2}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!set\_gauss@{set\_gauss}}
+\index{set\_gauss@{set\_gauss}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{set\_gauss()}{set\_gauss()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} set\+\_\+gauss (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Sets gauss filters used for calculating gauss derivatives. Filter size depends on sigma which is a user option hence we calculate these filters each time. Also each higher order depends on lower ones. Sigma can be zero only at difford = 0, then we only convert data to double instead.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 in case of success, a negative value corresponding to an A\+V\+E\+R\+R\+OR code in case of failure. 
+\end{DoxyReturn}
+
+
+Definition at line 109 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_ab688f8c440c3040d7d109dd6582626f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{vf__colorconstancy_8c_ab688f8c440c3040d7d109dd6582626f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a6a2ed522b247f3a752ca0b0f08d01c4f}\label{vf__colorconstancy_8c_a6a2ed522b247f3a752ca0b0f08d01c4f}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!setup\_derivative\_buffers@{setup\_derivative\_buffers}}
+\index{setup\_derivative\_buffers@{setup\_derivative\_buffers}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{setup\_derivative\_buffers()}{setup\_derivative\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} setup\+\_\+derivative\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_thread_data}{Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Allocates buffers used by grey edge for storing derivatives final and intermidiate results.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em td} & holds the buffers.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 in case of success, a negative value corresponding to an A\+V\+E\+R\+R\+OR code in case of failure. 
+\end{DoxyReturn}
+
+
+Definition at line 213 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a6a2ed522b247f3a752ca0b0f08d01c4f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a6a2ed522b247f3a752ca0b0f08d01c4f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_adcb274317bc47e4c2265c042afd16777}\label{vf__colorconstancy_8c_adcb274317bc47e4c2265c042afd16777}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!slice\_get\_derivative@{slice\_get\_derivative}}
+\index{slice\_get\_derivative@{slice\_get\_derivative}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{slice\_get\_derivative()}{slice\_get\_derivative()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} slice\+\_\+get\+\_\+derivative (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\hyperlink{struct_slice}{Slice}} calculation of gaussian derivatives. Applies 1-\/D gaussian derivative filter either horizontally or vertically according to meta data given in thread data. When convoluting horizontally source is always the in frame withing thread data while when convoluting vertically source is a buffer.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em arg} & data to be passed between threads. \\
+\hline
+{\em jobnr} & current job nubmer. \\
+\hline
+{\em nb\+\_\+jobs} & total number of jobs.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0. 
+\end{DoxyReturn}
+Applying gauss horizontally along each row
+
+Applying gauss vertically along each column
+
+Definition at line 249 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_adcb274317bc47e4c2265c042afd16777_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_adcb274317bc47e4c2265c042afd16777_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a82fb0bfa838a6d7077582a243df4aa7e}\label{vf__colorconstancy_8c_a82fb0bfa838a6d7077582a243df4aa7e}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!slice\_normalize@{slice\_normalize}}
+\index{slice\_normalize@{slice\_normalize}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{slice\_normalize()}{slice\_normalize()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} slice\+\_\+normalize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\hyperlink{struct_slice}{Slice}} Frobius normalization of gaussian derivatives. Only called for difford values of 1 or 2.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ctx} & the filter context. \\
+\hline
+{\em arg} & data to be passed between threads. \\
+\hline
+{\em jobnr} & current job nubmer. \\
+\hline
+{\em nb\+\_\+jobs} & total number of jobs.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0. 
+\end{DoxyReturn}
+
+
+Definition at line 317 of file vf\+\_\+colorconstancy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a82fb0bfa838a6d7077582a243df4aa7e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__colorconstancy_8c_a82fb0bfa838a6d7077582a243df4aa7e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__colorconstancy_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__colorconstancy_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 710 of file vf\+\_\+colorconstancy.\+c.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__colorconstancy_8c_a0543f05d5a62f99ea7a4aeb28de204db}\label{vf__colorconstancy_8c_a0543f05d5a62f99ea7a4aeb28de204db}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!colorconstancy\_inputs@{colorconstancy\_inputs}}
+\index{colorconstancy\_inputs@{colorconstancy\_inputs}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{colorconstancy\_inputs}{colorconstancy\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} colorconstancy\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__colorconstancy_8c_ab290697598353560db0c6e0131573103}{config\_props}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__colorconstancy_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 721 of file vf\+\_\+colorconstancy.\+c.
+
+\mbox{\Hypertarget{vf__colorconstancy_8c_a98b12828eeebca789ec2b574c33768b3}\label{vf__colorconstancy_8c_a98b12828eeebca789ec2b574c33768b3}} 
+\index{vf\_colorconstancy.c@{vf\_colorconstancy.c}!colorconstancy\_outputs@{colorconstancy\_outputs}}
+\index{colorconstancy\_outputs@{colorconstancy\_outputs}!vf\_colorconstancy.c@{vf\_colorconstancy.c}}
+\doxysubsubsection{\texorpdfstring{colorconstancy\_outputs}{colorconstancy\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} colorconstancy\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 731 of file vf\+\_\+colorconstancy.\+c.
+

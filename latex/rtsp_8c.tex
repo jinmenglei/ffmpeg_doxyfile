@@ -1,0 +1,488 @@
+\hypertarget{rtsp_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/rtsp.c File Reference}
+\label{rtsp_8c}\index{E:/github/ffmpeg/libavformat/rtsp.c@{E:/github/ffmpeg/libavformat/rtsp.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/base64.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/random\+\_\+seed.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/dict.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}network.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}os\+\_\+support.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}http.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtpdec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtpproto.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rdt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtpdec\+\_\+formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtpenc\+\_\+chain.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}url.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtpenc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpegts.\+h\char`\"{}}\newline
+Include dependency graph for rtsp.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_ad2f0c150b8b76747dae68b2b70d6f056}{R\+E\+A\+D\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+S}}~10
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_acf152fa567a54073a800111f253446e7}{R\+E\+C\+V\+B\+U\+F\+\_\+\+S\+I\+ZE}}~10 $\ast$ \mbox{\hyperlink{rtpdec_8h_a80755d15d966f6acf7580005fb9bc679}{R\+T\+P\+\_\+\+M\+A\+X\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+L\+E\+N\+G\+TH}}
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_a35888befe0c20bd3033cb9a65f0b285e}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+O\+R\+D\+E\+R\+I\+N\+G\+\_\+\+D\+E\+L\+AY}}~100000
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_r_t_s_p_state}{R\+T\+S\+P\+State}}, x)
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{D\+EC}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{E\+NC}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}{R\+T\+S\+P\+\_\+\+F\+L\+A\+G\+\_\+\+O\+P\+TS}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  longname)
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}{R\+T\+S\+P\+\_\+\+M\+E\+D\+I\+A\+T\+Y\+P\+E\+\_\+\+O\+P\+TS}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  longname)
+\item 
+\#define \mbox{\hyperlink{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}{C\+O\+M\+M\+O\+N\+\_\+\+O\+P\+TS}}()
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$ \mbox{\hyperlink{rtsp_8c_ad4c0afd50ac138649f86b104b18f7bd0}{map\+\_\+to\+\_\+opts}} (\mbox{\hyperlink{struct_r_t_s_p_state}{R\+T\+S\+P\+State}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_a357e03ff5befb5eba95fd96eb9f89bac}{get\+\_\+word\+\_\+until\+\_\+chars}} (char $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, const char $\ast$sep, const char $\ast$$\ast$pp)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_a8eef705438b32027473cc6ca56d06edb}{get\+\_\+word\+\_\+sep}} (char $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, const char $\ast$sep, const char $\ast$$\ast$pp)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_aa0b3b6e3b386d29dc34e9b843f568b3a}{get\+\_\+word}} (char $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, const char $\ast$$\ast$pp)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_a776067d16f5fa3939b68fb15c59789f4}{rtsp\+\_\+parse\+\_\+range\+\_\+npt}} (const char $\ast$p, int64\+\_\+t $\ast$start, int64\+\_\+t $\ast$\mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtsp_8c_aa2c0a7500c737610184006220e13296c}{get\+\_\+sockaddr}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$buf, struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$sock)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_adf7b45546debfc6eafed89457abe3246}{ff\+\_\+rtsp\+\_\+undo\+\_\+setup}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} send\+\_\+packets)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtsp_8c_ac5e9014884b3cac6ec91568abeeced8f}{ff\+\_\+rtsp\+\_\+close\+\_\+streams}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtsp_8c_a633e991e457ccdf175c2c21764d23983}{ff\+\_\+rtsp\+\_\+open\+\_\+transport\+\_\+ctx}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_s_p_stream}{R\+T\+S\+P\+Stream}} $\ast$rtsp\+\_\+st)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{rtsp_8c_aaf1b93ea79e284cf87f9f12450685d9c}{ff\+\_\+rtsp\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{rtsp_8c_a3112f8257e6f51bcc36f12757dabf15f}{sdp\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{rtsp_8c_a99094dd6cb92f99ea2699c2c8c9c1abc}{rtp\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}\label{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}} 
+\index{rtsp.c@{rtsp.c}!COMMON\_OPTS@{COMMON\_OPTS}}
+\index{COMMON\_OPTS@{COMMON\_OPTS}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{COMMON\_OPTS}{COMMON\_OPTS}}
+{\footnotesize\ttfamily \#define C\+O\+M\+M\+O\+N\+\_\+\+O\+P\+TS(\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}reorder\_queue\_size"{}}, \textcolor{stringliteral}{"{}set number of packets to buffer for handling of reordered packets"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(reordering\_queue\_size), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}buffer\_size"{}},        \textcolor{stringliteral}{"{}Underlying protocol send/receive buffer size"{}},                  \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(buffer\_size),           \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}pkt\_size"{}},           \textcolor{stringliteral}{"{}Underlying protocol send packet size"{}},                          \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(pkt\_size),              \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, INT\_MAX, \mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}} \} \(\backslash\)}
+
+\end{DoxyCode}
+
+
+Definition at line 74 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}\label{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}} 
+\index{rtsp.c@{rtsp.c}!DEC@{DEC}}
+\index{DEC@{DEC}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{DEC}{DEC}}
+{\footnotesize\ttfamily \#define D\+EC~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 60 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_a35888befe0c20bd3033cb9a65f0b285e}\label{rtsp_8c_a35888befe0c20bd3033cb9a65f0b285e}} 
+\index{rtsp.c@{rtsp.c}!DEFAULT\_REORDERING\_DELAY@{DEFAULT\_REORDERING\_DELAY}}
+\index{DEFAULT\_REORDERING\_DELAY@{DEFAULT\_REORDERING\_DELAY}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_REORDERING\_DELAY}{DEFAULT\_REORDERING\_DELAY}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+O\+R\+D\+E\+R\+I\+N\+G\+\_\+\+D\+E\+L\+AY~100000}
+
+
+
+Definition at line 57 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}\label{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}} 
+\index{rtsp.c@{rtsp.c}!ENC@{ENC}}
+\index{ENC@{ENC}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{ENC}{ENC}}
+{\footnotesize\ttfamily \#define E\+NC~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 61 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{rtsp.c@{rtsp.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_r_t_s_p_state}{R\+T\+S\+P\+State}}, x)}
+
+
+
+Definition at line 59 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_ad2f0c150b8b76747dae68b2b70d6f056}\label{rtsp_8c_ad2f0c150b8b76747dae68b2b70d6f056}} 
+\index{rtsp.c@{rtsp.c}!READ\_PACKET\_TIMEOUT\_S@{READ\_PACKET\_TIMEOUT\_S}}
+\index{READ\_PACKET\_TIMEOUT\_S@{READ\_PACKET\_TIMEOUT\_S}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{READ\_PACKET\_TIMEOUT\_S}{READ\_PACKET\_TIMEOUT\_S}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+S~10}
+
+
+
+Definition at line 55 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_acf152fa567a54073a800111f253446e7}\label{rtsp_8c_acf152fa567a54073a800111f253446e7}} 
+\index{rtsp.c@{rtsp.c}!RECVBUF\_SIZE@{RECVBUF\_SIZE}}
+\index{RECVBUF\_SIZE@{RECVBUF\_SIZE}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{RECVBUF\_SIZE}{RECVBUF\_SIZE}}
+{\footnotesize\ttfamily \#define R\+E\+C\+V\+B\+U\+F\+\_\+\+S\+I\+ZE~10 $\ast$ \mbox{\hyperlink{rtpdec_8h_a80755d15d966f6acf7580005fb9bc679}{R\+T\+P\+\_\+\+M\+A\+X\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+L\+E\+N\+G\+TH}}}
+
+
+
+Definition at line 56 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}\label{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}} 
+\index{rtsp.c@{rtsp.c}!RTSP\_FLAG\_OPTS@{RTSP\_FLAG\_OPTS}}
+\index{RTSP\_FLAG\_OPTS@{RTSP\_FLAG\_OPTS}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{RTSP\_FLAG\_OPTS}{RTSP\_FLAG\_OPTS}}
+{\footnotesize\ttfamily \#define R\+T\+S\+P\+\_\+\+F\+L\+A\+G\+\_\+\+O\+P\+TS(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{longname }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, longname, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(rtsp\_flags), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a7aaeee142b88a3078ddc57c644b49a7e}{AV\_OPT\_TYPE\_FLAGS}}, \{.i64 = 0\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}filter\_src"{}}, \textcolor{stringliteral}{"{}only receive packets from the negotiated peer IP"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_a46994c09b7dd8808cd465c5681d03579}{RTSP\_FLAG\_FILTER\_SRC}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \}}
+
+\end{DoxyCode}
+
+
+Definition at line 63 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}\label{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}} 
+\index{rtsp.c@{rtsp.c}!RTSP\_MEDIATYPE\_OPTS@{RTSP\_MEDIATYPE\_OPTS}}
+\index{RTSP\_MEDIATYPE\_OPTS@{RTSP\_MEDIATYPE\_OPTS}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{RTSP\_MEDIATYPE\_OPTS}{RTSP\_MEDIATYPE\_OPTS}}
+{\footnotesize\ttfamily \#define R\+T\+S\+P\+\_\+\+M\+E\+D\+I\+A\+T\+Y\+P\+E\+\_\+\+O\+P\+TS(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{longname }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, longname, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(media\_type\_mask), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a7aaeee142b88a3078ddc57c644b49a7e}{AV\_OPT\_TYPE\_FLAGS}}, \{ .i64 = (1 << (\mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48aa64a67386a9c53360744b86e4707b831}{AVMEDIA\_TYPE\_SUBTITLE}}+1)) -\/ 1 \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}allowed\_media\_types"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}video"{}}, \textcolor{stringliteral}{"{}Video"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}allowed\_media\_types"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}audio"{}}, \textcolor{stringliteral}{"{}Audio"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}allowed\_media\_types"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}data"{}}, \textcolor{stringliteral}{"{}Data"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ae3df4d77c6908fb626293c2fed215d52}{AVMEDIA\_TYPE\_DATA}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}allowed\_media\_types"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}subtitle"{}}, \textcolor{stringliteral}{"{}Subtitle"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48aa64a67386a9c53360744b86e4707b831}{AVMEDIA\_TYPE\_SUBTITLE}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}allowed\_media\_types"{}} \}}
+
+\end{DoxyCode}
+
+
+Definition at line 67 of file rtsp.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{rtsp_8c_ac5e9014884b3cac6ec91568abeeced8f}\label{rtsp_8c_ac5e9014884b3cac6ec91568abeeced8f}} 
+\index{rtsp.c@{rtsp.c}!ff\_rtsp\_close\_streams@{ff\_rtsp\_close\_streams}}
+\index{ff\_rtsp\_close\_streams@{ff\_rtsp\_close\_streams}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rtsp\_close\_streams()}{ff\_rtsp\_close\_streams()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+rtsp\+\_\+close\+\_\+streams (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})}
+
+Close and free all streams within the R\+T\+SP (de)muxer
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & R\+T\+SP (de)muxer context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 762 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_ac5e9014884b3cac6ec91568abeeced8f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=321pt]{rtsp_8c_ac5e9014884b3cac6ec91568abeeced8f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_a633e991e457ccdf175c2c21764d23983}\label{rtsp_8c_a633e991e457ccdf175c2c21764d23983}} 
+\index{rtsp.c@{rtsp.c}!ff\_rtsp\_open\_transport\_ctx@{ff\_rtsp\_open\_transport\_ctx}}
+\index{ff\_rtsp\_open\_transport\_ctx@{ff\_rtsp\_open\_transport\_ctx}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rtsp\_open\_transport\_ctx()}{ff\_rtsp\_open\_transport\_ctx()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+rtsp\+\_\+open\+\_\+transport\+\_\+ctx (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_s_p_stream}{R\+T\+S\+P\+Stream}} $\ast$}]{rtsp\+\_\+st }\end{DoxyParamCaption})}
+
+Open R\+T\+SP transport context. 
+
+Definition at line 798 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{rtsp_8c_a633e991e457ccdf175c2c21764d23983_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_a633e991e457ccdf175c2c21764d23983_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_adf7b45546debfc6eafed89457abe3246}\label{rtsp_8c_adf7b45546debfc6eafed89457abe3246}} 
+\index{rtsp.c@{rtsp.c}!ff\_rtsp\_undo\_setup@{ff\_rtsp\_undo\_setup}}
+\index{ff\_rtsp\_undo\_setup@{ff\_rtsp\_undo\_setup}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rtsp\_undo\_setup()}{ff\_rtsp\_undo\_setup()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+rtsp\+\_\+undo\+\_\+setup (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{send\+\_\+packets }\end{DoxyParamCaption})}
+
+Undo the effect of ff\+\_\+rtsp\+\_\+make\+\_\+setup\+\_\+request, close the transport\+\_\+priv and rtp\+\_\+handle fields. 
+
+Definition at line 730 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_adf7b45546debfc6eafed89457abe3246_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_adf7b45546debfc6eafed89457abe3246_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_aa2c0a7500c737610184006220e13296c}\label{rtsp_8c_aa2c0a7500c737610184006220e13296c}} 
+\index{rtsp.c@{rtsp.c}!get\_sockaddr@{get\_sockaddr}}
+\index{get\_sockaddr@{get\_sockaddr}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{get\_sockaddr()}{get\_sockaddr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+sockaddr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{buf,  }\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{sock }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 199 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_aa0b3b6e3b386d29dc34e9b843f568b3a}\label{rtsp_8c_aa0b3b6e3b386d29dc34e9b843f568b3a}} 
+\index{rtsp.c@{rtsp.c}!get\_word@{get\_word}}
+\index{get\_word@{get\_word}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{get\_word()}{get\_word()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+word (\begin{DoxyParamCaption}\item[{char $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{const char $\ast$$\ast$}]{pp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 168 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{rtsp_8c_aa0b3b6e3b386d29dc34e9b843f568b3a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_a8eef705438b32027473cc6ca56d06edb}\label{rtsp_8c_a8eef705438b32027473cc6ca56d06edb}} 
+\index{rtsp.c@{rtsp.c}!get\_word\_sep@{get\_word\_sep}}
+\index{get\_word\_sep@{get\_word\_sep}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{get\_word\_sep()}{get\_word\_sep()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+word\+\_\+sep (\begin{DoxyParamCaption}\item[{char $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{const char $\ast$}]{sep,  }\item[{const char $\ast$$\ast$}]{pp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 161 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{rtsp_8c_a8eef705438b32027473cc6ca56d06edb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=303pt]{rtsp_8c_a8eef705438b32027473cc6ca56d06edb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_a357e03ff5befb5eba95fd96eb9f89bac}\label{rtsp_8c_a357e03ff5befb5eba95fd96eb9f89bac}} 
+\index{rtsp.c@{rtsp.c}!get\_word\_until\_chars@{get\_word\_until\_chars}}
+\index{get\_word\_until\_chars@{get\_word\_until\_chars}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{get\_word\_until\_chars()}{get\_word\_until\_chars()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+word\+\_\+until\+\_\+chars (\begin{DoxyParamCaption}\item[{char $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{const char $\ast$}]{sep,  }\item[{const char $\ast$$\ast$}]{pp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 142 of file rtsp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_a357e03ff5befb5eba95fd96eb9f89bac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_ad4c0afd50ac138649f86b104b18f7bd0}\label{rtsp_8c_ad4c0afd50ac138649f86b104b18f7bd0}} 
+\index{rtsp.c@{rtsp.c}!map\_to\_opts@{map\_to\_opts}}
+\index{map\_to\_opts@{map\_to\_opts}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{map\_to\_opts()}{map\_to\_opts()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}}$\ast$ map\+\_\+to\+\_\+opts (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_s_p_state}{R\+T\+S\+P\+State}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 129 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_ad4c0afd50ac138649f86b104b18f7bd0_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtsp_8c_a776067d16f5fa3939b68fb15c59789f4}\label{rtsp_8c_a776067d16f5fa3939b68fb15c59789f4}} 
+\index{rtsp.c@{rtsp.c}!rtsp\_parse\_range\_npt@{rtsp\_parse\_range\_npt}}
+\index{rtsp\_parse\_range\_npt@{rtsp\_parse\_range\_npt}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{rtsp\_parse\_range\_npt()}{rtsp\_parse\_range\_npt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} rtsp\+\_\+parse\+\_\+range\+\_\+npt (\begin{DoxyParamCaption}\item[{const char $\ast$}]{p,  }\item[{int64\+\_\+t $\ast$}]{start,  }\item[{int64\+\_\+t $\ast$}]{end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Parse a string p in the form of \mbox{\hyperlink{struct_range}{Range}}\+:npt=xx-\/xx, and determine the start and end time. Used for seeking in the rtp stream. 
+
+Definition at line 177 of file rtsp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtsp_8c_a776067d16f5fa3939b68fb15c59789f4_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{rtsp_8c_aaf1b93ea79e284cf87f9f12450685d9c}\label{rtsp_8c_aaf1b93ea79e284cf87f9f12450685d9c}} 
+\index{rtsp.c@{rtsp.c}!ff\_rtsp\_options@{ff\_rtsp\_options}}
+\index{ff\_rtsp\_options@{ff\_rtsp\_options}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rtsp\_options}{ff\_rtsp\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} ff\+\_\+rtsp\+\_\+options\mbox{[}$\,$\mbox{]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}initial\_pause"{}},  \textcolor{stringliteral}{"{}do not start playing the stream immediately"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(initial\_pause), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{rtpenc_8h_a66db049c0c19d5a007b5b2387df2fb59}{FF\_RTP\_FLAG\_OPTS}}(\mbox{\hyperlink{struct_r_t_s_p_state}{RTSPState}}, rtp\_muxer\_flags),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}rtsp\_transport"{}}, \textcolor{stringliteral}{"{}set RTSP transport protocols"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(lower\_transport\_mask), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a7aaeee142b88a3078ddc57c644b49a7e}{AV\_OPT\_TYPE\_FLAGS}}, \{.i64 = 0\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \}, }
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}udp"{}}, \textcolor{stringliteral}{"{}UDP"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{rtsp_8h_a7d32a74979e7e6f60215f11789b3e02eab31d84d023a1ff6f491af197a446bba7}{RTSP\_LOWER\_TRANSPORT\_UDP}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \}, }
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}tcp"{}}, \textcolor{stringliteral}{"{}TCP"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{rtsp_8h_a7d32a74979e7e6f60215f11789b3e02ea365e39b94c7df02faa14d371d49a6a9b}{RTSP\_LOWER\_TRANSPORT\_TCP}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \}, }
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}udp\_multicast"{}}, \textcolor{stringliteral}{"{}UDP multicast"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 1 << \mbox{\hyperlink{rtsp_8h_a7d32a74979e7e6f60215f11789b3e02ea89dd2ec02679eec3d7de20a8aa33f022}{RTSP\_LOWER\_TRANSPORT\_UDP\_MULTICAST}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}http"{}}, \textcolor{stringliteral}{"{}HTTP tunneling"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = (1 << \mbox{\hyperlink{rtsp_8h_a7d32a74979e7e6f60215f11789b3e02ea706f6aa9ea694574e614b98668c6020d}{RTSP\_LOWER\_TRANSPORT\_HTTP}})\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}https"{}}, \textcolor{stringliteral}{"{}HTTPS tunneling"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = (1 << \mbox{\hyperlink{rtsp_8h_a7d32a74979e7e6f60215f11789b3e02eacea74c21d70d550a05f72f360e0469f3}{RTSP\_LOWER\_TRANSPORT\_HTTPS}} )\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_transport"{}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}{RTSP\_FLAG\_OPTS}}(\textcolor{stringliteral}{"{}rtsp\_flags"{}}, \textcolor{stringliteral}{"{}set RTSP flags"{}}),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}listen"{}}, \textcolor{stringliteral}{"{}wait for incoming connections"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_a0b675c0bfcc535a4d46e0ddddd41d0be}{RTSP\_FLAG\_LISTEN}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}prefer\_tcp"{}}, \textcolor{stringliteral}{"{}try RTP via TCP first, if available"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_aa54d7b5c5ac9c514381ce704895b98f0}{RTSP\_FLAG\_PREFER\_TCP}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}{RTSP\_MEDIATYPE\_OPTS}}(\textcolor{stringliteral}{"{}allowed\_media\_types"{}}, \textcolor{stringliteral}{"{}set media types to accept from the server"{}}),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}min\_port"{}}, \textcolor{stringliteral}{"{}set minimum local UDP port"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(rtp\_port\_min), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_a91b600bbc7a0c152acb34978645053f1}{RTSP\_RTP\_PORT\_MIN}}\}, 0, 65535, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}max\_port"{}}, \textcolor{stringliteral}{"{}set maximum local UDP port"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(rtp\_port\_max), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_ae4badedde32abf540b13841824738b53}{RTSP\_RTP\_PORT\_MAX}}\}, 0, 65535, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtsp_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}listen\_timeout"{}}, \textcolor{stringliteral}{"{}set maximum timeout (in seconds) to wait for incoming connections (-\/1 is infinite, imply flag listen)"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(initial\_timeout), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/1\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}timeout"{}}, \textcolor{stringliteral}{"{}set timeout (in microseconds) of socket TCP I/O operations"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(stimeout), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}{COMMON\_OPTS}}(),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}user\_agent"{}}, \textcolor{stringliteral}{"{}override User-\/Agent header"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(user\_agent), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{libavformat_2version_8h_a052e19399c636f5fe37639a6625f03ae}{LIBAVFORMAT\_IDENT}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 80 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_a99094dd6cb92f99ea2699c2c8c9c1abc}\label{rtsp_8c_a99094dd6cb92f99ea2699c2c8c9c1abc}} 
+\index{rtsp.c@{rtsp.c}!rtp\_options@{rtp\_options}}
+\index{rtp\_options@{rtp\_options}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{rtp\_options}{rtp\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} rtp\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}{RTSP\_FLAG\_OPTS}}(\textcolor{stringliteral}{"{}rtp\_flags"{}}, \textcolor{stringliteral}{"{}set RTP flags"{}}),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}listen\_timeout"{}}, \textcolor{stringliteral}{"{}set maximum timeout (in seconds) to wait for incoming connections"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(initial\_timeout), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{rtsp_8c_ad2f0c150b8b76747dae68b2b70d6f056}{READ\_PACKET\_TIMEOUT\_S}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}{RTSP\_MEDIATYPE\_OPTS}}(\textcolor{stringliteral}{"{}allowed\_media\_types"{}}, \textcolor{stringliteral}{"{}set media types to accept from the server"{}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}{COMMON\_OPTS}}(),}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 120 of file rtsp.\+c.
+
+\mbox{\Hypertarget{rtsp_8c_a3112f8257e6f51bcc36f12757dabf15f}\label{rtsp_8c_a3112f8257e6f51bcc36f12757dabf15f}} 
+\index{rtsp.c@{rtsp.c}!sdp\_options@{sdp\_options}}
+\index{sdp\_options@{sdp\_options}!rtsp.c@{rtsp.c}}
+\doxysubsubsection{\texorpdfstring{sdp\_options}{sdp\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} sdp\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_ad46435a3674358d2e353a2302b551bc2}{RTSP\_FLAG\_OPTS}}(\textcolor{stringliteral}{"{}sdp\_flags"{}}, \textcolor{stringliteral}{"{}SDP flags"{}}),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}custom\_io"{}}, \textcolor{stringliteral}{"{}use custom I/O"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_a62a62d3e6bc3330ff73eaf75ce58983c}{RTSP\_FLAG\_CUSTOM\_IO}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}rtcp\_to\_source"{}}, \textcolor{stringliteral}{"{}send RTCP packets to the source address of received packets"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{rtsp_8h_af8949331f111bfb7dca5b1ba9183412e}{RTSP\_FLAG\_RTCP\_TO\_SOURCE}}\}, 0, 0, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtsp\_flags"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}listen\_timeout"{}}, \textcolor{stringliteral}{"{}set maximum timeout (in seconds) to wait for incoming connections"{}}, \mbox{\hyperlink{rtsp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(initial\_timeout), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{rtsp_8c_ad2f0c150b8b76747dae68b2b70d6f056}{READ\_PACKET\_TIMEOUT\_S}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtsp_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_aedd5396aa925b74620978cd0d643a5ee}{RTSP\_MEDIATYPE\_OPTS}}(\textcolor{stringliteral}{"{}allowed\_media\_types"{}}, \textcolor{stringliteral}{"{}set media types to accept from the server"{}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{rtsp_8c_a82f6664c40970a5f062fbd31805f7eee}{COMMON\_OPTS}}(),}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 110 of file rtsp.\+c.
+

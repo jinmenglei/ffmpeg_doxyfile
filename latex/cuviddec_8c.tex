@@ -1,0 +1,492 @@
+\hypertarget{cuviddec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/cuviddec.c File Reference}
+\label{cuviddec_8c}\index{E:/github/ffmpeg/libavcodec/cuviddec.c@{E:/github/ffmpeg/libavcodec/cuviddec.c}}
+{\ttfamily \#include \char`\"{}compat/cuda/dynlink\+\_\+loader.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/buffer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/hwcontext.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/hwcontext\+\_\+cuda\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/cuda\+\_\+check.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/fifo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/log.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}decode.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}hwconfig.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}nvdec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for cuviddec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_cuvid_parsed_frame}{Cuvid\+Parsed\+Frame}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_a6c13ba7f37b47f1053998edb6de66707}{cuda\+Video\+Surface\+Format\+\_\+\+Y\+U\+V444}}~2
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_ae6245e751a2cb4cbb0c5dea0b5b96711}{cuda\+Video\+Surface\+Format\+\_\+\+Y\+U\+V444\+\_\+16\+Bit}}~3
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_aabb147a1f2a98d37cb3ce0dd6d50b78d}{C\+H\+E\+C\+K\+\_\+\+CU}}(x)~\mbox{\hyperlink{cuda__check_8h_a29c978727249e3ffebebe7e5c93511da}{F\+F\+\_\+\+C\+U\+D\+A\+\_\+\+C\+H\+E\+C\+K\+\_\+\+DL}}(avctx, \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/$>$cudl, x)
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{cuviddec_8c_ad9f0ce453f36bcded45b8ef1c9a3f2cc}{D\+E\+F\+I\+N\+E\+\_\+\+C\+U\+V\+I\+D\+\_\+\+C\+O\+D\+EC}}(x,  \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}},  bsf\+\_\+name)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}} \mbox{\hyperlink{cuviddec_8c_a34e7809113a8fc57ac40b950e0b2e9e9}{Cuvid\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_cuvid_parsed_frame}{Cuvid\+Parsed\+Frame}} \mbox{\hyperlink{cuviddec_8c_acf858ae6e08ceaa6bd5e1b1fc73a6411}{Cuvid\+Parsed\+Frame}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI \mbox{\hyperlink{cuviddec_8c_ab6399e99afbfdf9f0ea61f19225d05f4}{cuvid\+\_\+handle\+\_\+video\+\_\+sequence}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$opaque, C\+U\+V\+I\+D\+E\+O\+F\+O\+R\+M\+AT $\ast$\mbox{\hyperlink{filter__design_8txt_a7d537039ea0e18164d9edb0b5ca984dd}{format}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI \mbox{\hyperlink{cuviddec_8c_a0ee6c9c42169709635f6d26d49ebf7b0}{cuvid\+\_\+handle\+\_\+picture\+\_\+decode}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$opaque, C\+U\+V\+I\+D\+P\+I\+C\+P\+A\+R\+A\+MS $\ast$picparams)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI \mbox{\hyperlink{cuviddec_8c_a8753c8093c9b4b524ca54e452049c6d2}{cuvid\+\_\+handle\+\_\+picture\+\_\+display}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$opaque, C\+U\+V\+I\+D\+P\+A\+R\+S\+E\+R\+D\+I\+S\+P\+I\+N\+FO $\ast$dispinfo)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_af324391f20c02b7e33b8e200a6bc1021}{cuvid\+\_\+is\+\_\+buffer\+\_\+full}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_a03a32c5df9ba9785e774cbf499ce01f0}{cuvid\+\_\+decode\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8}{cuvid\+\_\+output\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_a6b1aa3d52a688982e33f3e048ffce07a}{cuvid\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42}{cuvid\+\_\+decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_a77a3088ebff83e56e8345e0a895de5c2}{cuvid\+\_\+test\+\_\+capabilities}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const C\+U\+V\+I\+D\+P\+A\+R\+S\+E\+R\+P\+A\+R\+A\+MS $\ast$cuparseinfo, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} probed\+\_\+width, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} probed\+\_\+height, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__astats_8c_a3fb64d8b9f96155a5d4138e186198917}{bit\+\_\+depth}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuviddec_8c_abf49e35b3cb482bc0721d23a49b36868}{cuvid\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cuviddec_8c_af82b51bb61d1e0133bcb40e63aebca30}{cuvid\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{cuviddec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_codec_h_w_config_internal}{A\+V\+Codec\+H\+W\+Config\+Internal}} $\ast$const \mbox{\hyperlink{cuviddec_8c_a27e646a8ac27e6f2b432e869cbf63b53}{cuvid\+\_\+hw\+\_\+configs}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{cuviddec_8c_aabb147a1f2a98d37cb3ce0dd6d50b78d}\label{cuviddec_8c_aabb147a1f2a98d37cb3ce0dd6d50b78d}} 
+\index{cuviddec.c@{cuviddec.c}!CHECK\_CU@{CHECK\_CU}}
+\index{CHECK\_CU@{CHECK\_CU}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{CHECK\_CU}{CHECK\_CU}}
+{\footnotesize\ttfamily \#define C\+H\+E\+C\+K\+\_\+\+CU(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~\mbox{\hyperlink{cuda__check_8h_a29c978727249e3ffebebe7e5c93511da}{F\+F\+\_\+\+C\+U\+D\+A\+\_\+\+C\+H\+E\+C\+K\+\_\+\+DL}}(avctx, \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/$>$cudl, x)}
+
+
+
+Definition at line 108 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_a6c13ba7f37b47f1053998edb6de66707}\label{cuviddec_8c_a6c13ba7f37b47f1053998edb6de66707}} 
+\index{cuviddec.c@{cuviddec.c}!cudaVideoSurfaceFormat\_YUV444@{cudaVideoSurfaceFormat\_YUV444}}
+\index{cudaVideoSurfaceFormat\_YUV444@{cudaVideoSurfaceFormat\_YUV444}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cudaVideoSurfaceFormat\_YUV444}{cudaVideoSurfaceFormat\_YUV444}}
+{\footnotesize\ttfamily \#define cuda\+Video\+Surface\+Format\+\_\+\+Y\+U\+V444~2}
+
+
+
+Definition at line 41 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_ae6245e751a2cb4cbb0c5dea0b5b96711}\label{cuviddec_8c_ae6245e751a2cb4cbb0c5dea0b5b96711}} 
+\index{cuviddec.c@{cuviddec.c}!cudaVideoSurfaceFormat\_YUV444\_16Bit@{cudaVideoSurfaceFormat\_YUV444\_16Bit}}
+\index{cudaVideoSurfaceFormat\_YUV444\_16Bit@{cudaVideoSurfaceFormat\_YUV444\_16Bit}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cudaVideoSurfaceFormat\_YUV444\_16Bit}{cudaVideoSurfaceFormat\_YUV444\_16Bit}}
+{\footnotesize\ttfamily \#define cuda\+Video\+Surface\+Format\+\_\+\+Y\+U\+V444\+\_\+16\+Bit~3}
+
+
+
+Definition at line 42 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_ad9f0ce453f36bcded45b8ef1c9a3f2cc}\label{cuviddec_8c_ad9f0ce453f36bcded45b8ef1c9a3f2cc}} 
+\index{cuviddec.c@{cuviddec.c}!DEFINE\_CUVID\_CODEC@{DEFINE\_CUVID\_CODEC}}
+\index{DEFINE\_CUVID\_CODEC@{DEFINE\_CUVID\_CODEC}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_CUVID\_CODEC}{DEFINE\_CUVID\_CODEC}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+C\+U\+V\+I\+D\+\_\+\+C\+O\+D\+EC(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}},  }\item[{}]{bsf\+\_\+name }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keyword}{static} \textcolor{keyword}{const} \mbox{\hyperlink{struct_a_v_class}{AVClass}} x\#\#\_cuvid\_class = \{ \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{struct_a_v_class_aa8883e113a3f2965abd008f7667db7eb}{class\_name}} = \#x \textcolor{stringliteral}{"{}\_cuvid"{}}, \(\backslash\)}
+\DoxyCodeLine{        .item\_name = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}}, \(\backslash\)}
+\DoxyCodeLine{        .option = \mbox{\hyperlink{cuviddec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}, \(\backslash\)}
+\DoxyCodeLine{        .version = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}}, \(\backslash\)}
+\DoxyCodeLine{    \}; \(\backslash\)}
+\DoxyCodeLine{    AVCodec ff\_\#\#x\#\#\_cuvid\_decoder = \{ \(\backslash\)}
+\DoxyCodeLine{        .name           = \#x \textcolor{stringliteral}{"{}\_cuvid"{}}, \(\backslash\)}
+\DoxyCodeLine{        .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Nvidia CUVID "{}} \#\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}} \textcolor{stringliteral}{"{} decoder"{}}), \(\backslash\)}
+\DoxyCodeLine{        .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}}, \(\backslash\)}
+\DoxyCodeLine{        .id             = AV\_CODEC\_ID\_\#\#\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}}, \(\backslash\)}
+\DoxyCodeLine{        .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{cuviddec_8c_a34e7809113a8fc57ac40b950e0b2e9e9}{CuvidContext}}), \(\backslash\)}
+\DoxyCodeLine{        .priv\_class     = \&x\#\#\_cuvid\_class, \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{cuviddec_8c_abf49e35b3cb482bc0721d23a49b36868}{cuvid\_decode\_init}}, \(\backslash\)}
+\DoxyCodeLine{        .close          = \mbox{\hyperlink{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42}{cuvid\_decode\_end}}, \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{cuviddec_8c_a6b1aa3d52a688982e33f3e048ffce07a}{cuvid\_decode\_frame}}, \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{crystalhd_8c_aa7c77736ee6ba0c6242841bec52e8550}{receive\_frame}}  = \mbox{\hyperlink{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8}{cuvid\_output\_frame}}, \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{cuviddec_8c_af82b51bb61d1e0133bcb40e63aebca30}{cuvid\_flush}}, \(\backslash\)}
+\DoxyCodeLine{        .bsfs           = bsf\_name, \(\backslash\)}
+\DoxyCodeLine{        .capabilities   = \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}} | \mbox{\hyperlink{group__lavc__core_ga2fbf0ffd269bdc9cc3a22ebacc9bcc59}{AV\_CODEC\_CAP\_AVOID\_PROBING}} | \mbox{\hyperlink{group__lavc__core_gad4cbd44018d5bf16beefd73b465327c2}{AV\_CODEC\_CAP\_HARDWARE}}, \(\backslash\)}
+\DoxyCodeLine{        .\mbox{\hyperlink{libkvazaar_8c_aa1219ee396a270ba57fd4f2306b64c6e}{pix\_fmts}}       = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}}[])\{ \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a5ab95e18c0c9e5335f29121418eab314}{AV\_PIX\_FMT\_CUDA}}, \(\backslash\)}
+\DoxyCodeLine{                                                        AV\_PIX\_FMT\_NV12, \(\backslash\)}
+\DoxyCodeLine{                                                        AV\_PIX\_FMT\_P010, \(\backslash\)}
+\DoxyCodeLine{                                                        AV\_PIX\_FMT\_P016, \(\backslash\)}
+\DoxyCodeLine{                                                        AV\_PIX\_FMT\_NONE \}, \(\backslash\)}
+\DoxyCodeLine{        .hw\_configs     = \mbox{\hyperlink{cuviddec_8c_a27e646a8ac27e6f2b432e869cbf63b53}{cuvid\_hw\_configs}}, \(\backslash\)}
+\DoxyCodeLine{        .wrapper\_name   = \textcolor{stringliteral}{"{}cuvid"{}}, \(\backslash\)}
+\DoxyCodeLine{    \};}
+
+\end{DoxyCode}
+
+
+Definition at line 1116 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{cuviddec.c@{cuviddec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}}, x)}
+
+
+
+Definition at line 1088 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}\label{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}} 
+\index{cuviddec.c@{cuviddec.c}!VD@{VD}}
+\index{VD@{VD}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{VD}{VD}}
+{\footnotesize\ttfamily \#define VD~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1089 of file cuviddec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{cuviddec_8c_a34e7809113a8fc57ac40b950e0b2e9e9}\label{cuviddec_8c_a34e7809113a8fc57ac40b950e0b2e9e9}} 
+\index{cuviddec.c@{cuviddec.c}!CuvidContext@{CuvidContext}}
+\index{CuvidContext@{CuvidContext}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{CuvidContext}{CuvidContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}} \mbox{\hyperlink{struct_cuvid_context}{Cuvid\+Context}}}
+
+\mbox{\Hypertarget{cuviddec_8c_acf858ae6e08ceaa6bd5e1b1fc73a6411}\label{cuviddec_8c_acf858ae6e08ceaa6bd5e1b1fc73a6411}} 
+\index{cuviddec.c@{cuviddec.c}!CuvidParsedFrame@{CuvidParsedFrame}}
+\index{CuvidParsedFrame@{CuvidParsedFrame}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{CuvidParsedFrame}{CuvidParsedFrame}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_cuvid_parsed_frame}{Cuvid\+Parsed\+Frame}} \mbox{\hyperlink{struct_cuvid_parsed_frame}{Cuvid\+Parsed\+Frame}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42}\label{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_decode\_end@{cuvid\_decode\_end}}
+\index{cuvid\_decode\_end@{cuvid\_decode\_end}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_decode\_end()}{cuvid\_decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 673 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=305pt]{cuviddec_8c_a3a495448f4dab120e3d1806e34253b42_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_a6b1aa3d52a688982e33f3e048ffce07a}\label{cuviddec_8c_a6b1aa3d52a688982e33f3e048ffce07a}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_decode\_frame@{cuvid\_decode\_frame}}
+\index{cuvid\_decode\_frame@{cuvid\_decode\_frame}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_decode\_frame()}{cuvid\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 642 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a6b1aa3d52a688982e33f3e048ffce07a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_abf49e35b3cb482bc0721d23a49b36868}\label{cuviddec_8c_abf49e35b3cb482bc0721d23a49b36868}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_decode\_init@{cuvid\_decode\_init}}
+\index{cuvid\_decode\_init@{cuvid\_decode\_init}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_decode\_init()}{cuvid\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 792 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_abf49e35b3cb482bc0721d23a49b36868_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_a03a32c5df9ba9785e774cbf499ce01f0}\label{cuviddec_8c_a03a32c5df9ba9785e774cbf499ce01f0}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_decode\_packet@{cuvid\_decode\_packet}}
+\index{cuvid\_decode\_packet@{cuvid\_decode\_packet}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_decode\_packet()}{cuvid\_decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 385 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a03a32c5df9ba9785e774cbf499ce01f0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a03a32c5df9ba9785e774cbf499ce01f0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_af82b51bb61d1e0133bcb40e63aebca30}\label{cuviddec_8c_af82b51bb61d1e0133bcb40e63aebca30}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_flush@{cuvid\_flush}}
+\index{cuvid\_flush@{cuvid\_flush}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_flush()}{cuvid\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} cuvid\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1032 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_a0ee6c9c42169709635f6d26d49ebf7b0}\label{cuviddec_8c_a0ee6c9c42169709635f6d26d49ebf7b0}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_handle\_picture\_decode@{cuvid\_handle\_picture\_decode}}
+\index{cuvid\_handle\_picture\_decode@{cuvid\_handle\_picture\_decode}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_handle\_picture\_decode()}{cuvid\_handle\_picture\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI cuvid\+\_\+handle\+\_\+picture\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{opaque,  }\item[{C\+U\+V\+I\+D\+P\+I\+C\+P\+A\+R\+A\+MS $\ast$}]{picparams }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 332 of file cuviddec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{cuviddec_8c_a0ee6c9c42169709635f6d26d49ebf7b0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_a8753c8093c9b4b524ca54e452049c6d2}\label{cuviddec_8c_a8753c8093c9b4b524ca54e452049c6d2}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_handle\_picture\_display@{cuvid\_handle\_picture\_display}}
+\index{cuvid\_handle\_picture\_display@{cuvid\_handle\_picture\_display}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_handle\_picture\_display()}{cuvid\_handle\_picture\_display()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI cuvid\+\_\+handle\+\_\+picture\+\_\+display (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{opaque,  }\item[{C\+U\+V\+I\+D\+P\+A\+R\+S\+E\+R\+D\+I\+S\+P\+I\+N\+FO $\ast$}]{dispinfo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 348 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{cuviddec_8c_a8753c8093c9b4b524ca54e452049c6d2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{cuviddec_8c_a8753c8093c9b4b524ca54e452049c6d2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_ab6399e99afbfdf9f0ea61f19225d05f4}\label{cuviddec_8c_ab6399e99afbfdf9f0ea61f19225d05f4}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_handle\_video\_sequence@{cuvid\_handle\_video\_sequence}}
+\index{cuvid\_handle\_video\_sequence@{cuvid\_handle\_video\_sequence}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_handle\_video\_sequence()}{cuvid\_handle\_video\_sequence()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+U\+D\+A\+A\+PI cuvid\+\_\+handle\+\_\+video\+\_\+sequence (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{opaque,  }\item[{C\+U\+V\+I\+D\+E\+O\+F\+O\+R\+M\+AT $\ast$}]{format }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 110 of file cuviddec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{cuviddec_8c_ab6399e99afbfdf9f0ea61f19225d05f4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_af324391f20c02b7e33b8e200a6bc1021}\label{cuviddec_8c_af324391f20c02b7e33b8e200a6bc1021}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_is\_buffer\_full@{cuvid\_is\_buffer\_full}}
+\index{cuvid\_is\_buffer\_full@{cuvid\_is\_buffer\_full}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_is\_buffer\_full()}{cuvid\_is\_buffer\_full()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+is\+\_\+buffer\+\_\+full (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 374 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{cuviddec_8c_af324391f20c02b7e33b8e200a6bc1021_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_af324391f20c02b7e33b8e200a6bc1021_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8}\label{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_output\_frame@{cuvid\_output\_frame}}
+\index{cuvid\_output\_frame@{cuvid\_output\_frame}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_output\_frame()}{cuvid\_output\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+output\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 450 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{cuviddec_8c_a34d7b281a49319ae824cb695ff6cd6a8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cuviddec_8c_a77a3088ebff83e56e8345e0a895de5c2}\label{cuviddec_8c_a77a3088ebff83e56e8345e0a895de5c2}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_test\_capabilities@{cuvid\_test\_capabilities}}
+\index{cuvid\_test\_capabilities@{cuvid\_test\_capabilities}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_test\_capabilities()}{cuvid\_test\_capabilities()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cuvid\+\_\+test\+\_\+capabilities (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const C\+U\+V\+I\+D\+P\+A\+R\+S\+E\+R\+P\+A\+R\+A\+MS $\ast$}]{cuparseinfo,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{probed\+\_\+width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{probed\+\_\+height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bit\+\_\+depth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 698 of file cuviddec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cuviddec_8c_a77a3088ebff83e56e8345e0a895de5c2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{cuviddec_8c_a77a3088ebff83e56e8345e0a895de5c2_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{cuviddec_8c_a27e646a8ac27e6f2b432e869cbf63b53}\label{cuviddec_8c_a27e646a8ac27e6f2b432e869cbf63b53}} 
+\index{cuviddec.c@{cuviddec.c}!cuvid\_hw\_configs@{cuvid\_hw\_configs}}
+\index{cuvid\_hw\_configs@{cuvid\_hw\_configs}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{cuvid\_hw\_configs}{cuvid\_hw\_configs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_codec_h_w_config_internal}{A\+V\+Codec\+H\+W\+Config\+Internal}}$\ast$ const cuvid\+\_\+hw\+\_\+configs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \&(\textcolor{keyword}{const} \mbox{\hyperlink{hwconfig_8h_a527984f94d846e8f58921e2bf5d1ad05}{AVCodecHWConfigInternal}}) \{}
+\DoxyCodeLine{        .public = \{}
+\DoxyCodeLine{            .pix\_fmt     = \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a5ab95e18c0c9e5335f29121418eab314}{AV\_PIX\_FMT\_CUDA}},}
+\DoxyCodeLine{            .methods     = \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba680870b80f0ed65e9ba97ea0905eb2fa}{AV\_CODEC\_HW\_CONFIG\_METHOD\_HW\_DEVICE\_CTX}} |}
+\DoxyCodeLine{                           \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55baa7386da6a6a78eb809d838053e4035ee}{AV\_CODEC\_HW\_CONFIG\_METHOD\_INTERNAL}},}
+\DoxyCodeLine{            .device\_type = \mbox{\hyperlink{hwcontext_8h_acf25724be4b066a51ad86aa9214b0d34a8447d4488b0fc4113c281cbdc6e7334e}{AV\_HWDEVICE\_TYPE\_CUDA}}}
+\DoxyCodeLine{        \},}
+\DoxyCodeLine{        .hwaccel = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1103 of file cuviddec.\+c.
+
+\mbox{\Hypertarget{cuviddec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{cuviddec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{cuviddec.c@{cuviddec.c}!options@{options}}
+\index{options@{options}!cuviddec.c@{cuviddec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}deint"{}},    \textcolor{stringliteral}{"{}Set deinterlacing mode"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(deint\_mode), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{ .i64 = cudaVideoDeinterlaceMode\_Weave    \}, cudaVideoDeinterlaceMode\_Weave, cudaVideoDeinterlaceMode\_Adaptive, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}, \textcolor{stringliteral}{"{}deint"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}weave"{}},    \textcolor{stringliteral}{"{}Weave deinterlacing (do nothing)"{}},        0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = cudaVideoDeinterlaceMode\_Weave    \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}, \textcolor{stringliteral}{"{}deint"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bob"{}},      \textcolor{stringliteral}{"{}Bob deinterlacing"{}},                       0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = cudaVideoDeinterlaceMode\_Bob      \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}, \textcolor{stringliteral}{"{}deint"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}adaptive"{}}, \textcolor{stringliteral}{"{}Adaptive deinterlacing"{}},                  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = cudaVideoDeinterlaceMode\_Adaptive \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}, \textcolor{stringliteral}{"{}deint"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}gpu"{}},      \textcolor{stringliteral}{"{}GPU to be used for decoding"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(cu\_gpu), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}surfaces"{}}, \textcolor{stringliteral}{"{}Maximum surfaces to be used for decoding"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(nb\_surfaces), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 25 \}, 0, INT\_MAX, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}drop\_second\_field"{}}, \textcolor{stringliteral}{"{}Drop second field when deinterlacing"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(drop\_second\_field), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = 0 \}, 0, 1, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}crop"{}},     \textcolor{stringliteral}{"{}Crop (top)x(bottom)x(left)x(right)"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(crop\_expr), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}resize"{}},   \textcolor{stringliteral}{"{}Resize (width)x(height)"{}}, \mbox{\hyperlink{cuviddec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(resize\_expr), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{cuviddec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1090 of file cuviddec.\+c.
+

@@ -1,0 +1,445 @@
+\hypertarget{vf__atadenoise_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+atadenoise.c File Reference}
+\label{vf__atadenoise_8c}\index{E:/github/ffmpeg/libavfilter/vf\_atadenoise.c@{E:/github/ffmpeg/libavfilter/vf\_atadenoise.c}}
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bufferqueue.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}atadenoise.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+atadenoise.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}~129
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a70ed59adcb4159ac551058053e649640}{S\+I\+ZE}}~\mbox{\hyperlink{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a8956b9119e3f283cb31cf6e029da3277}{VF}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a24990adec200c5eacd05aa574f71df6c}{F\+I\+L\+T\+E\+R\+\_\+\+R\+OW}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{vf__atadenoise_8c_a29851f5e792d435940e42ab23250e49b}{F\+I\+L\+T\+E\+R\+\_\+\+R\+O\+W\+\_\+\+S\+E\+R\+I\+AL}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}} \mbox{\hyperlink{vf__atadenoise_8c_a5b2fff095aed41c9babd007107edb59a}{A\+T\+A\+Denoise\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__atadenoise_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__atadenoise_8c_ae06a73d0a386752dff88cb242a940ef0}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (atadenoise)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a0fbb22a110fb726a8cecad69e873af91}{filter\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a72949c8fcad3f201712a3569fc6888cb}{request\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11}{process\+\_\+command}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$cmd, const char $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, char $\ast$res, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} res\+\_\+len, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__atadenoise_8c_a8dbea4ba4cdf36bbc590f2f56d405f00}{atadenoise\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__atadenoise_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__atadenoise_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__atadenoise_8c_a6eed6ab0cb701234d8be3a0a0e549b9a}{ff\+\_\+vf\+\_\+atadenoise}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Adaptive Temporal Averaging Denoiser, based on paper \char`\"{}\+Video Denoising Based on Adaptive Temporal Averaging\char`\"{} by David Bartovčak and Miroslav Vrankić 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__atadenoise_8c_a168bfc24195160677a1d8c367bd8fe8e}\label{vf__atadenoise_8c_a168bfc24195160677a1d8c367bd8fe8e}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!FF\_BUFQUEUE\_SIZE@{FF\_BUFQUEUE\_SIZE}}
+\index{FF\_BUFQUEUE\_SIZE@{FF\_BUFQUEUE\_SIZE}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{FF\_BUFQUEUE\_SIZE}{FF\_BUFQUEUE\_SIZE}}
+{\footnotesize\ttfamily \#define F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE~129}
+
+
+
+Definition at line 33 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a24990adec200c5eacd05aa574f71df6c}\label{vf__atadenoise_8c_a24990adec200c5eacd05aa574f71df6c}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!FILTER\_ROW@{FILTER\_ROW}}
+\index{FILTER\_ROW@{FILTER\_ROW}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{FILTER\_ROW}{FILTER\_ROW}}
+{\footnotesize\ttfamily \#define F\+I\+L\+T\+E\+R\+\_\+\+R\+OW(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+
+
+Definition at line 141 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a29851f5e792d435940e42ab23250e49b}\label{vf__atadenoise_8c_a29851f5e792d435940e42ab23250e49b}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!FILTER\_ROW\_SERIAL@{FILTER\_ROW\_SERIAL}}
+\index{FILTER\_ROW\_SERIAL@{FILTER\_ROW\_SERIAL}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{FILTER\_ROW\_SERIAL}{FILTER\_ROW\_SERIAL}}
+{\footnotesize\ttfamily \#define F\+I\+L\+T\+E\+R\+\_\+\+R\+O\+W\+\_\+\+S\+E\+R\+I\+AL(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+
+
+Definition at line 188 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 67 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}}, x)}
+
+
+
+Definition at line 66 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a70ed59adcb4159ac551058053e649640}\label{vf__atadenoise_8c_a70ed59adcb4159ac551058053e649640}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!SIZE@{SIZE}}
+\index{SIZE@{SIZE}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{SIZE}{SIZE}}
+{\footnotesize\ttfamily \#define S\+I\+ZE~\mbox{\hyperlink{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}}
+
+
+
+Definition at line 41 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a8956b9119e3f283cb31cf6e029da3277}\label{vf__atadenoise_8c_a8956b9119e3f283cb31cf6e029da3277}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!VF@{VF}}
+\index{VF@{VF}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{VF}{VF}}
+{\footnotesize\ttfamily \#define VF~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 68 of file vf\+\_\+atadenoise.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__atadenoise_8c_a5b2fff095aed41c9babd007107edb59a}\label{vf__atadenoise_8c_a5b2fff095aed41c9babd007107edb59a}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!ATADenoiseContext@{ATADenoiseContext}}
+\index{ATADenoiseContext@{ATADenoiseContext}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{ATADenoiseContext}{ATADenoiseContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}} \mbox{\hyperlink{struct_a_t_a_denoise_context}{A\+T\+A\+Denoise\+Context}}}
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__atadenoise_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__atadenoise_8c_ae06a73d0a386752dff88cb242a940ef0}\label{vf__atadenoise_8c_ae06a73d0a386752dff88cb242a940ef0}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{atadenoise}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 283 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27}\label{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 317 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_a0fbb22a110fb726a8cecad69e873af91}\label{vf__atadenoise_8c_a0fbb22a110fb726a8cecad69e873af91}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!filter\_slice@{filter\_slice}}
+\index{filter\_slice@{filter\_slice}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice()}{filter\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 237 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a0fbb22a110fb726a8cecad69e873af91_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a0fbb22a110fb726a8cecad69e873af91_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__atadenoise_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!init@{init}}
+\index{init@{init}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 124 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11}\label{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!process\_command@{process\_command}}
+\index{process\_command@{process\_command}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{process\_command()}{process\_command()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} process\+\_\+command (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{cmd,  }\item[{const char $\ast$}]{arg,  }\item[{char $\ast$}]{res,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{res\+\_\+len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 413 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 87 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_a72949c8fcad3f201712a3569fc6888cb}\label{vf__atadenoise_8c_a72949c8fcad3f201712a3569fc6888cb}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!request\_frame@{request\_frame}}
+\index{request\_frame@{request\_frame}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{request\_frame()}{request\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} request\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 386 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_a72949c8fcad3f201712a3569fc6888cb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 406 of file vf\+\_\+atadenoise.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__atadenoise_8c_a8dbea4ba4cdf36bbc590f2f56d405f00}\label{vf__atadenoise_8c_a8dbea4ba4cdf36bbc590f2f56d405f00}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!atadenoise\_options@{atadenoise\_options}}
+\index{atadenoise\_options@{atadenoise\_options}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{atadenoise\_options}{atadenoise\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} atadenoise\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}0a"{}}, \textcolor{stringliteral}{"{}set threshold A for 1st plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthra[0]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.02\}, 0, 0.3, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}0b"{}}, \textcolor{stringliteral}{"{}set threshold B for 1st plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthrb[0]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.04\}, 0, 5.0, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}1a"{}}, \textcolor{stringliteral}{"{}set threshold A for 2nd plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthra[1]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.02\}, 0, 0.3, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}1b"{}}, \textcolor{stringliteral}{"{}set threshold B for 2nd plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthrb[1]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.04\}, 0, 5.0, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}2a"{}}, \textcolor{stringliteral}{"{}set threshold A for 3rd plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthra[2]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.02\}, 0, 0.3, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}2b"{}}, \textcolor{stringliteral}{"{}set threshold B for 3rd plane"{}}, \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(fthrb[2]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.04\}, 0, 5.0, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}s"{}},  \textcolor{stringliteral}{"{}set how many frames to use"{}},    \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=9\},   5, \mbox{\hyperlink{vf__atadenoise_8c_a70ed59adcb4159ac551058053e649640}{SIZE}}, \mbox{\hyperlink{vf__atadenoise_8c_a8956b9119e3f283cb31cf6e029da3277}{VF}}    \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}p"{}},  \textcolor{stringliteral}{"{}set what planes to filter"{}},     \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{llviddspenc_8c_a39de7029a33bc3271ae437de0a38c343}{planes}}),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a7aaeee142b88a3078ddc57c644b49a7e}{AV\_OPT\_TYPE\_FLAGS}}, \{.i64=7\},    0, 15,  \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}a"{}},  \textcolor{stringliteral}{"{}set variant of algorithm"{}},      \mbox{\hyperlink{vf__atadenoise_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(algorithm),\mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=\mbox{\hyperlink{atadenoise_8h_a9c917d3716a3e6c09abba729b0a91249a90606f8ca5d91452541a74f1caef1d11}{PARALLEL}}\},  0, \mbox{\hyperlink{atadenoise_8h_a9c917d3716a3e6c09abba729b0a91249a55002076209bce62e84becb72d3c4863}{NB\_ATAA}}-\/1, \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}a"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}p"{}},  \textcolor{stringliteral}{"{}parallel"{}},                      0,                \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{atadenoise_8h_a9c917d3716a3e6c09abba729b0a91249a90606f8ca5d91452541a74f1caef1d11}{PARALLEL}}\},  0, 0,         \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}a"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}s"{}},  \textcolor{stringliteral}{"{}serial"{}},                        0,                \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{atadenoise_8h_a9c917d3716a3e6c09abba729b0a91249ab110642f01505447ed49cf2d49fbf0a2}{SERIAL}}\},    0, 0,         \mbox{\hyperlink{vf__atadenoise_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}a"{}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 70 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a6eed6ab0cb701234d8be3a0a0e549b9a}\label{vf__atadenoise_8c_a6eed6ab0cb701234d8be3a0a0e549b9a}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!ff\_vf\_atadenoise@{ff\_vf\_atadenoise}}
+\index{ff\_vf\_atadenoise@{ff\_vf\_atadenoise}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_atadenoise}{ff\_vf\_atadenoise}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+atadenoise}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}atadenoise"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apply an Adaptive Temporal Averaging Denoiser."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__atadenoise_8c_a5b2fff095aed41c9babd007107edb59a}{ATADenoiseContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&atadenoise\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{vf__atadenoise_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__atadenoise_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__atadenoise_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}        = \mbox{\hyperlink{vf__atadenoise_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__atadenoise_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gae225339ad292450a5832296f58f0d424}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_INTERNAL}} | \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11}{process\_command}} = \mbox{\hyperlink{vf__atadenoise_8c_a0494cc8297aba3328e35aed9f714ef11}{process\_command}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 447 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{vf__atadenoise_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!inputs@{inputs}}
+\index{inputs@{inputs}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__atadenoise_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__atadenoise_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 428 of file vf\+\_\+atadenoise.\+c.
+
+\mbox{\Hypertarget{vf__atadenoise_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{vf__atadenoise_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{vf\_atadenoise.c@{vf\_atadenoise.c}!outputs@{outputs}}
+\index{outputs@{outputs}!vf\_atadenoise.c@{vf\_atadenoise.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .request\_frame = \mbox{\hyperlink{vf__atadenoise_8c_a72949c8fcad3f201712a3569fc6888cb}{request\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 438 of file vf\+\_\+atadenoise.\+c.
+

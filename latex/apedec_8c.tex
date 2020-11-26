@@ -1,0 +1,2066 @@
+\hypertarget{apedec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/apedec.c File Reference}
+\label{apedec_8c}\index{E:/github/ffmpeg/libavcodec/apedec.c@{E:/github/ffmpeg/libavcodec/apedec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/crc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lossless\+\_\+audiodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bswapdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}unary.\+h\char`\"{}}\newline
+Include dependency graph for apedec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_rangecoder}{A\+P\+E\+Rangecoder}}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}}
+\item 
+struct \mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{apedec_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~2
+\item 
+\#define \mbox{\hyperlink{apedec_8c_aba508bec77be342ddb4588096512f8d0}{M\+A\+X\+\_\+\+B\+Y\+T\+E\+S\+P\+E\+R\+S\+A\+M\+P\+LE}}~3
+\item 
+\#define \mbox{\hyperlink{apedec_8c_abc1f5e0f6256d2a8cf5d6ce14ea5a7b3}{A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+M\+O\+N\+O\+\_\+\+S\+I\+L\+E\+N\+CE}}~1
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a502e831dfb97cd739daafe41b5ef8f18}{A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+S\+T\+E\+R\+E\+O\+\_\+\+S\+I\+L\+E\+N\+CE}}~3
+\item 
+\#define \mbox{\hyperlink{apedec_8c_af33bb6288d85da912a5240aa819a445e}{A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+P\+S\+E\+U\+D\+O\+\_\+\+S\+T\+E\+R\+EO}}~4
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a43034bdd0ae7c6267b05ff35ae97cddf}{H\+I\+S\+T\+O\+R\+Y\+\_\+\+S\+I\+ZE}}~512
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}~8
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a782b77207df9504d9cb022100af2160b}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+S\+I\+ZE}}~50
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a888d04c03433c2de364c3d38573980c8}{Y\+D\+E\+L\+A\+YA}}~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$4)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a4ed39d03c9bd5bfa342e64e06aeb450d}{Y\+D\+E\+L\+A\+YB}}~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$3)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a11dcb6a9a963638bd9a531cac8f9164b}{X\+D\+E\+L\+A\+YA}}~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$2)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_ad4693b691885f65d6a6464c3a86a2b61}{X\+D\+E\+L\+A\+YB}}~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}})
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a94ab15f98de32f452cfbd0b55cab1456}{Y\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SA}}~18
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a130341f2b9503616fca8398161550664}{X\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SA}}~14
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a1bc9553c20da431dcd84372652532820}{Y\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SB}}~10
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a790984e6cd827e9a0781d8d5e2402093}{X\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SB}}~5
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}{A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS}}~3
+\item 
+\#define \mbox{\hyperlink{apedec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a214a9b541003b871f81961eab349761d}{P\+AR}}~(\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} \mbox{\hyperlink{apedec_8c_a09c528a50d52c10703535129c8c5fcd3}{A\+P\+E\+Filter}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} \mbox{\hyperlink{apedec_8c_a407b4cae84533f609f1364dc8e87710a}{A\+P\+E\+Rice}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_rangecoder}{A\+P\+E\+Rangecoder}} \mbox{\hyperlink{apedec_8c_adb6ffc2a3cc81b58df46b9cf1564c692}{A\+P\+E\+Rangecoder}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} \mbox{\hyperlink{apedec_8c_a7206ba12a7b98cf98292a3541af21677}{A\+P\+E\+Predictor}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}} \mbox{\hyperlink{apedec_8c_a07d30339536b0ae2e75fb88307bbc870}{A\+P\+E\+Predictor64}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} \mbox{\hyperlink{apedec_8c_a3db246acfe4db1639b41f13d393dd52a}{A\+P\+E\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\textbf{ }\par
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027d}{A\+P\+E\+Compression\+Level}} \{ \newline
+\mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027dab948d541498ef175c14435f2590bb51e}{C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+F\+A\+ST}} = 1000, 
+\mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027dafed831c45ed39c0bf9c0ba9a7e106555}{C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+N\+O\+R\+M\+AL}} = 2000, 
+\mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027dac6ff268fbc4803238157fa0ec2e6c094}{C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+H\+I\+GH}} = 3000, 
+\mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027da2f9d6b9e900a0dbba8f0512ab0fe15e5}{C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+E\+X\+T\+R\+A\+\_\+\+H\+I\+GH}} = 4000, 
+\newline
+\mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027da356395101030cc5c21a50c535efa22c6}{C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+I\+N\+S\+A\+NE}} = 5000
+ \}
+\end{DoxyCompactItemize}
+
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a6e41b1c883efbf6c58998e808272df16}{ape\+\_\+apply\+\_\+filters}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$decoded0, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$decoded1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a91235cb46b632f071abda54af78b90d6}{entropy\+\_\+decode\+\_\+mono\+\_\+0000}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a8b535159a98ba212cdd5d446e710af33}{entropy\+\_\+decode\+\_\+stereo\+\_\+0000}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a0eb97cc8d7e6ec9b18539ac07b1ab1ed}{entropy\+\_\+decode\+\_\+mono\+\_\+3860}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a01cd46705361a5fb16ed1fe9ae50e0a4}{entropy\+\_\+decode\+\_\+stereo\+\_\+3860}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a1d13416119aa36c84a7d2a5474da6f7c}{entropy\+\_\+decode\+\_\+mono\+\_\+3900}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a9139da29e132367cab1ce1c0446b237f}{entropy\+\_\+decode\+\_\+stereo\+\_\+3900}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a045564e4e0db44381b3ae07951d00c08}{entropy\+\_\+decode\+\_\+stereo\+\_\+3930}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a9579d93552d95c7d154763f8cb25d8ac}{entropy\+\_\+decode\+\_\+mono\+\_\+3990}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a95ef852279ec409c05921e8789569f16}{entropy\+\_\+decode\+\_\+stereo\+\_\+3990}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_aaf5f096dfb0ec52d2d0ebe50f45a76fa}{predictor\+\_\+decode\+\_\+mono\+\_\+3800}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a93ca0eb86fd4b0f178685d81b6ad5228}{predictor\+\_\+decode\+\_\+stereo\+\_\+3800}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a73eaf10f14ac9eab01f88dfb008f5256}{predictor\+\_\+decode\+\_\+mono\+\_\+3930}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a961f2b8aca7f320461d844848073c6c7}{predictor\+\_\+decode\+\_\+stereo\+\_\+3930}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_af0fd9d67998fa7477f41728b367bbedf}{predictor\+\_\+decode\+\_\+mono\+\_\+3950}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a4295638171a08c50ab133970db55afc1}{predictor\+\_\+decode\+\_\+stereo\+\_\+3950}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a0ded1dc9a445089cc5055529fbc72c17}{ape\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a8b90355aa6ca8dbf82058cfbdc479bf3}{ape\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a595bb620320e689121fe2bb77ebd7258}{update\+\_\+rice}} (\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$rice, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a99ca8f6221918de480ec33e4a8321331}{get\+\_\+rice\+\_\+ook}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a8d0ea876e9691d4fa04bffabc1f19179}{ape\+\_\+decode\+\_\+value\+\_\+3860}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$rice)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a31eed59c54bcc102bb15a140968b9ff7}{ape\+\_\+decode\+\_\+value\+\_\+3900}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$rice)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a6a400599226b3a7aaa46d594151e92c0}{ape\+\_\+decode\+\_\+value\+\_\+3990}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$rice)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a4d09bdbad4db03f6c82de936635e534f}{get\+\_\+k}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ksum)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_ab4f830ddc9f299b2f39b35143f8573e8}{decode\+\_\+array\+\_\+0000}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$rice, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blockstodecode)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a7520de7c5d4c90584b077cff27bc4086}{init\+\_\+entropy\+\_\+decoder}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_ae2ad9e1672fcd6d198b0e8b4d2fb0ea2}{init\+\_\+predictor\+\_\+decoder}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a15a3cbd9fbd042c05895fcce4b493c8a}{A\+P\+E\+S\+I\+GN}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} x)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a1eeb3a85a726bfed3f1d97f71d8eb33e}{filter\+\_\+fast\+\_\+3320}} (\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$p, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decoded, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayA)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a6afa99ce0b92115c25100a50a7c08fc1}{filter\+\_\+3800}} (\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$p, const unsigned decoded, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayA, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayB, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a73a630e70be837c946a6b30617a2a8cd}{long\+\_\+filter\+\_\+high\+\_\+3800}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{seek_8c_a5819dbc2d305e99e930c734a0d28bc3b}{buffer}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a8b5923d8b6621dc3e4f56868630974fb}{long\+\_\+filter\+\_\+ehigh\+\_\+3830}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{seek_8c_a5819dbc2d305e99e930c734a0d28bc3b}{buffer}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a9920969f88b70201c12f647601adb02c}{predictor\+\_\+update\+\_\+3930}} (\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$p, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decoded, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayA)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a650c07a3b5f981a7d441f521b01ad141}{predictor\+\_\+update\+\_\+filter}} (\mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}} $\ast$p, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decoded, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayA, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delayB, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} adaptA, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} adaptB)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a43e90a022e6c22a499bb0bfb821b814e}{do\+\_\+init\+\_\+filter}} (\mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, int16\+\_\+t $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a8482205b97ed8bb17ee50985970c0599}{init\+\_\+filter}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, int16\+\_\+t $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a38893d41431214e889dbf965efd8d381}{do\+\_\+apply\+\_\+filter}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{nutenc_8c_a4c7a521b8f1a0769c09bfa4a1fca7dab}{version}}, \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fracbits)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_aea171a971a3d252f90170cbb6a28a759}{apply\+\_\+filter}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$data0, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$data1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fracbits)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_aede2bc481dbdf614d71cc3b02a72e7f4}{init\+\_\+frame\+\_\+decoder}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a724b175c87048c9061f1992428146ea4}{ape\+\_\+unpack\+\_\+mono}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_ad217b194d8b77b7570e4b9f0633cfa3c}{ape\+\_\+unpack\+\_\+stereo}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a23d1935e66228d70ec60902b619c9b12}{ape\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_ab96f43912d675fe268e43d1d0c2ad7f1}{ape\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{apedec_8c_a3d0df3b648cdb930bce7e126b01d12f4}{ape\+\_\+filter\+\_\+orders}} \mbox{[}5\mbox{]}\mbox{[}\mbox{\hyperlink{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}{A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{apedec_8c_a054dbb19cd3026319986df9cf60c9e0a}{ape\+\_\+filter\+\_\+fracbits}} \mbox{[}5\mbox{]}\mbox{[}\mbox{\hyperlink{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}{A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{apedec_8c_a17daba8cd8ad0c05744992ddd144658d}{initial\+\_\+coeffs\+\_\+fast\+\_\+3320}} \mbox{[}1\mbox{]}
+\item 
+static const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{apedec_8c_a841ba8b0c499428d1d4c963e36b8dcee}{initial\+\_\+coeffs\+\_\+a\+\_\+3800}} \mbox{[}3\mbox{]}
+\item 
+static const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{apedec_8c_a6d566d746455007316d9c877cc74e7ce}{initial\+\_\+coeffs\+\_\+b\+\_\+3800}} \mbox{[}2\mbox{]}
+\item 
+static const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{apedec_8c_a8ef99752bc524f18ee4e3b3a067372a8}{initial\+\_\+coeffs\+\_\+3930}} \mbox{[}4\mbox{]}
+\item 
+static const int64\+\_\+t \mbox{\hyperlink{apedec_8c_a7d5129ecc1ce9a9281bf7fe01d05a1ca}{initial\+\_\+coeffs\+\_\+3930\+\_\+64bit}} \mbox{[}4\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{apedec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{apedec_8c_aa154b892c08d2ee94e18af36ca522a99}{ape\+\_\+decoder\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{apedec_8c_a703fee6c027f4ccb4e68e03f9c68fd22}{ff\+\_\+ape\+\_\+decoder}}
+\end{DoxyCompactItemize}
+\doxysubsection*{A\+PE range decoding functions}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}}~32
+\item 
+\#define \mbox{\hyperlink{apedec_8c_af1b0eb518e3a6ed970920b7949213cd6}{T\+O\+P\+\_\+\+V\+A\+L\+UE}}~((unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})1 $<$$<$ (\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}}-\/1))
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a18b64507b88f9b541887105cac18eedc}{S\+H\+I\+F\+T\+\_\+\+B\+I\+TS}}~(\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}} -\/ 9)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a7f7980e43103a6dbc0a63e62233e2b98}{E\+X\+T\+R\+A\+\_\+\+B\+I\+TS}}~((\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}}-\/2) \% 8 + 1)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a1cd5501458bb3c5dda07d43dfb262007}{B\+O\+T\+T\+O\+M\+\_\+\+V\+A\+L\+UE}}~(\mbox{\hyperlink{bgmc_8c_af1b0eb518e3a6ed970920b7949213cd6}{T\+O\+P\+\_\+\+V\+A\+L\+UE}} $>$$>$ 8)
+\item 
+\#define \mbox{\hyperlink{apedec_8c_a43c6695dfb525ee8da90638deb89d946}{M\+O\+D\+E\+L\+\_\+\+E\+L\+E\+M\+E\+N\+TS}}~64
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{apedec_8c_acf2e2f91863bcb7616620d48462e9eb2}{counts\+\_\+3970}} \mbox{[}22\mbox{]}
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{apedec_8c_ada6bd1be2a8adfac27a9c830de09272e}{counts\+\_\+diff\+\_\+3970}} \mbox{[}21\mbox{]}
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{apedec_8c_adc290f5b762723d85f64565e83bde61a}{counts\+\_\+3980}} \mbox{[}22\mbox{]}
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{apedec_8c_ada769a23753938f4f7dc994e5dfe291a}{counts\+\_\+diff\+\_\+3980}} \mbox{[}21\mbox{]}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_ad8faca7b6c3d34e18ac959f0543f04d5}{range\+\_\+start\+\_\+decoding}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a0933796f13eb6ccf3ce657fcb3d54488}{range\+\_\+dec\+\_\+normalize}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a5808f1348c9d51877773b0f7b6250110}{range\+\_\+decode\+\_\+culfreq}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tot\+\_\+f)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a82d953707b452ec3f5113be2f09bde99}{range\+\_\+decode\+\_\+culshift}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{apedec_8c_a428d7cf0bfa4171012f1bd1aaa510da2}{range\+\_\+decode\+\_\+update}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sy\+\_\+f, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lt\+\_\+f)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_aeb3e121972cbd8dcbdef8c6ba937e8fe}{range\+\_\+decode\+\_\+bits}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{apedec_8c_a94159e94bd2e667667671c41a382098c}{range\+\_\+get\+\_\+symbol}} (\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const uint16\+\_\+t counts\mbox{[}$\,$\mbox{]}, const uint16\+\_\+t counts\+\_\+diff\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Monkey\textquotesingle{}s Audio lossless audio decoder 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}\label{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}} 
+\index{apedec.c@{apedec.c}!APE\_FILTER\_LEVELS@{APE\_FILTER\_LEVELS}}
+\index{APE\_FILTER\_LEVELS@{APE\_FILTER\_LEVELS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APE\_FILTER\_LEVELS}{APE\_FILTER\_LEVELS}}
+{\footnotesize\ttfamily \#define A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS~3}
+
+
+
+Definition at line 77 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_abc1f5e0f6256d2a8cf5d6ce14ea5a7b3}\label{apedec_8c_abc1f5e0f6256d2a8cf5d6ce14ea5a7b3}} 
+\index{apedec.c@{apedec.c}!APE\_FRAMECODE\_MONO\_SILENCE@{APE\_FRAMECODE\_MONO\_SILENCE}}
+\index{APE\_FRAMECODE\_MONO\_SILENCE@{APE\_FRAMECODE\_MONO\_SILENCE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APE\_FRAMECODE\_MONO\_SILENCE}{APE\_FRAMECODE\_MONO\_SILENCE}}
+{\footnotesize\ttfamily \#define A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+M\+O\+N\+O\+\_\+\+S\+I\+L\+E\+N\+CE~1}
+
+
+
+Definition at line 45 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_af33bb6288d85da912a5240aa819a445e}\label{apedec_8c_af33bb6288d85da912a5240aa819a445e}} 
+\index{apedec.c@{apedec.c}!APE\_FRAMECODE\_PSEUDO\_STEREO@{APE\_FRAMECODE\_PSEUDO\_STEREO}}
+\index{APE\_FRAMECODE\_PSEUDO\_STEREO@{APE\_FRAMECODE\_PSEUDO\_STEREO}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APE\_FRAMECODE\_PSEUDO\_STEREO}{APE\_FRAMECODE\_PSEUDO\_STEREO}}
+{\footnotesize\ttfamily \#define A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+P\+S\+E\+U\+D\+O\+\_\+\+S\+T\+E\+R\+EO~4}
+
+
+
+Definition at line 47 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a502e831dfb97cd739daafe41b5ef8f18}\label{apedec_8c_a502e831dfb97cd739daafe41b5ef8f18}} 
+\index{apedec.c@{apedec.c}!APE\_FRAMECODE\_STEREO\_SILENCE@{APE\_FRAMECODE\_STEREO\_SILENCE}}
+\index{APE\_FRAMECODE\_STEREO\_SILENCE@{APE\_FRAMECODE\_STEREO\_SILENCE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APE\_FRAMECODE\_STEREO\_SILENCE}{APE\_FRAMECODE\_STEREO\_SILENCE}}
+{\footnotesize\ttfamily \#define A\+P\+E\+\_\+\+F\+R\+A\+M\+E\+C\+O\+D\+E\+\_\+\+S\+T\+E\+R\+E\+O\+\_\+\+S\+I\+L\+E\+N\+CE~3}
+
+
+
+Definition at line 46 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a1cd5501458bb3c5dda07d43dfb262007}\label{apedec_8c_a1cd5501458bb3c5dda07d43dfb262007}} 
+\index{apedec.c@{apedec.c}!BOTTOM\_VALUE@{BOTTOM\_VALUE}}
+\index{BOTTOM\_VALUE@{BOTTOM\_VALUE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{BOTTOM\_VALUE}{BOTTOM\_VALUE}}
+{\footnotesize\ttfamily \#define B\+O\+T\+T\+O\+M\+\_\+\+V\+A\+L\+UE~(\mbox{\hyperlink{bgmc_8c_af1b0eb518e3a6ed970920b7949213cd6}{T\+O\+P\+\_\+\+V\+A\+L\+UE}} $>$$>$ 8)}
+
+
+
+Definition at line 329 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}\label{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}} 
+\index{apedec.c@{apedec.c}!CODE\_BITS@{CODE\_BITS}}
+\index{CODE\_BITS@{CODE\_BITS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{CODE\_BITS}{CODE\_BITS}}
+{\footnotesize\ttfamily \#define C\+O\+D\+E\+\_\+\+B\+I\+TS~32}
+
+
+
+Definition at line 325 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a7f7980e43103a6dbc0a63e62233e2b98}\label{apedec_8c_a7f7980e43103a6dbc0a63e62233e2b98}} 
+\index{apedec.c@{apedec.c}!EXTRA\_BITS@{EXTRA\_BITS}}
+\index{EXTRA\_BITS@{EXTRA\_BITS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{EXTRA\_BITS}{EXTRA\_BITS}}
+{\footnotesize\ttfamily \#define E\+X\+T\+R\+A\+\_\+\+B\+I\+TS~((\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}}-\/2) \% 8 + 1)}
+
+
+
+Definition at line 328 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a43034bdd0ae7c6267b05ff35ae97cddf}\label{apedec_8c_a43034bdd0ae7c6267b05ff35ae97cddf}} 
+\index{apedec.c@{apedec.c}!HISTORY\_SIZE@{HISTORY\_SIZE}}
+\index{HISTORY\_SIZE@{HISTORY\_SIZE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{HISTORY\_SIZE}{HISTORY\_SIZE}}
+{\footnotesize\ttfamily \#define H\+I\+S\+T\+O\+R\+Y\+\_\+\+S\+I\+ZE~512}
+
+
+
+Definition at line 49 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_aba508bec77be342ddb4588096512f8d0}\label{apedec_8c_aba508bec77be342ddb4588096512f8d0}} 
+\index{apedec.c@{apedec.c}!MAX\_BYTESPERSAMPLE@{MAX\_BYTESPERSAMPLE}}
+\index{MAX\_BYTESPERSAMPLE@{MAX\_BYTESPERSAMPLE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BYTESPERSAMPLE}{MAX\_BYTESPERSAMPLE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+Y\+T\+E\+S\+P\+E\+R\+S\+A\+M\+P\+LE~3}
+
+
+
+Definition at line 43 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_ac69ee46f4a51ed14f0d68628c2dec71d}\label{apedec_8c_ac69ee46f4a51ed14f0d68628c2dec71d}} 
+\index{apedec.c@{apedec.c}!MAX\_CHANNELS@{MAX\_CHANNELS}}
+\index{MAX\_CHANNELS@{MAX\_CHANNELS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_CHANNELS}{MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~2}
+
+
+
+Definition at line 42 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a43c6695dfb525ee8da90638deb89d946}\label{apedec_8c_a43c6695dfb525ee8da90638deb89d946}} 
+\index{apedec.c@{apedec.c}!MODEL\_ELEMENTS@{MODEL\_ELEMENTS}}
+\index{MODEL\_ELEMENTS@{MODEL\_ELEMENTS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{MODEL\_ELEMENTS}{MODEL\_ELEMENTS}}
+{\footnotesize\ttfamily \#define M\+O\+D\+E\+L\+\_\+\+E\+L\+E\+M\+E\+N\+TS~64}
+
+
+
+Definition at line 402 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{apedec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{apedec.c@{apedec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}}, x)}
+
+
+
+Definition at line 1642 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a214a9b541003b871f81961eab349761d}\label{apedec_8c_a214a9b541003b871f81961eab349761d}} 
+\index{apedec.c@{apedec.c}!PAR@{PAR}}
+\index{PAR@{PAR}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{PAR}{PAR}}
+{\footnotesize\ttfamily \#define P\+AR~(\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}})}
+
+
+
+Definition at line 1643 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}\label{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}} 
+\index{apedec.c@{apedec.c}!PREDICTOR\_ORDER@{PREDICTOR\_ORDER}}
+\index{PREDICTOR\_ORDER@{PREDICTOR\_ORDER}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{PREDICTOR\_ORDER}{PREDICTOR\_ORDER}}
+{\footnotesize\ttfamily \#define P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER~8}
+
+
+
+Definition at line 50 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a782b77207df9504d9cb022100af2160b}\label{apedec_8c_a782b77207df9504d9cb022100af2160b}} 
+\index{apedec.c@{apedec.c}!PREDICTOR\_SIZE@{PREDICTOR\_SIZE}}
+\index{PREDICTOR\_SIZE@{PREDICTOR\_SIZE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{PREDICTOR\_SIZE}{PREDICTOR\_SIZE}}
+{\footnotesize\ttfamily \#define P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+S\+I\+ZE~50}
+
+Total size of all predictor histories 
+
+Definition at line 52 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a18b64507b88f9b541887105cac18eedc}\label{apedec_8c_a18b64507b88f9b541887105cac18eedc}} 
+\index{apedec.c@{apedec.c}!SHIFT\_BITS@{SHIFT\_BITS}}
+\index{SHIFT\_BITS@{SHIFT\_BITS}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{SHIFT\_BITS}{SHIFT\_BITS}}
+{\footnotesize\ttfamily \#define S\+H\+I\+F\+T\+\_\+\+B\+I\+TS~(\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}} -\/ 9)}
+
+
+
+Definition at line 327 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_af1b0eb518e3a6ed970920b7949213cd6}\label{apedec_8c_af1b0eb518e3a6ed970920b7949213cd6}} 
+\index{apedec.c@{apedec.c}!TOP\_VALUE@{TOP\_VALUE}}
+\index{TOP\_VALUE@{TOP\_VALUE}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{TOP\_VALUE}{TOP\_VALUE}}
+{\footnotesize\ttfamily \#define T\+O\+P\+\_\+\+V\+A\+L\+UE~((unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})1 $<$$<$ (\mbox{\hyperlink{apedec_8c_a251992bfb3b94a87075fee6e9e077c86}{C\+O\+D\+E\+\_\+\+B\+I\+TS}}-\/1))}
+
+
+
+Definition at line 326 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a130341f2b9503616fca8398161550664}\label{apedec_8c_a130341f2b9503616fca8398161550664}} 
+\index{apedec.c@{apedec.c}!XADAPTCOEFFSA@{XADAPTCOEFFSA}}
+\index{XADAPTCOEFFSA@{XADAPTCOEFFSA}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{XADAPTCOEFFSA}{XADAPTCOEFFSA}}
+{\footnotesize\ttfamily \#define X\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SA~14}
+
+
+
+Definition at line 60 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a790984e6cd827e9a0781d8d5e2402093}\label{apedec_8c_a790984e6cd827e9a0781d8d5e2402093}} 
+\index{apedec.c@{apedec.c}!XADAPTCOEFFSB@{XADAPTCOEFFSB}}
+\index{XADAPTCOEFFSB@{XADAPTCOEFFSB}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{XADAPTCOEFFSB}{XADAPTCOEFFSB}}
+{\footnotesize\ttfamily \#define X\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SB~5}
+
+
+
+Definition at line 62 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a11dcb6a9a963638bd9a531cac8f9164b}\label{apedec_8c_a11dcb6a9a963638bd9a531cac8f9164b}} 
+\index{apedec.c@{apedec.c}!XDELAYA@{XDELAYA}}
+\index{XDELAYA@{XDELAYA}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{XDELAYA}{XDELAYA}}
+{\footnotesize\ttfamily \#define X\+D\+E\+L\+A\+YA~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$2)}
+
+
+
+Definition at line 56 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_ad4693b691885f65d6a6464c3a86a2b61}\label{apedec_8c_ad4693b691885f65d6a6464c3a86a2b61}} 
+\index{apedec.c@{apedec.c}!XDELAYB@{XDELAYB}}
+\index{XDELAYB@{XDELAYB}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{XDELAYB}{XDELAYB}}
+{\footnotesize\ttfamily \#define X\+D\+E\+L\+A\+YB~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}})}
+
+
+
+Definition at line 57 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a94ab15f98de32f452cfbd0b55cab1456}\label{apedec_8c_a94ab15f98de32f452cfbd0b55cab1456}} 
+\index{apedec.c@{apedec.c}!YADAPTCOEFFSA@{YADAPTCOEFFSA}}
+\index{YADAPTCOEFFSA@{YADAPTCOEFFSA}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{YADAPTCOEFFSA}{YADAPTCOEFFSA}}
+{\footnotesize\ttfamily \#define Y\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SA~18}
+
+
+
+Definition at line 59 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a1bc9553c20da431dcd84372652532820}\label{apedec_8c_a1bc9553c20da431dcd84372652532820}} 
+\index{apedec.c@{apedec.c}!YADAPTCOEFFSB@{YADAPTCOEFFSB}}
+\index{YADAPTCOEFFSB@{YADAPTCOEFFSB}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{YADAPTCOEFFSB}{YADAPTCOEFFSB}}
+{\footnotesize\ttfamily \#define Y\+A\+D\+A\+P\+T\+C\+O\+E\+F\+F\+SB~10}
+
+
+
+Definition at line 61 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a888d04c03433c2de364c3d38573980c8}\label{apedec_8c_a888d04c03433c2de364c3d38573980c8}} 
+\index{apedec.c@{apedec.c}!YDELAYA@{YDELAYA}}
+\index{YDELAYA@{YDELAYA}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{YDELAYA}{YDELAYA}}
+{\footnotesize\ttfamily \#define Y\+D\+E\+L\+A\+YA~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$4)}
+
+
+
+Definition at line 54 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a4ed39d03c9bd5bfa342e64e06aeb450d}\label{apedec_8c_a4ed39d03c9bd5bfa342e64e06aeb450d}} 
+\index{apedec.c@{apedec.c}!YDELAYB@{YDELAYB}}
+\index{YDELAYB@{YDELAYB}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{YDELAYB}{YDELAYB}}
+{\footnotesize\ttfamily \#define Y\+D\+E\+L\+A\+YB~(18 + \mbox{\hyperlink{apedec_8c_a1b934af95c6cb1eba8b7a4f2f9f63e72}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+O\+R\+D\+ER}}$\ast$3)}
+
+
+
+Definition at line 55 of file apedec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{apedec_8c_a3db246acfe4db1639b41f13d393dd52a}\label{apedec_8c_a3db246acfe4db1639b41f13d393dd52a}} 
+\index{apedec.c@{apedec.c}!APEContext@{APEContext}}
+\index{APEContext@{APEContext}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APEContext}{APEContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} \mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}}}
+
+\mbox{\hyperlink{struct_decoder}{Decoder}} context \mbox{\Hypertarget{apedec_8c_a09c528a50d52c10703535129c8c5fcd3}\label{apedec_8c_a09c528a50d52c10703535129c8c5fcd3}} 
+\index{apedec.c@{apedec.c}!APEFilter@{APEFilter}}
+\index{APEFilter@{APEFilter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APEFilter}{APEFilter}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} \mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}}}
+
+Filters applied to the decoded data \mbox{\Hypertarget{apedec_8c_a7206ba12a7b98cf98292a3541af21677}\label{apedec_8c_a7206ba12a7b98cf98292a3541af21677}} 
+\index{apedec.c@{apedec.c}!APEPredictor@{APEPredictor}}
+\index{APEPredictor@{APEPredictor}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APEPredictor}{APEPredictor}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} \mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}}}
+
+Filter histories \mbox{\Hypertarget{apedec_8c_a07d30339536b0ae2e75fb88307bbc870}\label{apedec_8c_a07d30339536b0ae2e75fb88307bbc870}} 
+\index{apedec.c@{apedec.c}!APEPredictor64@{APEPredictor64}}
+\index{APEPredictor64@{APEPredictor64}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APEPredictor64}{APEPredictor64}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}} \mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}}}
+
+\mbox{\Hypertarget{apedec_8c_adb6ffc2a3cc81b58df46b9cf1564c692}\label{apedec_8c_adb6ffc2a3cc81b58df46b9cf1564c692}} 
+\index{apedec.c@{apedec.c}!APERangecoder@{APERangecoder}}
+\index{APERangecoder@{APERangecoder}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APERangecoder}{APERangecoder}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_rangecoder}{A\+P\+E\+Rangecoder}} \mbox{\hyperlink{struct_a_p_e_rangecoder}{A\+P\+E\+Rangecoder}}}
+
+\mbox{\Hypertarget{apedec_8c_a407b4cae84533f609f1364dc8e87710a}\label{apedec_8c_a407b4cae84533f609f1364dc8e87710a}} 
+\index{apedec.c@{apedec.c}!APERice@{APERice}}
+\index{APERice@{APERice}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APERice}{APERice}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} \mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027d}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027d}} 
+\index{apedec.c@{apedec.c}!APECompressionLevel@{APECompressionLevel}}
+\index{APECompressionLevel@{APECompressionLevel}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APECompressionLevel}{APECompressionLevel}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{apedec_8c_a624229a25b6348b2973bb6d7a069027d}{A\+P\+E\+Compression\+Level}}}
+
+Possible compression levels \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMPRESSION\_LEVEL\_FAST@{COMPRESSION\_LEVEL\_FAST}!apedec.c@{apedec.c}}\index{apedec.c@{apedec.c}!COMPRESSION\_LEVEL\_FAST@{COMPRESSION\_LEVEL\_FAST}}}\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027dab948d541498ef175c14435f2590bb51e}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027dab948d541498ef175c14435f2590bb51e}} 
+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+F\+A\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMPRESSION\_LEVEL\_NORMAL@{COMPRESSION\_LEVEL\_NORMAL}!apedec.c@{apedec.c}}\index{apedec.c@{apedec.c}!COMPRESSION\_LEVEL\_NORMAL@{COMPRESSION\_LEVEL\_NORMAL}}}\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027dafed831c45ed39c0bf9c0ba9a7e106555}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027dafed831c45ed39c0bf9c0ba9a7e106555}} 
+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+N\+O\+R\+M\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMPRESSION\_LEVEL\_HIGH@{COMPRESSION\_LEVEL\_HIGH}!apedec.c@{apedec.c}}\index{apedec.c@{apedec.c}!COMPRESSION\_LEVEL\_HIGH@{COMPRESSION\_LEVEL\_HIGH}}}\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027dac6ff268fbc4803238157fa0ec2e6c094}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027dac6ff268fbc4803238157fa0ec2e6c094}} 
+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+H\+I\+GH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMPRESSION\_LEVEL\_EXTRA\_HIGH@{COMPRESSION\_LEVEL\_EXTRA\_HIGH}!apedec.c@{apedec.c}}\index{apedec.c@{apedec.c}!COMPRESSION\_LEVEL\_EXTRA\_HIGH@{COMPRESSION\_LEVEL\_EXTRA\_HIGH}}}\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027da2f9d6b9e900a0dbba8f0512ab0fe15e5}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027da2f9d6b9e900a0dbba8f0512ab0fe15e5}} 
+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+E\+X\+T\+R\+A\+\_\+\+H\+I\+GH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMPRESSION\_LEVEL\_INSANE@{COMPRESSION\_LEVEL\_INSANE}!apedec.c@{apedec.c}}\index{apedec.c@{apedec.c}!COMPRESSION\_LEVEL\_INSANE@{COMPRESSION\_LEVEL\_INSANE}}}\mbox{\Hypertarget{apedec_8c_a624229a25b6348b2973bb6d7a069027da356395101030cc5c21a50c535efa22c6}\label{apedec_8c_a624229a25b6348b2973bb6d7a069027da356395101030cc5c21a50c535efa22c6}} 
+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+L\+E\+V\+E\+L\+\_\+\+I\+N\+S\+A\+NE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 68 of file apedec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{apedec_8c_a6e41b1c883efbf6c58998e808272df16}\label{apedec_8c_a6e41b1c883efbf6c58998e808272df16}} 
+\index{apedec.c@{apedec.c}!ape\_apply\_filters@{ape\_apply\_filters}}
+\index{ape\_apply\_filters@{ape\_apply\_filters}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_apply\_filters()}{ape\_apply\_filters()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ape\+\_\+apply\+\_\+filters (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{decoded0,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{decoded1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1379 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a6e41b1c883efbf6c58998e808272df16_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a6e41b1c883efbf6c58998e808272df16_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a0ded1dc9a445089cc5055529fbc72c17}\label{apedec_8c_a0ded1dc9a445089cc5055529fbc72c17}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_close@{ape\_decode\_close}}
+\index{ape\_decode\_close@{ape\_decode\_close}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_close()}{ape\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 218 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a23d1935e66228d70ec60902b619c9b12}\label{apedec_8c_a23d1935e66228d70ec60902b619c9b12}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_frame@{ape\_decode\_frame}}
+\index{ape\_decode\_frame@{ape\_decode\_frame}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_frame()}{ape\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1459 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a23d1935e66228d70ec60902b619c9b12_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a8b90355aa6ca8dbf82058cfbdc479bf3}\label{apedec_8c_a8b90355aa6ca8dbf82058cfbdc479bf3}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_init@{ape\_decode\_init}}
+\index{ape\_decode\_init@{ape\_decode\_init}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_init()}{ape\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 233 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8b90355aa6ca8dbf82058cfbdc479bf3_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a8d0ea876e9691d4fa04bffabc1f19179}\label{apedec_8c_a8d0ea876e9691d4fa04bffabc1f19179}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_value\_3860@{ape\_decode\_value\_3860}}
+\index{ape\_decode\_value\_3860@{ape\_decode\_value\_3860}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_value\_3860()}{ape\_decode\_value\_3860()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+value\+\_\+3860 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$}]{rice }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 493 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8d0ea876e9691d4fa04bffabc1f19179_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8d0ea876e9691d4fa04bffabc1f19179_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a31eed59c54bcc102bb15a140968b9ff7}\label{apedec_8c_a31eed59c54bcc102bb15a140968b9ff7}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_value\_3900@{ape\_decode\_value\_3900}}
+\index{ape\_decode\_value\_3900@{ape\_decode\_value\_3900}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_value\_3900()}{ape\_decode\_value\_3900()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+value\+\_\+3900 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$}]{rice }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 526 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a31eed59c54bcc102bb15a140968b9ff7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a31eed59c54bcc102bb15a140968b9ff7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a6a400599226b3a7aaa46d594151e92c0}\label{apedec_8c_a6a400599226b3a7aaa46d594151e92c0}} 
+\index{apedec.c@{apedec.c}!ape\_decode\_value\_3990@{ape\_decode\_value\_3990}}
+\index{ape\_decode\_value\_3990@{ape\_decode\_value\_3990}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decode\_value\_3990()}{ape\_decode\_value\_3990()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ape\+\_\+decode\+\_\+value\+\_\+3990 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$}]{rice }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 560 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a6a400599226b3a7aaa46d594151e92c0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a6a400599226b3a7aaa46d594151e92c0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_ab96f43912d675fe268e43d1d0c2ad7f1}\label{apedec_8c_ab96f43912d675fe268e43d1d0c2ad7f1}} 
+\index{apedec.c@{apedec.c}!ape\_flush@{ape\_flush}}
+\index{ape\_flush@{ape\_flush}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_flush()}{ape\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ape\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1636 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a724b175c87048c9061f1992428146ea4}\label{apedec_8c_a724b175c87048c9061f1992428146ea4}} 
+\index{apedec.c@{apedec.c}!ape\_unpack\_mono@{ape\_unpack\_mono}}
+\index{ape\_unpack\_mono@{ape\_unpack\_mono}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_unpack\_mono()}{ape\_unpack\_mono()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ape\+\_\+unpack\+\_\+mono (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1409 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{apedec_8c_a724b175c87048c9061f1992428146ea4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_ad217b194d8b77b7570e4b9f0633cfa3c}\label{apedec_8c_ad217b194d8b77b7570e4b9f0633cfa3c}} 
+\index{apedec.c@{apedec.c}!ape\_unpack\_stereo@{ape\_unpack\_stereo}}
+\index{ape\_unpack\_stereo@{ape\_unpack\_stereo}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_unpack\_stereo()}{ape\_unpack\_stereo()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ape\+\_\+unpack\+\_\+stereo (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1430 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{apedec_8c_ad217b194d8b77b7570e4b9f0633cfa3c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a15a3cbd9fbd042c05895fcce4b493c8a}\label{apedec_8c_a15a3cbd9fbd042c05895fcce4b493c8a}} 
+\index{apedec.c@{apedec.c}!APESIGN@{APESIGN}}
+\index{APESIGN@{APESIGN}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{APESIGN()}{APESIGN()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} A\+P\+E\+S\+I\+GN (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Get inverse sign of integer (-\/1 for positive, 1 for negative and 0 for zero) 
+
+Definition at line 863 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a15a3cbd9fbd042c05895fcce4b493c8a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_aea171a971a3d252f90170cbb6a28a759}\label{apedec_8c_aea171a971a3d252f90170cbb6a28a759}} 
+\index{apedec.c@{apedec.c}!apply\_filter@{apply\_filter}}
+\index{apply\_filter@{apply\_filter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{apply\_filter()}{apply\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} apply\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$}]{f,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{data0,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{data1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{fracbits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1370 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aea171a971a3d252f90170cbb6a28a759_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aea171a971a3d252f90170cbb6a28a759_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_ab4f830ddc9f299b2f39b35143f8573e8}\label{apedec_8c_ab4f830ddc9f299b2f39b35143f8573e8}} 
+\index{apedec.c@{apedec.c}!decode\_array\_0000@{decode\_array\_0000}}
+\index{decode\_array\_0000@{decode\_array\_0000}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_array\_0000()}{decode\_array\_0000()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+array\+\_\+0000 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$}]{rice,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 606 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_ab4f830ddc9f299b2f39b35143f8573e8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_ab4f830ddc9f299b2f39b35143f8573e8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a38893d41431214e889dbf965efd8d381}\label{apedec_8c_a38893d41431214e889dbf965efd8d381}} 
+\index{apedec.c@{apedec.c}!do\_apply\_filter@{do\_apply\_filter}}
+\index{do\_apply\_filter@{do\_apply\_filter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{do\_apply\_filter()}{do\_apply\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} do\+\_\+apply\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{version,  }\item[{\mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$}]{f,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{fracbits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1308 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{apedec_8c_a38893d41431214e889dbf965efd8d381_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a38893d41431214e889dbf965efd8d381_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a43e90a022e6c22a499bb0bfb821b814e}\label{apedec_8c_a43e90a022e6c22a499bb0bfb821b814e}} 
+\index{apedec.c@{apedec.c}!do\_init\_filter@{do\_init\_filter}}
+\index{do\_init\_filter@{do\_init\_filter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{do\_init\_filter()}{do\_init\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} do\+\_\+init\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$}]{f,  }\item[{int16\+\_\+t $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1290 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a43e90a022e6c22a499bb0bfb821b814e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a91235cb46b632f071abda54af78b90d6}\label{apedec_8c_a91235cb46b632f071abda54af78b90d6}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_mono\_0000@{entropy\_decode\_mono\_0000}}
+\index{entropy\_decode\_mono\_0000@{entropy\_decode\_mono\_0000}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_mono\_0000()}{entropy\_decode\_mono\_0000()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+mono\+\_\+0000 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 664 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a91235cb46b632f071abda54af78b90d6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{apedec_8c_a91235cb46b632f071abda54af78b90d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a0eb97cc8d7e6ec9b18539ac07b1ab1ed}\label{apedec_8c_a0eb97cc8d7e6ec9b18539ac07b1ab1ed}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_mono\_3860@{entropy\_decode\_mono\_3860}}
+\index{entropy\_decode\_mono\_3860@{entropy\_decode\_mono\_3860}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_mono\_3860()}{entropy\_decode\_mono\_3860()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+mono\+\_\+3860 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 678 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a0eb97cc8d7e6ec9b18539ac07b1ab1ed_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{apedec_8c_a0eb97cc8d7e6ec9b18539ac07b1ab1ed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a1d13416119aa36c84a7d2a5474da6f7c}\label{apedec_8c_a1d13416119aa36c84a7d2a5474da6f7c}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_mono\_3900@{entropy\_decode\_mono\_3900}}
+\index{entropy\_decode\_mono\_3900@{entropy\_decode\_mono\_3900}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_mono\_3900()}{entropy\_decode\_mono\_3900()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+mono\+\_\+3900 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 698 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a1d13416119aa36c84a7d2a5474da6f7c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{apedec_8c_a1d13416119aa36c84a7d2a5474da6f7c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a9579d93552d95c7d154763f8cb25d8ac}\label{apedec_8c_a9579d93552d95c7d154763f8cb25d8ac}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_mono\_3990@{entropy\_decode\_mono\_3990}}
+\index{entropy\_decode\_mono\_3990@{entropy\_decode\_mono\_3990}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_mono\_3990()}{entropy\_decode\_mono\_3990()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+mono\+\_\+3990 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 733 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a9579d93552d95c7d154763f8cb25d8ac_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{apedec_8c_a9579d93552d95c7d154763f8cb25d8ac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a8b535159a98ba212cdd5d446e710af33}\label{apedec_8c_a8b535159a98ba212cdd5d446e710af33}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_stereo\_0000@{entropy\_decode\_stereo\_0000}}
+\index{entropy\_decode\_stereo\_0000@{entropy\_decode\_stereo\_0000}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_stereo\_0000()}{entropy\_decode\_stereo\_0000()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+stereo\+\_\+0000 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 670 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8b535159a98ba212cdd5d446e710af33_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{apedec_8c_a8b535159a98ba212cdd5d446e710af33_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a01cd46705361a5fb16ed1fe9ae50e0a4}\label{apedec_8c_a01cd46705361a5fb16ed1fe9ae50e0a4}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_stereo\_3860@{entropy\_decode\_stereo\_3860}}
+\index{entropy\_decode\_stereo\_3860@{entropy\_decode\_stereo\_3860}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_stereo\_3860()}{entropy\_decode\_stereo\_3860()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+stereo\+\_\+3860 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 686 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a01cd46705361a5fb16ed1fe9ae50e0a4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{apedec_8c_a01cd46705361a5fb16ed1fe9ae50e0a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a9139da29e132367cab1ce1c0446b237f}\label{apedec_8c_a9139da29e132367cab1ce1c0446b237f}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_stereo\_3900@{entropy\_decode\_stereo\_3900}}
+\index{entropy\_decode\_stereo\_3900@{entropy\_decode\_stereo\_3900}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_stereo\_3900()}{entropy\_decode\_stereo\_3900()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+stereo\+\_\+3900 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 706 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a9139da29e132367cab1ce1c0446b237f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{apedec_8c_a9139da29e132367cab1ce1c0446b237f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a045564e4e0db44381b3ae07951d00c08}\label{apedec_8c_a045564e4e0db44381b3ae07951d00c08}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_stereo\_3930@{entropy\_decode\_stereo\_3930}}
+\index{entropy\_decode\_stereo\_3930@{entropy\_decode\_stereo\_3930}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_stereo\_3930()}{entropy\_decode\_stereo\_3930()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+stereo\+\_\+3930 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 722 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a045564e4e0db44381b3ae07951d00c08_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{apedec_8c_a045564e4e0db44381b3ae07951d00c08_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a95ef852279ec409c05921e8789569f16}\label{apedec_8c_a95ef852279ec409c05921e8789569f16}} 
+\index{apedec.c@{apedec.c}!entropy\_decode\_stereo\_3990@{entropy\_decode\_stereo\_3990}}
+\index{entropy\_decode\_stereo\_3990@{entropy\_decode\_stereo\_3990}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{entropy\_decode\_stereo\_3990()}{entropy\_decode\_stereo\_3990()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} entropy\+\_\+decode\+\_\+stereo\+\_\+3990 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blockstodecode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 741 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a95ef852279ec409c05921e8789569f16_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{apedec_8c_a95ef852279ec409c05921e8789569f16_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a6afa99ce0b92115c25100a50a7c08fc1}\label{apedec_8c_a6afa99ce0b92115c25100a50a7c08fc1}} 
+\index{apedec.c@{apedec.c}!filter\_3800@{filter\_3800}}
+\index{filter\_3800@{filter\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{filter\_3800()}{filter\_3800()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+3800 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$}]{p,  }\item[{const unsigned}]{decoded,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayA,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayB,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{shift }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 893 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{apedec_8c_a6afa99ce0b92115c25100a50a7c08fc1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a6afa99ce0b92115c25100a50a7c08fc1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a1eeb3a85a726bfed3f1d97f71d8eb33e}\label{apedec_8c_a1eeb3a85a726bfed3f1d97f71d8eb33e}} 
+\index{apedec.c@{apedec.c}!filter\_fast\_3320@{filter\_fast\_3320}}
+\index{filter\_fast\_3320@{filter\_fast\_3320}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{filter\_fast\_3320()}{filter\_fast\_3320()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+fast\+\_\+3320 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{decoded,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayA }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 867 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a1eeb3a85a726bfed3f1d97f71d8eb33e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a4d09bdbad4db03f6c82de936635e534f}\label{apedec_8c_a4d09bdbad4db03f6c82de936635e534f}} 
+\index{apedec.c@{apedec.c}!get\_k@{get\_k}}
+\index{get\_k@{get\_k}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{get\_k()}{get\_k()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+k (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ksum }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 601 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a4d09bdbad4db03f6c82de936635e534f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a99ca8f6221918de480ec33e4a8321331}\label{apedec_8c_a99ca8f6221918de480ec33e4a8321331}} 
+\index{apedec.c@{apedec.c}!get\_rice\_ook@{get\_rice\_ook}}
+\index{get\_rice\_ook@{get\_rice\_ook}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{get\_rice\_ook()}{get\_rice\_ook()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+rice\+\_\+ook (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 481 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a99ca8f6221918de480ec33e4a8321331_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a99ca8f6221918de480ec33e4a8321331_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a7520de7c5d4c90584b077cff27bc4086}\label{apedec_8c_a7520de7c5d4c90584b077cff27bc4086}} 
+\index{apedec.c@{apedec.c}!init\_entropy\_decoder@{init\_entropy\_decoder}}
+\index{init\_entropy\_decoder@{init\_entropy\_decoder}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{init\_entropy\_decoder()}{init\_entropy\_decoder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+entropy\+\_\+decoder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 752 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a7520de7c5d4c90584b077cff27bc4086_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a7520de7c5d4c90584b077cff27bc4086_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a8482205b97ed8bb17ee50985970c0599}\label{apedec_8c_a8482205b97ed8bb17ee50985970c0599}} 
+\index{apedec.c@{apedec.c}!init\_filter@{init\_filter}}
+\index{init\_filter@{init\_filter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{init\_filter()}{init\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_p_e_filter}{A\+P\+E\+Filter}} $\ast$}]{f,  }\item[{int16\+\_\+t $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1302 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{apedec_8c_a8482205b97ed8bb17ee50985970c0599_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8482205b97ed8bb17ee50985970c0599_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_aede2bc481dbdf614d71cc3b02a72e7f4}\label{apedec_8c_aede2bc481dbdf614d71cc3b02a72e7f4}} 
+\index{apedec.c@{apedec.c}!init\_frame\_decoder@{init\_frame\_decoder}}
+\index{init\_frame\_decoder@{init\_frame\_decoder}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{init\_frame\_decoder()}{init\_frame\_decoder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+frame\+\_\+decoder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1393 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aede2bc481dbdf614d71cc3b02a72e7f4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{apedec_8c_aede2bc481dbdf614d71cc3b02a72e7f4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_ae2ad9e1672fcd6d198b0e8b4d2fb0ea2}\label{apedec_8c_ae2ad9e1672fcd6d198b0e8b4d2fb0ea2}} 
+\index{apedec.c@{apedec.c}!init\_predictor\_decoder@{init\_predictor\_decoder}}
+\index{init\_predictor\_decoder@{init\_predictor\_decoder}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{init\_predictor\_decoder()}{init\_predictor\_decoder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+predictor\+\_\+decoder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 810 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_ae2ad9e1672fcd6d198b0e8b4d2fb0ea2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a8b5923d8b6621dc3e4f56868630974fb}\label{apedec_8c_a8b5923d8b6621dc3e4f56868630974fb}} 
+\index{apedec.c@{apedec.c}!long\_filter\_ehigh\_3830@{long\_filter\_ehigh\_3830}}
+\index{long\_filter\_ehigh\_3830@{long\_filter\_ehigh\_3830}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{long\_filter\_ehigh\_3830()}{long\_filter\_ehigh\_3830()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} long\+\_\+filter\+\_\+ehigh\+\_\+3830 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{buffer,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 964 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{apedec_8c_a8b5923d8b6621dc3e4f56868630974fb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a8b5923d8b6621dc3e4f56868630974fb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a73a630e70be837c946a6b30617a2a8cd}\label{apedec_8c_a73a630e70be837c946a6b30617a2a8cd}} 
+\index{apedec.c@{apedec.c}!long\_filter\_high\_3800@{long\_filter\_high\_3800}}
+\index{long\_filter\_high\_3800@{long\_filter\_high\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{long\_filter\_high\_3800()}{long\_filter\_high\_3800()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} long\+\_\+filter\+\_\+high\+\_\+3800 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{buffer,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{shift,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 938 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{apedec_8c_a73a630e70be837c946a6b30617a2a8cd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a73a630e70be837c946a6b30617a2a8cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_aaf5f096dfb0ec52d2d0ebe50f45a76fa}\label{apedec_8c_aaf5f096dfb0ec52d2d0ebe50f45a76fa}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_mono\_3800@{predictor\_decode\_mono\_3800}}
+\index{predictor\_decode\_mono\_3800@{predictor\_decode\_mono\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_mono\_3800()}{predictor\_decode\_mono\_3800()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+mono\+\_\+3800 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1040 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aaf5f096dfb0ec52d2d0ebe50f45a76fa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=349pt]{apedec_8c_aaf5f096dfb0ec52d2d0ebe50f45a76fa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a73eaf10f14ac9eab01f88dfb008f5256}\label{apedec_8c_a73eaf10f14ac9eab01f88dfb008f5256}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_mono\_3930@{predictor\_decode\_mono\_3930}}
+\index{predictor\_decode\_mono\_3930@{predictor\_decode\_mono\_3930}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_mono\_3930()}{predictor\_decode\_mono\_3930()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+mono\+\_\+3930 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1143 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a73eaf10f14ac9eab01f88dfb008f5256_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=349pt]{apedec_8c_a73eaf10f14ac9eab01f88dfb008f5256_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_af0fd9d67998fa7477f41728b367bbedf}\label{apedec_8c_af0fd9d67998fa7477f41728b367bbedf}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_mono\_3950@{predictor\_decode\_mono\_3950}}
+\index{predictor\_decode\_mono\_3950@{predictor\_decode\_mono\_3950}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_mono\_3950()}{predictor\_decode\_mono\_3950()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+mono\+\_\+3950 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1242 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_af0fd9d67998fa7477f41728b367bbedf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=349pt]{apedec_8c_af0fd9d67998fa7477f41728b367bbedf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a93ca0eb86fd4b0f178685d81b6ad5228}\label{apedec_8c_a93ca0eb86fd4b0f178685d81b6ad5228}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_stereo\_3800@{predictor\_decode\_stereo\_3800}}
+\index{predictor\_decode\_stereo\_3800@{predictor\_decode\_stereo\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_stereo\_3800()}{predictor\_decode\_stereo\_3800()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+stereo\+\_\+3800 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 985 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a93ca0eb86fd4b0f178685d81b6ad5228_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a93ca0eb86fd4b0f178685d81b6ad5228_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a961f2b8aca7f320461d844848073c6c7}\label{apedec_8c_a961f2b8aca7f320461d844848073c6c7}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_stereo\_3930@{predictor\_decode\_stereo\_3930}}
+\index{predictor\_decode\_stereo\_3930@{predictor\_decode\_stereo\_3930}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_stereo\_3930()}{predictor\_decode\_stereo\_3930()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+stereo\+\_\+3930 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1115 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a961f2b8aca7f320461d844848073c6c7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a961f2b8aca7f320461d844848073c6c7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a4295638171a08c50ab133970db55afc1}\label{apedec_8c_a4295638171a08c50ab133970db55afc1}} 
+\index{apedec.c@{apedec.c}!predictor\_decode\_stereo\_3950@{predictor\_decode\_stereo\_3950}}
+\index{predictor\_decode\_stereo\_3950@{predictor\_decode\_stereo\_3950}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_decode\_stereo\_3950()}{predictor\_decode\_stereo\_3950()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predictor\+\_\+decode\+\_\+stereo\+\_\+3950 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1213 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a4295638171a08c50ab133970db55afc1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a4295638171a08c50ab133970db55afc1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a9920969f88b70201c12f647601adb02c}\label{apedec_8c_a9920969f88b70201c12f647601adb02c}} 
+\index{apedec.c@{apedec.c}!predictor\_update\_3930@{predictor\_update\_3930}}
+\index{predictor\_update\_3930@{predictor\_update\_3930}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_update\_3930()}{predictor\_update\_3930()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} predictor\+\_\+update\+\_\+3930 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_predictor}{A\+P\+E\+Predictor}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{decoded,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayA }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1085 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{apedec_8c_a9920969f88b70201c12f647601adb02c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a9920969f88b70201c12f647601adb02c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a650c07a3b5f981a7d441f521b01ad141}\label{apedec_8c_a650c07a3b5f981a7d441f521b01ad141}} 
+\index{apedec.c@{apedec.c}!predictor\_update\_filter@{predictor\_update\_filter}}
+\index{predictor\_update\_filter@{predictor\_update\_filter}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{predictor\_update\_filter()}{predictor\_update\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} predictor\+\_\+update\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_predictor64}{A\+P\+E\+Predictor64}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{decoded,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayA,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delayB,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{adaptA,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{adaptB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1165 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{apedec_8c_a650c07a3b5f981a7d441f521b01ad141_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a650c07a3b5f981a7d441f521b01ad141_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a0933796f13eb6ccf3ce657fcb3d54488}\label{apedec_8c_a0933796f13eb6ccf3ce657fcb3d54488}} 
+\index{apedec.c@{apedec.c}!range\_dec\_normalize@{range\_dec\_normalize}}
+\index{range\_dec\_normalize@{range\_dec\_normalize}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_dec\_normalize()}{range\_dec\_normalize()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} range\+\_\+dec\+\_\+normalize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Perform normalization 
+
+Definition at line 340 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a0933796f13eb6ccf3ce657fcb3d54488_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_aeb3e121972cbd8dcbdef8c6ba937e8fe}\label{apedec_8c_aeb3e121972cbd8dcbdef8c6ba937e8fe}} 
+\index{apedec.c@{apedec.c}!range\_decode\_bits@{range\_decode\_bits}}
+\index{range\_decode\_bits@{range\_decode\_bits}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_decode\_bits()}{range\_decode\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} range\+\_\+decode\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Decode n bits (n $<$= 16) without modelling 
+
+Definition at line 394 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aeb3e121972cbd8dcbdef8c6ba937e8fe_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_aeb3e121972cbd8dcbdef8c6ba937e8fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a5808f1348c9d51877773b0f7b6250110}\label{apedec_8c_a5808f1348c9d51877773b0f7b6250110}} 
+\index{apedec.c@{apedec.c}!range\_decode\_culfreq@{range\_decode\_culfreq}}
+\index{range\_decode\_culfreq@{range\_decode\_culfreq}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_decode\_culfreq()}{range\_decode\_culfreq()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} range\+\_\+decode\+\_\+culfreq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tot\+\_\+f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Calculate cumulative frequency for next symbol. Does NO update! 
+\begin{DoxyParams}{Parameters}
+{\em ctx} & decoder context \\
+\hline
+{\em tot\+\_\+f} & is the total frequency or (code\+\_\+value)1$<$$<$shift \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the cumulative frequency 
+\end{DoxyReturn}
+
+
+Definition at line 361 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{apedec_8c_a5808f1348c9d51877773b0f7b6250110_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a5808f1348c9d51877773b0f7b6250110_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a82d953707b452ec3f5113be2f09bde99}\label{apedec_8c_a82d953707b452ec3f5113be2f09bde99}} 
+\index{apedec.c@{apedec.c}!range\_decode\_culshift@{range\_decode\_culshift}}
+\index{range\_decode\_culshift@{range\_decode\_culshift}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_decode\_culshift()}{range\_decode\_culshift()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} range\+\_\+decode\+\_\+culshift (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{shift }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Decode value with given size in bits 
+\begin{DoxyParams}{Parameters}
+{\em ctx} & decoder context \\
+\hline
+{\em shift} & number of bits to decode \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 373 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=338pt]{apedec_8c_a82d953707b452ec3f5113be2f09bde99_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a82d953707b452ec3f5113be2f09bde99_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a428d7cf0bfa4171012f1bd1aaa510da2}\label{apedec_8c_a428d7cf0bfa4171012f1bd1aaa510da2}} 
+\index{apedec.c@{apedec.c}!range\_decode\_update@{range\_decode\_update}}
+\index{range\_decode\_update@{range\_decode\_update}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_decode\_update()}{range\_decode\_update()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} range\+\_\+decode\+\_\+update (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sy\+\_\+f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lt\+\_\+f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Update decoding state 
+\begin{DoxyParams}{Parameters}
+{\em ctx} & decoder context \\
+\hline
+{\em sy\+\_\+f} & the interval length (frequency of the symbol) \\
+\hline
+{\em lt\+\_\+f} & the lower end (frequency sum of $<$ symbols) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 387 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a428d7cf0bfa4171012f1bd1aaa510da2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a94159e94bd2e667667671c41a382098c}\label{apedec_8c_a94159e94bd2e667667671c41a382098c}} 
+\index{apedec.c@{apedec.c}!range\_get\_symbol@{range\_get\_symbol}}
+\index{range\_get\_symbol@{range\_get\_symbol}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_get\_symbol()}{range\_get\_symbol()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} range\+\_\+get\+\_\+symbol (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx,  }\item[{const uint16\+\_\+t}]{counts\mbox{[}$\,$\mbox{]},  }\item[{const uint16\+\_\+t}]{counts\+\_\+diff\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Decode symbol 
+\begin{DoxyParams}{Parameters}
+{\em ctx} & decoder context \\
+\hline
+{\em counts} & probability range start position \\
+\hline
+{\em counts\+\_\+diff} & probability range widths \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 446 of file apedec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a94159e94bd2e667667671c41a382098c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a94159e94bd2e667667671c41a382098c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_ad8faca7b6c3d34e18ac959f0543f04d5}\label{apedec_8c_ad8faca7b6c3d34e18ac959f0543f04d5}} 
+\index{apedec.c@{apedec.c}!range\_start\_decoding@{range\_start\_decoding}}
+\index{range\_start\_decoding@{range\_start\_decoding}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{range\_start\_decoding()}{range\_start\_decoding()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} range\+\_\+start\+\_\+decoding (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_context}{A\+P\+E\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Start the decoder 
+
+Definition at line 332 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_ad8faca7b6c3d34e18ac959f0543f04d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{apedec_8c_a595bb620320e689121fe2bb77ebd7258}\label{apedec_8c_a595bb620320e689121fe2bb77ebd7258}} 
+\index{apedec.c@{apedec.c}!update\_rice@{update\_rice}}
+\index{update\_rice@{update\_rice}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{update\_rice()}{update\_rice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+rice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_p_e_rice}{A\+P\+E\+Rice}} $\ast$}]{rice,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 470 of file apedec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{apedec_8c_a595bb620320e689121fe2bb77ebd7258_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{apedec_8c_aa154b892c08d2ee94e18af36ca522a99}\label{apedec_8c_aa154b892c08d2ee94e18af36ca522a99}} 
+\index{apedec.c@{apedec.c}!ape\_decoder\_class@{ape\_decoder\_class}}
+\index{ape\_decoder\_class@{ape\_decoder\_class}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_decoder\_class}{ape\_decoder\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} ape\+\_\+decoder\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}APE decoder"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{apedec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1650 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a054dbb19cd3026319986df9cf60c9e0a}\label{apedec_8c_a054dbb19cd3026319986df9cf60c9e0a}} 
+\index{apedec.c@{apedec.c}!ape\_filter\_fracbits@{ape\_filter\_fracbits}}
+\index{ape\_filter\_fracbits@{ape\_filter\_fracbits}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_filter\_fracbits}{ape\_filter\_fracbits}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} ape\+\_\+filter\+\_\+fracbits\mbox{[}5\mbox{]}\mbox{[}\mbox{\hyperlink{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}{A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{  0,  0,  0 \},}
+\DoxyCodeLine{    \{ 11,  0,  0 \},}
+\DoxyCodeLine{    \{ 11,  0,  0 \},}
+\DoxyCodeLine{    \{ 10, 13,  0 \},}
+\DoxyCodeLine{    \{ 11, 13, 15 \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Filter fraction bits depending on compression level 
+
+Definition at line 89 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a3d0df3b648cdb930bce7e126b01d12f4}\label{apedec_8c_a3d0df3b648cdb930bce7e126b01d12f4}} 
+\index{apedec.c@{apedec.c}!ape\_filter\_orders@{ape\_filter\_orders}}
+\index{ape\_filter\_orders@{ape\_filter\_orders}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ape\_filter\_orders}{ape\_filter\_orders}}
+{\footnotesize\ttfamily const uint16\+\_\+t ape\+\_\+filter\+\_\+orders\mbox{[}5\mbox{]}\mbox{[}\mbox{\hyperlink{apedec_8c_a956cc7ed8ad877e4fec800925e7c0aed}{A\+P\+E\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+L\+E\+V\+E\+LS}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{  0,   0,    0 \},}
+\DoxyCodeLine{    \{ 16,   0,    0 \},}
+\DoxyCodeLine{    \{ 64,   0,    0 \},}
+\DoxyCodeLine{    \{ 32, 256,    0 \},}
+\DoxyCodeLine{    \{ 16, 256, 1280 \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Filter orders depending on compression level 
+
+Definition at line 80 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_acf2e2f91863bcb7616620d48462e9eb2}\label{apedec_8c_acf2e2f91863bcb7616620d48462e9eb2}} 
+\index{apedec.c@{apedec.c}!counts\_3970@{counts\_3970}}
+\index{counts\_3970@{counts\_3970}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{counts\_3970}{counts\_3970}}
+{\footnotesize\ttfamily const uint16\+\_\+t counts\+\_\+3970\mbox{[}22\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{        0, 14824, 28224, 39348, 47855, 53994, 58171, 60926,}
+\DoxyCodeLine{    62682, 63786, 64463, 64878, 65126, 65276, 65365, 65419,}
+\DoxyCodeLine{    65450, 65469, 65480, 65487, 65491, 65493,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Fixed probabilities for symbols in Monkey Audio version 3.\+97 
+
+Definition at line 407 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_adc290f5b762723d85f64565e83bde61a}\label{apedec_8c_adc290f5b762723d85f64565e83bde61a}} 
+\index{apedec.c@{apedec.c}!counts\_3980@{counts\_3980}}
+\index{counts\_3980@{counts\_3980}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{counts\_3980}{counts\_3980}}
+{\footnotesize\ttfamily const uint16\+\_\+t counts\+\_\+3980\mbox{[}22\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{        0, 19578, 36160, 48417, 56323, 60899, 63265, 64435,}
+\DoxyCodeLine{    64971, 65232, 65351, 65416, 65447, 65466, 65476, 65482,}
+\DoxyCodeLine{    65485, 65488, 65490, 65491, 65492, 65493,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Fixed probabilities for symbols in Monkey Audio version 3.\+98 
+
+Definition at line 425 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_ada6bd1be2a8adfac27a9c830de09272e}\label{apedec_8c_ada6bd1be2a8adfac27a9c830de09272e}} 
+\index{apedec.c@{apedec.c}!counts\_diff\_3970@{counts\_diff\_3970}}
+\index{counts\_diff\_3970@{counts\_diff\_3970}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{counts\_diff\_3970}{counts\_diff\_3970}}
+{\footnotesize\ttfamily const uint16\+\_\+t counts\+\_\+diff\+\_\+3970\mbox{[}21\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    14824, 13400, 11124, 8507, 6139, 4177, 2755, 1756,}
+\DoxyCodeLine{    1104, 677, 415, 248, 150, 89, 54, 31,}
+\DoxyCodeLine{    19, 11, 7, 4, 2,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Probability ranges for symbols in Monkey Audio version 3.\+97 
+
+Definition at line 416 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_ada769a23753938f4f7dc994e5dfe291a}\label{apedec_8c_ada769a23753938f4f7dc994e5dfe291a}} 
+\index{apedec.c@{apedec.c}!counts\_diff\_3980@{counts\_diff\_3980}}
+\index{counts\_diff\_3980@{counts\_diff\_3980}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{counts\_diff\_3980}{counts\_diff\_3980}}
+{\footnotesize\ttfamily const uint16\+\_\+t counts\+\_\+diff\+\_\+3980\mbox{[}21\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    19578, 16582, 12257, 7906, 4576, 2366, 1170, 536,}
+\DoxyCodeLine{    261, 119, 65, 31, 19, 10, 6, 3,}
+\DoxyCodeLine{    3, 2, 1, 1, 1,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Probability ranges for symbols in Monkey Audio version 3.\+98 
+
+Definition at line 434 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a703fee6c027f4ccb4e68e03f9c68fd22}\label{apedec_8c_a703fee6c027f4ccb4e68e03f9c68fd22}} 
+\index{apedec.c@{apedec.c}!ff\_ape\_decoder@{ff\_ape\_decoder}}
+\index{ff\_ape\_decoder@{ff\_ape\_decoder}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_ape\_decoder}{ff\_ape\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+ape\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}ape"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Monkey's Audio"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea40c7bc93234f6eb8b5ead2b5d887aa4a}{AV\_CODEC\_ID\_APE}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{apedec_8c_a3db246acfe4db1639b41f13d393dd52a}{APEContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{apedec_8c_a8b90355aa6ca8dbf82058cfbdc479bf3}{ape\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{apedec_8c_a0ded1dc9a445089cc5055529fbc72c17}{ape\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{apedec_8c_a23d1935e66228d70ec60902b619c9b12}{ape\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}} |}
+\DoxyCodeLine{                      \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{apedec_8c_ab96f43912d675fe268e43d1d0c2ad7f1}{ape\_flush}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a6ab0109a23af37e29ea3a7282c00d311}{AV\_SAMPLE\_FMT\_U8P}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{AV\_SAMPLE\_FMT\_S16P}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{AV\_SAMPLE\_FMT\_S32P}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{apedec_8c_aa154b892c08d2ee94e18af36ca522a99}{ape\_decoder\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1657 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a8ef99752bc524f18ee4e3b3a067372a8}\label{apedec_8c_a8ef99752bc524f18ee4e3b3a067372a8}} 
+\index{apedec.c@{apedec.c}!initial\_coeffs\_3930@{initial\_coeffs\_3930}}
+\index{initial\_coeffs\_3930@{initial\_coeffs\_3930}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{initial\_coeffs\_3930}{initial\_coeffs\_3930}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} initial\+\_\+coeffs\+\_\+3930\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    360, 317, -\/109, 98}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 802 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a7d5129ecc1ce9a9281bf7fe01d05a1ca}\label{apedec_8c_a7d5129ecc1ce9a9281bf7fe01d05a1ca}} 
+\index{apedec.c@{apedec.c}!initial\_coeffs\_3930\_64bit@{initial\_coeffs\_3930\_64bit}}
+\index{initial\_coeffs\_3930\_64bit@{initial\_coeffs\_3930\_64bit}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{initial\_coeffs\_3930\_64bit}{initial\_coeffs\_3930\_64bit}}
+{\footnotesize\ttfamily const int64\+\_\+t initial\+\_\+coeffs\+\_\+3930\+\_\+64bit\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    360, 317, -\/109, 98}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 806 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a841ba8b0c499428d1d4c963e36b8dcee}\label{apedec_8c_a841ba8b0c499428d1d4c963e36b8dcee}} 
+\index{apedec.c@{apedec.c}!initial\_coeffs\_a\_3800@{initial\_coeffs\_a\_3800}}
+\index{initial\_coeffs\_a\_3800@{initial\_coeffs\_a\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{initial\_coeffs\_a\_3800}{initial\_coeffs\_a\_3800}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} initial\+\_\+coeffs\+\_\+a\+\_\+3800\mbox{[}3\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    64, 115, 64,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 794 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a6d566d746455007316d9c877cc74e7ce}\label{apedec_8c_a6d566d746455007316d9c877cc74e7ce}} 
+\index{apedec.c@{apedec.c}!initial\_coeffs\_b\_3800@{initial\_coeffs\_b\_3800}}
+\index{initial\_coeffs\_b\_3800@{initial\_coeffs\_b\_3800}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{initial\_coeffs\_b\_3800}{initial\_coeffs\_b\_3800}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} initial\+\_\+coeffs\+\_\+b\+\_\+3800\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    740, 0}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 798 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a17daba8cd8ad0c05744992ddd144658d}\label{apedec_8c_a17daba8cd8ad0c05744992ddd144658d}} 
+\index{apedec.c@{apedec.c}!initial\_coeffs\_fast\_3320@{initial\_coeffs\_fast\_3320}}
+\index{initial\_coeffs\_fast\_3320@{initial\_coeffs\_fast\_3320}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{initial\_coeffs\_fast\_3320}{initial\_coeffs\_fast\_3320}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} initial\+\_\+coeffs\+\_\+fast\+\_\+3320\mbox{[}1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    375,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 790 of file apedec.\+c.
+
+\mbox{\Hypertarget{apedec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{apedec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{apedec.c@{apedec.c}!options@{options}}
+\index{options@{options}!apedec.c@{apedec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}max\_samples"{}}, \textcolor{stringliteral}{"{}maximum number of samples decoded per call"{}},             \mbox{\hyperlink{apedec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(blocks\_per\_loop), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{ .i64 = 4608 \},    1,       INT\_MAX, \mbox{\hyperlink{apedec_8c_a214a9b541003b871f81961eab349761d}{PAR}}, \textcolor{stringliteral}{"{}max\_samples"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}all"{}},         \textcolor{stringliteral}{"{}no maximum. decode all samples for each packet at once"{}}, 0,                       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = INT\_MAX \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{apedec_8c_a214a9b541003b871f81961eab349761d}{PAR}}, \textcolor{stringliteral}{"{}max\_samples"{}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1644 of file apedec.\+c.
+

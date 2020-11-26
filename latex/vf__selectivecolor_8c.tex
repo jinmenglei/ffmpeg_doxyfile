@@ -1,0 +1,705 @@
+\hypertarget{vf__selectivecolor_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+selectivecolor.c File Reference}
+\label{vf__selectivecolor_8c}\index{E:/github/ffmpeg/libavfilter/vf\_selectivecolor.c@{E:/github/ffmpeg/libavfilter/vf\_selectivecolor.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/file.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}drawutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+selectivecolor.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structprocess__range}{process\+\_\+range}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a5c71a5e59a53413cd6c270266d63b031}{R}}~0
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_aed9ea78689ecce0b7264c02c7f8a9a54}{G}}~1
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a111da81ae5883147168bbb8366377b10}{B}}~2
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~3
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{R\+A\+N\+G\+E\+\_\+\+O\+P\+T\+I\+ON}}(color\+\_\+name,  range)~    \{ color\+\_\+name\char`\"{}s\char`\"{}, \char`\"{}\mbox{\hyperlink{mobiclip_8c_a1347ea3b728ecd30bcd9674ef3ef21e4}{adjust}} \char`\"{}color\+\_\+name\char`\"{} regions\char`\"{}, O\+F\+F\+S\+ET(opt\+\_\+cmyk\+\_\+adjust\mbox{[}range\mbox{]}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+T\+R\+I\+NG}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{N\+U\+LL}}\}, 0, 0, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}} \}
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a7a7f96cf6725001c8f7fc19c3ac99a0a}{D\+E\+C\+L\+A\+R\+E\+\_\+\+R\+A\+N\+G\+E\+\_\+\+S\+C\+A\+L\+E\+\_\+\+F\+U\+N\+CS}}(nbits)
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a838a0e5ef13cb9b2783bd003e09501d9}{R\+E\+A\+D16}}(dst)
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a838b8ca2676555f06368718525253bbe}{D\+E\+C\+L\+A\+R\+E\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+NC}}(nbits)
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a1b092c3293ec0b05d4d79e586cd3c91f}{D\+E\+F\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+NC}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{libavfilter_2af__afir_8c_a2935ad4574b6b85a524d227a44e8f171}{direct}},  \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\+\_\+method}},  nbits)
+\item 
+\#define \mbox{\hyperlink{vf__selectivecolor_8c_a29b3f98e556e84c84f6bfb9b35a61ef2}{D\+E\+F\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+N\+CS}}(nbits)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__selectivecolor_8c_aee1b10cb31b9ad788c9308fdfad5b67d}{get\+\_\+range\+\_\+scale\+\_\+func}}) (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} min\+\_\+val, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+val)
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__selectivecolor_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}} \mbox{\hyperlink{vf__selectivecolor_8c_afe1080c3c26969892cfa14976c435556}{Selective\+Color\+Context}}
+\item 
+typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__selectivecolor_8c_ab204e9174586c89567cdd498dbff8209}{selective\+\_\+color\+\_\+func\+\_\+type}}) (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43}{color\+\_\+range}} \{ \newline
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1ce4dfe5d1fa115fd340a60964732959}{R\+A\+N\+G\+E\+\_\+\+R\+E\+DS}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1242c72614fd458b40740705c825e525}{R\+A\+N\+G\+E\+\_\+\+Y\+E\+L\+L\+O\+WS}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a00dad9ec33d06863c84a76d0fcfb9834}{R\+A\+N\+G\+E\+\_\+\+G\+R\+E\+E\+NS}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a372ab50a79c7e74638845ddc028e8264}{R\+A\+N\+G\+E\+\_\+\+C\+Y\+A\+NS}}, 
+\newline
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a7f20de02f8a708ed954822a6c9ff1d33}{R\+A\+N\+G\+E\+\_\+\+B\+L\+U\+ES}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a3611a801ae5f54716f881ac4ce420fc5}{R\+A\+N\+G\+E\+\_\+\+M\+A\+G\+E\+N\+T\+AS}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43abb544e4891ed9c63b4acc80e3c53a453}{R\+A\+N\+G\+E\+\_\+\+W\+H\+I\+T\+ES}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43aafab35bbc2130594f9b3ea1eacf26c90}{R\+A\+N\+G\+E\+\_\+\+N\+E\+U\+T\+R\+A\+LS}}, 
+\newline
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43accc43eeb3779aa6ac9d1ffa6ab752974}{R\+A\+N\+G\+E\+\_\+\+B\+L\+A\+C\+KS}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a0dbedb38031808865168a59e500d4f11}{N\+B\+\_\+\+R\+A\+N\+G\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\+\_\+method}} \{ \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}{C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+A\+B\+S\+O\+L\+U\+TE}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}{C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+R\+E\+L\+A\+T\+I\+VE}}, 
+\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aaebf469d76b344eb42769182d8ef4b233}{N\+B\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+DS}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__selectivecolor_8c_a68ade463e80014e090432f38a1b808a3}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (selectivecolor)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a4542430fd057cd4badb6799478929b58}{get\+\_\+rgb\+\_\+scale}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} min\+\_\+val, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+val)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a309a357e0c0afc5b39e351a4388d7a38}{get\+\_\+cmy\+\_\+scale}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} min\+\_\+val, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+val)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_ada574dff33a09569cc8785147f2aa9e4}{register\+\_\+range}} (\mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} range\+\_\+id)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a982912886fcf76626531d2acdcf9be4e}{parse\+\_\+psfile}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$fname)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_ac55c2748dcbd511e3d52856d12b9595e}{comp\+\_\+adjust}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} scale, float \mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}}, float \mbox{\hyperlink{mobiclip_8c_a1347ea3b728ecd30bcd9674ef3ef21e4}{adjust}}, float k, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\+\_\+method}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__selectivecolor_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char $\ast$ \mbox{\hyperlink{vf__selectivecolor_8c_a46562175edde167fbb07385fb0e04101}{color\+\_\+names}} \mbox{[}\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a0dbedb38031808865168a59e500d4f11}{N\+B\+\_\+\+R\+A\+N\+G\+ES}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__selectivecolor_8c_a5ed7418f1899d2701ff5381b8f79e4db}{selectivecolor\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__selectivecolor_8c_ac71bb4f7dbe4ba6f61f244f9568ce1ce}{selectivecolor\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__selectivecolor_8c_a3d843d28058848deafad70e224643388}{selectivecolor\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__selectivecolor_8c_aa8dd3f2788f8886fc1d8d039ae92816f}{ff\+\_\+vf\+\_\+selectivecolor}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a955f504eccf76b4eb2489c0adab03121}\label{vf__selectivecolor_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!A@{A}}
+\index{A@{A}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~3}
+
+
+
+Definition at line 42 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a111da81ae5883147168bbb8366377b10}\label{vf__selectivecolor_8c_a111da81ae5883147168bbb8366377b10}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!B@{B}}
+\index{B@{B}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{B}{B}}
+{\footnotesize\ttfamily \#define B~2}
+
+
+
+Definition at line 41 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a7a7f96cf6725001c8f7fc19c3ac99a0a}\label{vf__selectivecolor_8c_a7a7f96cf6725001c8f7fc19c3ac99a0a}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!DECLARE\_RANGE\_SCALE\_FUNCS@{DECLARE\_RANGE\_SCALE\_FUNCS}}
+\index{DECLARE\_RANGE\_SCALE\_FUNCS@{DECLARE\_RANGE\_SCALE\_FUNCS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{DECLARE\_RANGE\_SCALE\_FUNCS}{DECLARE\_RANGE\_SCALE\_FUNCS}}
+{\footnotesize\ttfamily \#define D\+E\+C\+L\+A\+R\+E\+\_\+\+R\+A\+N\+G\+E\+\_\+\+S\+C\+A\+L\+E\+\_\+\+F\+U\+N\+CS(\begin{DoxyParamCaption}\item[{}]{nbits }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keywordtype}{int} get\_neutrals\_scale\#\#nbits(\textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}{g}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}, \textcolor{keywordtype}{int} min\_val, \textcolor{keywordtype}{int} max\_val)         \(\backslash\)}
+\DoxyCodeLine{\{                                                                                           \(\backslash\)}
+\DoxyCodeLine{    \textcolor{comment}{/* 1 -\/ (|max-\/0.5| + |min-\/0.5|) */}                                                       \(\backslash\)}
+\DoxyCodeLine{    return (((1<<nbits)-\/1)*2 -\/ (  \mbox{\hyperlink{cuda__runtime_8h_a3aa069ac3980707dae1e0530f50d59e4}{abs}}((max\_val<<1) -\/ ((1<<nbits)-\/1))                        \(\backslash\)}
+\DoxyCodeLine{                                + \mbox{\hyperlink{cuda__runtime_8h_a3aa069ac3980707dae1e0530f50d59e4}{abs}}((min\_val<<1) -\/ ((1<<nbits)-\/1))) + 1) >> 1;            \(\backslash\)}
+\DoxyCodeLine{\}                                                                                           \(\backslash\)}
+\DoxyCodeLine{                                                                                            \(\backslash\)}
+\DoxyCodeLine{static \textcolor{keywordtype}{int} get\_whites\_scale\#\#nbits(\textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}{g}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}, \textcolor{keywordtype}{int} min\_val, \textcolor{keywordtype}{int} max\_val)           \(\backslash\)}
+\DoxyCodeLine{\{                                                                                           \(\backslash\)}
+\DoxyCodeLine{    \textcolor{comment}{/* (min -\/ 0.5) * 2 */}                                                                   \(\backslash\)}
+\DoxyCodeLine{    return (min\_val<<1) -\/ ((1<<nbits)-\/1);                                                   \(\backslash\)}
+\DoxyCodeLine{\}                                                                                           \(\backslash\)}
+\DoxyCodeLine{                                                                                            \(\backslash\)}
+\DoxyCodeLine{static \textcolor{keywordtype}{int} get\_blacks\_scale\#\#nbits(\textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}{g}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}, \textcolor{keywordtype}{int} min\_val, \textcolor{keywordtype}{int} max\_val)           \(\backslash\)}
+\DoxyCodeLine{\{                                                                                           \(\backslash\)}
+\DoxyCodeLine{    \textcolor{comment}{/* (0.5 -\/ max) * 2 */}                                                                   \(\backslash\)}
+\DoxyCodeLine{    return ((1<<nbits)-\/1) -\/ (max\_val<<1);                                                   \(\backslash\)}
+\DoxyCodeLine{\}                                                                                           \(\backslash\)}
+
+\end{DoxyCode}
+
+
+Definition at line 127 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a838b8ca2676555f06368718525253bbe}\label{vf__selectivecolor_8c_a838b8ca2676555f06368718525253bbe}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!DECLARE\_SELECTIVE\_COLOR\_FUNC@{DECLARE\_SELECTIVE\_COLOR\_FUNC}}
+\index{DECLARE\_SELECTIVE\_COLOR\_FUNC@{DECLARE\_SELECTIVE\_COLOR\_FUNC}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{DECLARE\_SELECTIVE\_COLOR\_FUNC}{DECLARE\_SELECTIVE\_COLOR\_FUNC}}
+{\footnotesize\ttfamily \#define D\+E\+C\+L\+A\+R\+E\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{nbits }\end{DoxyParamCaption})}
+
+
+
+Definition at line 316 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a1b092c3293ec0b05d4d79e586cd3c91f}\label{vf__selectivecolor_8c_a1b092c3293ec0b05d4d79e586cd3c91f}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!DEF\_SELECTIVE\_COLOR\_FUNC@{DEF\_SELECTIVE\_COLOR\_FUNC}}
+\index{DEF\_SELECTIVE\_COLOR\_FUNC@{DEF\_SELECTIVE\_COLOR\_FUNC}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{DEF\_SELECTIVE\_COLOR\_FUNC}{DEF\_SELECTIVE\_COLOR\_FUNC}}
+{\footnotesize\ttfamily \#define D\+E\+F\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{libavfilter_2af__afir_8c_a2935ad4574b6b85a524d227a44e8f171}{direct}},  }\item[{}]{\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\+\_\+method}},  }\item[{}]{nbits }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keywordtype}{int} selective\_color\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#nbits(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} *\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \textcolor{keywordtype}{void} *\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \textcolor{keywordtype}{int} jobnr, \textcolor{keywordtype}{int} nb\_jobs)    \(\backslash\)}
+\DoxyCodeLine{\{                                                                                                       \(\backslash\)}
+\DoxyCodeLine{    return selective\_color\_\#\#nbits(\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, jobnr, nb\_jobs, \mbox{\hyperlink{libavfilter_2af__afir_8c_a2935ad4574b6b85a524d227a44e8f171}{direct}}, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\_method}});                \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 396 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a29b3f98e556e84c84f6bfb9b35a61ef2}\label{vf__selectivecolor_8c_a29b3f98e556e84c84f6bfb9b35a61ef2}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!DEF\_SELECTIVE\_COLOR\_FUNCS@{DEF\_SELECTIVE\_COLOR\_FUNCS}}
+\index{DEF\_SELECTIVE\_COLOR\_FUNCS@{DEF\_SELECTIVE\_COLOR\_FUNCS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{DEF\_SELECTIVE\_COLOR\_FUNCS}{DEF\_SELECTIVE\_COLOR\_FUNCS}}
+{\footnotesize\ttfamily \#define D\+E\+F\+\_\+\+S\+E\+L\+E\+C\+T\+I\+V\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+F\+U\+N\+CS(\begin{DoxyParamCaption}\item[{}]{nbits }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{vf__selectivecolor_8c_a838b8ca2676555f06368718525253bbe}{DECLARE\_SELECTIVE\_COLOR\_FUNC}}(nbits)                                                                     \(\backslash\)}
+\DoxyCodeLine{DEF\_SELECTIVE\_COLOR\_FUNC(indirect\_absolute, 0, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}{CORRECTION\_METHOD\_ABSOLUTE}}, nbits)                       \(\backslash\)}
+\DoxyCodeLine{DEF\_SELECTIVE\_COLOR\_FUNC(indirect\_relative, 0, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}{CORRECTION\_METHOD\_RELATIVE}}, nbits)                       \(\backslash\)}
+\DoxyCodeLine{DEF\_SELECTIVE\_COLOR\_FUNC(  direct\_absolute, 1, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}{CORRECTION\_METHOD\_ABSOLUTE}}, nbits)                       \(\backslash\)}
+\DoxyCodeLine{DEF\_SELECTIVE\_COLOR\_FUNC(  direct\_relative, 1, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}{CORRECTION\_METHOD\_RELATIVE}}, nbits)}
+
+\end{DoxyCode}
+
+
+Definition at line 402 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 94 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_aed9ea78689ecce0b7264c02c7f8a9a54}\label{vf__selectivecolor_8c_aed9ea78689ecce0b7264c02c7f8a9a54}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!G@{G}}
+\index{G@{G}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{G}{G}}
+{\footnotesize\ttfamily \#define G~1}
+
+
+
+Definition at line 40 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__selectivecolor_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}}, x)}
+
+
+
+Definition at line 93 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a5c71a5e59a53413cd6c270266d63b031}\label{vf__selectivecolor_8c_a5c71a5e59a53413cd6c270266d63b031}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!R@{R}}
+\index{R@{R}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{R}{R}}
+{\footnotesize\ttfamily \#define R~0}
+
+\begin{DoxySeeAlso}{See also}
+\href{http://blog.pkh.me/p/22-understanding-selective-coloring-in-adobe-photoshop.html}{\texttt{ http\+://blog.\+pkh.\+me/p/22-\/understanding-\/selective-\/coloring-\/in-\/adobe-\/photoshop.\+html}} 
+\end{DoxySeeAlso}
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000033}{Todo}}]
+\begin{DoxyItemize}
+\item use integers so it can be made bitexact and a F\+A\+TE test can be added 
+\end{DoxyItemize}\end{DoxyRefDesc}
+
+
+Definition at line 39 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}\label{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_OPTION@{RANGE\_OPTION}}
+\index{RANGE\_OPTION@{RANGE\_OPTION}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{RANGE\_OPTION}{RANGE\_OPTION}}
+{\footnotesize\ttfamily \#define R\+A\+N\+G\+E\+\_\+\+O\+P\+T\+I\+ON(\begin{DoxyParamCaption}\item[{}]{color\+\_\+name,  }\item[{}]{range }\end{DoxyParamCaption})~    \{ color\+\_\+name\char`\"{}s\char`\"{}, \char`\"{}\mbox{\hyperlink{mobiclip_8c_a1347ea3b728ecd30bcd9674ef3ef21e4}{adjust}} \char`\"{}color\+\_\+name\char`\"{} regions\char`\"{}, O\+F\+F\+S\+ET(opt\+\_\+cmyk\+\_\+adjust\mbox{[}range\mbox{]}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+T\+R\+I\+NG}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{N\+U\+LL}}\}, 0, 0, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}} \}}
+
+
+
+Definition at line 95 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a838a0e5ef13cb9b2783bd003e09501d9}\label{vf__selectivecolor_8c_a838a0e5ef13cb9b2783bd003e09501d9}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!READ16@{READ16}}
+\index{READ16@{READ16}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{READ16}{READ16}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D16(\begin{DoxyParamCaption}\item[{}]{dst }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} < 2) \{                     \(\backslash\)}
+\DoxyCodeLine{        ret = \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};      \(\backslash\)}
+\DoxyCodeLine{        goto \mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}};                       \(\backslash\)}
+\DoxyCodeLine{    \}                                   \(\backslash\)}
+\DoxyCodeLine{    dst = \mbox{\hyperlink{avr32_2intreadwrite_8h_a6a4c12ef75a81c72f96410e9d1d8c8e9}{AV\_RB16}}(buf);                 \(\backslash\)}
+\DoxyCodeLine{    buf  += 2;                          \(\backslash\)}
+\DoxyCodeLine{    size -\/= 2;                          \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__selectivecolor_8c_aee1b10cb31b9ad788c9308fdfad5b67d}\label{vf__selectivecolor_8c_aee1b10cb31b9ad788c9308fdfad5b67d}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!get\_range\_scale\_func@{get\_range\_scale\_func}}
+\index{get\_range\_scale\_func@{get\_range\_scale\_func}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{get\_range\_scale\_func}{get\_range\_scale\_func}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ get\+\_\+range\+\_\+scale\+\_\+func) (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} min\+\_\+val, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+val)}
+
+
+
+Definition at line 68 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_ab204e9174586c89567cdd498dbff8209}\label{vf__selectivecolor_8c_ab204e9174586c89567cdd498dbff8209}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!selective\_color\_func\_type@{selective\_color\_func\_type}}
+\index{selective\_color\_func\_type@{selective\_color\_func\_type}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{selective\_color\_func\_type}{selective\_color\_func\_type}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ selective\+\_\+color\+\_\+func\+\_\+type) (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)}
+
+
+
+Definition at line 412 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_afe1080c3c26969892cfa14976c435556}\label{vf__selectivecolor_8c_afe1080c3c26969892cfa14976c435556}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!SelectiveColorContext@{SelectiveColorContext}}
+\index{SelectiveColorContext@{SelectiveColorContext}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{SelectiveColorContext}{SelectiveColorContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}} \mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}}}
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__selectivecolor_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!color\_range@{color\_range}}
+\index{color\_range@{color\_range}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{color\_range}{color\_range}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43}{color\+\_\+range}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_REDS@{RANGE\_REDS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_REDS@{RANGE\_REDS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1ce4dfe5d1fa115fd340a60964732959}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1ce4dfe5d1fa115fd340a60964732959}} 
+R\+A\+N\+G\+E\+\_\+\+R\+E\+DS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_YELLOWS@{RANGE\_YELLOWS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_YELLOWS@{RANGE\_YELLOWS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1242c72614fd458b40740705c825e525}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1242c72614fd458b40740705c825e525}} 
+R\+A\+N\+G\+E\+\_\+\+Y\+E\+L\+L\+O\+WS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_GREENS@{RANGE\_GREENS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_GREENS@{RANGE\_GREENS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a00dad9ec33d06863c84a76d0fcfb9834}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a00dad9ec33d06863c84a76d0fcfb9834}} 
+R\+A\+N\+G\+E\+\_\+\+G\+R\+E\+E\+NS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_CYANS@{RANGE\_CYANS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_CYANS@{RANGE\_CYANS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a372ab50a79c7e74638845ddc028e8264}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a372ab50a79c7e74638845ddc028e8264}} 
+R\+A\+N\+G\+E\+\_\+\+C\+Y\+A\+NS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_BLUES@{RANGE\_BLUES}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_BLUES@{RANGE\_BLUES}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a7f20de02f8a708ed954822a6c9ff1d33}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a7f20de02f8a708ed954822a6c9ff1d33}} 
+R\+A\+N\+G\+E\+\_\+\+B\+L\+U\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_MAGENTAS@{RANGE\_MAGENTAS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_MAGENTAS@{RANGE\_MAGENTAS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a3611a801ae5f54716f881ac4ce420fc5}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a3611a801ae5f54716f881ac4ce420fc5}} 
+R\+A\+N\+G\+E\+\_\+\+M\+A\+G\+E\+N\+T\+AS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_WHITES@{RANGE\_WHITES}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_WHITES@{RANGE\_WHITES}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43abb544e4891ed9c63b4acc80e3c53a453}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43abb544e4891ed9c63b4acc80e3c53a453}} 
+R\+A\+N\+G\+E\+\_\+\+W\+H\+I\+T\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_NEUTRALS@{RANGE\_NEUTRALS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_NEUTRALS@{RANGE\_NEUTRALS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43aafab35bbc2130594f9b3ea1eacf26c90}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43aafab35bbc2130594f9b3ea1eacf26c90}} 
+R\+A\+N\+G\+E\+\_\+\+N\+E\+U\+T\+R\+A\+LS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RANGE\_BLACKS@{RANGE\_BLACKS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!RANGE\_BLACKS@{RANGE\_BLACKS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43accc43eeb3779aa6ac9d1ffa6ab752974}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43accc43eeb3779aa6ac9d1ffa6ab752974}} 
+R\+A\+N\+G\+E\+\_\+\+B\+L\+A\+C\+KS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_RANGES@{NB\_RANGES}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!NB\_RANGES@{NB\_RANGES}}}\mbox{\Hypertarget{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a0dbedb38031808865168a59e500d4f11}\label{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a0dbedb38031808865168a59e500d4f11}} 
+N\+B\+\_\+\+R\+A\+N\+G\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 44 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}\label{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!correction\_method@{correction\_method}}
+\index{correction\_method@{correction\_method}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{correction\_method}{correction\_method}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\+\_\+method}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CORRECTION\_METHOD\_ABSOLUTE@{CORRECTION\_METHOD\_ABSOLUTE}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!CORRECTION\_METHOD\_ABSOLUTE@{CORRECTION\_METHOD\_ABSOLUTE}}}\mbox{\Hypertarget{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}\label{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}} 
+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+A\+B\+S\+O\+L\+U\+TE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CORRECTION\_METHOD\_RELATIVE@{CORRECTION\_METHOD\_RELATIVE}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!CORRECTION\_METHOD\_RELATIVE@{CORRECTION\_METHOD\_RELATIVE}}}\mbox{\Hypertarget{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}\label{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}} 
+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+R\+E\+L\+A\+T\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_CORRECTION\_METHODS@{NB\_CORRECTION\_METHODS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!NB\_CORRECTION\_METHODS@{NB\_CORRECTION\_METHODS}}}\mbox{\Hypertarget{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aaebf469d76b344eb42769182d8ef4b233}\label{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aaebf469d76b344eb42769182d8ef4b233}} 
+N\+B\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+M\+E\+T\+H\+O\+DS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 58 of file vf\+\_\+selectivecolor.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a68ade463e80014e090432f38a1b808a3}\label{vf__selectivecolor_8c_a68ade463e80014e090432f38a1b808a3}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{selectivecolor}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_ac55c2748dcbd511e3d52856d12b9595e}\label{vf__selectivecolor_8c_ac55c2748dcbd511e3d52856d12b9595e}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!comp\_adjust@{comp\_adjust}}
+\index{comp\_adjust@{comp\_adjust}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{comp\_adjust()}{comp\_adjust()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} comp\+\_\+adjust (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{scale,  }\item[{float}]{value,  }\item[{float}]{adjust,  }\item[{float}]{k,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{correction\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 306 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=231pt]{vf__selectivecolor_8c_ac55c2748dcbd511e3d52856d12b9595e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__selectivecolor_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 238 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{vf__selectivecolor_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 414 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a309a357e0c0afc5b39e351a4388d7a38}\label{vf__selectivecolor_8c_a309a357e0c0afc5b39e351a4388d7a38}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!get\_cmy\_scale@{get\_cmy\_scale}}
+\index{get\_cmy\_scale@{get\_cmy\_scale}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{get\_cmy\_scale()}{get\_cmy\_scale()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+cmy\+\_\+scale (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{g,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{min\+\_\+val,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 122 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_a309a357e0c0afc5b39e351a4388d7a38_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a4542430fd057cd4badb6799478929b58}\label{vf__selectivecolor_8c_a4542430fd057cd4badb6799478929b58}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!get\_rgb\_scale@{get\_rgb\_scale}}
+\index{get\_rgb\_scale@{get\_rgb\_scale}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{get\_rgb\_scale()}{get\_rgb\_scale()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+rgb\+\_\+scale (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{g,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{min\+\_\+val,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 117 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_a4542430fd057cd4badb6799478929b58_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a982912886fcf76626531d2acdcf9be4e}\label{vf__selectivecolor_8c_a982912886fcf76626531d2acdcf9be4e}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!parse\_psfile@{parse\_psfile}}
+\index{parse\_psfile@{parse\_psfile}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{parse\_psfile()}{parse\_psfile()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+psfile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{fname }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 185 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_a982912886fcf76626531d2acdcf9be4e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{vf__selectivecolor_8c_a982912886fcf76626531d2acdcf9be4e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 288 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__selectivecolor_8c_ada574dff33a09569cc8785147f2aa9e4}\label{vf__selectivecolor_8c_ada574dff33a09569cc8785147f2aa9e4}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!register\_range@{register\_range}}
+\index{register\_range@{register\_range}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{register\_range()}{register\_range()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} register\+\_\+range (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_selective_color_context}{Selective\+Color\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{range\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 150 of file vf\+\_\+selectivecolor.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{vf__selectivecolor_8c_ada574dff33a09569cc8785147f2aa9e4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__selectivecolor_8c_ada574dff33a09569cc8785147f2aa9e4_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__selectivecolor_8c_a46562175edde167fbb07385fb0e04101}\label{vf__selectivecolor_8c_a46562175edde167fbb07385fb0e04101}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!color\_names@{color\_names}}
+\index{color\_names@{color\_names}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{color\_names}{color\_names}}
+{\footnotesize\ttfamily const char$\ast$ color\+\_\+names\mbox{[}\mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a0dbedb38031808865168a59e500d4f11}{N\+B\+\_\+\+R\+A\+N\+G\+ES}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \textcolor{stringliteral}{"{}red"{}}, \textcolor{stringliteral}{"{}yellow"{}}, \textcolor{stringliteral}{"{}green"{}}, \textcolor{stringliteral}{"{}cyan"{}}, \textcolor{stringliteral}{"{}blue"{}}, \textcolor{stringliteral}{"{}magenta"{}}, \textcolor{stringliteral}{"{}white"{}}, \textcolor{stringliteral}{"{}neutral"{}}, \textcolor{stringliteral}{"{}black"{}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 64 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_aa8dd3f2788f8886fc1d8d039ae92816f}\label{vf__selectivecolor_8c_aa8dd3f2788f8886fc1d8d039ae92816f}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!ff\_vf\_selectivecolor@{ff\_vf\_selectivecolor}}
+\index{ff\_vf\_selectivecolor@{ff\_vf\_selectivecolor}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_selectivecolor}{ff\_vf\_selectivecolor}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+selectivecolor}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}selectivecolor"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apply CMYK adjustments to specific color ranges."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__selectivecolor_8c_afe1080c3c26969892cfa14976c435556}{SelectiveColorContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__selectivecolor_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__selectivecolor_8c_ac71bb4f7dbe4ba6f61f244f9568ce1ce}{selectivecolor\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__selectivecolor_8c_a3d843d28058848deafad70e224643388}{selectivecolor\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&selectivecolor\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_ga00c4b8da7d5d89fa4ddc5dcdf72bffca}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_GENERIC}} | \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 473 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_ac71bb4f7dbe4ba6f61f244f9568ce1ce}\label{vf__selectivecolor_8c_ac71bb4f7dbe4ba6f61f244f9568ce1ce}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!selectivecolor\_inputs@{selectivecolor\_inputs}}
+\index{selectivecolor\_inputs@{selectivecolor\_inputs}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{selectivecolor\_inputs}{selectivecolor\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} selectivecolor\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__selectivecolor_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__selectivecolor_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 455 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a5ed7418f1899d2701ff5381b8f79e4db}\label{vf__selectivecolor_8c_a5ed7418f1899d2701ff5381b8f79e4db}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!selectivecolor\_options@{selectivecolor\_options}}
+\index{selectivecolor\_options@{selectivecolor\_options}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{selectivecolor\_options}{selectivecolor\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} selectivecolor\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}correction\_method"{}}, \textcolor{stringliteral}{"{}select correction method"{}}, \mbox{\hyperlink{vf__selectivecolor_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751a}{correction\_method}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}{CORRECTION\_METHOD\_ABSOLUTE}}\}, 0, \mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aaebf469d76b344eb42769182d8ef4b233}{NB\_CORRECTION\_METHODS}}-\/1, \mbox{\hyperlink{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}correction\_method"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}absolute"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aa45182502c329167b63238bdacb1fee36}{CORRECTION\_METHOD\_ABSOLUTE}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}correction\_method"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}relative"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__selectivecolor_8c_aeef391390a738c4f52ac515e83ad751aadbe740c8a1f56cf767ce92b3ae7395fa}{CORRECTION\_METHOD\_RELATIVE}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}correction\_method"{}} \},}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}red"{}},     \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1ce4dfe5d1fa115fd340a60964732959}{RANGE\_REDS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}yellow"{}},  \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a1242c72614fd458b40740705c825e525}{RANGE\_YELLOWS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}green"{}},   \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a00dad9ec33d06863c84a76d0fcfb9834}{RANGE\_GREENS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}cyan"{}},    \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a372ab50a79c7e74638845ddc028e8264}{RANGE\_CYANS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}blue"{}},    \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a7f20de02f8a708ed954822a6c9ff1d33}{RANGE\_BLUES}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}magenta"{}}, \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43a3611a801ae5f54716f881ac4ce420fc5}{RANGE\_MAGENTAS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}white"{}},   \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43abb544e4891ed9c63b4acc80e3c53a453}{RANGE\_WHITES}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}neutral"{}}, \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43aafab35bbc2130594f9b3ea1eacf26c90}{RANGE\_NEUTRALS}}),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__selectivecolor_8c_ae2e3faed81601cf974e38ab3258e2ab3}{RANGE\_OPTION}}(\textcolor{stringliteral}{"{}black"{}},   \mbox{\hyperlink{vf__selectivecolor_8c_a9e4497f08cd92bd3d2f92b7d69486f43accc43eeb3779aa6ac9d1ffa6ab752974}{RANGE\_BLACKS}}),}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}psfile"{}}, \textcolor{stringliteral}{"{}set Photoshop selectivecolor file name"{}}, \mbox{\hyperlink{vf__selectivecolor_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(psfile), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__selectivecolor_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 98 of file vf\+\_\+selectivecolor.\+c.
+
+\mbox{\Hypertarget{vf__selectivecolor_8c_a3d843d28058848deafad70e224643388}\label{vf__selectivecolor_8c_a3d843d28058848deafad70e224643388}} 
+\index{vf\_selectivecolor.c@{vf\_selectivecolor.c}!selectivecolor\_outputs@{selectivecolor\_outputs}}
+\index{selectivecolor\_outputs@{selectivecolor\_outputs}!vf\_selectivecolor.c@{vf\_selectivecolor.c}}
+\doxysubsubsection{\texorpdfstring{selectivecolor\_outputs}{selectivecolor\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} selectivecolor\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 465 of file vf\+\_\+selectivecolor.\+c.
+

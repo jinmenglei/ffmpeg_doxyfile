@@ -1,0 +1,563 @@
+\hypertarget{vf__convolve_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+convolve.c File Reference}
+\label{vf__convolve_8c}\index{E:/github/ffmpeg/libavfilter/vf\_convolve.c@{E:/github/ffmpeg/libavfilter/vf\_convolve.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/avfft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}framesync.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+convolve.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__convolve_8c_a8b5173357adb02a86c027316e0acdfa0}{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}}~16
+\item 
+\#define \mbox{\hyperlink{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} \mbox{\hyperlink{vf__convolve_8c_accba1739eb6684cd94bcc3f3bf60eb53}{Convolve\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__convolve_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_aa65cdb96bd6f4adf4944784dc7809c5e}{config\+\_\+input\+\_\+main}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_a37afac90925b0b4e43eeeb641b5e840f}{config\+\_\+input\+\_\+impulse}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_a5f96d38b52787dce3ddf11ee874c66fe}{fft\+\_\+horizontal}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__convolve_8c_ae29d4e00dcf22d07c4cb4d3aa0896144}{get\+\_\+input}} (\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$fft\+\_\+hdata, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, float scale)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_a70982c93f6077a43fc316799f997fcf8}{fft\+\_\+vertical}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_abc76796eceae0148169df278d756cc01}{ifft\+\_\+vertical}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_acd62aae3dfc50cbba96be67838112dcf}{ifft\+\_\+horizontal}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__convolve_8c_a6f98e4435e21baaec3c4f828a14b3db4}{get\+\_\+output}} (\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, float scale)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_aaad6d7a19fa006971896a5bf961b7df5}{complex\+\_\+multiply}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_ae776f13c1b5e9982de0401170ca54aaa}{complex\+\_\+divide}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_a29071ccd7c8887ab792e58c3c6f9147c}{do\+\_\+convolve}} (\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$\mbox{\hyperlink{cbs__vp9_8c_af257cad12c4d046a131f33cf6cce2c48}{fs}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__convolve_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__convolve_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__convolve_8c_a227ff8306efb24e9b7dc62913e39aaeb}{convolve\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__convolve_8c_aa13db3f5d3c82b2660c798520c13e83c}{convolve\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__convolve_8c_a18914d018922aa14874ff714ac734b54}{convolve\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 64 of file vf\+\_\+convolve.\+c.
+
+\mbox{\Hypertarget{vf__convolve_8c_a8b5173357adb02a86c027316e0acdfa0}\label{vf__convolve_8c_a8b5173357adb02a86c027316e0acdfa0}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!MAX\_THREADS@{MAX\_THREADS}}
+\index{MAX\_THREADS@{MAX\_THREADS}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_THREADS}{MAX\_THREADS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS~16}
+
+
+
+Definition at line 34 of file vf\+\_\+convolve.\+c.
+
+\mbox{\Hypertarget{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}}, x)}
+
+
+
+Definition at line 63 of file vf\+\_\+convolve.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__convolve_8c_accba1739eb6684cd94bcc3f3bf60eb53}\label{vf__convolve_8c_accba1739eb6684cd94bcc3f3bf60eb53}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!ConvolveContext@{ConvolveContext}}
+\index{ConvolveContext@{ConvolveContext}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{ConvolveContext}{ConvolveContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} \mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}}}
+
+\mbox{\Hypertarget{vf__convolve_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__convolve_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__convolve_8c_ab5283561721ad2970de4e2d569100dac}\label{vf__convolve_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!activate@{activate}}
+\index{activate@{activate}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 559 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_ae776f13c1b5e9982de0401170ca54aaa}\label{vf__convolve_8c_ae776f13c1b5e9982de0401170ca54aaa}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!complex\_divide@{complex\_divide}}
+\index{complex\_divide@{complex\_divide}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{complex\_divide()}{complex\_divide()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} complex\+\_\+divide (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 413 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_ae776f13c1b5e9982de0401170ca54aaa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{vf__convolve_8c_ae776f13c1b5e9982de0401170ca54aaa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_aaad6d7a19fa006971896a5bf961b7df5}\label{vf__convolve_8c_aaad6d7a19fa006971896a5bf961b7df5}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!complex\_multiply@{complex\_multiply}}
+\index{complex\_multiply@{complex\_multiply}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{complex\_multiply()}{complex\_multiply()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} complex\+\_\+multiply (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 382 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_aaad6d7a19fa006971896a5bf961b7df5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{vf__convolve_8c_aaad6d7a19fa006971896a5bf961b7df5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a37afac90925b0b4e43eeeb641b5e840f}\label{vf__convolve_8c_a37afac90925b0b4e43eeeb641b5e840f}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!config\_input\_impulse@{config\_input\_impulse}}
+\index{config\_input\_impulse@{config\_input\_impulse}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{config\_input\_impulse()}{config\_input\_impulse()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input\+\_\+impulse (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 144 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{vf__convolve_8c_a37afac90925b0b4e43eeeb641b5e840f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_aa65cdb96bd6f4adf4944784dc7809c5e}\label{vf__convolve_8c_aa65cdb96bd6f4adf4944784dc7809c5e}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!config\_input\_main@{config\_input\_main}}
+\index{config\_input\_main@{config\_input\_main}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{config\_input\_main()}{config\_input\_main()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input\+\_\+main (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 104 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_aa65cdb96bd6f4adf4944784dc7809c5e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__convolve_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 527 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a29071ccd7c8887ab792e58c3c6f9147c}\label{vf__convolve_8c_a29071ccd7c8887ab792e58c3c6f9147c}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!do\_convolve@{do\_convolve}}
+\index{do\_convolve@{do\_convolve}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{do\_convolve()}{do\_convolve()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} do\+\_\+convolve (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$}]{fs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 445 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a29071ccd7c8887ab792e58c3c6f9147c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{vf__convolve_8c_a29071ccd7c8887ab792e58c3c6f9147c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a5f96d38b52787dce3ddf11ee874c66fe}\label{vf__convolve_8c_a5f96d38b52787dce3ddf11ee874c66fe}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!fft\_horizontal@{fft\_horizontal}}
+\index{fft\_horizontal@{fft\_horizontal}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{fft\_horizontal()}{fft\_horizontal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fft\+\_\+horizontal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 166 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a5f96d38b52787dce3ddf11ee874c66fe_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a5f96d38b52787dce3ddf11ee874c66fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a70982c93f6077a43fc316799f997fcf8}\label{vf__convolve_8c_a70982c93f6077a43fc316799f997fcf8}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!fft\_vertical@{fft\_vertical}}
+\index{fft\_vertical@{fft\_vertical}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{fft\_vertical()}{fft\_vertical()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fft\+\_\+vertical (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 260 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a70982c93f6077a43fc316799f997fcf8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a70982c93f6077a43fc316799f997fcf8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_ae29d4e00dcf22d07c4cb4d3aa0896144}\label{vf__convolve_8c_ae29d4e00dcf22d07c4cb4d3aa0896144}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!get\_input@{get\_input}}
+\index{get\_input@{get\_input}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{get\_input()}{get\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$}]{fft\+\_\+hdata,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{float}]{scale }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 185 of file vf\+\_\+convolve.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_ae29d4e00dcf22d07c4cb4d3aa0896144_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a6f98e4435e21baaec3c4f828a14b3db4}\label{vf__convolve_8c_a6f98e4435e21baaec3c4f828a14b3db4}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!get\_output@{get\_output}}
+\index{get\_output@{get\_output}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{get\_output()}{get\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_convolve_context}{Convolve\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$}]{input,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{float}]{scale }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 329 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=207pt]{vf__convolve_8c_a6f98e4435e21baaec3c4f828a14b3db4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_a6f98e4435e21baaec3c4f828a14b3db4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_acd62aae3dfc50cbba96be67838112dcf}\label{vf__convolve_8c_acd62aae3dfc50cbba96be67838112dcf}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!ifft\_horizontal@{ifft\_horizontal}}
+\index{ifft\_horizontal@{ifft\_horizontal}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{ifft\_horizontal()}{ifft\_horizontal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ifft\+\_\+horizontal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 310 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_acd62aae3dfc50cbba96be67838112dcf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_acd62aae3dfc50cbba96be67838112dcf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_abc76796eceae0148169df278d756cc01}\label{vf__convolve_8c_abc76796eceae0148169df278d756cc01}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!ifft\_vertical@{ifft\_vertical}}
+\index{ifft\_vertical@{ifft\_vertical}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{ifft\_vertical()}{ifft\_vertical()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ifft\+\_\+vertical (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 285 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_abc76796eceae0148169df278d756cc01_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_abc76796eceae0148169df278d756cc01_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__convolve_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!init@{init}}
+\index{init@{init}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 565 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__convolve_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 75 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__convolve_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__convolve_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__convolve_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 580 of file vf\+\_\+convolve.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__convolve_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__convolve_8c_aa13db3f5d3c82b2660c798520c13e83c}\label{vf__convolve_8c_aa13db3f5d3c82b2660c798520c13e83c}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!convolve\_inputs@{convolve\_inputs}}
+\index{convolve\_inputs@{convolve\_inputs}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{convolve\_inputs}{convolve\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} convolve\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}main"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__convolve_8c_aa65cdb96bd6f4adf4944784dc7809c5e}{config\_input\_main}},}
+\DoxyCodeLine{    \},\{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}impulse"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__convolve_8c_a37afac90925b0b4e43eeeb641b5e840f}{config\_input\_impulse}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 602 of file vf\+\_\+convolve.\+c.
+
+\mbox{\Hypertarget{vf__convolve_8c_a227ff8306efb24e9b7dc62913e39aaeb}\label{vf__convolve_8c_a227ff8306efb24e9b7dc62913e39aaeb}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!convolve\_options@{convolve\_options}}
+\index{convolve\_options@{convolve\_options}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{convolve\_options}{convolve\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} convolve\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}planes"{}},  \textcolor{stringliteral}{"{}set planes to convolve"{}},                  \mbox{\hyperlink{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{llviddspenc_8c_a39de7029a33bc3271ae437de0a38c343}{planes}}),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=7\}, 0, 15, \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}impulse"{}}, \textcolor{stringliteral}{"{}when to process impulses"{}},                \mbox{\hyperlink{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(impulse),  \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=1\}, 0,  1, \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}impulse"{}} \},}
+\DoxyCodeLine{    \{   \textcolor{stringliteral}{"{}first"{}}, \textcolor{stringliteral}{"{}process only first impulse, ignore rest"{}}, 0,                \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=0\}, 0,  0, \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}impulse"{}} \},}
+\DoxyCodeLine{    \{   \textcolor{stringliteral}{"{}all"{}},   \textcolor{stringliteral}{"{}process all impulses"{}},                    0,                \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=1\}, 0,  0, \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}impulse"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}noise"{}},   \textcolor{stringliteral}{"{}set noise"{}},                               \mbox{\hyperlink{vf__convolve_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{noise__bsf_8c_a3a3365c63ff6375347a2c1dd8e6bd9ad}{noise}}),    \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0.0000001\}, 0,  1, \mbox{\hyperlink{vf__convolve_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 66 of file vf\+\_\+convolve.\+c.
+
+\mbox{\Hypertarget{vf__convolve_8c_a18914d018922aa14874ff714ac734b54}\label{vf__convolve_8c_a18914d018922aa14874ff714ac734b54}} 
+\index{vf\_convolve.c@{vf\_convolve.c}!convolve\_outputs@{convolve\_outputs}}
+\index{convolve\_outputs@{convolve\_outputs}!vf\_convolve.c@{vf\_convolve.c}}
+\doxysubsubsection{\texorpdfstring{convolve\_outputs}{convolve\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} convolve\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__convolve_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 615 of file vf\+\_\+convolve.\+c.
+

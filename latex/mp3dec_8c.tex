@@ -1,0 +1,504 @@
+\hypertarget{mp3dec_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/mp3dec.c File Reference}
+\label{mp3dec_8c}\index{E:/github/ffmpeg/libavformat/mp3dec.c@{E:/github/ffmpeg/libavformat/mp3dec.c}}
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/crc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/dict.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}id3v2.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}id3v1.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}replaygain.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/mpegaudiodecheader.\+h\char`\"{}}\newline
+Include dependency graph for mp3dec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_m_p3_dec_context}{M\+P3\+Dec\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a4a85f0b52796e38c18fdcbae92e508c6}{X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+F\+R\+A\+M\+ES}}~0x01
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_ac8f00179b1ef965f048e85122c07121a}{X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+S\+I\+ZE}}~0x02
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_af3fa53f94bb2d8c7a0c4efc2a67a6f68}{X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+T\+OC}}~0x04
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a21b3902287e7efca50424c878242f1ad}{X\+I\+N\+G\+\_\+\+F\+L\+A\+C\+\_\+\+Q\+S\+C\+A\+LE}}~0x08
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a8082b4469b83da648f8e80e22163a3fb}{X\+I\+N\+G\+\_\+\+T\+O\+C\+\_\+\+C\+O\+U\+NT}}~100
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_ad9bc848756d511c268b7792ca60aa5fd}{L\+A\+S\+T\+\_\+\+B\+I\+TS}}(k,  n)~((k) \& ((1 $<$$<$ (n)) -\/ 1))
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a723bb6f79609d5e13c0c36671131b013}{M\+I\+D\+D\+L\+E\+\_\+\+B\+I\+TS}}(k,  m,  n)~\mbox{\hyperlink{mp3dec_8c_ad9bc848756d511c268b7792ca60aa5fd}{L\+A\+S\+T\+\_\+\+B\+I\+TS}}((k) $>$$>$ (m), ((n) -\/ (m) + 1))
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a3563054f2dbb267fec6dc6a50f25aa32}{M\+P3\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+ZE}}~1024
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a7dd0cad1a9acd083da88503ff349a6a7}{S\+E\+E\+K\+\_\+\+W\+I\+N\+D\+OW}}~4096
+\item 
+\#define \mbox{\hyperlink{mp3dec_8c_a2ec847bfdda642d25b55dad71dbb0fc7}{M\+I\+N\+\_\+\+V\+A\+L\+ID}}~3
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38}{Check\+Ret}} \{ \mbox{\hyperlink{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38aff71941434716b53b6728f016e5c2fe3}{C\+H\+E\+C\+K\+\_\+\+W\+R\+O\+N\+G\+\_\+\+H\+E\+A\+D\+ER}} = -\/1, 
+\mbox{\hyperlink{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38a9b2a6356efd743e9903a9fb0ed298e90}{C\+H\+E\+C\+K\+\_\+\+S\+E\+E\+K\+\_\+\+F\+A\+I\+L\+ED}} = -\/2
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_a422959204a1376195194821c0c9e65d0}{check}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, int64\+\_\+t \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, uint32\+\_\+t $\ast$\mbox{\hyperlink{api-h264-slice-test_8c_adc7ed4d9991bc47d473e178bd4fe9a49}{header}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_ae73988984fa266194f34950fddb18094}{mp3\+\_\+read\+\_\+probe}} (const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$p)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mp3dec_8c_ab40d14499974cbb97dd75a6ea24ca8e5}{read\+\_\+xing\+\_\+toc}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, int64\+\_\+t filesize, int64\+\_\+t \mbox{\hyperlink{tests_2movenc_8c_a1f342e4e3615abc9314684ce6b4819c0}{duration}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mp3dec_8c_a3d3e2990ced52630dcf5dc0a29b89416}{mp3\+\_\+parse\+\_\+info\+\_\+tag}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_m_p_a_decode_header}{M\+P\+A\+Decode\+Header}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, uint32\+\_\+t spf)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mp3dec_8c_a69923b145fc773b545e906fe2ef7e912}{mp3\+\_\+parse\+\_\+vbri\+\_\+tag}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, int64\+\_\+t \mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_abfdff55d313b6aab5613899165fc0ce3}{mp3\+\_\+parse\+\_\+vbr\+\_\+tags}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, int64\+\_\+t \mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_a210deaf8fa879ce8c17bd162bd147af4}{mp3\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_aba310896e42fd8c7e25e40af227b9a8c}{mp3\+\_\+read\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{mp3dec_8c_a595655f83cfb253ae04da4ffcf1ea078}{mp3\+\_\+sync}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, int64\+\_\+t target\+\_\+pos, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mp3dec_8c_a335d2d93d0792f4501a30e68ad553b89}{mp3\+\_\+seek}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t timestamp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{mp3dec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{mp3dec_8c_a89892c5f4a9bb0571477bd181c7fc616}{demuxer\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{mp3dec_8c_a8af50833a7c2b897a5b58409694f12a3}{ff\+\_\+mp3\+\_\+demuxer}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{mp3dec_8c_ad9bc848756d511c268b7792ca60aa5fd}\label{mp3dec_8c_ad9bc848756d511c268b7792ca60aa5fd}} 
+\index{mp3dec.c@{mp3dec.c}!LAST\_BITS@{LAST\_BITS}}
+\index{LAST\_BITS@{LAST\_BITS}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{LAST\_BITS}{LAST\_BITS}}
+{\footnotesize\ttfamily \#define L\+A\+S\+T\+\_\+\+B\+I\+TS(\begin{DoxyParamCaption}\item[{}]{k,  }\item[{}]{n }\end{DoxyParamCaption})~((k) \& ((1 $<$$<$ (n)) -\/ 1))}
+
+\mbox{\Hypertarget{mp3dec_8c_a723bb6f79609d5e13c0c36671131b013}\label{mp3dec_8c_a723bb6f79609d5e13c0c36671131b013}} 
+\index{mp3dec.c@{mp3dec.c}!MIDDLE\_BITS@{MIDDLE\_BITS}}
+\index{MIDDLE\_BITS@{MIDDLE\_BITS}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{MIDDLE\_BITS}{MIDDLE\_BITS}}
+{\footnotesize\ttfamily \#define M\+I\+D\+D\+L\+E\+\_\+\+B\+I\+TS(\begin{DoxyParamCaption}\item[{}]{k,  }\item[{}]{m,  }\item[{}]{n }\end{DoxyParamCaption})~\mbox{\hyperlink{mp3dec_8c_ad9bc848756d511c268b7792ca60aa5fd}{L\+A\+S\+T\+\_\+\+B\+I\+TS}}((k) $>$$>$ (m), ((n) -\/ (m) + 1))}
+
+\mbox{\Hypertarget{mp3dec_8c_a2ec847bfdda642d25b55dad71dbb0fc7}\label{mp3dec_8c_a2ec847bfdda642d25b55dad71dbb0fc7}} 
+\index{mp3dec.c@{mp3dec.c}!MIN\_VALID@{MIN\_VALID}}
+\index{MIN\_VALID@{MIN\_VALID}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_VALID}{MIN\_VALID}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+V\+A\+L\+ID~3}
+
+\mbox{\Hypertarget{mp3dec_8c_a3563054f2dbb267fec6dc6a50f25aa32}\label{mp3dec_8c_a3563054f2dbb267fec6dc6a50f25aa32}} 
+\index{mp3dec.c@{mp3dec.c}!MP3\_PACKET\_SIZE@{MP3\_PACKET\_SIZE}}
+\index{MP3\_PACKET\_SIZE@{MP3\_PACKET\_SIZE}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{MP3\_PACKET\_SIZE}{MP3\_PACKET\_SIZE}}
+{\footnotesize\ttfamily \#define M\+P3\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+ZE~1024}
+
+
+
+Definition at line 441 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a7dd0cad1a9acd083da88503ff349a6a7}\label{mp3dec_8c_a7dd0cad1a9acd083da88503ff349a6a7}} 
+\index{mp3dec.c@{mp3dec.c}!SEEK\_WINDOW@{SEEK\_WINDOW}}
+\index{SEEK\_WINDOW@{SEEK\_WINDOW}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{SEEK\_WINDOW}{SEEK\_WINDOW}}
+{\footnotesize\ttfamily \#define S\+E\+E\+K\+\_\+\+W\+I\+N\+D\+OW~4096}
+
+
+
+Definition at line 467 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a21b3902287e7efca50424c878242f1ad}\label{mp3dec_8c_a21b3902287e7efca50424c878242f1ad}} 
+\index{mp3dec.c@{mp3dec.c}!XING\_FLAC\_QSCALE@{XING\_FLAC\_QSCALE}}
+\index{XING\_FLAC\_QSCALE@{XING\_FLAC\_QSCALE}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{XING\_FLAC\_QSCALE}{XING\_FLAC\_QSCALE}}
+{\footnotesize\ttfamily \#define X\+I\+N\+G\+\_\+\+F\+L\+A\+C\+\_\+\+Q\+S\+C\+A\+LE~0x08}
+
+
+
+Definition at line 41 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a4a85f0b52796e38c18fdcbae92e508c6}\label{mp3dec_8c_a4a85f0b52796e38c18fdcbae92e508c6}} 
+\index{mp3dec.c@{mp3dec.c}!XING\_FLAG\_FRAMES@{XING\_FLAG\_FRAMES}}
+\index{XING\_FLAG\_FRAMES@{XING\_FLAG\_FRAMES}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{XING\_FLAG\_FRAMES}{XING\_FLAG\_FRAMES}}
+{\footnotesize\ttfamily \#define X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+F\+R\+A\+M\+ES~0x01}
+
+
+
+Definition at line 38 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_ac8f00179b1ef965f048e85122c07121a}\label{mp3dec_8c_ac8f00179b1ef965f048e85122c07121a}} 
+\index{mp3dec.c@{mp3dec.c}!XING\_FLAG\_SIZE@{XING\_FLAG\_SIZE}}
+\index{XING\_FLAG\_SIZE@{XING\_FLAG\_SIZE}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{XING\_FLAG\_SIZE}{XING\_FLAG\_SIZE}}
+{\footnotesize\ttfamily \#define X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+S\+I\+ZE~0x02}
+
+
+
+Definition at line 39 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_af3fa53f94bb2d8c7a0c4efc2a67a6f68}\label{mp3dec_8c_af3fa53f94bb2d8c7a0c4efc2a67a6f68}} 
+\index{mp3dec.c@{mp3dec.c}!XING\_FLAG\_TOC@{XING\_FLAG\_TOC}}
+\index{XING\_FLAG\_TOC@{XING\_FLAG\_TOC}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{XING\_FLAG\_TOC}{XING\_FLAG\_TOC}}
+{\footnotesize\ttfamily \#define X\+I\+N\+G\+\_\+\+F\+L\+A\+G\+\_\+\+T\+OC~0x04}
+
+
+
+Definition at line 40 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a8082b4469b83da648f8e80e22163a3fb}\label{mp3dec_8c_a8082b4469b83da648f8e80e22163a3fb}} 
+\index{mp3dec.c@{mp3dec.c}!XING\_TOC\_COUNT@{XING\_TOC\_COUNT}}
+\index{XING\_TOC\_COUNT@{XING\_TOC\_COUNT}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{XING\_TOC\_COUNT}{XING\_TOC\_COUNT}}
+{\footnotesize\ttfamily \#define X\+I\+N\+G\+\_\+\+T\+O\+C\+\_\+\+C\+O\+U\+NT~100}
+
+
+
+Definition at line 43 of file mp3dec.\+c.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38}\label{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38}} 
+\index{mp3dec.c@{mp3dec.c}!CheckRet@{CheckRet}}
+\index{CheckRet@{CheckRet}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{CheckRet}{CheckRet}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38}{Check\+Ret}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHECK\_WRONG\_HEADER@{CHECK\_WRONG\_HEADER}!mp3dec.c@{mp3dec.c}}\index{mp3dec.c@{mp3dec.c}!CHECK\_WRONG\_HEADER@{CHECK\_WRONG\_HEADER}}}\mbox{\Hypertarget{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38aff71941434716b53b6728f016e5c2fe3}\label{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38aff71941434716b53b6728f016e5c2fe3}} 
+C\+H\+E\+C\+K\+\_\+\+W\+R\+O\+N\+G\+\_\+\+H\+E\+A\+D\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHECK\_SEEK\_FAILED@{CHECK\_SEEK\_FAILED}!mp3dec.c@{mp3dec.c}}\index{mp3dec.c@{mp3dec.c}!CHECK\_SEEK\_FAILED@{CHECK\_SEEK\_FAILED}}}\mbox{\Hypertarget{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38a9b2a6356efd743e9903a9fb0ed298e90}\label{mp3dec_8c_a06237d0178e4e8aa5aec0c7352606b38a9b2a6356efd743e9903a9fb0ed298e90}} 
+C\+H\+E\+C\+K\+\_\+\+S\+E\+E\+K\+\_\+\+F\+A\+I\+L\+ED&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 58 of file mp3dec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{mp3dec_8c_a422959204a1376195194821c0c9e65d0}\label{mp3dec_8c_a422959204a1376195194821c0c9e65d0}} 
+\index{mp3dec.c@{mp3dec.c}!check@{check}}
+\index{check@{check}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{check()}{check()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{int64\+\_\+t}]{pos,  }\item[{uint32\+\_\+t $\ast$}]{header }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 469 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a422959204a1376195194821c0c9e65d0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a422959204a1376195194821c0c9e65d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_a3d3e2990ced52630dcf5dc0a29b89416}\label{mp3dec_8c_a3d3e2990ced52630dcf5dc0a29b89416}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_parse\_info\_tag@{mp3\_parse\_info\_tag}}
+\index{mp3\_parse\_info\_tag@{mp3\_parse\_info\_tag}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_parse\_info\_tag()}{mp3\_parse\_info\_tag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mp3\+\_\+parse\+\_\+info\+\_\+tag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_m_p_a_decode_header}{M\+P\+A\+Decode\+Header}} $\ast$}]{c,  }\item[{uint32\+\_\+t}]{spf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 157 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a3d3e2990ced52630dcf5dc0a29b89416_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a3d3e2990ced52630dcf5dc0a29b89416_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_abfdff55d313b6aab5613899165fc0ce3}\label{mp3dec_8c_abfdff55d313b6aab5613899165fc0ce3}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_parse\_vbr\_tags@{mp3\_parse\_vbr\_tags}}
+\index{mp3\_parse\_vbr\_tags@{mp3\_parse\_vbr\_tags}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_parse\_vbr\_tags()}{mp3\_parse\_vbr\_tags()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mp3\+\_\+parse\+\_\+vbr\+\_\+tags (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{int64\+\_\+t}]{base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Try to find Xing/\+Info/\+V\+B\+RI tags and compute duration from info therein 
+
+Definition at line 317 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_abfdff55d313b6aab5613899165fc0ce3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{mp3dec_8c_abfdff55d313b6aab5613899165fc0ce3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_a69923b145fc773b545e906fe2ef7e912}\label{mp3dec_8c_a69923b145fc773b545e906fe2ef7e912}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_parse\_vbri\_tag@{mp3\_parse\_vbri\_tag}}
+\index{mp3\_parse\_vbri\_tag@{mp3\_parse\_vbri\_tag}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_parse\_vbri\_tag()}{mp3\_parse\_vbri\_tag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mp3\+\_\+parse\+\_\+vbri\+\_\+tag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{int64\+\_\+t}]{base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 295 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a69923b145fc773b545e906fe2ef7e912_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a69923b145fc773b545e906fe2ef7e912_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_a210deaf8fa879ce8c17bd162bd147af4}\label{mp3dec_8c_a210deaf8fa879ce8c17bd162bd147af4}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_read\_header@{mp3\_read\_header}}
+\index{mp3\_read\_header@{mp3\_read\_header}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_read\_header()}{mp3\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mp3\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 360 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a210deaf8fa879ce8c17bd162bd147af4_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_aba310896e42fd8c7e25e40af227b9a8c}\label{mp3dec_8c_aba310896e42fd8c7e25e40af227b9a8c}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_read\_packet@{mp3\_read\_packet}}
+\index{mp3\_read\_packet@{mp3\_read\_packet}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_read\_packet()}{mp3\_read\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mp3\+\_\+read\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 443 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_aba310896e42fd8c7e25e40af227b9a8c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_ae73988984fa266194f34950fddb18094}\label{mp3dec_8c_ae73988984fa266194f34950fddb18094}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_read\_probe@{mp3\_read\_probe}}
+\index{mp3\_read\_probe@{mp3\_read\_probe}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_read\_probe()}{mp3\_read\_probe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mp3\+\_\+read\+\_\+probe (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 67 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_ae73988984fa266194f34950fddb18094_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_a335d2d93d0792f4501a30e68ad553b89}\label{mp3dec_8c_a335d2d93d0792f4501a30e68ad553b89}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_seek@{mp3\_seek}}
+\index{mp3\_seek@{mp3\_seek}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_seek()}{mp3\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mp3\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{timestamp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 544 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a335d2d93d0792f4501a30e68ad553b89_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_a595655f83cfb253ae04da4ffcf1ea078}\label{mp3dec_8c_a595655f83cfb253ae04da4ffcf1ea078}} 
+\index{mp3dec.c@{mp3dec.c}!mp3\_sync@{mp3\_sync}}
+\index{mp3\_sync@{mp3\_sync}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{mp3\_sync()}{mp3\_sync()}}
+{\footnotesize\ttfamily static int64\+\_\+t mp3\+\_\+sync (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{int64\+\_\+t}]{target\+\_\+pos,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 494 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_a595655f83cfb253ae04da4ffcf1ea078_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{mp3dec_8c_a595655f83cfb253ae04da4ffcf1ea078_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mp3dec_8c_ab40d14499974cbb97dd75a6ea24ca8e5}\label{mp3dec_8c_ab40d14499974cbb97dd75a6ea24ca8e5}} 
+\index{mp3dec.c@{mp3dec.c}!read\_xing\_toc@{read\_xing\_toc}}
+\index{read\_xing\_toc@{read\_xing\_toc}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{read\_xing\_toc()}{read\_xing\_toc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read\+\_\+xing\+\_\+toc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{int64\+\_\+t}]{filesize,  }\item[{int64\+\_\+t}]{duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 132 of file mp3dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_ab40d14499974cbb97dd75a6ea24ca8e5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mp3dec_8c_ab40d14499974cbb97dd75a6ea24ca8e5_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{mp3dec_8c_a89892c5f4a9bb0571477bd181c7fc616}\label{mp3dec_8c_a89892c5f4a9bb0571477bd181c7fc616}} 
+\index{mp3dec.c@{mp3dec.c}!demuxer\_class@{demuxer\_class}}
+\index{demuxer\_class@{demuxer\_class}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{demuxer\_class}{demuxer\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} demuxer\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}mp3"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{mp3dec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{    .category   = \mbox{\hyperlink{log_8h_aeb1c06cc3e47a029ca6afeac782ac8f9a86a70f4c26b01f85c4c23433322eec2c}{AV\_CLASS\_CATEGORY\_DEMUXER}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 601 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a8af50833a7c2b897a5b58409694f12a3}\label{mp3dec_8c_a8af50833a7c2b897a5b58409694f12a3}} 
+\index{mp3dec.c@{mp3dec.c}!ff\_mp3\_demuxer@{ff\_mp3\_demuxer}}
+\index{ff\_mp3\_demuxer@{ff\_mp3\_demuxer}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_mp3\_demuxer}{ff\_mp3\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+mp3\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}mp3"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}MP2/3 (MPEG audio layer 2/3)"{}}),}
+\DoxyCodeLine{    .read\_probe     = \mbox{\hyperlink{mp3dec_8c_ae73988984fa266194f34950fddb18094}{mp3\_read\_probe}},}
+\DoxyCodeLine{    .read\_header    = \mbox{\hyperlink{mp3dec_8c_a210deaf8fa879ce8c17bd162bd147af4}{mp3\_read\_header}},}
+\DoxyCodeLine{    .read\_packet    = \mbox{\hyperlink{mp3dec_8c_aba310896e42fd8c7e25e40af227b9a8c}{mp3\_read\_packet}},}
+\DoxyCodeLine{    .read\_seek      = \mbox{\hyperlink{mp3dec_8c_a335d2d93d0792f4501a30e68ad553b89}{mp3\_seek}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{struct_m_p3_dec_context}{MP3DecContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{avformat_8h_ad2bd0ecdd51061b300e2ab490907bb09}{AVFMT\_GENERIC\_INDEX}},}
+\DoxyCodeLine{    .extensions     = \textcolor{stringliteral}{"{}mp2,mp3,m2a,mpa"{}}, }
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{mp3dec_8c_a89892c5f4a9bb0571477bd181c7fc616}{demuxer\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 609 of file mp3dec.\+c.
+
+\mbox{\Hypertarget{mp3dec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{mp3dec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{mp3dec.c@{mp3dec.c}!options@{options}}
+\index{options@{options}!mp3dec.c@{mp3dec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}usetoc"{}}, \textcolor{stringliteral}{"{}use table of contents"{}}, offsetof(\mbox{\hyperlink{struct_m_p3_dec_context}{MP3DecContext}}, usetoc), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1, \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{AV\_OPT\_FLAG\_DECODING\_PARAM}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 596 of file mp3dec.\+c.
+

@@ -1,0 +1,1723 @@
+\hypertarget{af__arnndn_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+arnndn.c File Reference}
+\label{af__arnndn_8c}\index{E:/github/ffmpeg/libavfilter/af\_arnndn.c@{E:/github/ffmpeg/libavfilter/af\_arnndn.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/tx.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+arnndn.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}}
+\item 
+struct \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}}
+\item 
+struct \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}}
+\item 
+struct \mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}}
+\item 
+struct \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}}
+\item 
+struct \mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a58dd964b25046b2cefb4311f2262b3b8}{F\+R\+A\+M\+E\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+H\+I\+FT}}~2
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}{F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}}~(120$<$$<$\mbox{\hyperlink{af__arnndn_8c_a58dd964b25046b2cefb4311f2262b3b8}{F\+R\+A\+M\+E\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+H\+I\+FT}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ab3f68d59e815ea166f8c983bc6e85c5b}{W\+I\+N\+D\+O\+W\+\_\+\+S\+I\+ZE}}~(2$\ast$\mbox{\hyperlink{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}{F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a5745e8a075423456b2ee9bbe723bc5f6}{F\+R\+E\+Q\+\_\+\+S\+I\+ZE}}~(\mbox{\hyperlink{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}{F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}} + 1)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a7f79242cb7d4174cbc586f30c7e8f969}{P\+I\+T\+C\+H\+\_\+\+M\+I\+N\+\_\+\+P\+E\+R\+I\+OD}}~60
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a663ec5b0fa5c91454e60884dac814cc8}{P\+I\+T\+C\+H\+\_\+\+M\+A\+X\+\_\+\+P\+E\+R\+I\+OD}}~768
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a92aad1361af810a432753fc064f274c7}{P\+I\+T\+C\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}}~960
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ae931a709e26c0fed4a956d2fe0ceee8a}{P\+I\+T\+C\+H\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE}}~(\mbox{\hyperlink{af__arnndn_8c_a663ec5b0fa5c91454e60884dac814cc8}{P\+I\+T\+C\+H\+\_\+\+M\+A\+X\+\_\+\+P\+E\+R\+I\+OD}}+\mbox{\hyperlink{af__arnndn_8c_a92aad1361af810a432753fc064f274c7}{P\+I\+T\+C\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_aa1cf70a99e21bc2032e8867c6cafbb43}{S\+Q\+U\+A\+RE}}(x)~((x)$\ast$(x))
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a6a7db4d4cae63c5a79563d18a4595294}{N\+B\+\_\+\+B\+A\+N\+DS}}~22
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a24b6fd7bd1e16c89ad36eae683b91f8d}{C\+E\+P\+S\+\_\+\+M\+EM}}~8
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ab881e0bd38bfc50e8051f88b85b0362a}{N\+B\+\_\+\+D\+E\+L\+T\+A\+\_\+\+C\+E\+PS}}~6
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_af71129311390d4a24443820e04f7609c}{N\+B\+\_\+\+F\+E\+A\+T\+U\+R\+ES}}~(\mbox{\hyperlink{af__arnndn_8c_a6a7db4d4cae63c5a79563d18a4595294}{N\+B\+\_\+\+B\+A\+N\+DS}}+3$\ast$\mbox{\hyperlink{af__arnndn_8c_ab881e0bd38bfc50e8051f88b85b0362a}{N\+B\+\_\+\+D\+E\+L\+T\+A\+\_\+\+C\+E\+PS}}+2)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a0ec0f29cca3ed369a53791663a5f7660}{W\+E\+I\+G\+H\+T\+S\+\_\+\+S\+C\+A\+LE}}~(1.\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}/256)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a6cc22f9e11440ae18564b9e1ef1bea03}{M\+A\+X\+\_\+\+N\+E\+U\+R\+O\+NS}}~128
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a1346c60e4dcaf7a316da88e0a8b4e5b5}{A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+T\+A\+NH}}~0
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a4fbcffe9238cd41de0a2bf13967107ed}{A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+S\+I\+G\+M\+O\+ID}}~1
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_acffa95b9b49991a1f972d9ae45673081}{A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+R\+E\+LU}}~2
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a6c7eade301479d89760d3baab65f6249}{Q15\+O\+NE}}~1.\+0f
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a232db42f0636823451db83028a1a73ad}{F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+T\+A\+NH}}~0
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a33ff387690be206e2e141bc0510ffd31}{F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+S\+I\+G\+M\+O\+ID}}~1
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a0615c4e3597050cce14fb1698cdeef50}{F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+R\+E\+LU}}~2
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_af810a13ba67fed97c65570cbd1c6bbe8}{F\+R\+E\+E\+\_\+\+M\+A\+Y\+BE}}(ptr)~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{audioconvert_8c_a399cece626adcffd619948d47f2d975a}{if}} (ptr) free(ptr); \} while (0)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a395c9df150c8462b2cef413a65d306d6}{F\+R\+E\+E\+\_\+\+D\+E\+N\+SE}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ad5cf043e5b47290a11aed8fc224c9132}{F\+R\+E\+E\+\_\+\+G\+RU}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a546be1519ef98880ff588e323e9d0f2e}{A\+L\+L\+O\+C\+\_\+\+L\+A\+Y\+ER}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a1a3c5ae84dbd73b30a0a01ea2593d358}{I\+N\+P\+U\+T\+\_\+\+V\+AL}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ac089466221fad7059ad96ff1e234228f}{I\+N\+P\+U\+T\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+ON}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ab106c120ca81afe249402b73192aacea}{I\+N\+P\+U\+T\+\_\+\+A\+R\+R\+AY}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ab2d28041edc86bd39df2bd9a2bd8b144}{I\+N\+P\+U\+T\+\_\+\+A\+R\+R\+A\+Y3}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  len0,  len1,  len2)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a733329e5a2a37928755a20f0ad9ab075}{I\+N\+P\+U\+T\+\_\+\+D\+E\+N\+SE}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a83c9ad8ff6bfafd7684ad5dc50b93e71}{I\+N\+P\+U\+T\+\_\+\+G\+RU}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ab9de82bea5ba48e49a48978f5976edd9}{R\+N\+N\+\_\+\+M\+O\+VE}}(dst,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  n)~(memmove((dst), (\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}), (n)$\ast$sizeof($\ast$(dst)) + 0$\ast$((dst)-\/(\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})) ))
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a65a46c34fa402ecc6183f1ca3d4c82e2}{R\+N\+N\+\_\+\+C\+L\+E\+AR}}(dst,  n)~(memset((dst), 0, (n)$\ast$sizeof($\ast$(dst))))
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a7bfbceff3b6657fe50dfb7bd0095f668}{R\+N\+N\+\_\+\+C\+O\+PY}}(dst,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  n)~(memcpy((dst), (\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}), (n)$\ast$sizeof($\ast$(dst)) + 0$\ast$((dst)-\/(\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})) ))
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_abcf72cd23bdafb47b19023d91b4c107d}{I\+N\+P\+U\+T\+\_\+\+S\+I\+ZE}}~42
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__arnndn_8c_a76ba789cde9c36cd57dbb390bdee7661}{AF}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}} \mbox{\hyperlink{af__arnndn_8c_a7c81228af09c0d03647921204ff3ec82}{Dense\+Layer}}
+\item 
+typedef struct \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}} \mbox{\hyperlink{af__arnndn_8c_a760405be1b349783477ab1f2368e63f1}{G\+R\+U\+Layer}}
+\item 
+typedef struct \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}} \mbox{\hyperlink{af__arnndn_8c_a8c4949466a45feb53a25c25eea5e9eab}{R\+N\+N\+Model}}
+\item 
+typedef struct \mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}} \mbox{\hyperlink{af__arnndn_8c_a540ae4f526db41acac8d1b03724c2416}{R\+N\+N\+State}}
+\item 
+typedef struct \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} \mbox{\hyperlink{af__arnndn_8c_a1c6033b2d6303d4600819acfc51bcf6a}{Denoise\+State}}
+\item 
+typedef struct \mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} \mbox{\hyperlink{af__arnndn_8c_aa68b71432b036483baa5a52c5b71ecfe}{Audio\+R\+N\+N\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{af__arnndn_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ac81446487b66195904b437aa6e9de899}{rnnoise\+\_\+model\+\_\+free}} (\mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}} $\ast$model)
+\item 
+static \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}} $\ast$ \mbox{\hyperlink{af__arnndn_8c_a31d6163e3aaf61b7223948f3c8bb7d2c}{rnnoise\+\_\+model\+\_\+from\+\_\+file}} (F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_aeb8b8a221afd6cf5746b4455cf122e88}{biquad}} (float $\ast$y, float mem\mbox{[}2\mbox{]}, const float $\ast$x, const float $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, const float $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a35eea348ac803332cb13ae5f2802c2d3}{forward\+\_\+transform}} (\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a1c9736da6a6a455f2a5025bdf0f5f167}{inverse\+\_\+transform}} (\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ab579d9b669b15d766b74303e965059fc}{compute\+\_\+band\+\_\+energy}} (float $\ast$bandE, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a8701396cf91f7b28d2c8516b32695a8e}{compute\+\_\+band\+\_\+corr}} (float $\ast$bandE, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}}, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{vf__hqx_8c_ad549fe7b23caebeec6296b8934b83b37}{P}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ab82d507717198613c0a2e2ef9cfbc40f}{frame\+\_\+analysis}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}}, float $\ast$Ex, const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a67e10b880efc45a49d0b46c90a215e02}{frame\+\_\+synthesis}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$y)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_aeb3dd1df009e81c35724325ef8907d5b}{xcorr\+\_\+kernel}} (const float $\ast$x, const float $\ast$y, float sum\mbox{[}4\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_a5d7086a0c423954335a2ffb19fc0368c}{celt\+\_\+inner\+\_\+prod}} (const float $\ast$x, const float $\ast$y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ad866e47c163703b28b477d941cde2207}{celt\+\_\+pitch\+\_\+xcorr}} (const float $\ast$x, const float $\ast$y, float $\ast$xcorr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+pitch)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_a2b95f3178812f95b1b0accd2e321e9a0}{celt\+\_\+autocorr}} (const float $\ast$x, float $\ast$ac, const float $\ast$\mbox{\hyperlink{hca__data_8h_a446bc3805b5a8b73ee7121ebd7e4e8b0}{window}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} overlap, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lag, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a99fdada79f1906117319a2d3d3ab940a}{celt\+\_\+lpc}} (float $\ast$lpc, const float $\ast$ac, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} p)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ac988350a165580748ee72f91edea96c6}{celt\+\_\+fir5}} (const float $\ast$x, const float $\ast$num, float $\ast$y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}}, float $\ast$mem)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a367f6f9b5c5b20f7ac04684740c44fd9}{pitch\+\_\+downsample}} (float $\ast$x\mbox{[}$\,$\mbox{]}, float $\ast$x\+\_\+lp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{writing__filters_8txt_ac6aa34a4d5a2730cb4a78b73983c6398}{C}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a123900e02b34e8caac53918b240f2abe}{dual\+\_\+inner\+\_\+prod}} (const float $\ast$x, const float $\ast$y01, const float $\ast$y02, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}}, float $\ast$xy1, float $\ast$xy2)
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_a01ccb94a95df53692b5edac39f951b22}{compute\+\_\+pitch\+\_\+gain}} (float xy, float xx, float yy)
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_a167ae4061226b7674a4942750eb4059b}{remove\+\_\+doubling}} (float $\ast$x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} maxperiod, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} minperiod, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$T0\+\_\+, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prev\+\_\+period, float prev\+\_\+gain)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_aeb715e1860d03a117388cc477b3b0ce3}{find\+\_\+best\+\_\+pitch}} (float $\ast$xcorr, float $\ast$y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+pitch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$best\+\_\+pitch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_aefd4fed4e778b859133a366bcdd564b7}{pitch\+\_\+search}} (const float $\ast$x\+\_\+lp, float $\ast$y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+pitch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$pitch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a9cc66b621d526463469f8524282f6d30}{dct}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_a0358215f0154527bb17ddde5623439b0}{compute\+\_\+frame\+\_\+features}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}}, \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{vf__hqx_8c_ad549fe7b23caebeec6296b8934b83b37}{P}}, float $\ast$Ex, float $\ast$Ep, float $\ast$Exp, float $\ast$features, const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a7a53beae94c2f59d8c4c1e8e6bd26f54}{interp\+\_\+band\+\_\+gain}} (float $\ast$\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, const float $\ast$bandE)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a603fb04832acc1c28b3332f74148533e}{pitch\+\_\+filter}} (\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba58833a3110c570fb05130d40c365d1e4}{X}}, const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$\mbox{\hyperlink{vf__hqx_8c_ad549fe7b23caebeec6296b8934b83b37}{P}}, const float $\ast$Ex, const float $\ast$Ep, const float $\ast$Exp, const float $\ast$\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}})
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_ad945d7aab4227b88b575afb03ce4da31}{tansig\+\_\+approx}} (float x)
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_a69de527ac97092062319223d58f953c8}{sigmoid\+\_\+approx}} (float x)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ad3843f248d095870eb23f4396e046f47}{compute\+\_\+dense}} (const \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}} $\ast$layer, float $\ast$\mbox{\hyperlink{filter__design_8txt_ad29e68e2acddc1f10f601345de7bf4aa}{output}}, const float $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_a6fbb9a3f531437a5bff103f3cc8cc897}{compute\+\_\+gru}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}} $\ast$gru, float $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, const float $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_ad74df66c28c42db2a933f9fade350cb0}{compute\+\_\+rnn}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}} $\ast$rnn, float $\ast$gains, float $\ast$vad, const float $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static float \mbox{\hyperlink{af__arnndn_8c_aea2bfeff714964d1dd7bb4ce428c8c2d}{rnnoise\+\_\+channel}} (\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$st, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_ab339dc283aa1b95f615cdd910ab1a7a7}{rnnoise\+\_\+channels}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+\mbox{\hyperlink{af__arnndn_8c_a3963a89c216f0766aeb9e2371f3b31f5}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (arnndn)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{af__arnndn_8c_af72e619708565917dbade907ce9e1066}{eband5ms}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{af__arnndn_8c_a11b3913011944a9c7a5913db720aac2a}{second\+\_\+check}} \mbox{[}16\mbox{]} = \{0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2\}
+\item 
+static const float \mbox{\hyperlink{af__arnndn_8c_af7d9eb32c2436bcfc4703816f73b3c89}{tansig\+\_\+table}} \mbox{[}201\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__arnndn_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__arnndn_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{af__arnndn_8c_aac6e2234289fc713d3951101077995f1}{arnndn\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{af__arnndn_8c_a0862b3ac59a6767ffd8899d94cc9d992}{ff\+\_\+af\+\_\+arnndn}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__arnndn_8c_acffa95b9b49991a1f972d9ae45673081}\label{af__arnndn_8c_acffa95b9b49991a1f972d9ae45673081}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ACTIVATION\_RELU@{ACTIVATION\_RELU}}
+\index{ACTIVATION\_RELU@{ACTIVATION\_RELU}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ACTIVATION\_RELU}{ACTIVATION\_RELU}}
+{\footnotesize\ttfamily \#define A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+R\+E\+LU~2}
+
+
+
+Definition at line 71 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a4fbcffe9238cd41de0a2bf13967107ed}\label{af__arnndn_8c_a4fbcffe9238cd41de0a2bf13967107ed}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ACTIVATION\_SIGMOID@{ACTIVATION\_SIGMOID}}
+\index{ACTIVATION\_SIGMOID@{ACTIVATION\_SIGMOID}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ACTIVATION\_SIGMOID}{ACTIVATION\_SIGMOID}}
+{\footnotesize\ttfamily \#define A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+S\+I\+G\+M\+O\+ID~1}
+
+
+
+Definition at line 70 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a1346c60e4dcaf7a316da88e0a8b4e5b5}\label{af__arnndn_8c_a1346c60e4dcaf7a316da88e0a8b4e5b5}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ACTIVATION\_TANH@{ACTIVATION\_TANH}}
+\index{ACTIVATION\_TANH@{ACTIVATION\_TANH}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ACTIVATION\_TANH}{ACTIVATION\_TANH}}
+{\footnotesize\ttfamily \#define A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+T\+A\+NH~0}
+
+
+
+Definition at line 69 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a76ba789cde9c36cd57dbb390bdee7661}\label{af__arnndn_8c_a76ba789cde9c36cd57dbb390bdee7661}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!AF@{AF}}
+\index{AF@{AF}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{AF}{AF}}
+{\footnotesize\ttfamily \#define AF~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1522 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a546be1519ef98880ff588e323e9d0f2e}\label{af__arnndn_8c_a546be1519ef98880ff588e323e9d0f2e}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ALLOC\_LAYER@{ALLOC\_LAYER}}
+\index{ALLOC\_LAYER@{ALLOC\_LAYER}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ALLOC\_LAYER}{ALLOC\_LAYER}}
+{\footnotesize\ttfamily \#define A\+L\+L\+O\+C\+\_\+\+L\+A\+Y\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}} = \mbox{\hyperlink{group__lavu__mem__funcs_gaaf38f6d994f5a85854ef47fd98fa6e9a}{av\_calloc}}(1, \textcolor{keyword}{sizeof}(\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}})); \(\backslash\)}
+\DoxyCodeLine{    if (!\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}) \{ \(\backslash\)}
+\DoxyCodeLine{        rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    ret-\/>name = \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_a24b6fd7bd1e16c89ad36eae683b91f8d}\label{af__arnndn_8c_a24b6fd7bd1e16c89ad36eae683b91f8d}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!CEPS\_MEM@{CEPS\_MEM}}
+\index{CEPS\_MEM@{CEPS\_MEM}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{CEPS\_MEM}{CEPS\_MEM}}
+{\footnotesize\ttfamily \#define C\+E\+P\+S\+\_\+\+M\+EM~8}
+
+
+
+Definition at line 60 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a0615c4e3597050cce14fb1698cdeef50}\label{af__arnndn_8c_a0615c4e3597050cce14fb1698cdeef50}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!F\_ACTIVATION\_RELU@{F\_ACTIVATION\_RELU}}
+\index{F\_ACTIVATION\_RELU@{F\_ACTIVATION\_RELU}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{F\_ACTIVATION\_RELU}{F\_ACTIVATION\_RELU}}
+{\footnotesize\ttfamily \#define F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+R\+E\+LU~2}
+
+
+
+Definition at line 153 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a33ff387690be206e2e141bc0510ffd31}\label{af__arnndn_8c_a33ff387690be206e2e141bc0510ffd31}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!F\_ACTIVATION\_SIGMOID@{F\_ACTIVATION\_SIGMOID}}
+\index{F\_ACTIVATION\_SIGMOID@{F\_ACTIVATION\_SIGMOID}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{F\_ACTIVATION\_SIGMOID}{F\_ACTIVATION\_SIGMOID}}
+{\footnotesize\ttfamily \#define F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+S\+I\+G\+M\+O\+ID~1}
+
+
+
+Definition at line 152 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a232db42f0636823451db83028a1a73ad}\label{af__arnndn_8c_a232db42f0636823451db83028a1a73ad}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!F\_ACTIVATION\_TANH@{F\_ACTIVATION\_TANH}}
+\index{F\_ACTIVATION\_TANH@{F\_ACTIVATION\_TANH}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{F\_ACTIVATION\_TANH}{F\_ACTIVATION\_TANH}}
+{\footnotesize\ttfamily \#define F\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+O\+N\+\_\+\+T\+A\+NH~0}
+
+
+
+Definition at line 151 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}\label{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FRAME\_SIZE@{FRAME\_SIZE}}
+\index{FRAME\_SIZE@{FRAME\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FRAME\_SIZE}{FRAME\_SIZE}}
+{\footnotesize\ttfamily \#define F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE~(120$<$$<$\mbox{\hyperlink{af__arnndn_8c_a58dd964b25046b2cefb4311f2262b3b8}{F\+R\+A\+M\+E\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+H\+I\+FT}})}
+
+
+
+Definition at line 47 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a58dd964b25046b2cefb4311f2262b3b8}\label{af__arnndn_8c_a58dd964b25046b2cefb4311f2262b3b8}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FRAME\_SIZE\_SHIFT@{FRAME\_SIZE\_SHIFT}}
+\index{FRAME\_SIZE\_SHIFT@{FRAME\_SIZE\_SHIFT}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FRAME\_SIZE\_SHIFT}{FRAME\_SIZE\_SHIFT}}
+{\footnotesize\ttfamily \#define F\+R\+A\+M\+E\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+H\+I\+FT~2}
+
+
+
+Definition at line 46 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a395c9df150c8462b2cef413a65d306d6}\label{af__arnndn_8c_a395c9df150c8462b2cef413a65d306d6}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FREE\_DENSE@{FREE\_DENSE}}
+\index{FREE\_DENSE@{FREE\_DENSE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FREE\_DENSE}{FREE\_DENSE}}
+{\footnotesize\ttfamily \#define F\+R\+E\+E\+\_\+\+D\+E\+N\+SE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (model-\/>name) \{ \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name-\/>input\_weights); \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name-\/>bias); \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name); \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_ad5cf043e5b47290a11aed8fc224c9132}\label{af__arnndn_8c_ad5cf043e5b47290a11aed8fc224c9132}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FREE\_GRU@{FREE\_GRU}}
+\index{FREE\_GRU@{FREE\_GRU}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FREE\_GRU}{FREE\_GRU}}
+{\footnotesize\ttfamily \#define F\+R\+E\+E\+\_\+\+G\+RU(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (model-\/>name) \{ \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name-\/>input\_weights); \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name-\/>recurrent\_weights); \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name-\/>bias); \(\backslash\)}
+\DoxyCodeLine{        av\_free((\textcolor{keywordtype}{void} *) model-\/>name); \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_af810a13ba67fed97c65570cbd1c6bbe8}\label{af__arnndn_8c_af810a13ba67fed97c65570cbd1c6bbe8}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FREE\_MAYBE@{FREE\_MAYBE}}
+\index{FREE\_MAYBE@{FREE\_MAYBE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FREE\_MAYBE}{FREE\_MAYBE}}
+{\footnotesize\ttfamily \#define F\+R\+E\+E\+\_\+\+M\+A\+Y\+BE(\begin{DoxyParamCaption}\item[{}]{ptr }\end{DoxyParamCaption})~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{audioconvert_8c_a399cece626adcffd619948d47f2d975a}{if}} (ptr) free(ptr); \} while (0)}
+
+\mbox{\Hypertarget{af__arnndn_8c_a5745e8a075423456b2ee9bbe723bc5f6}\label{af__arnndn_8c_a5745e8a075423456b2ee9bbe723bc5f6}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!FREQ\_SIZE@{FREQ\_SIZE}}
+\index{FREQ\_SIZE@{FREQ\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{FREQ\_SIZE}{FREQ\_SIZE}}
+{\footnotesize\ttfamily \#define F\+R\+E\+Q\+\_\+\+S\+I\+ZE~(\mbox{\hyperlink{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}{F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}} + 1)}
+
+
+
+Definition at line 49 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ac089466221fad7059ad96ff1e234228f}\label{af__arnndn_8c_ac089466221fad7059ad96ff1e234228f}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_ACTIVATION@{INPUT\_ACTIVATION}}
+\index{INPUT\_ACTIVATION@{INPUT\_ACTIVATION}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_ACTIVATION}{INPUT\_ACTIVATION}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+A\+C\+T\+I\+V\+A\+T\+I\+ON(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    int activation; \(\backslash\)}
+\DoxyCodeLine{    INPUT\_VAL(activation); \(\backslash\)}
+\DoxyCodeLine{    switch (activation) \{ \(\backslash\)}
+\DoxyCodeLine{    case \mbox{\hyperlink{af__arnndn_8c_a33ff387690be206e2e141bc0510ffd31}{F\_ACTIVATION\_SIGMOID}}: \(\backslash\)}
+\DoxyCodeLine{        name = \mbox{\hyperlink{af__arnndn_8c_a4fbcffe9238cd41de0a2bf13967107ed}{ACTIVATION\_SIGMOID}}; \(\backslash\)}
+\DoxyCodeLine{        break; \(\backslash\)}
+\DoxyCodeLine{    case \mbox{\hyperlink{af__arnndn_8c_a0615c4e3597050cce14fb1698cdeef50}{F\_ACTIVATION\_RELU}}: \(\backslash\)}
+\DoxyCodeLine{        name = \mbox{\hyperlink{af__arnndn_8c_acffa95b9b49991a1f972d9ae45673081}{ACTIVATION\_RELU}}; \(\backslash\)}
+\DoxyCodeLine{        break; \(\backslash\)}
+\DoxyCodeLine{    default: \(\backslash\)}
+\DoxyCodeLine{        name = \mbox{\hyperlink{af__arnndn_8c_a1346c60e4dcaf7a316da88e0a8b4e5b5}{ACTIVATION\_TANH}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_ab106c120ca81afe249402b73192aacea}\label{af__arnndn_8c_ab106c120ca81afe249402b73192aacea}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_ARRAY@{INPUT\_ARRAY}}
+\index{INPUT\_ARRAY@{INPUT\_ARRAY}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_ARRAY}{INPUT\_ARRAY}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+A\+R\+R\+AY(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    float *\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}} = \mbox{\hyperlink{group__lavu__mem__funcs_gaaf38f6d994f5a85854ef47fd98fa6e9a}{av\_calloc}}((\mbox{\hyperlink{vorbis__enc__data_8h_afed088663f8704004425cdae2120b9b3}{len}}), \textcolor{keyword}{sizeof}(\textcolor{keywordtype}{float})); \(\backslash\)}
+\DoxyCodeLine{    if (!\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}}) \{ \(\backslash\)}
+\DoxyCodeLine{        rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    name = \mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}}; \(\backslash\)}
+\DoxyCodeLine{    for (\textcolor{keywordtype}{int} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < (\mbox{\hyperlink{vorbis__enc__data_8h_afed088663f8704004425cdae2120b9b3}{len}}); \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}++) \{ \(\backslash\)}
+\DoxyCodeLine{        if (fscanf(\mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}}, \textcolor{stringliteral}{"{}\%d"{}}, \&\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}) != 1) \{ \(\backslash\)}
+\DoxyCodeLine{            rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{            return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{        values[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}] = \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_ab2d28041edc86bd39df2bd9a2bd8b144}\label{af__arnndn_8c_ab2d28041edc86bd39df2bd9a2bd8b144}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_ARRAY3@{INPUT\_ARRAY3}}
+\index{INPUT\_ARRAY3@{INPUT\_ARRAY3}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_ARRAY3}{INPUT\_ARRAY3}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+A\+R\+R\+A\+Y3(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{len0,  }\item[{}]{len1,  }\item[{}]{len2 }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    float *\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}} = \mbox{\hyperlink{group__lavu__mem__funcs_gaaf38f6d994f5a85854ef47fd98fa6e9a}{av\_calloc}}(\mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((len0), 4) * \mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((len1), 4) * (len2), \textcolor{keyword}{sizeof}(\textcolor{keywordtype}{float})); \(\backslash\)}
+\DoxyCodeLine{    if (!\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}}) \{ \(\backslash\)}
+\DoxyCodeLine{        rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    name = \mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}}; \(\backslash\)}
+\DoxyCodeLine{    for (\textcolor{keywordtype}{int} k = 0; k < (len0); k++) \{ \(\backslash\)}
+\DoxyCodeLine{        for (\textcolor{keywordtype}{int} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < (len2); \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}++) \{ \(\backslash\)}
+\DoxyCodeLine{            for (\textcolor{keywordtype}{int} j = 0; j < (len1); j++) \{ \(\backslash\)}
+\DoxyCodeLine{                if (fscanf(\mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}}, \textcolor{stringliteral}{"{}\%d"{}}, \&\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}) != 1) \{ \(\backslash\)}
+\DoxyCodeLine{                    rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{                    return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{                \} \(\backslash\)}
+\DoxyCodeLine{                values[j * (len2) * \mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((len0), 4) + \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} * \mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((len0), 4) + k] = \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}; \(\backslash\)}
+\DoxyCodeLine{            \} \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_a733329e5a2a37928755a20f0ad9ab075}\label{af__arnndn_8c_a733329e5a2a37928755a20f0ad9ab075}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_DENSE@{INPUT\_DENSE}}
+\index{INPUT\_DENSE@{INPUT\_DENSE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_DENSE}{INPUT\_DENSE}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+D\+E\+N\+SE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    INPUT\_VAL(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_inputs); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_VAL(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons); \(\backslash\)}
+\DoxyCodeLine{    ret-\/>name \#\# \_size = \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons; \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ACTIVATION(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>activation); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ARRAY(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>input\_weights, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_inputs * \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ARRAY(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>bias, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons); \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_a83c9ad8ff6bfafd7684ad5dc50b93e71}\label{af__arnndn_8c_a83c9ad8ff6bfafd7684ad5dc50b93e71}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_GRU@{INPUT\_GRU}}
+\index{INPUT\_GRU@{INPUT\_GRU}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_GRU}{INPUT\_GRU}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+G\+RU(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    INPUT\_VAL(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_inputs); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_VAL(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons); \(\backslash\)}
+\DoxyCodeLine{    ret-\/>name \#\# \_size = \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons; \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ACTIVATION(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>activation); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ARRAY3(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>input\_weights, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_inputs, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons, 3); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ARRAY3(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>recurrent\_weights, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons, 3); \(\backslash\)}
+\DoxyCodeLine{    INPUT\_ARRAY(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>bias, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}-\/>nb\_neurons * 3); \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_abcf72cd23bdafb47b19023d91b4c107d}\label{af__arnndn_8c_abcf72cd23bdafb47b19023d91b4c107d}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_SIZE@{INPUT\_SIZE}}
+\index{INPUT\_SIZE@{INPUT\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_SIZE}{INPUT\_SIZE}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+S\+I\+ZE~42}
+
+
+
+Definition at line 1311 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a1a3c5ae84dbd73b30a0a01ea2593d358}\label{af__arnndn_8c_a1a3c5ae84dbd73b30a0a01ea2593d358}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!INPUT\_VAL@{INPUT\_VAL}}
+\index{INPUT\_VAL@{INPUT\_VAL}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{INPUT\_VAL}{INPUT\_VAL}}
+{\footnotesize\ttfamily \#define I\+N\+P\+U\+T\+\_\+\+V\+AL(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (fscanf(\mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}}, \textcolor{stringliteral}{"{}\%d"{}}, \&\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}) != 1 || in < 0 || in > 128) \{ \(\backslash\)}
+\DoxyCodeLine{        rnnoise\_model\_free(\mbox{\hyperlink{filter__design_8txt_af1ec77bdca1b30e8153fc5da88f603db}{ret}}); \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{    name = \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}; \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{af__arnndn_8c_a6cc22f9e11440ae18564b9e1ef1bea03}\label{af__arnndn_8c_a6cc22f9e11440ae18564b9e1ef1bea03}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!MAX\_NEURONS@{MAX\_NEURONS}}
+\index{MAX\_NEURONS@{MAX\_NEURONS}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_NEURONS}{MAX\_NEURONS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+N\+E\+U\+R\+O\+NS~128}
+
+
+
+Definition at line 67 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a6a7db4d4cae63c5a79563d18a4595294}\label{af__arnndn_8c_a6a7db4d4cae63c5a79563d18a4595294}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!NB\_BANDS@{NB\_BANDS}}
+\index{NB\_BANDS@{NB\_BANDS}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{NB\_BANDS}{NB\_BANDS}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+B\+A\+N\+DS~22}
+
+
+
+Definition at line 58 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ab881e0bd38bfc50e8051f88b85b0362a}\label{af__arnndn_8c_ab881e0bd38bfc50e8051f88b85b0362a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!NB\_DELTA\_CEPS@{NB\_DELTA\_CEPS}}
+\index{NB\_DELTA\_CEPS@{NB\_DELTA\_CEPS}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{NB\_DELTA\_CEPS}{NB\_DELTA\_CEPS}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+D\+E\+L\+T\+A\+\_\+\+C\+E\+PS~6}
+
+
+
+Definition at line 61 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_af71129311390d4a24443820e04f7609c}\label{af__arnndn_8c_af71129311390d4a24443820e04f7609c}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!NB\_FEATURES@{NB\_FEATURES}}
+\index{NB\_FEATURES@{NB\_FEATURES}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{NB\_FEATURES}{NB\_FEATURES}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+F\+E\+A\+T\+U\+R\+ES~(\mbox{\hyperlink{af__arnndn_8c_a6a7db4d4cae63c5a79563d18a4595294}{N\+B\+\_\+\+B\+A\+N\+DS}}+3$\ast$\mbox{\hyperlink{af__arnndn_8c_ab881e0bd38bfc50e8051f88b85b0362a}{N\+B\+\_\+\+D\+E\+L\+T\+A\+\_\+\+C\+E\+PS}}+2)}
+
+
+
+Definition at line 63 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__arnndn_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}}, x)}
+
+
+
+Definition at line 1521 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ae931a709e26c0fed4a956d2fe0ceee8a}\label{af__arnndn_8c_ae931a709e26c0fed4a956d2fe0ceee8a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!PITCH\_BUF\_SIZE@{PITCH\_BUF\_SIZE}}
+\index{PITCH\_BUF\_SIZE@{PITCH\_BUF\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{PITCH\_BUF\_SIZE}{PITCH\_BUF\_SIZE}}
+{\footnotesize\ttfamily \#define P\+I\+T\+C\+H\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE~(\mbox{\hyperlink{af__arnndn_8c_a663ec5b0fa5c91454e60884dac814cc8}{P\+I\+T\+C\+H\+\_\+\+M\+A\+X\+\_\+\+P\+E\+R\+I\+OD}}+\mbox{\hyperlink{af__arnndn_8c_a92aad1361af810a432753fc064f274c7}{P\+I\+T\+C\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}})}
+
+
+
+Definition at line 54 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a92aad1361af810a432753fc064f274c7}\label{af__arnndn_8c_a92aad1361af810a432753fc064f274c7}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!PITCH\_FRAME\_SIZE@{PITCH\_FRAME\_SIZE}}
+\index{PITCH\_FRAME\_SIZE@{PITCH\_FRAME\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{PITCH\_FRAME\_SIZE}{PITCH\_FRAME\_SIZE}}
+{\footnotesize\ttfamily \#define P\+I\+T\+C\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE~960}
+
+
+
+Definition at line 53 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a663ec5b0fa5c91454e60884dac814cc8}\label{af__arnndn_8c_a663ec5b0fa5c91454e60884dac814cc8}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!PITCH\_MAX\_PERIOD@{PITCH\_MAX\_PERIOD}}
+\index{PITCH\_MAX\_PERIOD@{PITCH\_MAX\_PERIOD}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{PITCH\_MAX\_PERIOD}{PITCH\_MAX\_PERIOD}}
+{\footnotesize\ttfamily \#define P\+I\+T\+C\+H\+\_\+\+M\+A\+X\+\_\+\+P\+E\+R\+I\+OD~768}
+
+
+
+Definition at line 52 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a7f79242cb7d4174cbc586f30c7e8f969}\label{af__arnndn_8c_a7f79242cb7d4174cbc586f30c7e8f969}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!PITCH\_MIN\_PERIOD@{PITCH\_MIN\_PERIOD}}
+\index{PITCH\_MIN\_PERIOD@{PITCH\_MIN\_PERIOD}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{PITCH\_MIN\_PERIOD}{PITCH\_MIN\_PERIOD}}
+{\footnotesize\ttfamily \#define P\+I\+T\+C\+H\+\_\+\+M\+I\+N\+\_\+\+P\+E\+R\+I\+OD~60}
+
+
+
+Definition at line 51 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a6c7eade301479d89760d3baab65f6249}\label{af__arnndn_8c_a6c7eade301479d89760d3baab65f6249}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!Q15ONE@{Q15ONE}}
+\index{Q15ONE@{Q15ONE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{Q15ONE}{Q15ONE}}
+{\footnotesize\ttfamily \#define Q15\+O\+NE~1.\+0f}
+
+
+
+Definition at line 73 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a65a46c34fa402ecc6183f1ca3d4c82e2}\label{af__arnndn_8c_a65a46c34fa402ecc6183f1ca3d4c82e2}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!RNN\_CLEAR@{RNN\_CLEAR}}
+\index{RNN\_CLEAR@{RNN\_CLEAR}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{RNN\_CLEAR}{RNN\_CLEAR}}
+{\footnotesize\ttfamily \#define R\+N\+N\+\_\+\+C\+L\+E\+AR(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{n }\end{DoxyParamCaption})~(memset((dst), 0, (n)$\ast$sizeof($\ast$(dst))))}
+
+
+
+Definition at line 393 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a7bfbceff3b6657fe50dfb7bd0095f668}\label{af__arnndn_8c_a7bfbceff3b6657fe50dfb7bd0095f668}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!RNN\_COPY@{RNN\_COPY}}
+\index{RNN\_COPY@{RNN\_COPY}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{RNN\_COPY}{RNN\_COPY}}
+{\footnotesize\ttfamily \#define R\+N\+N\+\_\+\+C\+O\+PY(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{n }\end{DoxyParamCaption})~(memcpy((dst), (\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}), (n)$\ast$sizeof($\ast$(dst)) + 0$\ast$((dst)-\/(\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})) ))}
+
+
+
+Definition at line 394 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ab9de82bea5ba48e49a48978f5976edd9}\label{af__arnndn_8c_ab9de82bea5ba48e49a48978f5976edd9}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!RNN\_MOVE@{RNN\_MOVE}}
+\index{RNN\_MOVE@{RNN\_MOVE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{RNN\_MOVE}{RNN\_MOVE}}
+{\footnotesize\ttfamily \#define R\+N\+N\+\_\+\+M\+O\+VE(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{n }\end{DoxyParamCaption})~(memmove((dst), (\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}), (n)$\ast$sizeof($\ast$(dst)) + 0$\ast$((dst)-\/(\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})) ))}
+
+
+
+Definition at line 392 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_aa1cf70a99e21bc2032e8867c6cafbb43}\label{af__arnndn_8c_aa1cf70a99e21bc2032e8867c6cafbb43}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!SQUARE@{SQUARE}}
+\index{SQUARE@{SQUARE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{SQUARE}{SQUARE}}
+{\footnotesize\ttfamily \#define S\+Q\+U\+A\+RE(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x)$\ast$(x))}
+
+
+
+Definition at line 56 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a0ec0f29cca3ed369a53791663a5f7660}\label{af__arnndn_8c_a0ec0f29cca3ed369a53791663a5f7660}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!WEIGHTS\_SCALE@{WEIGHTS\_SCALE}}
+\index{WEIGHTS\_SCALE@{WEIGHTS\_SCALE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{WEIGHTS\_SCALE}{WEIGHTS\_SCALE}}
+{\footnotesize\ttfamily \#define W\+E\+I\+G\+H\+T\+S\+\_\+\+S\+C\+A\+LE~(1.\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}/256)}
+
+
+
+Definition at line 65 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_ab3f68d59e815ea166f8c983bc6e85c5b}\label{af__arnndn_8c_ab3f68d59e815ea166f8c983bc6e85c5b}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!WINDOW\_SIZE@{WINDOW\_SIZE}}
+\index{WINDOW\_SIZE@{WINDOW\_SIZE}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{WINDOW\_SIZE}{WINDOW\_SIZE}}
+{\footnotesize\ttfamily \#define W\+I\+N\+D\+O\+W\+\_\+\+S\+I\+ZE~(2$\ast$\mbox{\hyperlink{af__arnndn_8c_af9b1b2ba12857a4bf11289dac8c5462d}{F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}})}
+
+
+
+Definition at line 48 of file af\+\_\+arnndn.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__arnndn_8c_aa68b71432b036483baa5a52c5b71ecfe}\label{af__arnndn_8c_aa68b71432b036483baa5a52c5b71ecfe}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!AudioRNNContext@{AudioRNNContext}}
+\index{AudioRNNContext@{AudioRNNContext}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{AudioRNNContext}{AudioRNNContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} \mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a1c6033b2d6303d4600819acfc51bcf6a}\label{af__arnndn_8c_a1c6033b2d6303d4600819acfc51bcf6a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!DenoiseState@{DenoiseState}}
+\index{DenoiseState@{DenoiseState}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{DenoiseState}{DenoiseState}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} \mbox{\hyperlink{struct_denoise_state}{Denoise\+State}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a7c81228af09c0d03647921204ff3ec82}\label{af__arnndn_8c_a7c81228af09c0d03647921204ff3ec82}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!DenseLayer@{DenseLayer}}
+\index{DenseLayer@{DenseLayer}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{DenseLayer}{DenseLayer}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}} \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a760405be1b349783477ab1f2368e63f1}\label{af__arnndn_8c_a760405be1b349783477ab1f2368e63f1}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!GRULayer@{GRULayer}}
+\index{GRULayer@{GRULayer}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{GRULayer}{GRULayer}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}} \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a8c4949466a45feb53a25c25eea5e9eab}\label{af__arnndn_8c_a8c4949466a45feb53a25c25eea5e9eab}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!RNNModel@{RNNModel}}
+\index{RNNModel@{RNNModel}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{RNNModel}{RNNModel}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}} \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a540ae4f526db41acac8d1b03724c2416}\label{af__arnndn_8c_a540ae4f526db41acac8d1b03724c2416}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!RNNState@{RNNState}}
+\index{RNNState@{RNNState}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{RNNState}{RNNState}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}} \mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}}}
+
+\mbox{\Hypertarget{af__arnndn_8c_a5d1975e203ce6f822538d556409ccf6a}\label{af__arnndn_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac}\label{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!activate@{activate}}
+\index{activate@{activate}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1426 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a3963a89c216f0766aeb9e2371f3b31f5}\label{af__arnndn_8c_a3963a89c216f0766aeb9e2371f3b31f5}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{arnndn}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{af__arnndn_8c_aeb8b8a221afd6cf5746b4455cf122e88}\label{af__arnndn_8c_aeb8b8a221afd6cf5746b4455cf122e88}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!biquad@{biquad}}
+\index{biquad@{biquad}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{biquad()}{biquad()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} biquad (\begin{DoxyParamCaption}\item[{float $\ast$}]{y,  }\item[{float}]{mem\mbox{[}2\mbox{]},  }\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{b,  }\item[{const float $\ast$}]{a,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 378 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aeb8b8a221afd6cf5746b4455cf122e88_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a2b95f3178812f95b1b0accd2e321e9a0}\label{af__arnndn_8c_a2b95f3178812f95b1b0accd2e321e9a0}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!celt\_autocorr@{celt\_autocorr}}
+\index{celt\_autocorr@{celt\_autocorr}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{celt\_autocorr()}{celt\_autocorr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} celt\+\_\+autocorr (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{float $\ast$}]{ac,  }\item[{const float $\ast$}]{window,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{overlap,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lag,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 608 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a2b95f3178812f95b1b0accd2e321e9a0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a2b95f3178812f95b1b0accd2e321e9a0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ac988350a165580748ee72f91edea96c6}\label{af__arnndn_8c_ac988350a165580748ee72f91edea96c6}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!celt\_fir5@{celt\_fir5}}
+\index{celt\_fir5@{celt\_fir5}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{celt\_fir5()}{celt\_fir5()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} celt\+\_\+fir5 (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{num,  }\item[{float $\ast$}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N,  }\item[{float $\ast$}]{mem }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 679 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ac988350a165580748ee72f91edea96c6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a5d7086a0c423954335a2ffb19fc0368c}\label{af__arnndn_8c_a5d7086a0c423954335a2ffb19fc0368c}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!celt\_inner\_prod@{celt\_inner\_prod}}
+\index{celt\_inner\_prod@{celt\_inner\_prod}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{celt\_inner\_prod()}{celt\_inner\_prod()}}
+{\footnotesize\ttfamily static float celt\+\_\+inner\+\_\+prod (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 576 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a5d7086a0c423954335a2ffb19fc0368c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a99fdada79f1906117319a2d3d3ab940a}\label{af__arnndn_8c_a99fdada79f1906117319a2d3d3ab940a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!celt\_lpc@{celt\_lpc}}
+\index{celt\_lpc@{celt\_lpc}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{celt\_lpc()}{celt\_lpc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} celt\+\_\+lpc (\begin{DoxyParamCaption}\item[{float $\ast$}]{lpc,  }\item[{const float $\ast$}]{ac,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 646 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=202pt]{af__arnndn_8c_a99fdada79f1906117319a2d3d3ab940a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a99fdada79f1906117319a2d3d3ab940a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ad866e47c163703b28b477d941cde2207}\label{af__arnndn_8c_ad866e47c163703b28b477d941cde2207}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!celt\_pitch\_xcorr@{celt\_pitch\_xcorr}}
+\index{celt\_pitch\_xcorr@{celt\_pitch\_xcorr}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{celt\_pitch\_xcorr()}{celt\_pitch\_xcorr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} celt\+\_\+pitch\+\_\+xcorr (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{y,  }\item[{float $\ast$}]{xcorr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+pitch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 587 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=285pt]{af__arnndn_8c_ad866e47c163703b28b477d941cde2207_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad866e47c163703b28b477d941cde2207_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a8701396cf91f7b28d2c8516b32695a8e}\label{af__arnndn_8c_a8701396cf91f7b28d2c8516b32695a8e}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_band\_corr@{compute\_band\_corr}}
+\index{compute\_band\_corr@{compute\_band\_corr}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_band\_corr()}{compute\_band\_corr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+band\+\_\+corr (\begin{DoxyParamCaption}\item[{float $\ast$}]{bandE,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{X,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{P }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 459 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a8701396cf91f7b28d2c8516b32695a8e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ab579d9b669b15d766b74303e965059fc}\label{af__arnndn_8c_ab579d9b669b15d766b74303e965059fc}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_band\_energy@{compute\_band\_energy}}
+\index{compute\_band\_energy@{compute\_band\_energy}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_band\_energy()}{compute\_band\_energy()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+band\+\_\+energy (\begin{DoxyParamCaption}\item[{float $\ast$}]{bandE,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{X }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 434 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ab579d9b669b15d766b74303e965059fc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ad3843f248d095870eb23f4396e046f47}\label{af__arnndn_8c_ad3843f248d095870eb23f4396e046f47}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_dense@{compute\_dense}}
+\index{compute\_dense@{compute\_dense}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_dense()}{compute\_dense()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+dense (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_dense_layer}{Dense\+Layer}} $\ast$}]{layer,  }\item[{float $\ast$}]{output,  }\item[{const float $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1232 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad3843f248d095870eb23f4396e046f47_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad3843f248d095870eb23f4396e046f47_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a0358215f0154527bb17ddde5623439b0}\label{af__arnndn_8c_a0358215f0154527bb17ddde5623439b0}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_frame\_features@{compute\_frame\_features}}
+\index{compute\_frame\_features@{compute\_frame\_features}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_frame\_features()}{compute\_frame\_features()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compute\+\_\+frame\+\_\+features (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{X,  }\item[{\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{P,  }\item[{float $\ast$}]{Ex,  }\item[{float $\ast$}]{Ep,  }\item[{float $\ast$}]{Exp,  }\item[{float $\ast$}]{features,  }\item[{const float $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1001 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a0358215f0154527bb17ddde5623439b0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a0358215f0154527bb17ddde5623439b0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a6fbb9a3f531437a5bff103f3cc8cc897}\label{af__arnndn_8c_a6fbb9a3f531437a5bff103f3cc8cc897}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_gru@{compute\_gru}}
+\index{compute\_gru@{compute\_gru}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_gru()}{compute\_gru()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+gru (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{struct_g_r_u_layer}{G\+R\+U\+Layer}} $\ast$}]{gru,  }\item[{float $\ast$}]{state,  }\item[{const float $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1260 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a6fbb9a3f531437a5bff103f3cc8cc897_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a6fbb9a3f531437a5bff103f3cc8cc897_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a01ccb94a95df53692b5edac39f951b22}\label{af__arnndn_8c_a01ccb94a95df53692b5edac39f951b22}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_pitch\_gain@{compute\_pitch\_gain}}
+\index{compute\_pitch\_gain@{compute\_pitch\_gain}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_pitch\_gain()}{compute\_pitch\_gain()}}
+{\footnotesize\ttfamily static float compute\+\_\+pitch\+\_\+gain (\begin{DoxyParamCaption}\item[{float}]{xy,  }\item[{float}]{xx,  }\item[{float}]{yy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 778 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a01ccb94a95df53692b5edac39f951b22_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ad74df66c28c42db2a933f9fade350cb0}\label{af__arnndn_8c_ad74df66c28c42db2a933f9fade350cb0}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!compute\_rnn@{compute\_rnn}}
+\index{compute\_rnn@{compute\_rnn}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{compute\_rnn()}{compute\_rnn()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+rnn (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_n_n_state}{R\+N\+N\+State}} $\ast$}]{rnn,  }\item[{float $\ast$}]{gains,  }\item[{float $\ast$}]{vad,  }\item[{const float $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1313 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad74df66c28c42db2a933f9fade350cb0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad74df66c28c42db2a933f9fade350cb0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{af__arnndn_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 342 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a9cc66b621d526463469f8524282f6d30}\label{af__arnndn_8c_a9cc66b621d526463469f8524282f6d30}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!dct@{dct}}
+\index{dct@{dct}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{dct()}{dct()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dct (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{float $\ast$}]{out,  }\item[{const float $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 991 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a9cc66b621d526463469f8524282f6d30_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a123900e02b34e8caac53918b240f2abe}\label{af__arnndn_8c_a123900e02b34e8caac53918b240f2abe}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!dual\_inner\_prod@{dual\_inner\_prod}}
+\index{dual\_inner\_prod@{dual\_inner\_prod}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{dual\_inner\_prod()}{dual\_inner\_prod()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dual\+\_\+inner\+\_\+prod (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{y01,  }\item[{const float $\ast$}]{y02,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N,  }\item[{float $\ast$}]{xy1,  }\item[{float $\ast$}]{xy2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 764 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a123900e02b34e8caac53918b240f2abe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{af__arnndn_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1404 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{af__arnndn_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_aeb715e1860d03a117388cc477b3b0ce3}\label{af__arnndn_8c_aeb715e1860d03a117388cc477b3b0ce3}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!find\_best\_pitch@{find\_best\_pitch}}
+\index{find\_best\_pitch@{find\_best\_pitch}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{find\_best\_pitch()}{find\_best\_pitch()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} find\+\_\+best\+\_\+pitch (\begin{DoxyParamCaption}\item[{float $\ast$}]{xcorr,  }\item[{float $\ast$}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+pitch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{best\+\_\+pitch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 887 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aeb715e1860d03a117388cc477b3b0ce3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a35eea348ac803332cb13ae5f2802c2d3}\label{af__arnndn_8c_a35eea348ac803332cb13ae5f2802c2d3}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!forward\_transform@{forward\_transform}}
+\index{forward\_transform@{forward\_transform}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{forward\_transform()}{forward\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} forward\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{out,  }\item[{const float $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 396 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a35eea348ac803332cb13ae5f2802c2d3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ab82d507717198613c0a2e2ef9cfbc40f}\label{af__arnndn_8c_ab82d507717198613c0a2e2ef9cfbc40f}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!frame\_analysis@{frame\_analysis}}
+\index{frame\_analysis@{frame\_analysis}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{frame\_analysis()}{frame\_analysis()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} frame\+\_\+analysis (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{X,  }\item[{float $\ast$}]{Ex,  }\item[{const float $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 484 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=313pt]{af__arnndn_8c_ab82d507717198613c0a2e2ef9cfbc40f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ab82d507717198613c0a2e2ef9cfbc40f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a67e10b880efc45a49d0b46c90a215e02}\label{af__arnndn_8c_a67e10b880efc45a49d0b46c90a215e02}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!frame\_synthesis@{frame\_synthesis}}
+\index{frame\_synthesis@{frame\_synthesis}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{frame\_synthesis()}{frame\_synthesis()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} frame\+\_\+synthesis (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{float $\ast$}]{out,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 496 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{af__arnndn_8c_a67e10b880efc45a49d0b46c90a215e02_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a67e10b880efc45a49d0b46c90a215e02_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!init@{init}}
+\index{init@{init}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1448 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a7a53beae94c2f59d8c4c1e8e6bd26f54}\label{af__arnndn_8c_a7a53beae94c2f59d8c4c1e8e6bd26f54}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!interp\_band\_gain@{interp\_band\_gain}}
+\index{interp\_band\_gain@{interp\_band\_gain}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{interp\_band\_gain()}{interp\_band\_gain()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interp\+\_\+band\+\_\+gain (\begin{DoxyParamCaption}\item[{float $\ast$}]{g,  }\item[{const float $\ast$}]{bandE }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1109 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a7a53beae94c2f59d8c4c1e8e6bd26f54_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a1c9736da6a6a455f2a5025bdf0f5f167}\label{af__arnndn_8c_a1c9736da6a6a455f2a5025bdf0f5f167}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!inverse\_transform@{inverse\_transform}}
+\index{inverse\_transform@{inverse\_transform}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{inverse\_transform()}{inverse\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inverse\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{float $\ast$}]{out,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 411 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a1c9736da6a6a455f2a5025bdf0f5f167_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a367f6f9b5c5b20f7ac04684740c44fd9}\label{af__arnndn_8c_a367f6f9b5c5b20f7ac04684740c44fd9}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!pitch\_downsample@{pitch\_downsample}}
+\index{pitch\_downsample@{pitch\_downsample}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{pitch\_downsample()}{pitch\_downsample()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pitch\+\_\+downsample (\begin{DoxyParamCaption}\item[{float $\ast$}]{x\mbox{[}$\,$\mbox{]},  }\item[{float $\ast$}]{x\+\_\+lp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{C }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 722 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a367f6f9b5c5b20f7ac04684740c44fd9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a367f6f9b5c5b20f7ac04684740c44fd9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a603fb04832acc1c28b3332f74148533e}\label{af__arnndn_8c_a603fb04832acc1c28b3332f74148533e}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!pitch\_filter@{pitch\_filter}}
+\index{pitch\_filter@{pitch\_filter}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{pitch\_filter()}{pitch\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pitch\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{X,  }\item[{const \mbox{\hyperlink{struct_a_v_complex_float}{A\+V\+Complex\+Float}} $\ast$}]{P,  }\item[{const float $\ast$}]{Ex,  }\item[{const float $\ast$}]{Ep,  }\item[{const float $\ast$}]{Exp,  }\item[{const float $\ast$}]{g }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1124 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{af__arnndn_8c_a603fb04832acc1c28b3332f74148533e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a603fb04832acc1c28b3332f74148533e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_aefd4fed4e778b859133a366bcdd564b7}\label{af__arnndn_8c_aefd4fed4e778b859133a366bcdd564b7}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!pitch\_search@{pitch\_search}}
+\index{pitch\_search@{pitch\_search}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{pitch\_search()}{pitch\_search()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pitch\+\_\+search (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x\+\_\+lp,  }\item[{float $\ast$}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+pitch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{pitch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 934 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aefd4fed4e778b859133a366bcdd564b7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aefd4fed4e778b859133a366bcdd564b7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__arnndn_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 311 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a167ae4061226b7674a4942750eb4059b}\label{af__arnndn_8c_a167ae4061226b7674a4942750eb4059b}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!remove\_doubling@{remove\_doubling}}
+\index{remove\_doubling@{remove\_doubling}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{remove\_doubling()}{remove\_doubling()}}
+{\footnotesize\ttfamily static float remove\+\_\+doubling (\begin{DoxyParamCaption}\item[{float $\ast$}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{maxperiod,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{minperiod,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{T0\+\_\+,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{prev\+\_\+period,  }\item[{float}]{prev\+\_\+gain }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 784 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{af__arnndn_8c_a167ae4061226b7674a4942750eb4059b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a167ae4061226b7674a4942750eb4059b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_aea2bfeff714964d1dd7bb4ce428c8c2d}\label{af__arnndn_8c_aea2bfeff714964d1dd7bb4ce428c8c2d}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!rnnoise\_channel@{rnnoise\_channel}}
+\index{rnnoise\_channel@{rnnoise\_channel}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{rnnoise\_channel()}{rnnoise\_channel()}}
+{\footnotesize\ttfamily static float rnnoise\+\_\+channel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_r_n_n_context}{Audio\+R\+N\+N\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_denoise_state}{Denoise\+State}} $\ast$}]{st,  }\item[{float $\ast$}]{out,  }\item[{const float $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1341 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aea2bfeff714964d1dd7bb4ce428c8c2d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aea2bfeff714964d1dd7bb4ce428c8c2d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ab339dc283aa1b95f615cdd910ab1a7a7}\label{af__arnndn_8c_ab339dc283aa1b95f615cdd910ab1a7a7}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!rnnoise\_channels@{rnnoise\_channels}}
+\index{rnnoise\_channels@{rnnoise\_channels}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{rnnoise\_channels()}{rnnoise\_channels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rnnoise\+\_\+channels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1386 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ab339dc283aa1b95f615cdd910ab1a7a7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ab339dc283aa1b95f615cdd910ab1a7a7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ac81446487b66195904b437aa6e9de899}\label{af__arnndn_8c_ac81446487b66195904b437aa6e9de899}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!rnnoise\_model\_free@{rnnoise\_model\_free}}
+\index{rnnoise\_model\_free@{rnnoise\_model\_free}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{rnnoise\_model\_free()}{rnnoise\_model\_free()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} rnnoise\+\_\+model\+\_\+free (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}} $\ast$}]{model }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 155 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ac81446487b66195904b437aa6e9de899_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a31d6163e3aaf61b7223948f3c8bb7d2c}\label{af__arnndn_8c_a31d6163e3aaf61b7223948f3c8bb7d2c}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!rnnoise\_model\_from\_file@{rnnoise\_model\_from\_file}}
+\index{rnnoise\_model\_from\_file@{rnnoise\_model\_from\_file}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{rnnoise\_model\_from\_file()}{rnnoise\_model\_from\_file()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_r_n_n_model}{R\+N\+N\+Model}}$\ast$ rnnoise\+\_\+model\+\_\+from\+\_\+file (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 185 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a31d6163e3aaf61b7223948f3c8bb7d2c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=266pt]{af__arnndn_8c_a31d6163e3aaf61b7223948f3c8bb7d2c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_a69de527ac97092062319223d58f953c8}\label{af__arnndn_8c_a69de527ac97092062319223d58f953c8}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!sigmoid\_approx@{sigmoid\_approx}}
+\index{sigmoid\_approx@{sigmoid\_approx}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{sigmoid\_approx()}{sigmoid\_approx()}}
+{\footnotesize\ttfamily static float sigmoid\+\_\+approx (\begin{DoxyParamCaption}\item[{float}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1227 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=349pt]{af__arnndn_8c_a69de527ac97092062319223d58f953c8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_a69de527ac97092062319223d58f953c8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_ad945d7aab4227b88b575afb03ce4da31}\label{af__arnndn_8c_ad945d7aab4227b88b575afb03ce4da31}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!tansig\_approx@{tansig\_approx}}
+\index{tansig\_approx@{tansig\_approx}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{tansig\_approx()}{tansig\_approx()}}
+{\footnotesize\ttfamily static float tansig\+\_\+approx (\begin{DoxyParamCaption}\item[{float}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1199 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{af__arnndn_8c_ad945d7aab4227b88b575afb03ce4da31_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_ad945d7aab4227b88b575afb03ce4da31_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1484 of file af\+\_\+arnndn.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=257pt]{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__arnndn_8c_aeb3dd1df009e81c35724325ef8907d5b}\label{af__arnndn_8c_aeb3dd1df009e81c35724325ef8907d5b}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!xcorr\_kernel@{xcorr\_kernel}}
+\index{xcorr\_kernel@{xcorr\_kernel}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{xcorr\_kernel()}{xcorr\_kernel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} xcorr\+\_\+kernel (\begin{DoxyParamCaption}\item[{const float $\ast$}]{x,  }\item[{const float $\ast$}]{y,  }\item[{float}]{sum\mbox{[}4\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 507 of file af\+\_\+arnndn.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__arnndn_8c_aeb3dd1df009e81c35724325ef8907d5b_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__arnndn_8c_aac6e2234289fc713d3951101077995f1}\label{af__arnndn_8c_aac6e2234289fc713d3951101077995f1}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!arnndn\_options@{arnndn\_options}}
+\index{arnndn\_options@{arnndn\_options}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{arnndn\_options}{arnndn\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} arnndn\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}model"{}}, \textcolor{stringliteral}{"{}set model name"{}}, \mbox{\hyperlink{af__arnndn_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(model\_name), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, 0, 0, \mbox{\hyperlink{af__arnndn_8c_a76ba789cde9c36cd57dbb390bdee7661}{AF}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}m"{}},     \textcolor{stringliteral}{"{}set model name"{}}, \mbox{\hyperlink{af__arnndn_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(model\_name), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, 0, 0, \mbox{\hyperlink{af__arnndn_8c_a76ba789cde9c36cd57dbb390bdee7661}{AF}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1524 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_af72e619708565917dbade907ce9e1066}\label{af__arnndn_8c_af72e619708565917dbade907ce9e1066}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!eband5ms@{eband5ms}}
+\index{eband5ms@{eband5ms}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{eband5ms}{eband5ms}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} eband5ms\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{}
+\DoxyCodeLine{  0,  1,  2,  3,  4,   5, 6,  7,  8,  10, 12, 14, 16, 20, 24, 28, 34, 40, 48, 60, 78, 100}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 429 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a0862b3ac59a6767ffd8899d94cc9d992}\label{af__arnndn_8c_a0862b3ac59a6767ffd8899d94cc9d992}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!ff\_af\_arnndn@{ff\_af\_arnndn}}
+\index{ff\_af\_arnndn@{ff\_af\_arnndn}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{ff\_af\_arnndn}{ff\_af\_arnndn}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+af\+\_\+arnndn}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}arnndn"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Reduce noise from speech using Recurrent Neural Networks."{}}),}
+\DoxyCodeLine{    .query\_formats = \mbox{\hyperlink{af__arnndn_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__arnndn_8c_aa68b71432b036483baa5a52c5b71ecfe}{AudioRNNContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&arnndn\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac}{activate}}      = \mbox{\hyperlink{af__arnndn_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{af__arnndn_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{af__arnndn_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__arnndn_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}        = \mbox{\hyperlink{af__arnndn_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__arnndn_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{af__arnndn_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1532 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{af__arnndn_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!inputs@{inputs}}
+\index{inputs@{inputs}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{af__arnndn_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1504 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{af__arnndn_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!outputs@{outputs}}
+\index{outputs@{outputs}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1513 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_a11b3913011944a9c7a5913db720aac2a}\label{af__arnndn_8c_a11b3913011944a9c7a5913db720aac2a}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!second\_check@{second\_check}}
+\index{second\_check@{second\_check}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{second\_check}{second\_check}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} second\+\_\+check\mbox{[}16\mbox{]} = \{0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 783 of file af\+\_\+arnndn.\+c.
+
+\mbox{\Hypertarget{af__arnndn_8c_af7d9eb32c2436bcfc4703816f73b3c89}\label{af__arnndn_8c_af7d9eb32c2436bcfc4703816f73b3c89}} 
+\index{af\_arnndn.c@{af\_arnndn.c}!tansig\_table@{tansig\_table}}
+\index{tansig\_table@{tansig\_table}!af\_arnndn.c@{af\_arnndn.c}}
+\doxysubsubsection{\texorpdfstring{tansig\_table}{tansig\_table}}
+{\footnotesize\ttfamily const float tansig\+\_\+table\mbox{[}201\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1155 of file af\+\_\+arnndn.\+c.
+

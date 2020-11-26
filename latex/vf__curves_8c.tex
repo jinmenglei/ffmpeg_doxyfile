@@ -1,0 +1,955 @@
+\hypertarget{vf__curves_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+curves.c File Reference}
+\label{vf__curves_8c}\index{E:/github/ffmpeg/libavfilter/vf\_curves.c@{E:/github/ffmpeg/libavfilter/vf\_curves.c}}
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/eval.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/file.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}drawutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+curves.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structkeypoint}{keypoint}}
+\item 
+struct \mbox{\hyperlink{struct_curves_context}{Curves\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a5c71a5e59a53413cd6c270266d63b031}{R}}~0
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_aed9ea78689ecce0b7264c02c7f8a9a54}{G}}~1
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a111da81ae5883147168bbb8366377b10}{B}}~2
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~3
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}{N\+B\+\_\+\+C\+O\+MP}}~3
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_curves_context}{Curves\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_ab934f1183f9597f860210cc11d000edd}{C\+L\+IP}}(v)~(nbits == 8 ? av\+\_\+clip\+\_\+uint8(v) \+: \mbox{\hyperlink{common_8h_a867dba37c785d27d42b272aa968efda8}{av\+\_\+clip\+\_\+uintp2\+\_\+c}}(v, nbits))
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a920971eab600c52963635b965ba64898}{BD}}~0 /$\ast$ \mbox{\hyperlink{dnn__backend__native__layer__mathbinary_8c_aec238e230db0cd41b80558db403931dd}{sub}}  diagonal (below \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}}) $\ast$/
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_aa7c91c377791a7af0880e479d30efe70}{MD}}~1 /$\ast$ \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}} diagonal (center) $\ast$/
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_aa70747e23d9ebf312299930cf6b3c20d}{AD}}~2 /$\ast$ sup  diagonal (above \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}}) $\ast$/
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a9ad22ee1f265a7e4d59fab37a52c856d}{D\+E\+C\+L\+A\+R\+E\+\_\+\+I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+F\+U\+NC}}(nbits)
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_a838a0e5ef13cb9b2783bd003e09501d9}{R\+E\+A\+D16}}(dst)
+\item 
+\#define \mbox{\hyperlink{vf__curves_8c_ada2e73ecb067fbca9e96e9354a539680}{S\+E\+T\+\_\+\+C\+O\+M\+P\+\_\+\+I\+F\+\_\+\+N\+O\+T\+\_\+\+S\+ET}}(n,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_curves_context}{Curves\+Context}} \mbox{\hyperlink{vf__curves_8c_aa364f9743ad52446a1f3040d1b278706}{Curves\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__curves_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514f}{preset}} \{ \newline
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}{P\+R\+E\+S\+E\+T\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa13766789acd72a085208cecb0639f29e}{P\+R\+E\+S\+E\+T\+\_\+\+C\+O\+L\+O\+R\+\_\+\+N\+E\+G\+A\+T\+I\+VE}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab12d259d5665ef4e7106b272972959cd}{P\+R\+E\+S\+E\+T\+\_\+\+C\+R\+O\+S\+S\+\_\+\+P\+R\+O\+C\+E\+SS}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fafd7d3e1b4ce8d53236c908356c1b1430}{P\+R\+E\+S\+E\+T\+\_\+\+D\+A\+R\+K\+ER}}, 
+\newline
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa8c228da8d3aa0d5874aab51400502cea}{P\+R\+E\+S\+E\+T\+\_\+\+I\+N\+C\+R\+E\+A\+S\+E\+\_\+\+C\+O\+N\+T\+R\+A\+ST}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa88b845a10631a3c32b3d88235d9e4c19}{P\+R\+E\+S\+E\+T\+\_\+\+L\+I\+G\+H\+T\+ER}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa0f611bbfe124e9145fd0be7190f4d826}{P\+R\+E\+S\+E\+T\+\_\+\+L\+I\+N\+E\+A\+R\+\_\+\+C\+O\+N\+T\+R\+A\+ST}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa641eaaab37c2c97085e4cc4c26a28321}{P\+R\+E\+S\+E\+T\+\_\+\+M\+E\+D\+I\+U\+M\+\_\+\+C\+O\+N\+T\+R\+A\+ST}}, 
+\newline
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa007acaca56847b63f0bdbc7368571c0c}{P\+R\+E\+S\+E\+T\+\_\+\+N\+E\+G\+A\+T\+I\+VE}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab71b0f6b59802763146f591f4c105846}{P\+R\+E\+S\+E\+T\+\_\+\+S\+T\+R\+O\+N\+G\+\_\+\+C\+O\+N\+T\+R\+A\+ST}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa46d2dffe1b0c6668eab59de25156975f}{P\+R\+E\+S\+E\+T\+\_\+\+V\+I\+N\+T\+A\+GE}}, 
+\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fada46d5b574d69f9b8519bc9d22a1cfd8}{N\+B\+\_\+\+P\+R\+E\+S\+E\+TS}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__curves_8c_abee5e16721c648bf969b5cb2bc20547b}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (curves)
+\item 
+static struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$ \mbox{\hyperlink{vf__curves_8c_afad11cfe31271c060d7134f897570073}{make\+\_\+point}} (double x, double y, struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$next)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a240d2b786a08c36fae1c42b94ec2d6c8}{parse\+\_\+points\+\_\+str}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$$\ast$points, const char $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lut\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a58cfe9b373a2016992cc682a7422a678}{get\+\_\+nb\+\_\+points}} (const struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$d)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8}{interpolate}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log\+\_\+ctx, uint16\+\_\+t $\ast$y, const struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$points, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nbits)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a982912886fcf76626531d2acdcf9be4e}{parse\+\_\+psfile}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$fname)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_ae6f67df95c292af10754b793f5b33e19}{dump\+\_\+curves}} (const char $\ast$fname, uint16\+\_\+t $\ast$graph\mbox{[}\mbox{\hyperlink{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}{N\+B\+\_\+\+C\+O\+MP}}+1\mbox{]}, struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$comp\+\_\+points\mbox{[}\mbox{\hyperlink{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}{N\+B\+\_\+\+C\+O\+MP}}+1\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lut\+\_\+size)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a26350fe7a9db9dc51b80bf7fec0f7644}{curves\+\_\+init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a578148bf87c3d0929a7d0be6b14be050}{filter\+\_\+slice\+\_\+packed}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a7ad0700412c812d58bd66edc04085854}{filter\+\_\+slice\+\_\+planar}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__curves_8c_adb358fdb047e5ad42d2c39eeb1e83511}{curves\+\_\+uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__curves_8c_abd8bfc405237fce3bf2c981a7652c52f}{curves\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+struct \{\\
+\>double \mbox{\hyperlink{ffprobe_8c_abe26d15b985a069bc10d6d6ce66276ad}{bin\_val}}\\
+\>double \mbox{\hyperlink{ffprobe_8c_a64cbc6a41a9a16a582ac02e1be7aadd0}{dec\_val}}\\
+\>const char $\ast$ \mbox{\hyperlink{ffprobe_8c_abb7465ed8c0c9af5cf6babf5e228fa15}{bin\_str}}\\
+\>const char $\ast$ \mbox{\hyperlink{ffprobe_8c_a817f5961e80633aea76faadb970001df}{dec\_str}}\\
+\>enum \mbox{\hyperlink{group__lavc__core_gaadca229ad2c20e060a14fec08a5cc7ce}{AVCodecID}} \mbox{\hyperlink{extract__extradata__bsf_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{extract__extradata__bsf_8c_a4819ef8cf0c58922189686d5bf7501f2}{extract}} )(\mbox{\hyperlink{struct_a_v_b_s_f_context}{AVBSFContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_packet}{AVPacket}} \\
+\>\>$\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$$\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \\
+\>\>$\ast$\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_a0c72c91b4eaf2193000cf829b6f40da6}{profile\_idc}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_a68ad4713e5ecd0bff200f183b44ddd37}{cpb\_br\_vcl\_factor}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_ac50f07474800177ad232e815f7afb1de}{cpb\_br\_nal\_factor}}\\
+\>\mbox{\hyperlink{ivi_8h_a0f52eab6575b732d837d0ceb4f1ced6a}{InvTransformPtr}} $\ast$ \mbox{\hyperlink{indeo4_8c_a5576960156a6adb85168d4f8542c1b2a}{inv\_trans}}\\
+\>\mbox{\hyperlink{ivi_8h_a1d721d87fb7697c1f77927957f9d7d80}{DCTransformPtr}} $\ast$ \mbox{\hyperlink{indeo4_8c_a884bffe6a90b7febc0b0e3e562169294}{dc\_trans}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{indeo4_8c_a3dfdd5e9c96508f805f8172cf5862c7b}{is\_2d\_trans}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_af9f143e62cdad4afb8a53a21b8b8fcfd}{from}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_a06044f95c6f30acd8cd3b80a2381259e}{func}} )(AVBPrint $\ast$dst, const char \\
+\>\>$\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const char $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})\\
+\>EbErrorType \mbox{\hyperlink{libsvtav1_8c_a22cc5391c76d803da807cd5c57e41ea7}{eb\_err}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libsvtav1_8c_ac4c8134fd296a1d68eaefa287757c444}{av\_err}}\\
+\>const char $\ast$ \mbox{\hyperlink{libsvtav1_8c_a710bce51374aba96ab04912897666c35}{desc}}\\
+\>const int16\_t $\ast$ \mbox{\hyperlink{mace_8c_afb970ad3a53d09ce72f74212b0df2290}{tab1}}\\
+\>const int16\_t $\ast$ \mbox{\hyperlink{mace_8c_a69b5f89c093cd81857a090ba08bbbd70}{tab2}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}\\
+\>NVENCSTATUS \mbox{\hyperlink{nvenc_8c_a4e0ddbacaa28d61a8fa4b77cc67a736f}{nverr}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{nvenc_8c_ac504a73146da1c32baabe689e4ca3e1b}{averr}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{qsv_8c_a84309ef44231e7870385e1dff9216d52}{mfx\_iopattern}}\\
+\>mfxU16 \mbox{\hyperlink{qsvenc_8c_aacd2c6f4a09d71ea05bdcc1c2e9d42dd}{profile}}\\
+\>const char $\ast$ \mbox{\hyperlink{qsvenc_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{svq3_8c_aa90bc2b9950a6a9a3144876047f8bee2}{run}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}}\\
+\>float \mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}\\
+\>float \mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_ab4a08f9d64a0d901c25eed4855931c4f}{level\_idc}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{twinvq__data_8h_a58565306e09ffac38bb76952d6e458a9}{tab}}\\
+\>uint32\_t \mbox{\hyperlink{vaapi__decode_8c_aa5d906425500585aa7832161b2a40e1b}{fourcc}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{vaapi__decode_8c_a7331e302ea7bb48e0b605a069576e135}{pix\_fmt}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_afed088663f8704004425cdae2120b9b3}{len}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_af89023439276f4960316202c97f210f9}{real\_len}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{vorbis__enc__data_8h_a499938cfcccb89183a9c3d581b78eacb}{clens}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_a26d315c17b27a762085ddd59f4750fb7}{lookup}}\\
+\>float \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}}\\
+\>float \mbox{\hyperlink{vorbis__enc__data_8h_a1ee4a05b54419bfadd66ee351d05812e}{delta}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{vorbis__enc__data_8h_a0ec8e44e0e296a1e3307a1436a0f0fdf}{quant}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2webvttdec_8c_a5d467a63df9ff99d33d6749038f6f421}{to}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{kmsgrab_8c_ab482f514ab017799e2ac45d666537564}{pixfmt}}\\
+\>uint32\_t \mbox{\hyperlink{kmsgrab_8c_a744ebd08aac4ba26fc2819c067bb2b84}{drm\_format}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}{g}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a2a1bf31ff09137e014c839bbaf9453d6}{master}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__signalstats_8c_aca33ab5a09d4b754627c19af2bf99b9f}{process8}} )(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \\
+\>\>$\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\_jobs)\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__signalstats_8c_a399454592cf03313e92d0a8b855edf06}{process16}} )(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \\
+\>\>$\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\_jobs)\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_a4fc3a0c58dfbd1e68224521185cb9384}{id}}\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_ad0eab1042455a2067c812ab8071d5376}{width}}\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_a81c9f8d0b8c3b49d770be14dbe9f0d37}{height}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}\\
+\>enum \mbox{\hyperlink{group__lavc__core_gaadca229ad2c20e060a14fec08a5cc7ce}{AVCodecID}} \mbox{\hyperlink{mov__chan_8c_a0fd12851a78b80080e277db30411728d}{codec\_id}}\\
+\>enum \mbox{\hyperlink{mov__chan_8c_a52e7e7770e3a090cf4197d341bd7ea41}{MovChannelLayoutTag}} $\ast$ \mbox{\hyperlink{mov__chan_8c_a0f9e2036e9efff8b06562d17cb0994ad}{layouts}}\\
+\>uint32\_t \mbox{\hyperlink{movenc_8c_a1c50fcd1195659821729f52af8f3bb7d}{tag}}\\
+\>unsigned \mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}}\\
+\>const char \mbox{\hyperlink{mxf_8c_a084824fc871e38157790c99ae1240842}{data}} \mbox{[}16\mbox{]}\\
+\>enum \mbox{\hyperlink{mxfenc_8c_a506a289fddcdf1e290ca22a04d19b488}{ULIndex}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_aa51c0cd81327c3099d0a4d1738c6a45d}{pt}}\\
+\>const char \mbox{\hyperlink{rtp_8c_a5626702170a0a81e3c1f6516c1ed1d0d}{enc\_name}} \mbox{[}6\mbox{]}\\
+\>enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{AVMediaType}} \mbox{\hyperlink{rtp_8c_a550d0fd0475cc25c2e1fec3e15acaffb}{codec\_type}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_a9ba9cb271aacdab3589a8a609d8cb1b7}{clock\_rate}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_a2002de13feb82533e1d3f85c37d45d35}{audio\_channels}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{channel__layout_8c_ac8404c077a0560a06a73cfec0697c99a}{nb\_channels}}\\
+\>uint64\_t \mbox{\hyperlink{channel__layout_8c_a5fb8d8660239f03323dae7e7c1699f29}{layout}}\\
+\>int8\_t \mbox{\hyperlink{eval_8c_afc05d41e1a0fc024ac21072d11d4f263}{exp}}\\
+\>DXGI\_FORMAT \mbox{\hyperlink{hwcontext__d3d11va_8c_a8510428f69a7ba9040a1f4ef2df86761}{d3d\_format}}\\
+\>D3DFORMAT \mbox{\hyperlink{hwcontext__dxva2_8c_adbbd8b53c1093fb6ada6a22763f416b1}{d3d\_format}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}\\
+\>cl\_platform\_info \mbox{\hyperlink{hwcontext__opencl_8c_a6087c755c95064e4547b2b629d483e41}{name}}\\
+\>mfxHandleType \mbox{\hyperlink{hwcontext__qsv_8c_a3f6f34808101299d4cd094fcb313e919}{handle\_type}}\\
+\>enum \mbox{\hyperlink{hwcontext_8h_acf25724be4b066a51ad86aa9214b0d34}{AVHWDeviceType}} \mbox{\hyperlink{hwcontext__qsv_8c_a7898416aa2fa2f5d58aa4b6f35135205}{device\_type}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__vaapi_8c_af4f3a4e175def195bea03a54bd3e7205}{friendly\_name}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__vaapi_8c_a33100d8fbce72445b01f88003826d41d}{match\_string}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hwcontext__vaapi_8c_abb72e384863d48f0c521dafc06ec0889}{quirks}}\\
+\>VdpChromaType \mbox{\hyperlink{hwcontext__vdpau_8c_af51599ed3ace16c1f018b0151d0ee55a}{chroma\_type}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{hwcontext__vdpau_8c_a96bf5f4a9bc95b67aae7b331c6a89170}{frames\_sw\_format}}\\
+\>const \mbox{\hyperlink{struct_v_d_p_a_u_pix_fmt_map}{VDPAUPixFmtMap}} $\ast$ \mbox{\hyperlink{hwcontext__vdpau_8c_a2996cc16b36e13c9010705bad768e866}{map}}\\
+\>uint32\_t \mbox{\hyperlink{hwcontext__videotoolbox_8c_ac9ab9722e60ae348cbba8c6569f8749d}{cv\_fmt}}\\
+\>bool \mbox{\hyperlink{hwcontext__videotoolbox_8c_a94f15a9c5d773bc54239ae80a9699f0c}{full\_range}}\\
+\>const VkFormat \mbox{\hyperlink{hwcontext__vulkan_8c_a2c95bc38a9d106e007afb65b5fcbb230}{vkfmts}} \mbox{[}3\mbox{]}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2cpu_8c_adf916204820072417ed73a32de1cefcf}{flag}}\\
+\>enum \mbox{\hyperlink{hwcontext_8h_acf25724be4b066a51ad86aa9214b0d34}{AVHWDeviceType}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwdevice_8c_a2136c4dacaa7a760db910454c32d5070}{possible\_devices}} \mbox{[}5\mbox{]}\\
+\>const char $\ast$ \mbox{\hyperlink{pixdesc__query_8c_a25b40fa77d1c87bbb20af5f6ae7a316f}{class}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}} )(enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{hwcontext__videotoolbox_8c_a7331e302ea7bb48e0b605a069576e135}{pix\_fmt}})\\
+\>\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ \mbox{\hyperlink{checkasm_8c_a87cc763359903cf60b8a9f1b367476e8}{func}} )(\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a3378f35ca205fd422d7edb3190867861}{class\_name}} = \char`\"{}libkvazaar\char`\"{}\\
+\>\mbox{\hyperlink{libkvazaar_8c_af35dc833b858a6b99a695329119334a0}{item\_name}} = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a3cfe71f40b244562d3665516c3934c06}{option}} = \mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a4c7a521b8f1a0769c09bfa4a1fca7dab}{version}} = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}}\\
+\>\mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}} = \mbox{\hyperlink{log_8h_aeb1c06cc3e47a029ca6afeac782ac8f9aacba77c66d969c8dbd8b9597e9b98869}{AV\_CLASS\_CATEGORY\_DEVICE\_AUDIO\_INPUT}}\\
+\} \mbox{\hyperlink{vf__curves_8c_abd748170a632e308dda39491c5a45f27}{curves\_presets}} \mbox{[}$\,$\mbox{]}\\
+
+\end{tabbing}\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__curves_8c_abc2d79a004404dbe4ca7a245ee0830c4}{curves\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__curves_8c_a855cb534d6226e5eae81c091af48782c}{curves\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__curves_8c_a6d959bd089f45995bd6514abd17a2b73}{ff\+\_\+vf\+\_\+curves}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__curves_8c_a955f504eccf76b4eb2489c0adab03121}\label{vf__curves_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{vf\_curves.c@{vf\_curves.c}!A@{A}}
+\index{A@{A}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~3}
+
+
+
+Definition at line 37 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_aa70747e23d9ebf312299930cf6b3c20d}\label{vf__curves_8c_aa70747e23d9ebf312299930cf6b3c20d}} 
+\index{vf\_curves.c@{vf\_curves.c}!AD@{AD}}
+\index{AD@{AD}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{AD}{AD}}
+{\footnotesize\ttfamily \#define AD~2 /$\ast$ sup  diagonal (above \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}}) $\ast$/}
+
+\mbox{\Hypertarget{vf__curves_8c_a111da81ae5883147168bbb8366377b10}\label{vf__curves_8c_a111da81ae5883147168bbb8366377b10}} 
+\index{vf\_curves.c@{vf\_curves.c}!B@{B}}
+\index{B@{B}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{B}{B}}
+{\footnotesize\ttfamily \#define B~2}
+
+
+
+Definition at line 36 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a920971eab600c52963635b965ba64898}\label{vf__curves_8c_a920971eab600c52963635b965ba64898}} 
+\index{vf\_curves.c@{vf\_curves.c}!BD@{BD}}
+\index{BD@{BD}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{BD}{BD}}
+{\footnotesize\ttfamily \#define BD~0 /$\ast$ \mbox{\hyperlink{dnn__backend__native__layer__mathbinary_8c_aec238e230db0cd41b80558db403931dd}{sub}}  diagonal (below \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}}) $\ast$/}
+
+\mbox{\Hypertarget{vf__curves_8c_ab934f1183f9597f860210cc11d000edd}\label{vf__curves_8c_ab934f1183f9597f860210cc11d000edd}} 
+\index{vf\_curves.c@{vf\_curves.c}!CLIP@{CLIP}}
+\index{CLIP@{CLIP}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{CLIP}{CLIP}}
+{\footnotesize\ttfamily \#define C\+L\+IP(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~(nbits == 8 ? av\+\_\+clip\+\_\+uint8(v) \+: \mbox{\hyperlink{common_8h_a867dba37c785d27d42b272aa968efda8}{av\+\_\+clip\+\_\+uintp2\+\_\+c}}(v, nbits))}
+
+Natural cubic spline interpolation Finding curves using Cubic Splines notes by Steven Rauch and John Stockie. \begin{DoxySeeAlso}{See also}
+\href{http://people.math.sfu.ca/~stockie/teaching/macm316/notes/splines.pdf}{\texttt{ http\+://people.\+math.\+sfu.\+ca/$\sim$stockie/teaching/macm316/notes/splines.\+pdf}} 
+\end{DoxySeeAlso}
+
+
+Definition at line 215 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a9ad22ee1f265a7e4d59fab37a52c856d}\label{vf__curves_8c_a9ad22ee1f265a7e4d59fab37a52c856d}} 
+\index{vf\_curves.c@{vf\_curves.c}!DECLARE\_INTERPOLATE\_FUNC@{DECLARE\_INTERPOLATE\_FUNC}}
+\index{DECLARE\_INTERPOLATE\_FUNC@{DECLARE\_INTERPOLATE\_FUNC}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{DECLARE\_INTERPOLATE\_FUNC}{DECLARE\_INTERPOLATE\_FUNC}}
+{\footnotesize\ttfamily \#define D\+E\+C\+L\+A\+R\+E\+\_\+\+I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{nbits }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8}{interpolate}}\#\#nbits(\textcolor{keywordtype}{void} *log\_ctx, uint16\_t *y,                   \(\backslash\)}
+\DoxyCodeLine{                              \textcolor{keyword}{const} \textcolor{keyword}{struct} \mbox{\hyperlink{structkeypoint}{keypoint}} *points)                \(\backslash\)}
+\DoxyCodeLine{\{                                                                           \(\backslash\)}
+\DoxyCodeLine{    return \mbox{\hyperlink{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8}{interpolate}}(log\_ctx, y, points, nbits);                          \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 339 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_curves.c@{vf\_curves.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 83 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_aed9ea78689ecce0b7264c02c7f8a9a54}\label{vf__curves_8c_aed9ea78689ecce0b7264c02c7f8a9a54}} 
+\index{vf\_curves.c@{vf\_curves.c}!G@{G}}
+\index{G@{G}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{G}{G}}
+{\footnotesize\ttfamily \#define G~1}
+
+
+
+Definition at line 35 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_aa7c91c377791a7af0880e479d30efe70}\label{vf__curves_8c_aa7c91c377791a7af0880e479d30efe70}} 
+\index{vf\_curves.c@{vf\_curves.c}!MD@{MD}}
+\index{MD@{MD}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{MD}{MD}}
+{\footnotesize\ttfamily \#define MD~1 /$\ast$ \mbox{\hyperlink{zmqsend_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main}} diagonal (center) $\ast$/}
+
+\mbox{\Hypertarget{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}\label{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}} 
+\index{vf\_curves.c@{vf\_curves.c}!NB\_COMP@{NB\_COMP}}
+\index{NB\_COMP@{NB\_COMP}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{NB\_COMP}{NB\_COMP}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+C\+O\+MP~3}
+
+
+
+Definition at line 44 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_curves.c@{vf\_curves.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_curves_context}{Curves\+Context}}, x)}
+
+
+
+Definition at line 82 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a5c71a5e59a53413cd6c270266d63b031}\label{vf__curves_8c_a5c71a5e59a53413cd6c270266d63b031}} 
+\index{vf\_curves.c@{vf\_curves.c}!R@{R}}
+\index{R@{R}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{R}{R}}
+{\footnotesize\ttfamily \#define R~0}
+
+
+
+Definition at line 34 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a838a0e5ef13cb9b2783bd003e09501d9}\label{vf__curves_8c_a838a0e5ef13cb9b2783bd003e09501d9}} 
+\index{vf\_curves.c@{vf\_curves.c}!READ16@{READ16}}
+\index{READ16@{READ16}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{READ16}{READ16}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D16(\begin{DoxyParamCaption}\item[{}]{dst }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} < 2) \{                     \(\backslash\)}
+\DoxyCodeLine{        ret = \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};      \(\backslash\)}
+\DoxyCodeLine{        goto \mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}};                       \(\backslash\)}
+\DoxyCodeLine{    \}                                   \(\backslash\)}
+\DoxyCodeLine{    dst = \mbox{\hyperlink{avr32_2intreadwrite_8h_a6a4c12ef75a81c72f96410e9d1d8c8e9}{AV\_RB16}}(buf);                 \(\backslash\)}
+\DoxyCodeLine{    buf  += 2;                          \(\backslash\)}
+\DoxyCodeLine{    size -\/= 2;                          \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__curves_8c_ada2e73ecb067fbca9e96e9354a539680}\label{vf__curves_8c_ada2e73ecb067fbca9e96e9354a539680}} 
+\index{vf\_curves.c@{vf\_curves.c}!SET\_COMP\_IF\_NOT\_SET@{SET\_COMP\_IF\_NOT\_SET}}
+\index{SET\_COMP\_IF\_NOT\_SET@{SET\_COMP\_IF\_NOT\_SET}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{SET\_COMP\_IF\_NOT\_SET}{SET\_COMP\_IF\_NOT\_SET}}
+{\footnotesize\ttfamily \#define S\+E\+T\+\_\+\+C\+O\+M\+P\+\_\+\+I\+F\+\_\+\+N\+O\+T\+\_\+\+S\+ET(\begin{DoxyParamCaption}\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                           \(\backslash\)}
+\DoxyCodeLine{    if (!\mbox{\hyperlink{transcode__aac_8c_a4fbb704fb96c36a78a36eee010306ce7}{pts}}[n] \&\& \mbox{\hyperlink{vf__curves_8c_abd748170a632e308dda39491c5a45f27}{curves\_presets}}[curves-\/>preset].name) \{           \(\backslash\)}
+\DoxyCodeLine{        pts[n] = \mbox{\hyperlink{group__lavu__mem__funcs_ga7c352f4cff02184f005323691375fea9}{av\_strdup}}(\mbox{\hyperlink{vf__curves_8c_abd748170a632e308dda39491c5a45f27}{curves\_presets}}[curves-\/>preset].name);    \(\backslash\)}
+\DoxyCodeLine{        if (!\mbox{\hyperlink{transcode__aac_8c_a4fbb704fb96c36a78a36eee010306ce7}{pts}}[n])                                                \(\backslash\)}
+\DoxyCodeLine{            return \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{AVERROR}}(ENOMEM);                                 \(\backslash\)}
+\DoxyCodeLine{    \}                                                               \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__curves_8c_aa364f9743ad52446a1f3040d1b278706}\label{vf__curves_8c_aa364f9743ad52446a1f3040d1b278706}} 
+\index{vf\_curves.c@{vf\_curves.c}!CurvesContext@{CurvesContext}}
+\index{CurvesContext@{CurvesContext}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{CurvesContext}{CurvesContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_curves_context}{Curves\+Context}} \mbox{\hyperlink{struct_curves_context}{Curves\+Context}}}
+
+\mbox{\Hypertarget{vf__curves_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__curves_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_curves.c@{vf\_curves.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514f}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514f}} 
+\index{vf\_curves.c@{vf\_curves.c}!preset@{preset}}
+\index{preset@{preset}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{preset}{preset}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514f}{preset}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_NONE@{PRESET\_NONE}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_NONE@{PRESET\_NONE}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}} 
+P\+R\+E\+S\+E\+T\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_COLOR\_NEGATIVE@{PRESET\_COLOR\_NEGATIVE}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_COLOR\_NEGATIVE@{PRESET\_COLOR\_NEGATIVE}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa13766789acd72a085208cecb0639f29e}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa13766789acd72a085208cecb0639f29e}} 
+P\+R\+E\+S\+E\+T\+\_\+\+C\+O\+L\+O\+R\+\_\+\+N\+E\+G\+A\+T\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_CROSS\_PROCESS@{PRESET\_CROSS\_PROCESS}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_CROSS\_PROCESS@{PRESET\_CROSS\_PROCESS}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab12d259d5665ef4e7106b272972959cd}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab12d259d5665ef4e7106b272972959cd}} 
+P\+R\+E\+S\+E\+T\+\_\+\+C\+R\+O\+S\+S\+\_\+\+P\+R\+O\+C\+E\+SS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_DARKER@{PRESET\_DARKER}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_DARKER@{PRESET\_DARKER}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fafd7d3e1b4ce8d53236c908356c1b1430}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fafd7d3e1b4ce8d53236c908356c1b1430}} 
+P\+R\+E\+S\+E\+T\+\_\+\+D\+A\+R\+K\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_INCREASE\_CONTRAST@{PRESET\_INCREASE\_CONTRAST}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_INCREASE\_CONTRAST@{PRESET\_INCREASE\_CONTRAST}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa8c228da8d3aa0d5874aab51400502cea}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa8c228da8d3aa0d5874aab51400502cea}} 
+P\+R\+E\+S\+E\+T\+\_\+\+I\+N\+C\+R\+E\+A\+S\+E\+\_\+\+C\+O\+N\+T\+R\+A\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_LIGHTER@{PRESET\_LIGHTER}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_LIGHTER@{PRESET\_LIGHTER}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa88b845a10631a3c32b3d88235d9e4c19}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa88b845a10631a3c32b3d88235d9e4c19}} 
+P\+R\+E\+S\+E\+T\+\_\+\+L\+I\+G\+H\+T\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_LINEAR\_CONTRAST@{PRESET\_LINEAR\_CONTRAST}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_LINEAR\_CONTRAST@{PRESET\_LINEAR\_CONTRAST}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa0f611bbfe124e9145fd0be7190f4d826}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa0f611bbfe124e9145fd0be7190f4d826}} 
+P\+R\+E\+S\+E\+T\+\_\+\+L\+I\+N\+E\+A\+R\+\_\+\+C\+O\+N\+T\+R\+A\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_MEDIUM\_CONTRAST@{PRESET\_MEDIUM\_CONTRAST}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_MEDIUM\_CONTRAST@{PRESET\_MEDIUM\_CONTRAST}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa641eaaab37c2c97085e4cc4c26a28321}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa641eaaab37c2c97085e4cc4c26a28321}} 
+P\+R\+E\+S\+E\+T\+\_\+\+M\+E\+D\+I\+U\+M\+\_\+\+C\+O\+N\+T\+R\+A\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_NEGATIVE@{PRESET\_NEGATIVE}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_NEGATIVE@{PRESET\_NEGATIVE}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa007acaca56847b63f0bdbc7368571c0c}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa007acaca56847b63f0bdbc7368571c0c}} 
+P\+R\+E\+S\+E\+T\+\_\+\+N\+E\+G\+A\+T\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_STRONG\_CONTRAST@{PRESET\_STRONG\_CONTRAST}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_STRONG\_CONTRAST@{PRESET\_STRONG\_CONTRAST}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab71b0f6b59802763146f591f4c105846}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab71b0f6b59802763146f591f4c105846}} 
+P\+R\+E\+S\+E\+T\+\_\+\+S\+T\+R\+O\+N\+G\+\_\+\+C\+O\+N\+T\+R\+A\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESET\_VINTAGE@{PRESET\_VINTAGE}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!PRESET\_VINTAGE@{PRESET\_VINTAGE}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa46d2dffe1b0c6668eab59de25156975f}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa46d2dffe1b0c6668eab59de25156975f}} 
+P\+R\+E\+S\+E\+T\+\_\+\+V\+I\+N\+T\+A\+GE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_PRESETS@{NB\_PRESETS}!vf\_curves.c@{vf\_curves.c}}\index{vf\_curves.c@{vf\_curves.c}!NB\_PRESETS@{NB\_PRESETS}}}\mbox{\Hypertarget{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fada46d5b574d69f9b8519bc9d22a1cfd8}\label{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fada46d5b574d69f9b8519bc9d22a1cfd8}} 
+N\+B\+\_\+\+P\+R\+E\+S\+E\+TS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 46 of file vf\+\_\+curves.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__curves_8c_abee5e16721c648bf969b5cb2bc20547b}\label{vf__curves_8c_abee5e16721c648bf969b5cb2bc20547b}} 
+\index{vf\_curves.c@{vf\_curves.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{curves}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__curves_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__curves_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_curves.c@{vf\_curves.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 650 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a26350fe7a9db9dc51b80bf7fec0f7644}\label{vf__curves_8c_a26350fe7a9db9dc51b80bf7fec0f7644}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_init@{curves\_init}}
+\index{curves\_init@{curves\_init}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_init()}{curves\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} curves\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 470 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a26350fe7a9db9dc51b80bf7fec0f7644_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_adb358fdb047e5ad42d2c39eeb1e83511}\label{vf__curves_8c_adb358fdb047e5ad42d2c39eeb1e83511}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_uninit@{curves\_uninit}}
+\index{curves\_uninit@{curves\_uninit}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_uninit()}{curves\_uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} curves\+\_\+uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 746 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_ae6f67df95c292af10754b793f5b33e19}\label{vf__curves_8c_ae6f67df95c292af10754b793f5b33e19}} 
+\index{vf\_curves.c@{vf\_curves.c}!dump\_curves@{dump\_curves}}
+\index{dump\_curves@{dump\_curves}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{dump\_curves()}{dump\_curves()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dump\+\_\+curves (\begin{DoxyParamCaption}\item[{const char $\ast$}]{fname,  }\item[{uint16\+\_\+t $\ast$}]{graph\mbox{[}\+N\+B\+\_\+\+C\+O\+M\+P+1\mbox{]},  }\item[{struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$}]{comp\+\_\+points\mbox{[}\+N\+B\+\_\+\+C\+O\+M\+P+1\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lut\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 409 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_ae6f67df95c292af10754b793f5b33e19_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{vf__curves_8c_ae6f67df95c292af10754b793f5b33e19_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{vf__curves_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{vf\_curves.c@{vf\_curves.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 717 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a578148bf87c3d0929a7d0be6b14be050}\label{vf__curves_8c_a578148bf87c3d0929a7d0be6b14be050}} 
+\index{vf\_curves.c@{vf\_curves.c}!filter\_slice\_packed@{filter\_slice\_packed}}
+\index{filter\_slice\_packed@{filter\_slice\_packed}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice\_packed()}{filter\_slice\_packed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice\+\_\+packed (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 536 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a578148bf87c3d0929a7d0be6b14be050_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{vf__curves_8c_a578148bf87c3d0929a7d0be6b14be050_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a7ad0700412c812d58bd66edc04085854}\label{vf__curves_8c_a7ad0700412c812d58bd66edc04085854}} 
+\index{vf\_curves.c@{vf\_curves.c}!filter\_slice\_planar@{filter\_slice\_planar}}
+\index{filter\_slice\_planar@{filter\_slice\_planar}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice\_planar()}{filter\_slice\_planar()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice\+\_\+planar (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 584 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a7ad0700412c812d58bd66edc04085854_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{vf__curves_8c_a7ad0700412c812d58bd66edc04085854_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a58cfe9b373a2016992cc682a7422a678}\label{vf__curves_8c_a58cfe9b373a2016992cc682a7422a678}} 
+\index{vf\_curves.c@{vf\_curves.c}!get\_nb\_points@{get\_nb\_points}}
+\index{get\_nb\_points@{get\_nb\_points}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{get\_nb\_points()}{get\_nb\_points()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+nb\+\_\+points (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$}]{d }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 199 of file vf\+\_\+curves.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{vf__curves_8c_a58cfe9b373a2016992cc682a7422a678_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8}\label{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8}} 
+\index{vf\_curves.c@{vf\_curves.c}!interpolate@{interpolate}}
+\index{interpolate@{interpolate}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{interpolate()}{interpolate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} interpolate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log\+\_\+ctx,  }\item[{uint16\+\_\+t $\ast$}]{y,  }\item[{const struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$}]{points,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nbits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 217 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a177a10938522b6054d9c5d961e5600a8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_afad11cfe31271c060d7134f897570073}\label{vf__curves_8c_afad11cfe31271c060d7134f897570073}} 
+\index{vf\_curves.c@{vf\_curves.c}!make\_point@{make\_point}}
+\index{make\_point@{make\_point}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{make\_point()}{make\_point()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structkeypoint}{keypoint}}$\ast$ make\+\_\+point (\begin{DoxyParamCaption}\item[{double}]{x,  }\item[{double}]{y,  }\item[{struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$}]{next }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 143 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{vf__curves_8c_afad11cfe31271c060d7134f897570073_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_afad11cfe31271c060d7134f897570073_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a240d2b786a08c36fae1c42b94ec2d6c8}\label{vf__curves_8c_a240d2b786a08c36fae1c42b94ec2d6c8}} 
+\index{vf\_curves.c@{vf\_curves.c}!parse\_points\_str@{parse\_points\_str}}
+\index{parse\_points\_str@{parse\_points\_str}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{parse\_points\_str()}{parse\_points\_str()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+points\+\_\+str (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{struct \mbox{\hyperlink{structkeypoint}{keypoint}} $\ast$$\ast$}]{points,  }\item[{const char $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lut\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 155 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a240d2b786a08c36fae1c42b94ec2d6c8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{vf__curves_8c_a240d2b786a08c36fae1c42b94ec2d6c8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a982912886fcf76626531d2acdcf9be4e}\label{vf__curves_8c_a982912886fcf76626531d2acdcf9be4e}} 
+\index{vf\_curves.c@{vf\_curves.c}!parse\_psfile@{parse\_psfile}}
+\index{parse\_psfile@{parse\_psfile}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{parse\_psfile()}{parse\_psfile()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+psfile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{fname }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 353 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__curves_8c_a982912886fcf76626531d2acdcf9be4e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{vf__curves_8c_a982912886fcf76626531d2acdcf9be4e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_curves.c@{vf\_curves.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 512 of file vf\+\_\+curves.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}\label{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}} 
+\index{vf\_curves.c@{vf\_curves.c}!b@{b}}
+\index{b@{b}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{b}{b}}
+{\footnotesize\ttfamily const char$\ast$ b}
+
+
+
+Definition at line 116 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_abc2d79a004404dbe4ca7a245ee0830c4}\label{vf__curves_8c_abc2d79a004404dbe4ca7a245ee0830c4}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_inputs@{curves\_inputs}}
+\index{curves\_inputs@{curves\_inputs}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_inputs}{curves\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} curves\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__curves_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__curves_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 755 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_abd8bfc405237fce3bf2c981a7652c52f}\label{vf__curves_8c_abd8bfc405237fce3bf2c981a7652c52f}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_options@{curves\_options}}
+\index{curves\_options@{curves\_options}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_options}{curves\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} curves\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}preset"{}}, \textcolor{stringliteral}{"{}select a color curves preset"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514f}{preset}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}{PRESET\_NONE}}\}, \mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}{PRESET\_NONE}}, \mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fada46d5b574d69f9b8519bc9d22a1cfd8}{NB\_PRESETS}}-\/1, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}none"{}},               \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fadced88f47cbf7d5a119522472262263e}{PRESET\_NONE}}\},                 INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}color\_negative"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa13766789acd72a085208cecb0639f29e}{PRESET\_COLOR\_NEGATIVE}}\},       INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}cross\_process"{}},      \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab12d259d5665ef4e7106b272972959cd}{PRESET\_CROSS\_PROCESS}}\},        INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}darker"{}},             \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fafd7d3e1b4ce8d53236c908356c1b1430}{PRESET\_DARKER}}\},               INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}increase\_contrast"{}},  \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa8c228da8d3aa0d5874aab51400502cea}{PRESET\_INCREASE\_CONTRAST}}\},    INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}lighter"{}},            \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa88b845a10631a3c32b3d88235d9e4c19}{PRESET\_LIGHTER}}\},              INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}linear\_contrast"{}},    \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa0f611bbfe124e9145fd0be7190f4d826}{PRESET\_LINEAR\_CONTRAST}}\},      INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}medium\_contrast"{}},    \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa641eaaab37c2c97085e4cc4c26a28321}{PRESET\_MEDIUM\_CONTRAST}}\},      INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}negative"{}},           \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa007acaca56847b63f0bdbc7368571c0c}{PRESET\_NEGATIVE}}\},             INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}strong\_contrast"{}},    \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab71b0f6b59802763146f591f4c105846}{PRESET\_STRONG\_CONTRAST}}\},      INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}vintage"{}},            \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa46d2dffe1b0c6668eab59de25156975f}{PRESET\_VINTAGE}}\},              INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}preset\_name"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}master"{}},\textcolor{stringliteral}{"{}set master points coordinates"{}},\mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[\mbox{\hyperlink{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}{NB\_COMP}}]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}m"{}},     \textcolor{stringliteral}{"{}set master points coordinates"{}},\mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[\mbox{\hyperlink{vf__curves_8c_a726ae2ab59fdd2d2e8927328a4506789}{NB\_COMP}}]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}red"{}},   \textcolor{stringliteral}{"{}set red points coordinates"{}},   \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[0]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}r"{}},     \textcolor{stringliteral}{"{}set red points coordinates"{}},   \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[0]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}green"{}}, \textcolor{stringliteral}{"{}set green points coordinates"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[1]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}g"{}},     \textcolor{stringliteral}{"{}set green points coordinates"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[1]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}blue"{}},  \textcolor{stringliteral}{"{}set blue points coordinates"{}},  \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[2]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}b"{}},     \textcolor{stringliteral}{"{}set blue points coordinates"{}},  \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str[2]), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}all"{}},   \textcolor{stringliteral}{"{}set points coordinates for all components"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(comp\_points\_str\_all), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}psfile"{}}, \textcolor{stringliteral}{"{}set Photoshop curves file name"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(psfile), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}plot"{}}, \textcolor{stringliteral}{"{}save Gnuplot script of the curves in specified file"{}}, \mbox{\hyperlink{vf__curves_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(plot\_filename), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, .flags = \mbox{\hyperlink{vf__curves_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 84 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a855cb534d6226e5eae81c091af48782c}\label{vf__curves_8c_a855cb534d6226e5eae81c091af48782c}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_outputs@{curves\_outputs}}
+\index{curves\_outputs@{curves\_outputs}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_outputs}{curves\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} curves\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 765 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_abd748170a632e308dda39491c5a45f27}\label{vf__curves_8c_abd748170a632e308dda39491c5a45f27}} 
+\index{vf\_curves.c@{vf\_curves.c}!curves\_presets@{curves\_presets}}
+\index{curves\_presets@{curves\_presets}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{curves\_presets}{curves\_presets}}
+{\footnotesize\ttfamily const \{ ... \}  curves\+\_\+presets\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa13766789acd72a085208cecb0639f29e}{PRESET\_COLOR\_NEGATIVE}}] = \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0.129/1 0.466/0.498 0.725/0"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0.109/1 0.301/0.498 0.517/0"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0.098/1 0.235/0.498 0.423/0"{}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab12d259d5665ef4e7106b272972959cd}{PRESET\_CROSS\_PROCESS}}] = \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0 0.25/0.156 0.501/0.501 0.686/0.745 1/1"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0 0.25/0.188 0.38/0.501 0.745/0.815 1/0.815"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0 0.231/0.094 0.709/0.874 1/1"{}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fafd7d3e1b4ce8d53236c908356c1b1430}{PRESET\_DARKER}}]             = \{ .master = \textcolor{stringliteral}{"{}0/0 0.5/0.4 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa8c228da8d3aa0d5874aab51400502cea}{PRESET\_INCREASE\_CONTRAST}}]  = \{ .master = \textcolor{stringliteral}{"{}0/0 0.149/0.066 0.831/0.905 0.905/0.98 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa88b845a10631a3c32b3d88235d9e4c19}{PRESET\_LIGHTER}}]            = \{ .master = \textcolor{stringliteral}{"{}0/0 0.4/0.5 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa0f611bbfe124e9145fd0be7190f4d826}{PRESET\_LINEAR\_CONTRAST}}]    = \{ .master = \textcolor{stringliteral}{"{}0/0 0.305/0.286 0.694/0.713 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa641eaaab37c2c97085e4cc4c26a28321}{PRESET\_MEDIUM\_CONTRAST}}]    = \{ .master = \textcolor{stringliteral}{"{}0/0 0.286/0.219 0.639/0.643 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa007acaca56847b63f0bdbc7368571c0c}{PRESET\_NEGATIVE}}]           = \{ .master = \textcolor{stringliteral}{"{}0/1 1/0"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fab71b0f6b59802763146f591f4c105846}{PRESET\_STRONG\_CONTRAST}}]    = \{ .master = \textcolor{stringliteral}{"{}0/0 0.301/0.196 0.592/0.6 0.686/0.737 1/1"{}} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__curves_8c_a7f1bb62735b2e1288baece1f7e14514fa46d2dffe1b0c6668eab59de25156975f}{PRESET\_VINTAGE}}] = \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0.11 0.42/0.51 1/0.95"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0 0.50/0.48 1/1"{}},}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}0/0.22 0.49/0.44 1/0.8"{}},}
+\DoxyCodeLine{    \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__curves_8c_a6d959bd089f45995bd6514abd17a2b73}\label{vf__curves_8c_a6d959bd089f45995bd6514abd17a2b73}} 
+\index{vf\_curves.c@{vf\_curves.c}!ff\_vf\_curves@{ff\_vf\_curves}}
+\index{ff\_vf\_curves@{ff\_vf\_curves}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_curves}{ff\_vf\_curves}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+curves}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}curves"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Adjust components curves."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__curves_8c_aa364f9743ad52446a1f3040d1b278706}{CurvesContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}          = \mbox{\hyperlink{vf__curves_8c_a26350fe7a9db9dc51b80bf7fec0f7644}{curves\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{crystalhd_8c_a47e28e6ea289d3f83ad1883ddde5a422}{uninit}}        = \mbox{\hyperlink{vf__curves_8c_adb358fdb047e5ad42d2c39eeb1e83511}{curves\_uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__curves_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__curves_8c_abc2d79a004404dbe4ca7a245ee0830c4}{curves\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__curves_8c_a855cb534d6226e5eae81c091af48782c}{curves\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&curves\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_ga00c4b8da7d5d89fa4ddc5dcdf72bffca}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_GENERIC}} | \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 773 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}\label{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}} 
+\index{vf\_curves.c@{vf\_curves.c}!g@{g}}
+\index{g@{g}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{g}{g}}
+{\footnotesize\ttfamily const char$\ast$ g}
+
+
+
+Definition at line 115 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a2a1bf31ff09137e014c839bbaf9453d6}\label{vf__curves_8c_a2a1bf31ff09137e014c839bbaf9453d6}} 
+\index{vf\_curves.c@{vf\_curves.c}!master@{master}}
+\index{master@{master}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{master}{master}}
+{\footnotesize\ttfamily const char$\ast$ master}
+
+
+
+Definition at line 117 of file vf\+\_\+curves.\+c.
+
+\mbox{\Hypertarget{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}\label{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}} 
+\index{vf\_curves.c@{vf\_curves.c}!r@{r}}
+\index{r@{r}!vf\_curves.c@{vf\_curves.c}}
+\doxysubsubsection{\texorpdfstring{r}{r}}
+{\footnotesize\ttfamily const char$\ast$ r}
+
+
+
+Definition at line 114 of file vf\+\_\+curves.\+c.
+

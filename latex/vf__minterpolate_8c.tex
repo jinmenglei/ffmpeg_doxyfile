@@ -1,0 +1,1093 @@
+\hypertarget{vf__minterpolate_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+minterpolate.c File Reference}
+\label{vf__minterpolate_8c}\index{E:/github/ffmpeg/libavfilter/vf\_minterpolate.c@{E:/github/ffmpeg/libavfilter/vf\_minterpolate.c}}
+{\ttfamily \#include \char`\"{}motion\+\_\+estimation.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/motion\+\_\+vector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}scene\+\_\+sad.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+minterpolate.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_cluster}{Cluster}}
+\item 
+struct \mbox{\hyperlink{struct_block}{Block}}
+\item 
+struct \mbox{\hyperlink{struct_pixel_m_v_s}{Pixel\+M\+VS}}
+\item 
+struct \mbox{\hyperlink{struct_pixel_weights}{Pixel\+Weights}}
+\item 
+struct \mbox{\hyperlink{struct_pixel_refs}{Pixel\+Refs}}
+\item 
+struct \mbox{\hyperlink{struct_frame}{Frame}}
+\item 
+struct \mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a04b91c4a8d35698c93cf64b9026a565f}{M\+E\+\_\+\+M\+O\+D\+E\+\_\+\+B\+I\+D\+IR}}~0
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a2f9de559a3aedcda8071adf5627a3214}{M\+E\+\_\+\+M\+O\+D\+E\+\_\+\+B\+I\+L\+AT}}~1
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_aa4be9323ec7a9cec71f87f9f7c05d6a4}{M\+C\+\_\+\+M\+O\+D\+E\+\_\+\+O\+B\+MC}}~0
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_aa9343e426310986ab3329a8146c883b5}{M\+C\+\_\+\+M\+O\+D\+E\+\_\+\+A\+O\+B\+MC}}~1
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a74805e717e45ad4c6513a94dbf9610e5}{S\+C\+D\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+N\+O\+NE}}~0
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a594cfb4f86cb40413426286b8417dd0d}{S\+C\+D\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+F\+D\+I\+FF}}~1
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a467e0edbc93466648e5a4efac6a5f36b}{N\+B\+\_\+\+F\+R\+A\+M\+ES}}~4
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a7665ed8e0ee6a204f66c8f6bc9dd114c}{N\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+M\+VS}}~32
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_ab47285ae01a355582adcf6655016072e}{N\+B\+\_\+\+C\+L\+U\+S\+T\+E\+RS}}~128
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{A\+L\+P\+H\+A\+\_\+\+M\+AX}}~1024
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a782d9a479ed1e75611c4007d2b769178}{C\+L\+U\+S\+T\+E\+R\+\_\+\+T\+H\+R\+E\+S\+H\+O\+LD}}~4
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a935227341e5a752efd0ad8a9d39bbf9e}{P\+X\+\_\+\+W\+E\+I\+G\+H\+T\+\_\+\+M\+AX}}~255
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a1fff6c9b24dba2da79e26b4242376092}{C\+O\+S\+T\+\_\+\+P\+R\+E\+D\+\_\+\+S\+C\+A\+LE}}~64
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a510794fe76fcf4ae5bc18d0fe99ab393}{C\+O\+N\+ST}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{tests_2movenc_8c_ac3618078947fab6bccf1fc80a6566051}{help}},  \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  unit)~\{ \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, \mbox{\hyperlink{tests_2movenc_8c_ac3618078947fab6bccf1fc80a6566051}{help}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+C\+O\+N\+ST}}, \{.i64=\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}\}, 0, 0, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}, unit \}
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_a1f4f07498361a68bf88ebc69faa0fa58}{A\+D\+D\+\_\+\+P\+R\+ED}}(preds,  px,  py)
+\item 
+\#define \mbox{\hyperlink{vf__minterpolate_8c_ae2cf24b2e6634a506a0b414b23ee6db0}{A\+D\+D\+\_\+\+P\+I\+X\+E\+LS}}(b\+\_\+weight,  mv\+\_\+x,  mv\+\_\+y)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_cluster}{Cluster}} \mbox{\hyperlink{vf__minterpolate_8c_a7686171815013f799f50789ee1de5a6c}{Cluster}}
+\item 
+typedef struct \mbox{\hyperlink{struct_block}{Block}} \mbox{\hyperlink{vf__minterpolate_8c_a2af45dc93858b3ab0965646789821f60}{Block}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pixel_m_v_s}{Pixel\+M\+VS}} \mbox{\hyperlink{vf__minterpolate_8c_afe6b89944d1d8d0676701ed68d5bf6a0}{Pixel\+M\+VS}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pixel_weights}{Pixel\+Weights}} \mbox{\hyperlink{vf__minterpolate_8c_abfee07ac8cafffb7cc99726ef4bf759b}{Pixel\+Weights}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pixel_refs}{Pixel\+Refs}} \mbox{\hyperlink{vf__minterpolate_8c_a227036b18b12d9181608ad60fb78ab9c}{Pixel\+Refs}}
+\item 
+typedef struct \mbox{\hyperlink{struct_frame}{Frame}} \mbox{\hyperlink{vf__minterpolate_8c_a8bed1e36372ccc1470e37e91647cce20}{Frame}}
+\item 
+typedef struct \mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} \mbox{\hyperlink{vf__minterpolate_8c_a27488862cf1a52858f0cc0055f625db9}{M\+I\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93}{M\+I\+Mode}} \{ \mbox{\hyperlink{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93a8576cad6bce8b2d66666719d07a12c1e}{M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+D\+UP}} = 0, 
+\mbox{\hyperlink{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93ac4e98905675f7cea6273bba4480c6b2c}{M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+B\+L\+E\+ND}} = 1, 
+\mbox{\hyperlink{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93aeb6fd45d555285dd9c444777887dc830}{M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+M\+CI}} = 2
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__minterpolate_8c_a4f342ad32a6c3c7d61efdcde3d31dbc5}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (minterpolate)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{vf__minterpolate_8c_acf9c74e2d2e48a5ae20c5fd161b2af60}{get\+\_\+sbad}} (\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$me\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+mv, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+mv)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{vf__minterpolate_8c_a0b4041ca038e324d22e4a0b98d6a4e2b}{get\+\_\+sbad\+\_\+ob}} (\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$me\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+mv, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+mv)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{vf__minterpolate_8c_a29ee3205d84a91319a9b054a2b2fbcb6}{get\+\_\+sad\+\_\+ob}} (\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$me\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+mv, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+mv)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_af71f5bbd82af207f8db64f4fe2e1ca46}{search\+\_\+mv}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{struct_block}{Block}} $\ast$blocks, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dir)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_a86f24c8006e4262fb3b51cd32444ab5f}{bilateral\+\_\+me}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_ac47eed17eeaeca4df6f0f55de47c6354}{var\+\_\+size\+\_\+bme}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{struct_block}{Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+mb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+mb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_adef6ed6caf2307ecc7f8439a6f61ff25}{cluster\+\_\+mvs}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_a54612164ef017174b3bf810eb490b472}{inject\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$avf\+\_\+in)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_a5f235c20aad0e706ba487f936c1f18a7}{detect\+\_\+scene\+\_\+change}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_afab568061910dfc6e413daead2a52311}{bidirectional\+\_\+obmc}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__geq_8c_a62da772255bc551e680d5f4ed47cfeba}{alpha}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_ab956b0ce876a788b141d0c2afe209d7d}{set\+\_\+frame\+\_\+data}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__geq_8c_a62da772255bc551e680d5f4ed47cfeba}{alpha}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$avf\+\_\+out)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_ab3ee287066d31daee069d7d2d530559e}{var\+\_\+size\+\_\+bmc}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{struct_block}{Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+mb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+mb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__geq_8c_a62da772255bc551e680d5f4ed47cfeba}{alpha}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_a868ec172697f7288f3a6d22164e61195}{bilateral\+\_\+obmc}} (\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$mi\+\_\+ctx, \mbox{\hyperlink{struct_block}{Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__geq_8c_a62da772255bc551e680d5f4ed47cfeba}{alpha}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_a9f46af473a4e002ead71442caf8081b4}{interpolate}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$avf\+\_\+out)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__minterpolate_8c_ab53102aa3adfa927b09f4da31c22aee7}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$avf\+\_\+in)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_a5667965cccf4cabe06d5b3a5cbb795fe}{free\+\_\+blocks}} (\mbox{\hyperlink{struct_block}{Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sb)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__minterpolate_8c_aed9fdb8e3d0615e8e84e632f65526dfa}{obmc\+\_\+linear32}} \mbox{[}1024\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__minterpolate_8c_a78e9ab1bc2163cf9745d48a5995163da}{obmc\+\_\+linear16}} \mbox{[}256\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__minterpolate_8c_ad0db81fd0758b100b300d7037785635d}{obmc\+\_\+linear8}} \mbox{[}64\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__minterpolate_8c_a4542a07e82fcdd85913c8e7589c14bca}{obmc\+\_\+linear4}} \mbox{[}16\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$const \mbox{\hyperlink{vf__minterpolate_8c_a397c61e8c94d12bf9408cb6e29f4bd20}{obmc\+\_\+tab\+\_\+linear}} \mbox{[}4\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__minterpolate_8c_aacc0aa60270d96a3aba2f7b3214fb429}{minterpolate\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__minterpolate_8c_aa1049b18baa1cef2adeb7647019d5413}{minterpolate\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__minterpolate_8c_a9f65a49e2403c9cc82ce2c30b2017466}{minterpolate\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__minterpolate_8c_accc007201f2dd94fd6223562e23ffa5a}{ff\+\_\+vf\+\_\+minterpolate}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__minterpolate_8c_ae2cf24b2e6634a506a0b414b23ee6db0}\label{vf__minterpolate_8c_ae2cf24b2e6634a506a0b414b23ee6db0}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ADD\_PIXELS@{ADD\_PIXELS}}
+\index{ADD\_PIXELS@{ADD\_PIXELS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ADD\_PIXELS}{ADD\_PIXELS}}
+{\footnotesize\ttfamily \#define A\+D\+D\+\_\+\+P\+I\+X\+E\+LS(\begin{DoxyParamCaption}\item[{}]{b\+\_\+weight,  }\item[{}]{mv\+\_\+x,  }\item[{}]{mv\+\_\+y }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{\(\backslash\)}
+\DoxyCodeLine{        if (!b\_weight || pixel\_refs-\/>nb + 1 >= \mbox{\hyperlink{vf__minterpolate_8c_a7665ed8e0ee6a204f66c8f6bc9dd114c}{NB\_PIXEL\_MVS}})\(\backslash\)}
+\DoxyCodeLine{            continue;\(\backslash\)}
+\DoxyCodeLine{        pixel\_refs-\/>refs[pixel\_refs-\/>nb] = 1;\(\backslash\)}
+\DoxyCodeLine{        pixel\_weights-\/>weights[pixel\_refs-\/>nb] = b\_weight * (\mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}} -\/ \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}});\(\backslash\)}
+\DoxyCodeLine{        pixel\_mvs-\/>mvs[pixel\_refs-\/>nb][0] = av\_clip((mv\_x * \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}}) / \mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}}, x\_min, x\_max);\(\backslash\)}
+\DoxyCodeLine{        pixel\_mvs-\/>mvs[pixel\_refs-\/>nb][1] = av\_clip((mv\_y * \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}}) / \mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}}, y\_min, y\_max);\(\backslash\)}
+\DoxyCodeLine{        pixel\_refs-\/>nb++;\(\backslash\)}
+\DoxyCodeLine{        pixel\_refs-\/>refs[pixel\_refs-\/>nb] = 2;\(\backslash\)}
+\DoxyCodeLine{        pixel\_weights-\/>weights[pixel\_refs-\/>nb] = b\_weight * \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}};\(\backslash\)}
+\DoxyCodeLine{        pixel\_mvs-\/>mvs[pixel\_refs-\/>nb][0] = av\_clip(-\/mv\_x * (\mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}} -\/ \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}}) / \mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}}, x\_min, x\_max);\(\backslash\)}
+\DoxyCodeLine{        pixel\_mvs-\/>mvs[pixel\_refs-\/>nb][1] = av\_clip(-\/mv\_y * (\mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}} -\/ \mbox{\hyperlink{ilbcdata_8h_a545b8c1c045fcc34b81d3ca822620277}{alpha}}) / \mbox{\hyperlink{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}{ALPHA\_MAX}}, y\_min, y\_max);\(\backslash\)}
+\DoxyCodeLine{        pixel\_refs-\/>nb++;\(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while}(0)}
+
+\end{DoxyCode}
+
+
+Definition at line 851 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a1f4f07498361a68bf88ebc69faa0fa58}\label{vf__minterpolate_8c_a1f4f07498361a68bf88ebc69faa0fa58}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ADD\_PRED@{ADD\_PRED}}
+\index{ADD\_PRED@{ADD\_PRED}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ADD\_PRED}{ADD\_PRED}}
+{\footnotesize\ttfamily \#define A\+D\+D\+\_\+\+P\+R\+ED(\begin{DoxyParamCaption}\item[{}]{preds,  }\item[{}]{px,  }\item[{}]{py }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{\(\backslash\)}
+\DoxyCodeLine{        preds.mvs[preds.nb][0] = px;\(\backslash\)}
+\DoxyCodeLine{        preds.mvs[preds.nb][1] = py;\(\backslash\)}
+\DoxyCodeLine{        preds.nb++;\(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while}(0)}
+
+\end{DoxyCode}
+
+
+Definition at line 418 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}\label{vf__minterpolate_8c_ad89cd130c64cf199461b25ce74f5d6c7}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ALPHA\_MAX@{ALPHA\_MAX}}
+\index{ALPHA\_MAX@{ALPHA\_MAX}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ALPHA\_MAX}{ALPHA\_MAX}}
+{\footnotesize\ttfamily \#define A\+L\+P\+H\+A\+\_\+\+M\+AX~1024}
+
+
+
+Definition at line 48 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a782d9a479ed1e75611c4007d2b769178}\label{vf__minterpolate_8c_a782d9a479ed1e75611c4007d2b769178}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!CLUSTER\_THRESHOLD@{CLUSTER\_THRESHOLD}}
+\index{CLUSTER\_THRESHOLD@{CLUSTER\_THRESHOLD}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{CLUSTER\_THRESHOLD}{CLUSTER\_THRESHOLD}}
+{\footnotesize\ttfamily \#define C\+L\+U\+S\+T\+E\+R\+\_\+\+T\+H\+R\+E\+S\+H\+O\+LD~4}
+
+
+
+Definition at line 49 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a510794fe76fcf4ae5bc18d0fe99ab393}\label{vf__minterpolate_8c_a510794fe76fcf4ae5bc18d0fe99ab393}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!CONST@{CONST}}
+\index{CONST@{CONST}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{CONST}{CONST}}
+{\footnotesize\ttfamily \#define C\+O\+N\+ST(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{tests_2movenc_8c_ac3618078947fab6bccf1fc80a6566051}{help}},  }\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  }\item[{}]{unit }\end{DoxyParamCaption})~\{ \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, \mbox{\hyperlink{tests_2movenc_8c_ac3618078947fab6bccf1fc80a6566051}{help}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+C\+O\+N\+ST}}, \{.i64=\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}\}, 0, 0, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}, unit \}}
+
+
+
+Definition at line 203 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a1fff6c9b24dba2da79e26b4242376092}\label{vf__minterpolate_8c_a1fff6c9b24dba2da79e26b4242376092}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!COST\_PRED\_SCALE@{COST\_PRED\_SCALE}}
+\index{COST\_PRED\_SCALE@{COST\_PRED\_SCALE}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{COST\_PRED\_SCALE}{COST\_PRED\_SCALE}}
+{\footnotesize\ttfamily \#define C\+O\+S\+T\+\_\+\+P\+R\+E\+D\+\_\+\+S\+C\+A\+LE~64}
+
+
+
+Definition at line 51 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__minterpolate_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 202 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_aa9343e426310986ab3329a8146c883b5}\label{vf__minterpolate_8c_aa9343e426310986ab3329a8146c883b5}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MC\_MODE\_AOBMC@{MC\_MODE\_AOBMC}}
+\index{MC\_MODE\_AOBMC@{MC\_MODE\_AOBMC}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{MC\_MODE\_AOBMC}{MC\_MODE\_AOBMC}}
+{\footnotesize\ttfamily \#define M\+C\+\_\+\+M\+O\+D\+E\+\_\+\+A\+O\+B\+MC~1}
+
+
+
+Definition at line 39 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_aa4be9323ec7a9cec71f87f9f7c05d6a4}\label{vf__minterpolate_8c_aa4be9323ec7a9cec71f87f9f7c05d6a4}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MC\_MODE\_OBMC@{MC\_MODE\_OBMC}}
+\index{MC\_MODE\_OBMC@{MC\_MODE\_OBMC}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{MC\_MODE\_OBMC}{MC\_MODE\_OBMC}}
+{\footnotesize\ttfamily \#define M\+C\+\_\+\+M\+O\+D\+E\+\_\+\+O\+B\+MC~0}
+
+
+
+Definition at line 38 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a04b91c4a8d35698c93cf64b9026a565f}\label{vf__minterpolate_8c_a04b91c4a8d35698c93cf64b9026a565f}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ME\_MODE\_BIDIR@{ME\_MODE\_BIDIR}}
+\index{ME\_MODE\_BIDIR@{ME\_MODE\_BIDIR}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ME\_MODE\_BIDIR}{ME\_MODE\_BIDIR}}
+{\footnotesize\ttfamily \#define M\+E\+\_\+\+M\+O\+D\+E\+\_\+\+B\+I\+D\+IR~0}
+
+Copyright (c) 2014-\/2015 Michael Niedermayer \href{mailto:michaelni@gmx.at}{\texttt{ michaelni@gmx.\+at}} Copyright (c) 2016 Davinder Singh (D\+S\+M\+\_\+) $<$ds.\+mudhar$<$@gmail.com$>$
+
+This file is part of F\+Fmpeg.
+
+F\+Fmpeg is free software; you can redistribute it and/or modify it under the terms of the G\+NU Lesser General Public License as published by the Free Software Foundation; either version 2.\+1 of the License, or (at your option) any later version.
+
+F\+Fmpeg is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU Lesser General Public License for more details.
+
+You should have received a copy of the G\+NU Lesser General Public License along with F\+Fmpeg; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-\/1301 U\+SA 
+
+Definition at line 35 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a2f9de559a3aedcda8071adf5627a3214}\label{vf__minterpolate_8c_a2f9de559a3aedcda8071adf5627a3214}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ME\_MODE\_BILAT@{ME\_MODE\_BILAT}}
+\index{ME\_MODE\_BILAT@{ME\_MODE\_BILAT}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ME\_MODE\_BILAT}{ME\_MODE\_BILAT}}
+{\footnotesize\ttfamily \#define M\+E\+\_\+\+M\+O\+D\+E\+\_\+\+B\+I\+L\+AT~1}
+
+
+
+Definition at line 36 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_ab47285ae01a355582adcf6655016072e}\label{vf__minterpolate_8c_ab47285ae01a355582adcf6655016072e}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!NB\_CLUSTERS@{NB\_CLUSTERS}}
+\index{NB\_CLUSTERS@{NB\_CLUSTERS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{NB\_CLUSTERS}{NB\_CLUSTERS}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+C\+L\+U\+S\+T\+E\+RS~128}
+
+
+
+Definition at line 46 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a467e0edbc93466648e5a4efac6a5f36b}\label{vf__minterpolate_8c_a467e0edbc93466648e5a4efac6a5f36b}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!NB\_FRAMES@{NB\_FRAMES}}
+\index{NB\_FRAMES@{NB\_FRAMES}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{NB\_FRAMES}{NB\_FRAMES}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+F\+R\+A\+M\+ES~4}
+
+
+
+Definition at line 44 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a7665ed8e0ee6a204f66c8f6bc9dd114c}\label{vf__minterpolate_8c_a7665ed8e0ee6a204f66c8f6bc9dd114c}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!NB\_PIXEL\_MVS@{NB\_PIXEL\_MVS}}
+\index{NB\_PIXEL\_MVS@{NB\_PIXEL\_MVS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{NB\_PIXEL\_MVS}{NB\_PIXEL\_MVS}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+M\+VS~32}
+
+
+
+Definition at line 45 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__minterpolate_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}}, x)}
+
+
+
+Definition at line 201 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a935227341e5a752efd0ad8a9d39bbf9e}\label{vf__minterpolate_8c_a935227341e5a752efd0ad8a9d39bbf9e}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!PX\_WEIGHT\_MAX@{PX\_WEIGHT\_MAX}}
+\index{PX\_WEIGHT\_MAX@{PX\_WEIGHT\_MAX}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{PX\_WEIGHT\_MAX}{PX\_WEIGHT\_MAX}}
+{\footnotesize\ttfamily \#define P\+X\+\_\+\+W\+E\+I\+G\+H\+T\+\_\+\+M\+AX~255}
+
+
+
+Definition at line 50 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a594cfb4f86cb40413426286b8417dd0d}\label{vf__minterpolate_8c_a594cfb4f86cb40413426286b8417dd0d}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!SCD\_METHOD\_FDIFF@{SCD\_METHOD\_FDIFF}}
+\index{SCD\_METHOD\_FDIFF@{SCD\_METHOD\_FDIFF}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{SCD\_METHOD\_FDIFF}{SCD\_METHOD\_FDIFF}}
+{\footnotesize\ttfamily \#define S\+C\+D\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+F\+D\+I\+FF~1}
+
+
+
+Definition at line 42 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a74805e717e45ad4c6513a94dbf9610e5}\label{vf__minterpolate_8c_a74805e717e45ad4c6513a94dbf9610e5}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!SCD\_METHOD\_NONE@{SCD\_METHOD\_NONE}}
+\index{SCD\_METHOD\_NONE@{SCD\_METHOD\_NONE}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{SCD\_METHOD\_NONE}{SCD\_METHOD\_NONE}}
+{\footnotesize\ttfamily \#define S\+C\+D\+\_\+\+M\+E\+T\+H\+O\+D\+\_\+\+N\+O\+NE~0}
+
+
+
+Definition at line 41 of file vf\+\_\+minterpolate.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__minterpolate_8c_a2af45dc93858b3ab0965646789821f60}\label{vf__minterpolate_8c_a2af45dc93858b3ab0965646789821f60}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!Block@{Block}}
+\index{Block@{Block}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{Block}{Block}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_block}{Block}} \mbox{\hyperlink{struct_block}{Block}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a7686171815013f799f50789ee1de5a6c}\label{vf__minterpolate_8c_a7686171815013f799f50789ee1de5a6c}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!Cluster@{Cluster}}
+\index{Cluster@{Cluster}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{Cluster}{Cluster}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_cluster}{Cluster}} \mbox{\hyperlink{struct_cluster}{Cluster}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a8bed1e36372ccc1470e37e91647cce20}\label{vf__minterpolate_8c_a8bed1e36372ccc1470e37e91647cce20}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!Frame@{Frame}}
+\index{Frame@{Frame}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{Frame}{Frame}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_frame}{Frame}} \mbox{\hyperlink{struct_frame}{Frame}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a27488862cf1a52858f0cc0055f625db9}\label{vf__minterpolate_8c_a27488862cf1a52858f0cc0055f625db9}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MIContext@{MIContext}}
+\index{MIContext@{MIContext}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{MIContext}{MIContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} \mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_afe6b89944d1d8d0676701ed68d5bf6a0}\label{vf__minterpolate_8c_afe6b89944d1d8d0676701ed68d5bf6a0}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!PixelMVS@{PixelMVS}}
+\index{PixelMVS@{PixelMVS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{PixelMVS}{PixelMVS}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pixel_m_v_s}{Pixel\+M\+VS}} \mbox{\hyperlink{struct_pixel_m_v_s}{Pixel\+M\+VS}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a227036b18b12d9181608ad60fb78ab9c}\label{vf__minterpolate_8c_a227036b18b12d9181608ad60fb78ab9c}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!PixelRefs@{PixelRefs}}
+\index{PixelRefs@{PixelRefs}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{PixelRefs}{PixelRefs}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pixel_refs}{Pixel\+Refs}} \mbox{\hyperlink{struct_pixel_refs}{Pixel\+Refs}}}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_abfee07ac8cafffb7cc99726ef4bf759b}\label{vf__minterpolate_8c_abfee07ac8cafffb7cc99726ef4bf759b}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!PixelWeights@{PixelWeights}}
+\index{PixelWeights@{PixelWeights}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{PixelWeights}{PixelWeights}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pixel_weights}{Pixel\+Weights}} \mbox{\hyperlink{struct_pixel_weights}{Pixel\+Weights}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93}\label{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MIMode@{MIMode}}
+\index{MIMode@{MIMode}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{MIMode}{MIMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93}{M\+I\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MI\_MODE\_DUP@{MI\_MODE\_DUP}!vf\_minterpolate.c@{vf\_minterpolate.c}}\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MI\_MODE\_DUP@{MI\_MODE\_DUP}}}\mbox{\Hypertarget{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93a8576cad6bce8b2d66666719d07a12c1e}\label{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93a8576cad6bce8b2d66666719d07a12c1e}} 
+M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+D\+UP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MI\_MODE\_BLEND@{MI\_MODE\_BLEND}!vf\_minterpolate.c@{vf\_minterpolate.c}}\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MI\_MODE\_BLEND@{MI\_MODE\_BLEND}}}\mbox{\Hypertarget{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93ac4e98905675f7cea6273bba4480c6b2c}\label{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93ac4e98905675f7cea6273bba4480c6b2c}} 
+M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+B\+L\+E\+ND&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MI\_MODE\_MCI@{MI\_MODE\_MCI}!vf\_minterpolate.c@{vf\_minterpolate.c}}\index{vf\_minterpolate.c@{vf\_minterpolate.c}!MI\_MODE\_MCI@{MI\_MODE\_MCI}}}\mbox{\Hypertarget{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93aeb6fd45d555285dd9c444777887dc830}\label{vf__minterpolate_8c_a451d6574ac8213154f01f7733323eb93aeb6fd45d555285dd9c444777887dc830}} 
+M\+I\+\_\+\+M\+O\+D\+E\+\_\+\+M\+CI&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 129 of file vf\+\_\+minterpolate.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__minterpolate_8c_a4f342ad32a6c3c7d61efdcde3d31dbc5}\label{vf__minterpolate_8c_a4f342ad32a6c3c7d61efdcde3d31dbc5}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{minterpolate}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__minterpolate_8c_afab568061910dfc6e413daead2a52311}\label{vf__minterpolate_8c_afab568061910dfc6e413daead2a52311}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!bidirectional\_obmc@{bidirectional\_obmc}}
+\index{bidirectional\_obmc@{bidirectional\_obmc}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{bidirectional\_obmc()}{bidirectional\_obmc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bidirectional\+\_\+obmc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alpha }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 867 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{vf__minterpolate_8c_afab568061910dfc6e413daead2a52311_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_afab568061910dfc6e413daead2a52311_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a86f24c8006e4262fb3b51cd32444ab5f}\label{vf__minterpolate_8c_a86f24c8006e4262fb3b51cd32444ab5f}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!bilateral\_me@{bilateral\_me}}
+\index{bilateral\_me@{bilateral\_me}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{bilateral\_me()}{bilateral\_me()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bilateral\+\_\+me (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 567 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a86f24c8006e4262fb3b51cd32444ab5f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a86f24c8006e4262fb3b51cd32444ab5f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a868ec172697f7288f3a6d22164e61195}\label{vf__minterpolate_8c_a868ec172697f7288f3a6d22164e61195}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!bilateral\_obmc@{bilateral\_obmc}}
+\index{bilateral\_obmc@{bilateral\_obmc}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{bilateral\_obmc()}{bilateral\_obmc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bilateral\+\_\+obmc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_block}{Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alpha }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1014 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a868ec172697f7288f3a6d22164e61195_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a868ec172697f7288f3a6d22164e61195_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_adef6ed6caf2307ecc7f8439a6f61ff25}\label{vf__minterpolate_8c_adef6ed6caf2307ecc7f8439a6f61ff25}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!cluster\_mvs@{cluster\_mvs}}
+\index{cluster\_mvs@{cluster\_mvs}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{cluster\_mvs()}{cluster\_mvs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cluster\+\_\+mvs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 650 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_adef6ed6caf2307ecc7f8439a6f61ff25_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_adef6ed6caf2307ecc7f8439a6f61ff25_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__minterpolate_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 336 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__minterpolate_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 408 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{vf__minterpolate_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a5f235c20aad0e706ba487f936c1f18a7}\label{vf__minterpolate_8c_a5f235c20aad0e706ba487f936c1f18a7}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!detect\_scene\_change@{detect\_scene\_change}}
+\index{detect\_scene\_change@{detect\_scene\_change}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{detect\_scene\_change()}{detect\_scene\_change()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} detect\+\_\+scene\+\_\+change (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 826 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=263pt]{vf__minterpolate_8c_a5f235c20aad0e706ba487f936c1f18a7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{vf__minterpolate_8c_a5f235c20aad0e706ba487f936c1f18a7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_ab53102aa3adfa927b09f4da31c22aee7}\label{vf__minterpolate_8c_ab53102aa3adfa927b09f4da31c22aee7}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{avf\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1161 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ab53102aa3adfa927b09f4da31c22aee7_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a5667965cccf4cabe06d5b3a5cbb795fe}\label{vf__minterpolate_8c_a5667965cccf4cabe06d5b3a5cbb795fe}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!free\_blocks@{free\_blocks}}
+\index{free\_blocks@{free\_blocks}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{free\_blocks()}{free\_blocks()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+blocks (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_block}{Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1211 of file vf\+\_\+minterpolate.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=222pt]{vf__minterpolate_8c_a5667965cccf4cabe06d5b3a5cbb795fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a29ee3205d84a91319a9b054a2b2fbcb6}\label{vf__minterpolate_8c_a29ee3205d84a91319a9b054a2b2fbcb6}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!get\_sad\_ob@{get\_sad\_ob}}
+\index{get\_sad\_ob@{get\_sad\_ob}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{get\_sad\_ob()}{get\_sad\_ob()}}
+{\footnotesize\ttfamily static uint64\+\_\+t get\+\_\+sad\+\_\+ob (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$}]{me\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+mv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 310 of file vf\+\_\+minterpolate.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{vf__minterpolate_8c_a29ee3205d84a91319a9b054a2b2fbcb6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_acf9c74e2d2e48a5ae20c5fd161b2af60}\label{vf__minterpolate_8c_acf9c74e2d2e48a5ae20c5fd161b2af60}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!get\_sbad@{get\_sbad}}
+\index{get\_sbad@{get\_sbad}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{get\_sbad()}{get\_sbad()}}
+{\footnotesize\ttfamily static uint64\+\_\+t get\+\_\+sbad (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$}]{me\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+mv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 259 of file vf\+\_\+minterpolate.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_acf9c74e2d2e48a5ae20c5fd161b2af60_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a0b4041ca038e324d22e4a0b98d6a4e2b}\label{vf__minterpolate_8c_a0b4041ca038e324d22e4a0b98d6a4e2b}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!get\_sbad\_ob@{get\_sbad\_ob}}
+\index{get\_sbad\_ob@{get\_sbad\_ob}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{get\_sbad\_ob()}{get\_sbad\_ob()}}
+{\footnotesize\ttfamily static uint64\+\_\+t get\+\_\+sbad\+\_\+ob (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_motion_est_context}{A\+V\+Motion\+Est\+Context}} $\ast$}]{me\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+mv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 284 of file vf\+\_\+minterpolate.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{vf__minterpolate_8c_a0b4041ca038e324d22e4a0b98d6a4e2b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a54612164ef017174b3bf810eb490b472}\label{vf__minterpolate_8c_a54612164ef017174b3bf810eb490b472}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!inject\_frame@{inject\_frame}}
+\index{inject\_frame@{inject\_frame}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{inject\_frame()}{inject\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} inject\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{avf\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 740 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a54612164ef017174b3bf810eb490b472_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{vf__minterpolate_8c_a54612164ef017174b3bf810eb490b472_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a9f46af473a4e002ead71442caf8081b4}\label{vf__minterpolate_8c_a9f46af473a4e002ead71442caf8081b4}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!interpolate@{interpolate}}
+\index{interpolate@{interpolate}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{interpolate()}{interpolate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interpolate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{avf\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1078 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_a9f46af473a4e002ead71442caf8081b4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=242pt]{vf__minterpolate_8c_a9f46af473a4e002ead71442caf8081b4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 239 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_af71f5bbd82af207f8db64f4fe2e1ca46}\label{vf__minterpolate_8c_af71f5bbd82af207f8db64f4fe2e1ca46}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!search\_mv@{search\_mv}}
+\index{search\_mv@{search\_mv}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{search\_mv()}{search\_mv()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} search\+\_\+mv (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_block}{Block}} $\ast$}]{blocks,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dir }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 425 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=285pt]{vf__minterpolate_8c_af71f5bbd82af207f8db64f4fe2e1ca46_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_af71f5bbd82af207f8db64f4fe2e1ca46_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_ab956b0ce876a788b141d0c2afe209d7d}\label{vf__minterpolate_8c_ab956b0ce876a788b141d0c2afe209d7d}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!set\_frame\_data@{set\_frame\_data}}
+\index{set\_frame\_data@{set\_frame\_data}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{set\_frame\_data()}{set\_frame\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+frame\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alpha,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{avf\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 917 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ab956b0ce876a788b141d0c2afe209d7d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ab956b0ce876a788b141d0c2afe209d7d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1219 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_ab3ee287066d31daee069d7d2d530559e}\label{vf__minterpolate_8c_ab3ee287066d31daee069d7d2d530559e}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!var\_size\_bmc@{var\_size\_bmc}}
+\index{var\_size\_bmc@{var\_size\_bmc}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{var\_size\_bmc()}{var\_size\_bmc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} var\+\_\+size\+\_\+bmc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_block}{Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+mb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+mb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alpha }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 975 of file vf\+\_\+minterpolate.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ab3ee287066d31daee069d7d2d530559e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__minterpolate_8c_ac47eed17eeaeca4df6f0f55de47c6354}\label{vf__minterpolate_8c_ac47eed17eeaeca4df6f0f55de47c6354}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!var\_size\_bme@{var\_size\_bme}}
+\index{var\_size\_bme@{var\_size\_bme}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{var\_size\_bme()}{var\_size\_bme()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} var\+\_\+size\+\_\+bme (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_i_context}{M\+I\+Context}} $\ast$}]{mi\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_block}{Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+mb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+mb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 588 of file vf\+\_\+minterpolate.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ac47eed17eeaeca4df6f0f55de47c6354_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__minterpolate_8c_ac47eed17eeaeca4df6f0f55de47c6354_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__minterpolate_8c_accc007201f2dd94fd6223562e23ffa5a}\label{vf__minterpolate_8c_accc007201f2dd94fd6223562e23ffa5a}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!ff\_vf\_minterpolate@{ff\_vf\_minterpolate}}
+\index{ff\_vf\_minterpolate@{ff\_vf\_minterpolate}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_minterpolate}{ff\_vf\_minterpolate}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+minterpolate}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}minterpolate"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Frame rate conversion using Motion Interpolation."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__minterpolate_8c_a27488862cf1a52858f0cc0055f625db9}{MIContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&minterpolate\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__minterpolate_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__minterpolate_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__minterpolate_8c_aa1049b18baa1cef2adeb7647019d5413}{minterpolate\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__minterpolate_8c_a9f65a49e2403c9cc82ce2c30b2017466}{minterpolate\_outputs}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1261 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_aa1049b18baa1cef2adeb7647019d5413}\label{vf__minterpolate_8c_aa1049b18baa1cef2adeb7647019d5413}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!minterpolate\_inputs@{minterpolate\_inputs}}
+\index{minterpolate\_inputs@{minterpolate\_inputs}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{minterpolate\_inputs}{minterpolate\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} minterpolate\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame  = \mbox{\hyperlink{vf__minterpolate_8c_ab53102aa3adfa927b09f4da31c22aee7}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__minterpolate_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1242 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_aacc0aa60270d96a3aba2f7b3214fb429}\label{vf__minterpolate_8c_aacc0aa60270d96a3aba2f7b3214fb429}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!minterpolate\_options@{minterpolate\_options}}
+\index{minterpolate\_options@{minterpolate\_options}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{minterpolate\_options}{minterpolate\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} minterpolate\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 205 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a9f65a49e2403c9cc82ce2c30b2017466}\label{vf__minterpolate_8c_a9f65a49e2403c9cc82ce2c30b2017466}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!minterpolate\_outputs@{minterpolate\_outputs}}
+\index{minterpolate\_outputs@{minterpolate\_outputs}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{minterpolate\_outputs}{minterpolate\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} minterpolate\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__minterpolate_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1252 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a78e9ab1bc2163cf9745d48a5995163da}\label{vf__minterpolate_8c_a78e9ab1bc2163cf9745d48a5995163da}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!obmc\_linear16@{obmc\_linear16}}
+\index{obmc\_linear16@{obmc\_linear16}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{obmc\_linear16}{obmc\_linear16}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} obmc\+\_\+linear16\mbox{[}256\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{  0,  4,  4,  8,  8, 12, 12, 16, 16, 12, 12,  8,  8,  4,  4,  0,}
+\DoxyCodeLine{  4,  8, 16, 20, 28, 32, 40, 44, 44, 40, 32, 28, 20, 16,  8,  4,}
+\DoxyCodeLine{  4, 16, 24, 36, 44, 56, 64, 76, 76, 64, 56, 44, 36, 24, 16,  4,}
+\DoxyCodeLine{  8, 20, 36, 48, 64, 76, 92,104,104, 92, 76, 64, 48, 36, 20,  8,}
+\DoxyCodeLine{  8, 28, 44, 64, 80,100,116,136,136,116,100, 80, 64, 44, 28,  8,}
+\DoxyCodeLine{ 12, 32, 56, 76,100,120,144,164,164,144,120,100, 76, 56, 32, 12,}
+\DoxyCodeLine{ 12, 40, 64, 92,116,144,168,196,196,168,144,116, 92, 64, 40, 12,}
+\DoxyCodeLine{ 16, 44, 76,104,136,164,196,224,224,196,164,136,104, 76, 44, 16,}
+\DoxyCodeLine{ 16, 44, 76,104,136,164,196,224,224,196,164,136,104, 76, 44, 16,}
+\DoxyCodeLine{ 12, 40, 64, 92,116,144,168,196,196,168,144,116, 92, 64, 40, 12,}
+\DoxyCodeLine{ 12, 32, 56, 76,100,120,144,164,164,144,120,100, 76, 56, 32, 12,}
+\DoxyCodeLine{  8, 28, 44, 64, 80,100,116,136,136,116,100, 80, 64, 44, 28,  8,}
+\DoxyCodeLine{  8, 20, 36, 48, 64, 76, 92,104,104, 92, 76, 64, 48, 36, 20,  8,}
+\DoxyCodeLine{  4, 16, 24, 36, 44, 56, 64, 76, 76, 64, 56, 44, 36, 24, 16,  4,}
+\DoxyCodeLine{  4,  8, 16, 20, 28, 32, 40, 44, 44, 40, 32, 28, 20, 16,  8,  4,}
+\DoxyCodeLine{  0,  4,  4,  8,  8, 12, 12, 16, 16, 12, 12,  8,  8,  4,  4,  0,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 88 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_aed9fdb8e3d0615e8e84e632f65526dfa}\label{vf__minterpolate_8c_aed9fdb8e3d0615e8e84e632f65526dfa}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!obmc\_linear32@{obmc\_linear32}}
+\index{obmc\_linear32@{obmc\_linear32}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{obmc\_linear32}{obmc\_linear32}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} obmc\+\_\+linear32\mbox{[}1024\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 53 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a4542a07e82fcdd85913c8e7589c14bca}\label{vf__minterpolate_8c_a4542a07e82fcdd85913c8e7589c14bca}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!obmc\_linear4@{obmc\_linear4}}
+\index{obmc\_linear4@{obmc\_linear4}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{obmc\_linear4}{obmc\_linear4}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} obmc\+\_\+linear4\mbox{[}16\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{ 16, 48, 48, 16,}
+\DoxyCodeLine{ 48,144,144, 48,}
+\DoxyCodeLine{ 48,144,144, 48,}
+\DoxyCodeLine{ 16, 48, 48, 16,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 118 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_ad0db81fd0758b100b300d7037785635d}\label{vf__minterpolate_8c_ad0db81fd0758b100b300d7037785635d}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!obmc\_linear8@{obmc\_linear8}}
+\index{obmc\_linear8@{obmc\_linear8}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{obmc\_linear8}{obmc\_linear8}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} obmc\+\_\+linear8\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{  4, 12, 20, 28, 28, 20, 12,  4,}
+\DoxyCodeLine{ 12, 36, 60, 84, 84, 60, 36, 12,}
+\DoxyCodeLine{ 20, 60,100,140,140,100, 60, 20,}
+\DoxyCodeLine{ 28, 84,140,196,196,140, 84, 28,}
+\DoxyCodeLine{ 28, 84,140,196,196,140, 84, 28,}
+\DoxyCodeLine{ 20, 60,100,140,140,100, 60, 20,}
+\DoxyCodeLine{ 12, 36, 60, 84, 84, 60, 36, 12,}
+\DoxyCodeLine{  4, 12, 20, 28, 28, 20, 12,  4,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 107 of file vf\+\_\+minterpolate.\+c.
+
+\mbox{\Hypertarget{vf__minterpolate_8c_a397c61e8c94d12bf9408cb6e29f4bd20}\label{vf__minterpolate_8c_a397c61e8c94d12bf9408cb6e29f4bd20}} 
+\index{vf\_minterpolate.c@{vf\_minterpolate.c}!obmc\_tab\_linear@{obmc\_tab\_linear}}
+\index{obmc\_tab\_linear@{obmc\_tab\_linear}!vf\_minterpolate.c@{vf\_minterpolate.c}}
+\doxysubsubsection{\texorpdfstring{obmc\_tab\_linear}{obmc\_tab\_linear}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}$\ast$ const obmc\+\_\+tab\+\_\+linear\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__minterpolate_8c_aed9fdb8e3d0615e8e84e632f65526dfa}{obmc\_linear32}}, \mbox{\hyperlink{vf__minterpolate_8c_a78e9ab1bc2163cf9745d48a5995163da}{obmc\_linear16}}, \mbox{\hyperlink{vf__minterpolate_8c_ad0db81fd0758b100b300d7037785635d}{obmc\_linear8}}, \mbox{\hyperlink{vf__minterpolate_8c_a4542a07e82fcdd85913c8e7589c14bca}{obmc\_linear4}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 125 of file vf\+\_\+minterpolate.\+c.
+

@@ -1,0 +1,866 @@
+\hypertarget{libavfilter_2vf__colorspace_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+colorspace.c File Reference}
+\label{libavfilter_2vf__colorspace_8c}\index{E:/github/ffmpeg/libavfilter/vf\_colorspace.c@{E:/github/ffmpeg/libavfilter/vf\_colorspace.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixfmt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}colorspacedsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}colorspace.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+colorspace.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_color_primaries}{Color\+Primaries}}
+\item 
+struct \mbox{\hyperlink{struct_transfer_characteristics}{Transfer\+Characteristics}}
+\item 
+struct \mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a01bd08aff8ad2f19e48b9209baf53972}{supported\+\_\+depth}}(d)~((d) == 8 $\vert$$\vert$ (d) == 10 $\vert$$\vert$ (d) == 12)
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_aa8eda68e1d7d52c50ea919d44a6855fa}{supported\+\_\+subsampling}}(lcw,  lch)~    (((lcw) == 0 \&\& (lch) == 0) $\vert$$\vert$ ((lcw) == 1 \&\& (lch) == 0) $\vert$$\vert$ ((lcw) == 1 \&\& (lch) == 1))
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1dcafb57f75118fbc9c45e1813264cba}{supported\+\_\+format}}(d)
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_acd05673a4542af8a182c985d0e83bee3}{E\+N\+UM}}(x,  y,  z)~\{ x, \char`\"{}\char`\"{}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+C\+O\+N\+ST}}, \{ .i64 = y \}, I\+N\+T\+\_\+\+M\+IN, I\+N\+T\+\_\+\+M\+AX, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}, z \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8283163c858ed084957ce6076c03b74c}{Color\+Space\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ce}{Dither\+Mode}} \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cea163e0772b5825bdccc954ee0492c8f53}{D\+I\+T\+H\+E\+R\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ceac6209a6e5db8cc7e744362a509fac546}{D\+I\+T\+H\+E\+R\+\_\+\+F\+SB}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cead1bfb4eab2a6f54bfbae81248628c171}{D\+I\+T\+H\+E\+R\+\_\+\+NB}}
+ \}
+\item 
+enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65}{Colorspace}} \{ \newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}{C\+S\+\_\+\+U\+N\+S\+P\+E\+C\+I\+F\+I\+ED}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}{C\+S\+\_\+\+B\+T470M}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}{C\+S\+\_\+\+B\+T470\+BG}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}{C\+S\+\_\+\+B\+T601\+\_\+6\+\_\+525}}, 
+\newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}{C\+S\+\_\+\+B\+T601\+\_\+6\+\_\+625}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}{C\+S\+\_\+\+B\+T709}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}{C\+S\+\_\+\+S\+M\+P\+T\+E170M}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}{C\+S\+\_\+\+S\+M\+P\+T\+E240M}}, 
+\newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}{C\+S\+\_\+\+B\+T2020}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}
+ \}
+\item 
+enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}} \{ \newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{W\+P\+\_\+\+D65}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}{W\+P\+\_\+C}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24afdaa417181aa78bbee7cfa06648944e5}{W\+P\+\_\+\+D\+CI}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a35d12f086dbef0dc4e7c361e23de3c66}{W\+P\+\_\+E}}, 
+\newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a554d97c34135b018d0c8635e83c621d7}{W\+P\+\_\+\+NB}}
+ \}
+\item 
+enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}{Whitepoint\+Adaptation}} \{ \newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aae9579706b24a9477db3b422deec47d3}{W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+B\+R\+A\+D\+F\+O\+RD}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ab1c0f38eeecb2f785e0f6ac56a9c3bc7}{W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+V\+O\+N\+\_\+\+K\+R\+I\+ES}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aba0d99e869a840da7b33ec8c887b94b0}{N\+B\+\_\+\+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+N\+O\+N\+\_\+\+I\+D\+E\+N\+T\+I\+TY}}, 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ae9aa825965f8192c6bf924b4aa266cfc}{W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+I\+D\+E\+N\+T\+I\+TY}} = N\+B\+\_\+\+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+N\+O\+N\+\_\+\+I\+D\+E\+N\+T\+I\+TY, 
+\newline
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aca3add8aeab333492c8408a06e4eddec}{N\+B\+\_\+\+W\+P\+\_\+\+A\+D\+A\+PT}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static const struct \mbox{\hyperlink{struct_transfer_characteristics}{Transfer\+Characteristics}} $\ast$ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a07a817b359f046de5ee3998ddc594b52}{get\+\_\+transfer\+\_\+characteristics}} (enum \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6}{A\+V\+Color\+Transfer\+Characteristic}} trc)
+\item 
+static const struct \mbox{\hyperlink{struct_color_primaries}{Color\+Primaries}} $\ast$ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac0da9a096f6376405f5b7d323b1826d0}{get\+\_\+color\+\_\+primaries}} (enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}} prm)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a0b0132518bb5d16f58d4e7833a51a51d}{fill\+\_\+gamma\+\_\+table}} (\mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a00bd2c28788de700ca323f70bc75f838}{fill\+\_\+whitepoint\+\_\+conv\+\_\+table}} (double \mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}\mbox{[}3\mbox{]}\mbox{[}3\mbox{]}, enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}{Whitepoint\+Adaptation}} wp\+\_\+adapt, enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}} \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}} dst)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ad9ad94dfa9afb08369af31ebf400db3e}{apply\+\_\+lut}} (int16\+\_\+t $\ast$buf\mbox{[}3\mbox{]}, ptrdiff\+\_\+t \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const int16\+\_\+t $\ast$lut)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a55e2ede93a82966744b84bd236a7f929}{convert}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} job\+\_\+nr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a946ad9de07afd1e61147d69d54ba06ef}{get\+\_\+range\+\_\+off}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$off, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$y\+\_\+rng, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$uv\+\_\+rng, enum \mbox{\hyperlink{pixfmt_8h_a3da0bf691418bc22c4bcbe6583ad589a}{A\+V\+Color\+Range}} rng, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} depth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a6dcf15b604dafff66c6c5442749433a6}{create\+\_\+filtergraph}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a73a57c5a01e7b6bf5590366e596d7c7d}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a507c820aa4475d788435b7c8204df912}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1bc6e09603911c4e18c2c4ca789f23db}{config\+\_\+props}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ace88620fc988b70211be2478a9811964}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (colorspace)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6}{A\+V\+Color\+Transfer\+Characteristic}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7b08f47f6ec3b926ea9c4f42f7907d49}{default\+\_\+trc}} \mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ad12a7faca256d329e2fe758bdd722019}{default\+\_\+prm}} \mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85}{A\+V\+Color\+Space}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_af7529de690a7a0171b116305157e061c}{default\+\_\+csp}} \mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}
+\item 
+static const struct \mbox{\hyperlink{struct_transfer_characteristics}{Transfer\+Characteristics}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8a778a4e0080d36d44e0c0e6157fe116}{transfer\+\_\+characteristics}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}
+\item 
+static const struct \mbox{\hyperlink{struct_whitepoint_coefficients}{Whitepoint\+Coefficients}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a45b16251a7d4eed45f52d8a08c5aefb6}{whitepoint\+\_\+coefficients}} \mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a554d97c34135b018d0c8635e83c621d7}{W\+P\+\_\+\+NB}}\mbox{]}
+\item 
+static const struct \mbox{\hyperlink{struct_color_primaries}{Color\+Primaries}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a9316211d6779b014b10602ee98089cdd}{color\+\_\+primaries}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a9c97f78f841540f06490988c80a149b9}{colorspace\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a0dd2f1a8162b1b355d3cdc7e035ffc26}{ff\+\_\+vf\+\_\+colorspace}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_acd05673a4542af8a182c985d0e83bee3}\label{libavfilter_2vf__colorspace_8c_acd05673a4542af8a182c985d0e83bee3}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!ENUM@{ENUM}}
+\index{ENUM@{ENUM}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{ENUM}{ENUM}}
+{\footnotesize\ttfamily \#define E\+N\+UM(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{y,  }\item[{}]{z }\end{DoxyParamCaption})~\{ x, \char`\"{}\char`\"{}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{A\+V\+\_\+\+O\+P\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+C\+O\+N\+ST}}, \{ .i64 = y \}, I\+N\+T\+\_\+\+M\+IN, I\+N\+T\+\_\+\+M\+AX, \mbox{\hyperlink{mov_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}, z \}}
+
+
+
+Definition at line 932 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{libavfilter_2vf__colorspace_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 931 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{libavfilter_2vf__colorspace_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}}, x)}
+
+
+
+Definition at line 930 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a01bd08aff8ad2f19e48b9209baf53972}\label{libavfilter_2vf__colorspace_8c_a01bd08aff8ad2f19e48b9209baf53972}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!supported\_depth@{supported\_depth}}
+\index{supported\_depth@{supported\_depth}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{supported\_depth}{supported\_depth}}
+{\footnotesize\ttfamily \#define supported\+\_\+depth(\begin{DoxyParamCaption}\item[{}]{d }\end{DoxyParamCaption})~((d) == 8 $\vert$$\vert$ (d) == 10 $\vert$$\vert$ (d) == 12)}
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1dcafb57f75118fbc9c45e1813264cba}\label{libavfilter_2vf__colorspace_8c_a1dcafb57f75118fbc9c45e1813264cba}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!supported\_format@{supported\_format}}
+\index{supported\_format@{supported\_format}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{supported\_format}{supported\_format}}
+{\footnotesize\ttfamily \#define supported\+\_\+format(\begin{DoxyParamCaption}\item[{}]{d }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    ((d) != \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \&\& (d)-\/>nb\_components == 3 \&\& \(\backslash\)}
+\DoxyCodeLine{     !((d)-\/>\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}} \& \mbox{\hyperlink{pixdesc_8h_a4c4e95f659b1e131480c1e98d70c57de}{AV\_PIX\_FMT\_FLAG\_RGB}}) \&\& \(\backslash\)}
+\DoxyCodeLine{     supported\_depth((d)-\/>\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}[0].depth) \&\& \(\backslash\)}
+\DoxyCodeLine{     supported\_subsampling((d)-\/>log2\_chroma\_w, (d)-\/>log2\_chroma\_h))}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_aa8eda68e1d7d52c50ea919d44a6855fa}\label{libavfilter_2vf__colorspace_8c_aa8eda68e1d7d52c50ea919d44a6855fa}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!supported\_subsampling@{supported\_subsampling}}
+\index{supported\_subsampling@{supported\_subsampling}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{supported\_subsampling}{supported\_subsampling}}
+{\footnotesize\ttfamily \#define supported\+\_\+subsampling(\begin{DoxyParamCaption}\item[{}]{lcw,  }\item[{}]{lch }\end{DoxyParamCaption})~    (((lcw) == 0 \&\& (lch) == 0) $\vert$$\vert$ ((lcw) == 1 \&\& (lch) == 0) $\vert$$\vert$ ((lcw) == 1 \&\& (lch) == 1))}
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8283163c858ed084957ce6076c03b74c}\label{libavfilter_2vf__colorspace_8c_a8283163c858ed084957ce6076c03b74c}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!ColorSpaceContext@{ColorSpaceContext}}
+\index{ColorSpaceContext@{ColorSpaceContext}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{ColorSpaceContext}{ColorSpaceContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}} \mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}}}
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a5d1975e203ce6f822538d556409ccf6a}\label{libavfilter_2vf__colorspace_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!Colorspace@{Colorspace}}
+\index{Colorspace@{Colorspace}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{Colorspace}{Colorspace}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65}{Colorspace}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_UNSPECIFIED@{CS\_UNSPECIFIED}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_UNSPECIFIED@{CS\_UNSPECIFIED}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}} 
+C\+S\+\_\+\+U\+N\+S\+P\+E\+C\+I\+F\+I\+ED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT470M@{CS\_BT470M}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT470M@{CS\_BT470M}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}} 
+C\+S\+\_\+\+B\+T470M&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT470BG@{CS\_BT470BG}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT470BG@{CS\_BT470BG}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}} 
+C\+S\+\_\+\+B\+T470\+BG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT601\_6\_525@{CS\_BT601\_6\_525}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT601\_6\_525@{CS\_BT601\_6\_525}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}} 
+C\+S\+\_\+\+B\+T601\+\_\+6\+\_\+525&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT601\_6\_625@{CS\_BT601\_6\_625}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT601\_6\_625@{CS\_BT601\_6\_625}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}} 
+C\+S\+\_\+\+B\+T601\+\_\+6\+\_\+625&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT709@{CS\_BT709}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT709@{CS\_BT709}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}} 
+C\+S\+\_\+\+B\+T709&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_SMPTE170M@{CS\_SMPTE170M}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_SMPTE170M@{CS\_SMPTE170M}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}} 
+C\+S\+\_\+\+S\+M\+P\+T\+E170M&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_SMPTE240M@{CS\_SMPTE240M}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_SMPTE240M@{CS\_SMPTE240M}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}} 
+C\+S\+\_\+\+S\+M\+P\+T\+E240M&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_BT2020@{CS\_BT2020}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_BT2020@{CS\_BT2020}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}} 
+C\+S\+\_\+\+B\+T2020&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CS\_NB@{CS\_NB}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!CS\_NB@{CS\_NB}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}\label{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}} 
+C\+S\+\_\+\+NB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 44 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ce}\label{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ce}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!DitherMode@{DitherMode}}
+\index{DitherMode@{DitherMode}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{DitherMode}{DitherMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ce}{Dither\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHER\_NONE@{DITHER\_NONE}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!DITHER\_NONE@{DITHER\_NONE}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cea163e0772b5825bdccc954ee0492c8f53}\label{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cea163e0772b5825bdccc954ee0492c8f53}} 
+D\+I\+T\+H\+E\+R\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHER\_FSB@{DITHER\_FSB}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!DITHER\_FSB@{DITHER\_FSB}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ceac6209a6e5db8cc7e744362a509fac546}\label{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92ceac6209a6e5db8cc7e744362a509fac546}} 
+D\+I\+T\+H\+E\+R\+\_\+\+F\+SB&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHER\_NB@{DITHER\_NB}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!DITHER\_NB@{DITHER\_NB}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cead1bfb4eab2a6f54bfbae81248628c171}\label{libavfilter_2vf__colorspace_8c_a1b4070dd0d9ae07275c116010e3e92cead1bfb4eab2a6f54bfbae81248628c171}} 
+D\+I\+T\+H\+E\+R\+\_\+\+NB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 38 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!Whitepoint@{Whitepoint}}
+\index{Whitepoint@{Whitepoint}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{Whitepoint}{Whitepoint}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_D65@{WP\_D65}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_D65@{WP\_D65}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}} 
+W\+P\+\_\+\+D65&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_C@{WP\_C}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_C@{WP\_C}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}} 
+W\+P\+\_\+C&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_DCI@{WP\_DCI}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_DCI@{WP\_DCI}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24afdaa417181aa78bbee7cfa06648944e5}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24afdaa417181aa78bbee7cfa06648944e5}} 
+W\+P\+\_\+\+D\+CI&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_E@{WP\_E}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_E@{WP\_E}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a35d12f086dbef0dc4e7c361e23de3c66}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a35d12f086dbef0dc4e7c361e23de3c66}} 
+W\+P\+\_\+E&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_NB@{WP\_NB}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_NB@{WP\_NB}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a554d97c34135b018d0c8635e83c621d7}\label{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a554d97c34135b018d0c8635e83c621d7}} 
+W\+P\+\_\+\+NB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 57 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!WhitepointAdaptation@{WhitepointAdaptation}}
+\index{WhitepointAdaptation@{WhitepointAdaptation}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{WhitepointAdaptation}{WhitepointAdaptation}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}{Whitepoint\+Adaptation}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_ADAPT\_BRADFORD@{WP\_ADAPT\_BRADFORD}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_ADAPT\_BRADFORD@{WP\_ADAPT\_BRADFORD}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aae9579706b24a9477db3b422deec47d3}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aae9579706b24a9477db3b422deec47d3}} 
+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+B\+R\+A\+D\+F\+O\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_ADAPT\_VON\_KRIES@{WP\_ADAPT\_VON\_KRIES}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_ADAPT\_VON\_KRIES@{WP\_ADAPT\_VON\_KRIES}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ab1c0f38eeecb2f785e0f6ac56a9c3bc7}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ab1c0f38eeecb2f785e0f6ac56a9c3bc7}} 
+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+V\+O\+N\+\_\+\+K\+R\+I\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_WP\_ADAPT\_NON\_IDENTITY@{NB\_WP\_ADAPT\_NON\_IDENTITY}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!NB\_WP\_ADAPT\_NON\_IDENTITY@{NB\_WP\_ADAPT\_NON\_IDENTITY}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aba0d99e869a840da7b33ec8c887b94b0}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aba0d99e869a840da7b33ec8c887b94b0}} 
+N\+B\+\_\+\+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+N\+O\+N\+\_\+\+I\+D\+E\+N\+T\+I\+TY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WP\_ADAPT\_IDENTITY@{WP\_ADAPT\_IDENTITY}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!WP\_ADAPT\_IDENTITY@{WP\_ADAPT\_IDENTITY}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ae9aa825965f8192c6bf924b4aa266cfc}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1ae9aa825965f8192c6bf924b4aa266cfc}} 
+W\+P\+\_\+\+A\+D\+A\+P\+T\+\_\+\+I\+D\+E\+N\+T\+I\+TY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_WP\_ADAPT@{NB\_WP\_ADAPT}!vf\_colorspace.c@{vf\_colorspace.c}}\index{vf\_colorspace.c@{vf\_colorspace.c}!NB\_WP\_ADAPT@{NB\_WP\_ADAPT}}}\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aca3add8aeab333492c8408a06e4eddec}\label{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1aca3add8aeab333492c8408a06e4eddec}} 
+N\+B\+\_\+\+W\+P\+\_\+\+A\+D\+A\+PT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 65 of file vf\+\_\+colorspace.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ad9ad94dfa9afb08369af31ebf400db3e}\label{libavfilter_2vf__colorspace_8c_ad9ad94dfa9afb08369af31ebf400db3e}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!apply\_lut@{apply\_lut}}
+\index{apply\_lut@{apply\_lut}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{apply\_lut()}{apply\_lut()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} apply\+\_\+lut (\begin{DoxyParamCaption}\item[{int16\+\_\+t $\ast$}]{buf\mbox{[}3\mbox{]},  }\item[{ptrdiff\+\_\+t}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{const int16\+\_\+t $\ast$}]{lut }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 318 of file vf\+\_\+colorspace.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{libavfilter_2vf__colorspace_8c_ad9ad94dfa9afb08369af31ebf400db3e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ace88620fc988b70211be2478a9811964}\label{libavfilter_2vf__colorspace_8c_ace88620fc988b70211be2478a9811964}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{colorspace}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a1bc6e09603911c4e18c2c4ca789f23db}\label{libavfilter_2vf__colorspace_8c_a1bc6e09603911c4e18c2c4ca789f23db}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!config\_props@{config\_props}}
+\index{config\_props@{config\_props}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{config\_props()}{config\_props()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+props (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 911 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a55e2ede93a82966744b84bd236a7f929}\label{libavfilter_2vf__colorspace_8c_a55e2ede93a82966744b84bd236a7f929}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!convert@{convert}}
+\index{convert@{convert}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{convert()}{convert()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} convert (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{job\+\_\+nr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 341 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{libavfilter_2vf__colorspace_8c_a55e2ede93a82966744b84bd236a7f929_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a6dcf15b604dafff66c6c5442749433a6}\label{libavfilter_2vf__colorspace_8c_a6dcf15b604dafff66c6c5442749433a6}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!create\_filtergraph@{create\_filtergraph}}
+\index{create\_filtergraph@{create\_filtergraph}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{create\_filtergraph()}{create\_filtergraph()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} create\+\_\+filtergraph (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 441 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavfilter_2vf__colorspace_8c_a6dcf15b604dafff66c6c5442749433a6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=271pt]{libavfilter_2vf__colorspace_8c_a6dcf15b604dafff66c6c5442749433a6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a0b0132518bb5d16f58d4e7833a51a51d}\label{libavfilter_2vf__colorspace_8c_a0b0132518bb5d16f58d4e7833a51a51d}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!fill\_gamma\_table@{fill\_gamma\_table}}
+\index{fill\_gamma\_table@{fill\_gamma\_table}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{fill\_gamma\_table()}{fill\_gamma\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fill\+\_\+gamma\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_color_space_context}{Color\+Space\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 237 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{libavfilter_2vf__colorspace_8c_a0b0132518bb5d16f58d4e7833a51a51d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_a0b0132518bb5d16f58d4e7833a51a51d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a00bd2c28788de700ca323f70bc75f838}\label{libavfilter_2vf__colorspace_8c_a00bd2c28788de700ca323f70bc75f838}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!fill\_whitepoint\_conv\_table@{fill\_whitepoint\_conv\_table}}
+\index{fill\_whitepoint\_conv\_table@{fill\_whitepoint\_conv\_table}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{fill\_whitepoint\_conv\_table()}{fill\_whitepoint\_conv\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fill\+\_\+whitepoint\+\_\+conv\+\_\+table (\begin{DoxyParamCaption}\item[{double}]{out\mbox{[}3\mbox{]}\mbox{[}3\mbox{]},  }\item[{enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ac71eaba5fdd762423ce62df2e4c90bb1}{Whitepoint\+Adaptation}}}]{wp\+\_\+adapt,  }\item[{enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}}}]{src,  }\item[{enum \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24}{Whitepoint}}}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 281 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{libavfilter_2vf__colorspace_8c_a00bd2c28788de700ca323f70bc75f838_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_a00bd2c28788de700ca323f70bc75f838_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a507c820aa4475d788435b7c8204df912}\label{libavfilter_2vf__colorspace_8c_a507c820aa4475d788435b7c8204df912}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 763 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavfilter_2vf__colorspace_8c_a507c820aa4475d788435b7c8204df912_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ac0da9a096f6376405f5b7d323b1826d0}\label{libavfilter_2vf__colorspace_8c_ac0da9a096f6376405f5b7d323b1826d0}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!get\_color\_primaries@{get\_color\_primaries}}
+\index{get\_color\_primaries@{get\_color\_primaries}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{get\_color\_primaries()}{get\_color\_primaries()}}
+{\footnotesize\ttfamily static const struct \mbox{\hyperlink{struct_color_primaries}{Color\+Primaries}}$\ast$ get\+\_\+color\+\_\+primaries (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}}}]{prm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 224 of file vf\+\_\+colorspace.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_ac0da9a096f6376405f5b7d323b1826d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a946ad9de07afd1e61147d69d54ba06ef}\label{libavfilter_2vf__colorspace_8c_a946ad9de07afd1e61147d69d54ba06ef}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!get\_range\_off@{get\_range\_off}}
+\index{get\_range\_off@{get\_range\_off}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{get\_range\_off()}{get\_range\_off()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+range\+\_\+off (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{off,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{y\+\_\+rng,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{uv\+\_\+rng,  }\item[{enum \mbox{\hyperlink{pixfmt_8h_a3da0bf691418bc22c4bcbe6583ad589a}{A\+V\+Color\+Range}}}]{rng,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{depth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 411 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{libavfilter_2vf__colorspace_8c_a946ad9de07afd1e61147d69d54ba06ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_a946ad9de07afd1e61147d69d54ba06ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a07a817b359f046de5ee3998ddc594b52}\label{libavfilter_2vf__colorspace_8c_a07a817b359f046de5ee3998ddc594b52}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!get\_transfer\_characteristics@{get\_transfer\_characteristics}}
+\index{get\_transfer\_characteristics@{get\_transfer\_characteristics}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{get\_transfer\_characteristics()}{get\_transfer\_characteristics()}}
+{\footnotesize\ttfamily static const struct \mbox{\hyperlink{struct_transfer_characteristics}{Transfer\+Characteristics}}$\ast$ get\+\_\+transfer\+\_\+characteristics (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6}{A\+V\+Color\+Transfer\+Characteristic}}}]{trc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 190 of file vf\+\_\+colorspace.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_a07a817b359f046de5ee3998ddc594b52_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{libavfilter_2vf__colorspace_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!init@{init}}
+\index{init@{init}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 736 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{libavfilter_2vf__colorspace_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 883 of file vf\+\_\+colorspace.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavfilter_2vf__colorspace_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a73a57c5a01e7b6bf5590366e596d7c7d}\label{libavfilter_2vf__colorspace_8c_a73a57c5a01e7b6bf5590366e596d7c7d}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 745 of file vf\+\_\+colorspace.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{libavfilter_2vf__colorspace_8c_a73a57c5a01e7b6bf5590366e596d7c7d_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a9316211d6779b014b10602ee98089cdd}\label{libavfilter_2vf__colorspace_8c_a9316211d6779b014b10602ee98089cdd}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!color\_primaries@{color\_primaries}}
+\index{color\_primaries@{color\_primaries}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{color\_primaries}{color\_primaries}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_color_primaries}{Color\+Primaries}} color\+\_\+primaries\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a4f1c38f3e06cd2c49b28046bbf3a4cbd}{AVCOL\_PRI\_BT709}}]     = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.640, 0.330, 0.300, 0.600, 0.150, 0.060 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ae5d6b90d4f36ac68f3a5ef347d930cc9}{AVCOL\_PRI\_BT470M}}]    = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}{WP\_C}},   \{ 0.670, 0.330, 0.210, 0.710, 0.140, 0.080 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a1aeb4f44414c396b28b3f392313e50ae}{AVCOL\_PRI\_BT470BG}}]   = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.640, 0.330, 0.290, 0.600, 0.150, 0.060 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ad882a69d6c7cf33fa22a5717c63baf19}{AVCOL\_PRI\_SMPTE170M}}] = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.630, 0.340, 0.310, 0.595, 0.155, 0.070 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a768f96c1362405b45b87fd3d6bc0c586}{AVCOL\_PRI\_SMPTE240M}}] = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.630, 0.340, 0.310, 0.595, 0.155, 0.070 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ad299397f9da208ecb4c17d16fab3b77f}{AVCOL\_PRI\_SMPTE428}}]  = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a35d12f086dbef0dc4e7c361e23de3c66}{WP\_E}},   \{ 0.735, 0.265, 0.274, 0.718, 0.167, 0.009 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ac175bef7f6d10cd18ef8d86de4a3303b}{AVCOL\_PRI\_SMPTE431}}]  = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24afdaa417181aa78bbee7cfa06648944e5}{WP\_DCI}}, \{ 0.680, 0.320, 0.265, 0.690, 0.150, 0.060 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a3f3ea1cb18f2bb9e50809d4290eee9c1}{AVCOL\_PRI\_SMPTE432}}]  = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.680, 0.320, 0.265, 0.690, 0.150, 0.060 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a2e8005bff17a4b8c3f4afefb364ee967}{AVCOL\_PRI\_FILM}}]      = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}{WP\_C}},   \{ 0.681, 0.319, 0.243, 0.692, 0.145, 0.049 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7adee9de223d6a8683fd2177b43444404c}{AVCOL\_PRI\_BT2020}}]    = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.708, 0.292, 0.170, 0.797, 0.131, 0.046 \} \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a657338156323691609e76b752920de77}{AVCOL\_PRI\_JEDEC\_P22}}] = \{ \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}, \{ 0.630, 0.340, 0.295, 0.605, 0.155, 0.077 \} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 190 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a9c97f78f841540f06490988c80a149b9}\label{libavfilter_2vf__colorspace_8c_a9c97f78f841540f06490988c80a149b9}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!colorspace\_options@{colorspace\_options}}
+\index{colorspace\_options@{colorspace\_options}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{colorspace\_options}{colorspace\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} colorspace\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 934 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_af7529de690a7a0171b116305157e061c}\label{libavfilter_2vf__colorspace_8c_af7529de690a7a0171b116305157e061c}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!default\_csp@{default\_csp}}
+\index{default\_csp@{default\_csp}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{default\_csp}{default\_csp}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85}{A\+V\+Color\+Space}} default\+\_\+csp\mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}{CS\_UNSPECIFIED}}] = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8111716eff3b3fd95a197993d30b8ec2}{AVCOL\_SPC\_UNSPECIFIED}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}{CS\_BT470M}}]      = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8a3f2b5ebbb2d5734435fe23837cd20c}{AVCOL\_SPC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}{CS\_BT470BG}}]     = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a32a0719616b0bb89f4be9d885341bfa4}{AVCOL\_SPC\_BT470BG}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}{CS\_BT601\_6\_525}}] = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8a3f2b5ebbb2d5734435fe23837cd20c}{AVCOL\_SPC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}{CS\_BT601\_6\_625}}] = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a32a0719616b0bb89f4be9d885341bfa4}{AVCOL\_SPC\_BT470BG}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}{CS\_BT709}}]       = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a23e7d1012e354bbfcb62642e537d33cb}{AVCOL\_SPC\_BT709}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}{CS\_SMPTE170M}}]   = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8a3f2b5ebbb2d5734435fe23837cd20c}{AVCOL\_SPC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}{CS\_SMPTE240M}}]   = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85aa0052721bb202c5cfb68a84d69116f69}{AVCOL\_SPC\_SMPTE240M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}{CS\_BT2020}}]      = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a766a63c9ca065ba454f1d83161350055}{AVCOL\_SPC\_BT2020\_NCL}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{CS\_NB}}]          = \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8111716eff3b3fd95a197993d30b8ec2}{AVCOL\_SPC\_UNSPECIFIED}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_ad12a7faca256d329e2fe758bdd722019}\label{libavfilter_2vf__colorspace_8c_ad12a7faca256d329e2fe758bdd722019}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!default\_prm@{default\_prm}}
+\index{default\_prm@{default\_prm}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{default\_prm}{default\_prm}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}} default\+\_\+prm\mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}{CS\_UNSPECIFIED}}] = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a868aff08a725fc038a7f37b5e9d01942}{AVCOL\_PRI\_UNSPECIFIED}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}{CS\_BT470M}}]      = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ae5d6b90d4f36ac68f3a5ef347d930cc9}{AVCOL\_PRI\_BT470M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}{CS\_BT470BG}}]     = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a1aeb4f44414c396b28b3f392313e50ae}{AVCOL\_PRI\_BT470BG}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}{CS\_BT601\_6\_525}}] = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ad882a69d6c7cf33fa22a5717c63baf19}{AVCOL\_PRI\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}{CS\_BT601\_6\_625}}] = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a1aeb4f44414c396b28b3f392313e50ae}{AVCOL\_PRI\_BT470BG}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}{CS\_BT709}}]       = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a4f1c38f3e06cd2c49b28046bbf3a4cbd}{AVCOL\_PRI\_BT709}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}{CS\_SMPTE170M}}]   = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ad882a69d6c7cf33fa22a5717c63baf19}{AVCOL\_PRI\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}{CS\_SMPTE240M}}]   = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a768f96c1362405b45b87fd3d6bc0c586}{AVCOL\_PRI\_SMPTE240M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}{CS\_BT2020}}]      = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7adee9de223d6a8683fd2177b43444404c}{AVCOL\_PRI\_BT2020}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{CS\_NB}}]          = \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a868aff08a725fc038a7f37b5e9d01942}{AVCOL\_PRI\_UNSPECIFIED}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7b08f47f6ec3b926ea9c4f42f7907d49}\label{libavfilter_2vf__colorspace_8c_a7b08f47f6ec3b926ea9c4f42f7907d49}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!default\_trc@{default\_trc}}
+\index{default\_trc@{default\_trc}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{default\_trc}{default\_trc}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6}{A\+V\+Color\+Transfer\+Characteristic}} default\+\_\+trc\mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{C\+S\+\_\+\+NB}}+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65acf603d5b907d585e36bf5a8ad4e90b7e}{CS\_UNSPECIFIED}}] = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6af707e1f8131d3413ac4fb5b626b075ab}{AVCOL\_TRC\_UNSPECIFIED}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a5c4155a79e3b63e5f24053052cd490b3}{CS\_BT470M}}]      = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a40493e11b08cac85ca14b1ecc74884c3}{AVCOL\_TRC\_GAMMA22}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a0a6ee25da7efc729f525d108dc4e26b7}{CS\_BT470BG}}]     = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a81c41e7983ad4045c75eb1d50caa5590}{AVCOL\_TRC\_GAMMA28}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a9ff8e2aea04eea0e353392480161a78d}{CS\_BT601\_6\_525}}] = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a0afb6440afaeda94f18dd99629b6b741}{AVCOL\_TRC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65ae84678993ab2764293a94ccdbe6616a4}{CS\_BT601\_6\_625}}] = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a0afb6440afaeda94f18dd99629b6b741}{AVCOL\_TRC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a83ebf8cbedcdacbb5a2288fdbfab1dcd}{CS\_BT709}}]       = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd8960c59aa927ce6bee76a9594ffd95}{AVCOL\_TRC\_BT709}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a61bcf1d823219ed4c84f1251b87d15d4}{CS\_SMPTE170M}}]   = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a0afb6440afaeda94f18dd99629b6b741}{AVCOL\_TRC\_SMPTE170M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65aca415e1f476ea6f07c53f0d1563e21e8}{CS\_SMPTE240M}}]   = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a6772770d44d894df7f06984c1fd5a188}{AVCOL\_TRC\_SMPTE240M}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a39dc38d674d4dbbc54dde4383bb8c842}{CS\_BT2020}}]      = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6ae093f58aff406b86c6de6b9c9bc80b3a}{AVCOL\_TRC\_BT2020\_10}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7a7e24cdb2a27271343f0adceff89f65a6ae3b1a060d5666c1ac5274068b5cac5}{CS\_NB}}]          = \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6af707e1f8131d3413ac4fb5b626b075ab}{AVCOL\_TRC\_UNSPECIFIED}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a0dd2f1a8162b1b355d3cdc7e035ffc26}\label{libavfilter_2vf__colorspace_8c_a0dd2f1a8162b1b355d3cdc7e035ffc26}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!ff\_vf\_colorspace@{ff\_vf\_colorspace}}
+\index{ff\_vf\_colorspace@{ff\_vf\_colorspace}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_colorspace}{ff\_vf\_colorspace}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+colorspace}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name            = \textcolor{stringliteral}{"{}colorspace"{}},}
+\DoxyCodeLine{    .description     = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Convert between colorspaces."{}}),}
+\DoxyCodeLine{    .init            = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .uninit          = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a73a57c5a01e7b6bf5590366e596d7c7d}{uninit}},}
+\DoxyCodeLine{    .query\_formats   = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .priv\_size       = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8283163c858ed084957ce6076c03b74c}{ColorSpaceContext}}),}
+\DoxyCodeLine{    .priv\_class      = \&colorspace\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}          = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}         = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}           = \mbox{\hyperlink{group__lavfi_ga00c4b8da7d5d89fa4ddc5dcdf72bffca}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_GENERIC}} | \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1071 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{libavfilter_2vf__colorspace_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!inputs@{inputs}}
+\index{inputs@{inputs}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a507c820aa4475d788435b7c8204df912}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1053 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{libavfilter_2vf__colorspace_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!outputs@{outputs}}
+\index{outputs@{outputs}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a1bc6e09603911c4e18c2c4ca789f23db}{config\_props}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1062 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a8a778a4e0080d36d44e0c0e6157fe116}\label{libavfilter_2vf__colorspace_8c_a8a778a4e0080d36d44e0c0e6157fe116}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!transfer\_characteristics@{transfer\_characteristics}}
+\index{transfer\_characteristics@{transfer\_characteristics}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{transfer\_characteristics}{transfer\_characteristics}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_transfer_characteristics}{Transfer\+Characteristics}} transfer\+\_\+characteristics\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd8960c59aa927ce6bee76a9594ffd95}{AVCOL\_TRC\_BT709}}]     = \{ 1.099,  0.018,  0.45, 4.5 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a40493e11b08cac85ca14b1ecc74884c3}{AVCOL\_TRC\_GAMMA22}}]   = \{ 1.0,    0.0,    1.0 / 2.2, 0.0 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a81c41e7983ad4045c75eb1d50caa5590}{AVCOL\_TRC\_GAMMA28}}]   = \{ 1.0,    0.0,    1.0 / 2.8, 0.0 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a0afb6440afaeda94f18dd99629b6b741}{AVCOL\_TRC\_SMPTE170M}}] = \{ 1.099,  0.018,  0.45, 4.5 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a6772770d44d894df7f06984c1fd5a188}{AVCOL\_TRC\_SMPTE240M}}] = \{ 1.1115, 0.0228, 0.45, 4.0 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a7fb3b6cc26688e1fe7ea658fe5b1133f}{AVCOL\_TRC\_LINEAR}}]    = \{ 1.0,    0.0,    1.0,  0.0 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6adcce194982c0e7d70d57f9ddbc604545}{AVCOL\_TRC\_IEC61966\_2\_1}}] = \{ 1.055, 0.0031308, 1.0 / 2.4, 12.92 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a7b920e7a825baea0aa3a2ae9dd338133}{AVCOL\_TRC\_IEC61966\_2\_4}}] = \{ 1.099, 0.018, 0.45, 4.5 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6ae093f58aff406b86c6de6b9c9bc80b3a}{AVCOL\_TRC\_BT2020\_10}}] = \{ 1.099,  0.018,  0.45, 4.5 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6ad76da6ac6007f75a390472d1d01eedf8}{AVCOL\_TRC\_BT2020\_12}}] = \{ 1.0993, 0.0181, 0.45, 4.5 \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1 of file vf\+\_\+colorspace.\+c.
+
+\mbox{\Hypertarget{libavfilter_2vf__colorspace_8c_a45b16251a7d4eed45f52d8a08c5aefb6}\label{libavfilter_2vf__colorspace_8c_a45b16251a7d4eed45f52d8a08c5aefb6}} 
+\index{vf\_colorspace.c@{vf\_colorspace.c}!whitepoint\_coefficients@{whitepoint\_coefficients}}
+\index{whitepoint\_coefficients@{whitepoint\_coefficients}!vf\_colorspace.c@{vf\_colorspace.c}}
+\doxysubsubsection{\texorpdfstring{whitepoint\_coefficients}{whitepoint\_coefficients}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_whitepoint_coefficients}{Whitepoint\+Coefficients}} whitepoint\+\_\+coefficients\mbox{[}\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a554d97c34135b018d0c8635e83c621d7}{W\+P\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24aa65d946e6b45fb42c512484d52a6da03}{WP\_D65}}] = \{ 0.3127, 0.3290 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a248e86fb2c386940f2f1f2ebdbb272ee}{WP\_C}}]   = \{ 0.3100, 0.3160 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24afdaa417181aa78bbee7cfa06648944e5}{WP\_DCI}}] = \{ 0.3140, 0.3510 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{libavfilter_2vf__colorspace_8c_a8c91b921157da7c81897e2556527ac24a35d12f086dbef0dc4e7c361e23de3c66}{WP\_E}}]   = \{ 1/3.0f, 1/3.0f \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 190 of file vf\+\_\+colorspace.\+c.
+

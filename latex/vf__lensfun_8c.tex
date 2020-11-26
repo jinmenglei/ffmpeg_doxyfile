@@ -1,0 +1,592 @@
+\hypertarget{vf__lensfun_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+lensfun.c File Reference}
+\label{vf__lensfun_8c}\index{E:/github/ffmpeg/libavfilter/vf\_lensfun.c@{E:/github/ffmpeg/libavfilter/vf\_lensfun.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libswscale/swscale.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$lensfun.\+h$>$}\newline
+Include dependency graph for vf\+\_\+lensfun.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_vignetting_thread_data}{Vignetting\+Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_distortion_correction_thread_data}{Distortion\+Correction\+Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__lensfun_8c_af0fffa2c5db3a95e4db0f404b5407dd8}{L\+A\+N\+C\+Z\+O\+S\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+ON}}~256
+\item 
+\#define \mbox{\hyperlink{vf__lensfun_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__lensfun_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_vignetting_thread_data}{Vignetting\+Thread\+Data}} \mbox{\hyperlink{vf__lensfun_8c_a1886fc60da51577ee8756c25d4b84b74}{Vignetting\+Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_distortion_correction_thread_data}{Distortion\+Correction\+Thread\+Data}} \mbox{\hyperlink{vf__lensfun_8c_aae8494b5558db0986ae556a8e28cb58c}{Distortion\+Correction\+Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}} \mbox{\hyperlink{vf__lensfun_8c_a5ab7491a941f2e56c835f4718b44cee0}{Lensfun\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \{ \newline
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a2964cc1c888e5124912e4bd434856a35}{M\+O\+D\+E\+\_\+4k75}} = 0, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a11da00bed9cd45029aa24d5afe64de61}{M\+O\+D\+E\+\_\+5k15}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911af62c1f98a0bc1ec4f86d605197ac9abe}{M\+O\+D\+E\+\_\+5k9}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911ab25ca6b606d0dd35655fcf4fc628d23f}{M\+O\+D\+E\+\_\+6k7}}, 
+\newline
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911aa0efc8ef9b0c63d93629ff6f8eb4fa15}{M\+O\+D\+E\+\_\+7k4}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911aad1ce223fc09ec3e4cfee165ec086f0f}{M\+O\+D\+E\+\_\+7k95}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a8df9137cc069cb3f90c5d33112e9eca0}{M\+O\+D\+E\+\_\+10k2}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a1db4f163caa13c7d830e72d0ec95bafe}{M\+O\+D\+E\+\_\+12k2}}, 
+\newline
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a27cc8bbdd609c6b1d55f3f397b729068}{M\+O\+D\+E\+\_\+\+D\+TX}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a71797b26ecd9951a6f241ae9e07009a9}{N\+\_\+\+M\+O\+D\+ES}}, 
+\mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}{N\+O\+\_\+\+D\+A\+TA}} = 15, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911ae8ce13192251673619783dc33159f82f}{M\+O\+D\+E\+\_\+6k60}} = 0, 
+\newline
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a16a00ba9eddee496e558dbc282f4336a}{M\+O\+D\+E\+\_\+8k85}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a0281a239710c001f6ed63931438243d6}{M\+O\+D\+E\+\_\+12k65}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a559b6e58ffd0263d46009d01c1bcbbc5}{M\+O\+D\+E\+\_\+14k25}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a361a22f664a54158139317053eff4cf0}{M\+O\+D\+E\+\_\+15k85}}, 
+\newline
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a3203b10a278b86996ddafd40a2ff745b}{M\+O\+D\+E\+\_\+18k25}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a3bed97ee837dd9caee31d370da9f446d}{M\+O\+D\+E\+\_\+19k85}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a01976c8d32712bb64bf581a60ff5ebce}{M\+O\+D\+E\+\_\+23k05}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a5458440c004c6c76f577a0bea0b676ba}{M\+O\+D\+E\+\_\+23k85}}, 
+\newline
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a49c7a51e80e9f6bb24da8a13c9560459}{M\+O\+D\+E\+\_\+\+S\+ID}}, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911a08e6ab79c15d4bb7e0c77ced4884ea49}{S\+P\+\_\+\+L\+O\+ST}} = 14, 
+\mbox{\hyperlink{amrwbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}{N\+O\+\_\+\+D\+A\+TA}}, 
+\mbox{\hyperlink{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a5f6deb90fd65a95246c530e68d74f238}{V\+I\+G\+N\+E\+T\+T\+I\+NG}} = 0x1, 
+\newline
+\mbox{\hyperlink{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ab47329aac91cef29d2d96efbb3311fc6}{G\+E\+O\+M\+E\+T\+R\+Y\+\_\+\+D\+I\+S\+T\+O\+R\+T\+I\+ON}} = 0x2, 
+\mbox{\hyperlink{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aff3fce0d644e6f034e9188395d4b6efc}{S\+U\+B\+P\+I\+X\+E\+L\+\_\+\+D\+I\+S\+T\+O\+R\+T\+I\+ON}} = 0x4
+ \}
+\item 
+enum \mbox{\hyperlink{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1ea}{Interpolation\+Type}} \{ \mbox{\hyperlink{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaa32bf899c26ebe34101c3c9d15e41b77e}{N\+E\+A\+R\+E\+ST}}, 
+\mbox{\hyperlink{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaadc101ebf31c49c2d4b80b7c6f59f22cb}{L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaad3b5e1557114c53f2b44b9333eabd996}{L\+A\+N\+C\+Z\+OS}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__lensfun_8c_a91c630901b28411248f7a0ec63680ec3}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (lensfun)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static float \mbox{\hyperlink{vf__lensfun_8c_a1ee941e26e1f8863790dc43bf03ccf1d}{lanczos\+\_\+kernel}} (float x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_ab290697598353560db0c6e0131573103}{config\+\_\+props}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_a04559e837d5e1f055d8bff92296a45a5}{vignetting\+\_\+filter\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static float \mbox{\hyperlink{vf__lensfun_8c_ab4e658e91488d601fcdb2e5b4272f34c}{square}} (float x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_a37f68f954802b1276acfdcf36e863573}{distortion\+\_\+correction\+\_\+filter\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lensfun_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__lensfun_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__lensfun_8c_a43d184335b5eb51c6f6520459e4b4f74}{lensfun\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__lensfun_8c_aa8b908232500ef488beb2f00ef8e3e39}{lensfun\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__lensfun_8c_a66c80cef2af0d49cd0e7b8f8cef20074}{lensfun\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__lensfun_8c_a08b4dfc3880a91509a487c5a0780ff32}{ff\+\_\+vf\+\_\+lensfun}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Lensfun filter, applies lens correction with parameters from the lensfun database
+
+\begin{DoxySeeAlso}{See also}
+\href{https://lensfun.sourceforge.net/}{\texttt{ https\+://lensfun.\+sourceforge.\+net/}} 
+\end{DoxySeeAlso}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__lensfun_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__lensfun_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 96 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_af0fffa2c5db3a95e4db0f404b5407dd8}\label{vf__lensfun_8c_af0fffa2c5db3a95e4db0f404b5407dd8}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!LANCZOS\_RESOLUTION@{LANCZOS\_RESOLUTION}}
+\index{LANCZOS\_RESOLUTION@{LANCZOS\_RESOLUTION}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{LANCZOS\_RESOLUTION}{LANCZOS\_RESOLUTION}}
+{\footnotesize\ttfamily \#define L\+A\+N\+C\+Z\+O\+S\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+ON~256}
+
+
+
+Definition at line 42 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__lensfun_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}}, x)}
+
+
+
+Definition at line 95 of file vf\+\_\+lensfun.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__lensfun_8c_aae8494b5558db0986ae556a8e28cb58c}\label{vf__lensfun_8c_aae8494b5558db0986ae556a8e28cb58c}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!DistortionCorrectionThreadData@{DistortionCorrectionThreadData}}
+\index{DistortionCorrectionThreadData@{DistortionCorrectionThreadData}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{DistortionCorrectionThreadData}{DistortionCorrectionThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_distortion_correction_thread_data}{Distortion\+Correction\+Thread\+Data}} \mbox{\hyperlink{struct_distortion_correction_thread_data}{Distortion\+Correction\+Thread\+Data}}}
+
+\mbox{\Hypertarget{vf__lensfun_8c_a5ab7491a941f2e56c835f4718b44cee0}\label{vf__lensfun_8c_a5ab7491a941f2e56c835f4718b44cee0}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!LensfunContext@{LensfunContext}}
+\index{LensfunContext@{LensfunContext}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{LensfunContext}{LensfunContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}} \mbox{\hyperlink{struct_lensfun_context}{Lensfun\+Context}}}
+
+\mbox{\Hypertarget{vf__lensfun_8c_a1886fc60da51577ee8756c25d4b84b74}\label{vf__lensfun_8c_a1886fc60da51577ee8756c25d4b84b74}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!VignettingThreadData@{VignettingThreadData}}
+\index{VignettingThreadData@{VignettingThreadData}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{VignettingThreadData}{VignettingThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_vignetting_thread_data}{Vignetting\+Thread\+Data}} \mbox{\hyperlink{struct_vignetting_thread_data}{Vignetting\+Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1ea}\label{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1ea}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!InterpolationType@{InterpolationType}}
+\index{InterpolationType@{InterpolationType}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{InterpolationType}{InterpolationType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1ea}{Interpolation\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NEAREST@{NEAREST}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!NEAREST@{NEAREST}}}\mbox{\Hypertarget{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaa32bf899c26ebe34101c3c9d15e41b77e}\label{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaa32bf899c26ebe34101c3c9d15e41b77e}} 
+N\+E\+A\+R\+E\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LINEAR@{LINEAR}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!LINEAR@{LINEAR}}}\mbox{\Hypertarget{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaadc101ebf31c49c2d4b80b7c6f59f22cb}\label{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaadc101ebf31c49c2d4b80b7c6f59f22cb}} 
+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LANCZOS@{LANCZOS}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!LANCZOS@{LANCZOS}}}\mbox{\Hypertarget{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaad3b5e1557114c53f2b44b9333eabd996}\label{vf__lensfun_8c_a8472f01c511d77bbfb981a46618ea1eaad3b5e1557114c53f2b44b9333eabd996}} 
+L\+A\+N\+C\+Z\+OS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 50 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!Mode@{Mode}}
+\index{Mode@{Mode}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{Mode}{Mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_4k75@{MODE\_4k75}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_4k75@{MODE\_4k75}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a2964cc1c888e5124912e4bd434856a35}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a2964cc1c888e5124912e4bd434856a35}} 
+M\+O\+D\+E\+\_\+4k75&4.\+75 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_5k15@{MODE\_5k15}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_5k15@{MODE\_5k15}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a11da00bed9cd45029aa24d5afe64de61}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a11da00bed9cd45029aa24d5afe64de61}} 
+M\+O\+D\+E\+\_\+5k15&5.\+15 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_5k9@{MODE\_5k9}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_5k9@{MODE\_5k9}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911af62c1f98a0bc1ec4f86d605197ac9abe}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911af62c1f98a0bc1ec4f86d605197ac9abe}} 
+M\+O\+D\+E\+\_\+5k9&5.\+90 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_6k7@{MODE\_6k7}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_6k7@{MODE\_6k7}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ab25ca6b606d0dd35655fcf4fc628d23f}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ab25ca6b606d0dd35655fcf4fc628d23f}} 
+M\+O\+D\+E\+\_\+6k7&6.\+70 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_7k4@{MODE\_7k4}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_7k4@{MODE\_7k4}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aa0efc8ef9b0c63d93629ff6f8eb4fa15}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aa0efc8ef9b0c63d93629ff6f8eb4fa15}} 
+M\+O\+D\+E\+\_\+7k4&7.\+40 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_7k95@{MODE\_7k95}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_7k95@{MODE\_7k95}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aad1ce223fc09ec3e4cfee165ec086f0f}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aad1ce223fc09ec3e4cfee165ec086f0f}} 
+M\+O\+D\+E\+\_\+7k95&7.\+95 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_10k2@{MODE\_10k2}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_10k2@{MODE\_10k2}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a8df9137cc069cb3f90c5d33112e9eca0}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a8df9137cc069cb3f90c5d33112e9eca0}} 
+M\+O\+D\+E\+\_\+10k2&10.\+2 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_12k2@{MODE\_12k2}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_12k2@{MODE\_12k2}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a1db4f163caa13c7d830e72d0ec95bafe}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a1db4f163caa13c7d830e72d0ec95bafe}} 
+M\+O\+D\+E\+\_\+12k2&12.\+2 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_DTX@{MODE\_DTX}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_DTX@{MODE\_DTX}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a27cc8bbdd609c6b1d55f3f397b729068}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a27cc8bbdd609c6b1d55f3f397b729068}} 
+M\+O\+D\+E\+\_\+\+D\+TX&silent frame \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{N\_MODES@{N\_MODES}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!N\_MODES@{N\_MODES}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a71797b26ecd9951a6f241ae9e07009a9}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a71797b26ecd9951a6f241ae9e07009a9}} 
+N\+\_\+\+M\+O\+D\+ES&number of modes \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NO\_DATA@{NO\_DATA}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!NO\_DATA@{NO\_DATA}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}} 
+N\+O\+\_\+\+D\+A\+TA&no transmission \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_6k60@{MODE\_6k60}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_6k60@{MODE\_6k60}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ae8ce13192251673619783dc33159f82f}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ae8ce13192251673619783dc33159f82f}} 
+M\+O\+D\+E\+\_\+6k60&6.\+60 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_8k85@{MODE\_8k85}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_8k85@{MODE\_8k85}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a16a00ba9eddee496e558dbc282f4336a}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a16a00ba9eddee496e558dbc282f4336a}} 
+M\+O\+D\+E\+\_\+8k85&8.\+85 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_12k65@{MODE\_12k65}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_12k65@{MODE\_12k65}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a0281a239710c001f6ed63931438243d6}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a0281a239710c001f6ed63931438243d6}} 
+M\+O\+D\+E\+\_\+12k65&12.\+65 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_14k25@{MODE\_14k25}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_14k25@{MODE\_14k25}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a559b6e58ffd0263d46009d01c1bcbbc5}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a559b6e58ffd0263d46009d01c1bcbbc5}} 
+M\+O\+D\+E\+\_\+14k25&14.\+25 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_15k85@{MODE\_15k85}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_15k85@{MODE\_15k85}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a361a22f664a54158139317053eff4cf0}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a361a22f664a54158139317053eff4cf0}} 
+M\+O\+D\+E\+\_\+15k85&15.\+85 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_18k25@{MODE\_18k25}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_18k25@{MODE\_18k25}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a3203b10a278b86996ddafd40a2ff745b}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a3203b10a278b86996ddafd40a2ff745b}} 
+M\+O\+D\+E\+\_\+18k25&18.\+25 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_19k85@{MODE\_19k85}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_19k85@{MODE\_19k85}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a3bed97ee837dd9caee31d370da9f446d}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a3bed97ee837dd9caee31d370da9f446d}} 
+M\+O\+D\+E\+\_\+19k85&19.\+85 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_23k05@{MODE\_23k05}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_23k05@{MODE\_23k05}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a01976c8d32712bb64bf581a60ff5ebce}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a01976c8d32712bb64bf581a60ff5ebce}} 
+M\+O\+D\+E\+\_\+23k05&23.\+05 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_23k85@{MODE\_23k85}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_23k85@{MODE\_23k85}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a5458440c004c6c76f577a0bea0b676ba}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a5458440c004c6c76f577a0bea0b676ba}} 
+M\+O\+D\+E\+\_\+23k85&23.\+85 kbit/s \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_SID@{MODE\_SID}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!MODE\_SID@{MODE\_SID}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a49c7a51e80e9f6bb24da8a13c9560459}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a49c7a51e80e9f6bb24da8a13c9560459}} 
+M\+O\+D\+E\+\_\+\+S\+ID&comfort noise frame \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SP\_LOST@{SP\_LOST}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!SP\_LOST@{SP\_LOST}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a08e6ab79c15d4bb7e0c77ced4884ea49}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a08e6ab79c15d4bb7e0c77ced4884ea49}} 
+S\+P\+\_\+\+L\+O\+ST&speech lost \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NO\_DATA@{NO\_DATA}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!NO\_DATA@{NO\_DATA}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ad2c08fb8362bb7bc8b17aa5a6df6e498}} 
+N\+O\+\_\+\+D\+A\+TA&no transmission \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VIGNETTING@{VIGNETTING}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!VIGNETTING@{VIGNETTING}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a5f6deb90fd65a95246c530e68d74f238}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911a5f6deb90fd65a95246c530e68d74f238}} 
+V\+I\+G\+N\+E\+T\+T\+I\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{GEOMETRY\_DISTORTION@{GEOMETRY\_DISTORTION}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!GEOMETRY\_DISTORTION@{GEOMETRY\_DISTORTION}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ab47329aac91cef29d2d96efbb3311fc6}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911ab47329aac91cef29d2d96efbb3311fc6}} 
+G\+E\+O\+M\+E\+T\+R\+Y\+\_\+\+D\+I\+S\+T\+O\+R\+T\+I\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUBPIXEL\_DISTORTION@{SUBPIXEL\_DISTORTION}!vf\_lensfun.c@{vf\_lensfun.c}}\index{vf\_lensfun.c@{vf\_lensfun.c}!SUBPIXEL\_DISTORTION@{SUBPIXEL\_DISTORTION}}}\mbox{\Hypertarget{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aff3fce0d644e6f034e9188395d4b6efc}\label{vf__lensfun_8c_a46c8a310cf4c094f8c80e1cb8dc1f911aff3fce0d644e6f034e9188395d4b6efc}} 
+S\+U\+B\+P\+I\+X\+E\+L\+\_\+\+D\+I\+S\+T\+O\+R\+T\+I\+ON&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 44 of file vf\+\_\+lensfun.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__lensfun_8c_a91c630901b28411248f7a0ec63680ec3}\label{vf__lensfun_8c_a91c630901b28411248f7a0ec63680ec3}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{lensfun}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__lensfun_8c_ab290697598353560db0c6e0131573103}\label{vf__lensfun_8c_ab290697598353560db0c6e0131573103}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!config\_props@{config\_props}}
+\index{config\_props@{config\_props}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{config\_props()}{config\_props()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+props (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 207 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c_ab290697598353560db0c6e0131573103_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_a37f68f954802b1276acfdcf36e863573}\label{vf__lensfun_8c_a37f68f954802b1276acfdcf36e863573}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!distortion\_correction\_filter\_slice@{distortion\_correction\_filter\_slice}}
+\index{distortion\_correction\_filter\_slice@{distortion\_correction\_filter\_slice}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{distortion\_correction\_filter\_slice()}{distortion\_correction\_filter\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} distortion\+\_\+correction\+\_\+filter\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 314 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c_a37f68f954802b1276acfdcf36e863573_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{vf__lensfun_8c_a37f68f954802b1276acfdcf36e863573_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{vf__lensfun_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 443 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!init@{init}}
+\index{init@{init}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 132 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_a1ee941e26e1f8863790dc43bf03ccf1d}\label{vf__lensfun_8c_a1ee941e26e1f8863790dc43bf03ccf1d}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!lanczos\_kernel@{lanczos\_kernel}}
+\index{lanczos\_kernel@{lanczos\_kernel}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{lanczos\_kernel()}{lanczos\_kernel()}}
+{\footnotesize\ttfamily static float lanczos\+\_\+kernel (\begin{DoxyParamCaption}\item[{float}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 196 of file vf\+\_\+lensfun.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=269pt]{vf__lensfun_8c_a1ee941e26e1f8863790dc43bf03ccf1d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 188 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_ab4e658e91488d601fcdb2e5b4272f34c}\label{vf__lensfun_8c_ab4e658e91488d601fcdb2e5b4272f34c}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!square@{square}}
+\index{square@{square}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{square()}{square()}}
+{\footnotesize\ttfamily static float square (\begin{DoxyParamCaption}\item[{float}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 309 of file vf\+\_\+lensfun.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c_ab4e658e91488d601fcdb2e5b4272f34c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lensfun_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__lensfun_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 505 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_a04559e837d5e1f055d8bff92296a45a5}\label{vf__lensfun_8c_a04559e837d5e1f055d8bff92296a45a5}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!vignetting\_filter\_slice@{vignetting\_filter\_slice}}
+\index{vignetting\_filter\_slice@{vignetting\_filter\_slice}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{vignetting\_filter\_slice()}{vignetting\_filter\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vignetting\+\_\+filter\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 291 of file vf\+\_\+lensfun.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lensfun_8c_a04559e837d5e1f055d8bff92296a45a5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{vf__lensfun_8c_a04559e837d5e1f055d8bff92296a45a5_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__lensfun_8c_a08b4dfc3880a91509a487c5a0780ff32}\label{vf__lensfun_8c_a08b4dfc3880a91509a487c5a0780ff32}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!ff\_vf\_lensfun@{ff\_vf\_lensfun}}
+\index{ff\_vf\_lensfun@{ff\_vf\_lensfun}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_lensfun}{ff\_vf\_lensfun}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+lensfun}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}lensfun"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apply correction to an image based on info derived from the lensfun database."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__lensfun_8c_a5ab7491a941f2e56c835f4718b44cee0}{LensfunContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{vf__lensfun_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__lensfun_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__lensfun_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__lensfun_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__lensfun_8c_aa8b908232500ef488beb2f00ef8e3e39}{lensfun\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__lensfun_8c_a66c80cef2af0d49cd0e7b8f8cef20074}{lensfun\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&lensfun\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_ga00c4b8da7d5d89fa4ddc5dcdf72bffca}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_GENERIC}} | \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 537 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_aa8b908232500ef488beb2f00ef8e3e39}\label{vf__lensfun_8c_aa8b908232500ef488beb2f00ef8e3e39}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!lensfun\_inputs@{lensfun\_inputs}}
+\index{lensfun\_inputs@{lensfun\_inputs}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{lensfun\_inputs}{lensfun\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} lensfun\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__lensfun_8c_ab290697598353560db0c6e0131573103}{config\_props}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__lensfun_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 519 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_a43d184335b5eb51c6f6520459e4b4f74}\label{vf__lensfun_8c_a43d184335b5eb51c6f6520459e4b4f74}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!lensfun\_options@{lensfun\_options}}
+\index{lensfun\_options@{lensfun\_options}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{lensfun\_options}{lensfun\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} lensfun\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 97 of file vf\+\_\+lensfun.\+c.
+
+\mbox{\Hypertarget{vf__lensfun_8c_a66c80cef2af0d49cd0e7b8f8cef20074}\label{vf__lensfun_8c_a66c80cef2af0d49cd0e7b8f8cef20074}} 
+\index{vf\_lensfun.c@{vf\_lensfun.c}!lensfun\_outputs@{lensfun\_outputs}}
+\index{lensfun\_outputs@{lensfun\_outputs}!vf\_lensfun.c@{vf\_lensfun.c}}
+\doxysubsubsection{\texorpdfstring{lensfun\_outputs}{lensfun\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} lensfun\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 529 of file vf\+\_\+lensfun.\+c.
+

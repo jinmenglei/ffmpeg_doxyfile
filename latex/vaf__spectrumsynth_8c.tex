@@ -1,0 +1,639 @@
+\hypertarget{vaf__spectrumsynth_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vaf\+\_\+spectrumsynth.c File Reference}
+\label{vaf__spectrumsynth_8c}\index{E:/github/ffmpeg/libavfilter/vaf\_spectrumsynth.c@{E:/github/ffmpeg/libavfilter/vaf\_spectrumsynth.c}}
+{\ttfamily \#include \char`\"{}libavcodec/avfft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/ffmath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}window\+\_\+func.\+h\char`\"{}}\newline
+Include dependency graph for vaf\+\_\+spectrumsynth.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} \mbox{\hyperlink{vaf__spectrumsynth_8c_afb10150cb5a564b89f6f37bf389e878d}{Spectrum\+Synth\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27cc}{Magnitude\+Scale}} \{ \mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccadc101ebf31c49c2d4b80b7c6f59f22cb}{L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccacd7ffe737ad5fb21fbd7499886934910}{L\+OG}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccac32f5d8d0877b7bfcc3cc2913cd7d84f}{N\+B\+\_\+\+S\+C\+A\+L\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327}{Slide\+Mode}} \{ \newline
+\mbox{\hyperlink{avf__ahistogram_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}{R\+E\+P\+L\+A\+CE}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}{S\+C\+R\+O\+LL}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}{N\+B\+\_\+\+S\+L\+I\+D\+ES}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}{R\+E\+P\+L\+A\+CE}}, 
+\newline
+\mbox{\hyperlink{avf__showspectrum_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}{S\+C\+R\+O\+LL}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}{F\+U\+L\+L\+F\+R\+A\+ME}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}{R\+S\+C\+R\+O\+LL}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}{N\+B\+\_\+\+S\+L\+I\+D\+ES}}, 
+\newline
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}{R\+E\+P\+L\+A\+CE}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}{S\+C\+R\+O\+LL}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}{F\+U\+L\+L\+F\+R\+A\+ME}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}{R\+S\+C\+R\+O\+LL}}, 
+\newline
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}{N\+B\+\_\+\+S\+L\+I\+D\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58}{Orientation}} \{ \newline
+\mbox{\hyperlink{avf__showspectrum_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}{V\+E\+R\+T\+I\+C\+AL}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}{H\+O\+R\+I\+Z\+O\+N\+T\+AL}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}{N\+B\+\_\+\+O\+R\+I\+E\+N\+T\+A\+T\+I\+O\+NS}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}{V\+E\+R\+T\+I\+C\+AL}}, 
+\newline
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}{H\+O\+R\+I\+Z\+O\+N\+T\+AL}}, 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}{N\+B\+\_\+\+O\+R\+I\+E\+N\+T\+A\+T\+I\+O\+NS}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vaf__spectrumsynth_8c_acd3a5d794850c21c1f90a98566e6a47e}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (spectrumsynth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vaf__spectrumsynth_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a89dee62043a4ec0d0ee95188f2c20ca5}{read16\+\_\+fft\+\_\+bin}} (\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a7cd589e4d389666b12afeaf7a3ffdc81}{read8\+\_\+fft\+\_\+bin}} (\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vaf__spectrumsynth_8c_aaa1eac32325b0f4a42a59888894a2e99}{read\+\_\+fft\+\_\+data}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a206d671afc493fe09a526bf9a4c90977}{synth\+\_\+window}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a2471a8f3f893d1ad7a72f66c92ad6fa8}{try\+\_\+push\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a5cd8f6ee01640e9cb5a6107f071e3acc}{try\+\_\+push\+\_\+frames}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vaf__spectrumsynth_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vaf__spectrumsynth_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a5dae3ae739c2d23d0fe2a352b15e6866}{spectrumsynth\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a85d01283ba3f832b72a3c88daf6a126a}{spectrumsynth\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vaf__spectrumsynth_8c_af4c290667c6ab600443f1aefbc48e9be}{spectrumsynth\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vaf__spectrumsynth_8c_a37c988e24342b3381e5064f4e25ef763}{ff\+\_\+vaf\+\_\+spectrumsynth}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Spectrum\+Synth filter \begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000022}{Todo}}]support float pixel format \end{DoxyRefDesc}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}\label{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!A@{A}}
+\index{A@{A}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 73 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}}, x)}
+
+
+
+Definition at line 72 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}\label{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!V@{V}}
+\index{V@{V}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{V}{V}}
+{\footnotesize\ttfamily \#define V~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 74 of file vaf\+\_\+spectrumsynth.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_afb10150cb5a564b89f6f37bf389e878d}\label{vaf__spectrumsynth_8c_afb10150cb5a564b89f6f37bf389e878d}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!SpectrumSynthContext@{SpectrumSynthContext}}
+\index{SpectrumSynthContext@{SpectrumSynthContext}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{SpectrumSynthContext}{SpectrumSynthContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} \mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27cc}\label{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27cc}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!MagnitudeScale@{MagnitudeScale}}
+\index{MagnitudeScale@{MagnitudeScale}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{MagnitudeScale}{MagnitudeScale}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27cc}{Magnitude\+Scale}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LINEAR@{LINEAR}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!LINEAR@{LINEAR}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccadc101ebf31c49c2d4b80b7c6f59f22cb}\label{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccadc101ebf31c49c2d4b80b7c6f59f22cb}} 
+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOG@{LOG}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!LOG@{LOG}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccacd7ffe737ad5fb21fbd7499886934910}\label{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccacd7ffe737ad5fb21fbd7499886934910}} 
+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_SCALES@{NB\_SCALES}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_SCALES@{NB\_SCALES}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccac32f5d8d0877b7bfcc3cc2913cd7d84f}\label{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccac32f5d8d0877b7bfcc3cc2913cd7d84f}} 
+N\+B\+\_\+\+S\+C\+A\+L\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 41 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!Orientation@{Orientation}}
+\index{Orientation@{Orientation}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{Orientation}{Orientation}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__showspectrum_8c_a871118a09520247c78a71ecd7b0abd58}{Orientation}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VERTICAL@{VERTICAL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!VERTICAL@{VERTICAL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}} 
+V\+E\+R\+T\+I\+C\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HORIZONTAL@{HORIZONTAL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!HORIZONTAL@{HORIZONTAL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}} 
+H\+O\+R\+I\+Z\+O\+N\+T\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_ORIENTATIONS@{NB\_ORIENTATIONS}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_ORIENTATIONS@{NB\_ORIENTATIONS}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}} 
+N\+B\+\_\+\+O\+R\+I\+E\+N\+T\+A\+T\+I\+O\+NS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VERTICAL@{VERTICAL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!VERTICAL@{VERTICAL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}} 
+V\+E\+R\+T\+I\+C\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HORIZONTAL@{HORIZONTAL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!HORIZONTAL@{HORIZONTAL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}} 
+H\+O\+R\+I\+Z\+O\+N\+T\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_ORIENTATIONS@{NB\_ORIENTATIONS}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_ORIENTATIONS@{NB\_ORIENTATIONS}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}\label{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}} 
+N\+B\+\_\+\+O\+R\+I\+E\+N\+T\+A\+T\+I\+O\+NS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 43 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!SlideMode@{SlideMode}}
+\index{SlideMode@{SlideMode}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{SlideMode}{SlideMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__ahistogram_8c_a1057761ccdd129caedbec11d9a724327}{Slide\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{REPLACE@{REPLACE}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!REPLACE@{REPLACE}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}} 
+R\+E\+P\+L\+A\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SCROLL@{SCROLL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!SCROLL@{SCROLL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}} 
+S\+C\+R\+O\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_SLIDES@{NB\_SLIDES}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_SLIDES@{NB\_SLIDES}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}} 
+N\+B\+\_\+\+S\+L\+I\+D\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{REPLACE@{REPLACE}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!REPLACE@{REPLACE}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}} 
+R\+E\+P\+L\+A\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SCROLL@{SCROLL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!SCROLL@{SCROLL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}} 
+S\+C\+R\+O\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FULLFRAME@{FULLFRAME}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!FULLFRAME@{FULLFRAME}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}} 
+F\+U\+L\+L\+F\+R\+A\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RSCROLL@{RSCROLL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!RSCROLL@{RSCROLL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}} 
+R\+S\+C\+R\+O\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_SLIDES@{NB\_SLIDES}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_SLIDES@{NB\_SLIDES}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}} 
+N\+B\+\_\+\+S\+L\+I\+D\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{REPLACE@{REPLACE}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!REPLACE@{REPLACE}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}} 
+R\+E\+P\+L\+A\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SCROLL@{SCROLL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!SCROLL@{SCROLL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}} 
+S\+C\+R\+O\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FULLFRAME@{FULLFRAME}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!FULLFRAME@{FULLFRAME}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}} 
+F\+U\+L\+L\+F\+R\+A\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RSCROLL@{RSCROLL}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!RSCROLL@{RSCROLL}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}} 
+R\+S\+C\+R\+O\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_SLIDES@{NB\_SLIDES}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!NB\_SLIDES@{NB\_SLIDES}}}\mbox{\Hypertarget{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}\label{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}} 
+N\+B\+\_\+\+S\+L\+I\+D\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 42 of file vaf\+\_\+spectrumsynth.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_ab5283561721ad2970de4e2d569100dac}\label{vaf__spectrumsynth_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!activate@{activate}}
+\index{activate@{activate}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 455 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_acd3a5d794850c21c1f90a98566e6a47e}\label{vaf__spectrumsynth_8c_acd3a5d794850c21c1f90a98566e6a47e}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{spectrumsynth}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_ad21a4e672440f6072991b632efe70c1b}\label{vaf__spectrumsynth_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 145 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vaf__spectrumsynth_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 103 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a89dee62043a4ec0d0ee95188f2c20ca5}\label{vaf__spectrumsynth_8c_a89dee62043a4ec0d0ee95188f2c20ca5}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!read16\_fft\_bin@{read16\_fft\_bin}}
+\index{read16\_fft\_bin@{read16\_fft\_bin}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{read16\_fft\_bin()}{read16\_fft\_bin()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read16\+\_\+fft\+\_\+bin (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 226 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{vaf__spectrumsynth_8c_a89dee62043a4ec0d0ee95188f2c20ca5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a89dee62043a4ec0d0ee95188f2c20ca5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a7cd589e4d389666b12afeaf7a3ffdc81}\label{vaf__spectrumsynth_8c_a7cd589e4d389666b12afeaf7a3ffdc81}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!read8\_fft\_bin@{read8\_fft\_bin}}
+\index{read8\_fft\_bin@{read8\_fft\_bin}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{read8\_fft\_bin()}{read8\_fft\_bin()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read8\+\_\+fft\+\_\+bin (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_spectrum_synth_context}{Spectrum\+Synth\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 251 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{vaf__spectrumsynth_8c_a7cd589e4d389666b12afeaf7a3ffdc81_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a7cd589e4d389666b12afeaf7a3ffdc81_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_aaa1eac32325b0f4a42a59888894a2e99}\label{vaf__spectrumsynth_8c_aaa1eac32325b0f4a42a59888894a2e99}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!read\_fft\_data@{read\_fft\_data}}
+\index{read\_fft\_data@{read\_fft\_data}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{read\_fft\_data()}{read\_fft\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read\+\_\+fft\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 276 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_aaa1eac32325b0f4a42a59888894a2e99_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_aaa1eac32325b0f4a42a59888894a2e99_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a206d671afc493fe09a526bf9a4c90977}\label{vaf__spectrumsynth_8c_a206d671afc493fe09a526bf9a4c90977}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!synth\_window@{synth\_window}}
+\index{synth\_window@{synth\_window}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{synth\_window()}{synth\_window()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} synth\+\_\+window (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 322 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a206d671afc493fe09a526bf9a4c90977_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a206d671afc493fe09a526bf9a4c90977_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a2471a8f3f893d1ad7a72f66c92ad6fa8}\label{vaf__spectrumsynth_8c_a2471a8f3f893d1ad7a72f66c92ad6fa8}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!try\_push\_frame@{try\_push\_frame}}
+\index{try\_push\_frame@{try\_push\_frame}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{try\_push\_frame()}{try\_push\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} try\+\_\+push\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 347 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a2471a8f3f893d1ad7a72f66c92ad6fa8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a2471a8f3f893d1ad7a72f66c92ad6fa8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a5cd8f6ee01640e9cb5a6107f071e3acc}\label{vaf__spectrumsynth_8c_a5cd8f6ee01640e9cb5a6107f071e3acc}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!try\_push\_frames@{try\_push\_frames}}
+\index{try\_push\_frames@{try\_push\_frames}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{try\_push\_frames()}{try\_push\_frames()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} try\+\_\+push\+\_\+frames (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 416 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_a5cd8f6ee01640e9cb5a6107f071e3acc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{vaf__spectrumsynth_8c_a5cd8f6ee01640e9cb5a6107f071e3acc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vaf__spectrumsynth_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 494 of file vaf\+\_\+spectrumsynth.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vaf__spectrumsynth_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a37c988e24342b3381e5064f4e25ef763}\label{vaf__spectrumsynth_8c_a37c988e24342b3381e5064f4e25ef763}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!ff\_vaf\_spectrumsynth@{ff\_vaf\_spectrumsynth}}
+\index{ff\_vaf\_spectrumsynth@{ff\_vaf\_spectrumsynth}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vaf\_spectrumsynth}{ff\_vaf\_spectrumsynth}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vaf\+\_\+spectrumsynth}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}spectrumsynth"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Convert input spectrum videos to audio output."{}}),}
+\DoxyCodeLine{    .uninit        = \mbox{\hyperlink{vaf__spectrumsynth_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .query\_formats = \mbox{\hyperlink{vaf__spectrumsynth_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .activate      = \mbox{\hyperlink{vaf__spectrumsynth_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vaf__spectrumsynth_8c_afb10150cb5a564b89f6f37bf389e878d}{SpectrumSynthContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vaf__spectrumsynth_8c_a85d01283ba3f832b72a3c88daf6a126a}{spectrumsynth\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vaf__spectrumsynth_8c_af4c290667c6ab600443f1aefbc48e9be}{spectrumsynth\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&spectrumsynth\_class,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 532 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a85d01283ba3f832b72a3c88daf6a126a}\label{vaf__spectrumsynth_8c_a85d01283ba3f832b72a3c88daf6a126a}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!spectrumsynth\_inputs@{spectrumsynth\_inputs}}
+\index{spectrumsynth\_inputs@{spectrumsynth\_inputs}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{spectrumsynth\_inputs}{spectrumsynth\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} spectrumsynth\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}magnitude"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}phase"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 511 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_a5dae3ae739c2d23d0fe2a352b15e6866}\label{vaf__spectrumsynth_8c_a5dae3ae739c2d23d0fe2a352b15e6866}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!spectrumsynth\_options@{spectrumsynth\_options}}
+\index{spectrumsynth\_options@{spectrumsynth\_options}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{spectrumsynth\_options}{spectrumsynth\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} spectrumsynth\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}sample\_rate"{}}, \textcolor{stringliteral}{"{}set sample rate"{}},  \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\_rate}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 44100\}, 15,  INT\_MAX, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}channels"{}},    \textcolor{stringliteral}{"{}set channels"{}},     \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 1\}, 1, 8, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}scale"{}},       \textcolor{stringliteral}{"{}set input amplitude scale"{}}, \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(scale), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccacd7ffe737ad5fb21fbd7499886934910}{LOG}}\}, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccac32f5d8d0877b7bfcc3cc2913cd7d84f}{NB\_SCALES}}-\/1, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}scale"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}lin"{}},  \textcolor{stringliteral}{"{}linear"{}},      0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccadc101ebf31c49c2d4b80b7c6f59f22cb}{LINEAR}}\}, 0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}scale"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}log"{}},  \textcolor{stringliteral}{"{}logarithmic"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a2695a8c498f2101220dd46b494fa27ccacd7ffe737ad5fb21fbd7499886934910}{LOG}}\},    0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}scale"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}slide"{}}, \textcolor{stringliteral}{"{}set input sliding mode"{}}, \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(sliding), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}{FULLFRAME}}\}, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a8adb6b28dc0e9d5b270a04197fe8839c}{NB\_SLIDES}}-\/1, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}slide"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}replace"{}},   \textcolor{stringliteral}{"{}consume old columns with new"{}},   0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a765ae4f8f09e8a28e363acc11643ed91}{REPLACE}}\},   0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}slide"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}scroll"{}},    \textcolor{stringliteral}{"{}consume only most right column"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a0fa7d6bebaf9da084fa40612ca13d2c6}{SCROLL}}\},    0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}slide"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}fullframe"{}}, \textcolor{stringliteral}{"{}consume full frames"{}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327a078e730fd0da68b53abc665a9a6a509d}{FULLFRAME}}\}, 0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}slide"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}rscroll"{}},   \textcolor{stringliteral}{"{}consume only most left column"{}},  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a1057761ccdd129caedbec11d9a724327ac361326e0e317ec414e2c4748d5b6c0a}{RSCROLL}}\},   0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}slide"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}win\_func"{}}, \textcolor{stringliteral}{"{}set window function"{}}, \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(win\_func), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, 0, \mbox{\hyperlink{af__firequalizer_8c_ae7d09f450ebc1e178763067de771a906aeb6da0263989c71574ef1e3b09bada1e}{NB\_WFUNC}}-\/1, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}rect"{}},     \textcolor{stringliteral}{"{}Rectangular"{}},      0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{window__func_8h_ae7d09f450ebc1e178763067de771a906a436ae65010ebeb53a153d61ea8edaa33}{WFUNC\_RECT}}\},     0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}bartlett"{}}, \textcolor{stringliteral}{"{}Bartlett"{}},         0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{window__func_8h_ae7d09f450ebc1e178763067de771a906a0340f7a99208b54736af5aa9b14bce86}{WFUNC\_BARTLETT}}\}, 0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}hann"{}},     \textcolor{stringliteral}{"{}Hann"{}},             0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{window__func_8h_ae7d09f450ebc1e178763067de771a906aab0c79fb5ba76b06980773c747eb64d8}{WFUNC\_HANNING}}\},  0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}hanning"{}},  \textcolor{stringliteral}{"{}Hanning"{}},          0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{window__func_8h_ae7d09f450ebc1e178763067de771a906aab0c79fb5ba76b06980773c747eb64d8}{WFUNC\_HANNING}}\},  0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}hamming"{}},  \textcolor{stringliteral}{"{}Hamming"{}},          0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__firequalizer_8c_ae7d09f450ebc1e178763067de771a906a0acf39458a176853ceef78abe6a7e35c}{WFUNC\_HAMMING}}\},  0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}sine"{}},     \textcolor{stringliteral}{"{}Sine"{}},             0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{window__func_8h_ae7d09f450ebc1e178763067de771a906ac528e6cc8f178a51a01cd059339cd629}{WFUNC\_SINE}}\},     0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}win\_func"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}overlap"{}}, \textcolor{stringliteral}{"{}set window overlap"{}},  \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(overlap), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=1\}, 0,  1, \mbox{\hyperlink{vaf__spectrumsynth_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}orientation"{}}, \textcolor{stringliteral}{"{}set orientation"{}}, \mbox{\hyperlink{vaf__spectrumsynth_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(orientation), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}{VERTICAL}}\}, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58ac9f63bc0055160edcbaf8004c69b2ee5}{NB\_ORIENTATIONS}}-\/1, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}orientation"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}vertical"{}},   \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a1a88641fcd39f2ed3e58a18526e97138}{VERTICAL}}\},   0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}orientation"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}horizontal"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vaf__spectrumsynth_8c_a871118a09520247c78a71ecd7b0abd58a4dd51ad73508d6fc83a502966779e48e}{HORIZONTAL}}\}, 0, 0, \mbox{\hyperlink{vaf__spectrumsynth_8c_af40a326b23c68a27cebe60f16634a2cb}{V}}, \textcolor{stringliteral}{"{}orientation"{}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 76 of file vaf\+\_\+spectrumsynth.\+c.
+
+\mbox{\Hypertarget{vaf__spectrumsynth_8c_af4c290667c6ab600443f1aefbc48e9be}\label{vaf__spectrumsynth_8c_af4c290667c6ab600443f1aefbc48e9be}} 
+\index{vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}!spectrumsynth\_outputs@{spectrumsynth\_outputs}}
+\index{spectrumsynth\_outputs@{spectrumsynth\_outputs}!vaf\_spectrumsynth.c@{vaf\_spectrumsynth.c}}
+\doxysubsubsection{\texorpdfstring{spectrumsynth\_outputs}{spectrumsynth\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} spectrumsynth\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vaf__spectrumsynth_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 523 of file vaf\+\_\+spectrumsynth.\+c.
+

@@ -1,0 +1,683 @@
+\hypertarget{libavcodec_2pcm_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/pcm.c File Reference}
+\label{libavcodec_2pcm_8c}\index{E:/github/ffmpeg/libavcodec/pcm.c@{E:/github/ffmpeg/libavcodec/pcm.c}}
+{\ttfamily \#include \char`\"{}libavutil/attributes.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}pcm\+\_\+tablegen.\+h\char`\"{}}\newline
+Include dependency graph for pcm.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2pcm_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_p_c_m_decode}{P\+C\+M\+Decode}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_ae49f68f637186ee5abc0697de6664d78}{E\+N\+C\+O\+DE}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  endian,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  dst,  n,  \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a891e09eeecd09a634cc25d36eec8f732}{E\+N\+C\+O\+D\+E\+\_\+\+P\+L\+A\+N\+AR}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  endian,  dst,  n,  \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a9f3b55dc9c50755e8ddf349611732b1d}{D\+E\+C\+O\+DE}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  endian,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  dst,  n,  \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_af208a80f42d4f0ed96eb8d2fab32e309}{D\+E\+C\+O\+D\+E\+\_\+\+P\+L\+A\+N\+AR}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  endian,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  dst,  n,  \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a2dae85f85aa94ee81e1b3700f745d6eb}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+0}}(id\+\_\+,  sample\+\_\+fmt\+\_\+,  name\+\_\+,  long\+\_\+name\+\_\+)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a18050a5e16a1602d3572c520e9df4226}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+1}}(id\+\_\+,  sample\+\_\+fmt\+\_\+,  name\+\_\+,  long\+\_\+name\+\_\+)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_aca28e09a0992f22f20fcc621b5ee00d2}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+2}}(cf,  \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+ \#\# cf(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_af7d2efa9fe3c4146bc750eac24fe81b4}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+3}}(cf,  \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    \mbox{\hyperlink{libavcodec_2pcm_8c_aca28e09a0992f22f20fcc621b5ee00d2}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+2}}(cf, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a87b49df8d46e4654d36c0f42334a857a}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+ER}}(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    \mbox{\hyperlink{libavcodec_2pcm_8c_af7d2efa9fe3c4146bc750eac24fe81b4}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+3}}(C\+O\+N\+F\+I\+G\+\_\+ \#\# \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}} \#\# \+\_\+\+E\+N\+C\+O\+D\+ER, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a56e3ae3c09cf0d1a050712a7aabd97fc}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+0}}(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_ac1bf88dea07ee7d1138c9b7d9e1acd49}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+1}}(id\+\_\+,  sample\+\_\+fmt\+\_\+,  name\+\_\+,  long\+\_\+name\+\_\+)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_a69492c6d0bed1c51353d53a265a260f3}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+2}}(cf,  \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+ \#\# cf(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_aa187cf52ac19549e6c18e444a8f73a98}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+3}}(cf,  \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    \mbox{\hyperlink{libavcodec_2pcm_8c_a69492c6d0bed1c51353d53a265a260f3}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+2}}(cf, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_aeb4d023178f95b2b980a6cda6553b0cd}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER}}(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name)~    \mbox{\hyperlink{libavcodec_2pcm_8c_aa187cf52ac19549e6c18e444a8f73a98}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+3}}(C\+O\+N\+F\+I\+G\+\_\+ \#\# \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}} \#\# \+\_\+\+D\+E\+C\+O\+D\+ER, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2pcm_8c_ad75338736a528548c7c6a3adc996e88a}{P\+C\+M\+\_\+\+C\+O\+D\+EC}}(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  sample\+\_\+fmt\+\_\+,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  long\+\_\+name\+\_\+)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_p_c_m_decode}{P\+C\+M\+Decode}} \mbox{\hyperlink{libavcodec_2pcm_8c_a44dfbfc4f51034c3ea29f5f1ba1b3f67}{P\+C\+M\+Decode}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2pcm_8c_aa454d35c0f501f32a1c684ed41c885de}{pcm\+\_\+encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2pcm_8c_a6a56059b2e64b17c72d3e4be8b469d49}{pcm\+\_\+encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet\+\_\+ptr)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2pcm_8c_ab7311b36c439ed9668d594764052e2a7}{pcm\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2pcm_8c_ad4c32e0212026b6dd3e076eae0defff8}{pcm\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a6062bf2fce4ea46f87ddad2657608286}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+A\+L\+AW, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+alaw, \char`\"{}P\+CM \mbox{\hyperlink{vf__geq_8c_adf764cbdea00d65edcd07bb9953ad2b7a42a4ade1acd55a49164099104990e09f}{A}}-\/law / G.\+711 \mbox{\hyperlink{vf__geq_8c_adf764cbdea00d65edcd07bb9953ad2b7a42a4ade1acd55a49164099104990e09f}{A}}-\/law\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a2df76f980166db653d27139f304c0cf9}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER}} (P\+C\+M\+\_\+\+F16\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}, pcm\+\_\+f16le, \char`\"{}P\+CM 16.\+8 floating point little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a7a2e9d014229297f9bf80887a337ba23}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER}} (P\+C\+M\+\_\+\+F24\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}, pcm\+\_\+f24le, \char`\"{}P\+CM 24.\+0 floating point little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a8fddf54ebe8ba5188d38964cced0425d}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+F32\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}, pcm\+\_\+f32be, \char`\"{}P\+CM 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ac3d999bc959d78fc388066363ee140fe}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+F32\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}, pcm\+\_\+f32le, \char`\"{}P\+CM 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a5d8f32a43c4fd1ff406200ae23ef7839}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+F64\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ae35a2a6a7593723d9fe4bcefb2876606}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+D\+BL}}, pcm\+\_\+f64be, \char`\"{}P\+CM 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ae6f12523ca574c8e9652682ae45e7aad}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+F64\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ae35a2a6a7593723d9fe4bcefb2876606}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+D\+BL}}, pcm\+\_\+f64le, \char`\"{}P\+CM 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a6fbd7d62dc21d458d2a47360b8e12be0}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER}} (P\+C\+M\+\_\+\+L\+XF, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}, pcm\+\_\+lxf, \char`\"{}P\+CM signed 20-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a70f99ffffcfd2b5f250e94bff473d0a0}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+M\+U\+L\+AW, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+mulaw, \char`\"{}P\+CM mu-\/law / G.\+711 mu-\/law\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a64faac87ee3f2e8080edbf52261c3673}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S8, \mbox{\hyperlink{audioconvert_8c_ada3f2f20e8b592fea3bf924182793cc8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8}}, pcm\+\_\+s8, \char`\"{}P\+CM signed 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_af1ca99eb89994db987346fb2385c9899}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S8\+\_\+\+P\+L\+A\+N\+AR, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a6ab0109a23af37e29ea3a7282c00d311}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8P}}, pcm\+\_\+s8\+\_\+planar, \char`\"{}P\+CM signed 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a42c58391c818bff83db82469c2aecad1}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S16\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+s16be, \char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ad24028b7d5c8a94fa9fd7e46868e2fce}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S16\+B\+E\+\_\+\+P\+L\+A\+N\+AR, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16P}}, pcm\+\_\+s16be\+\_\+planar, \char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a78ca0b994e1e9e733ad2b0267fbcf7ce}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S16\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+s16le, \char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a20f0139d34faba6852611626d1e32f35}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S16\+L\+E\+\_\+\+P\+L\+A\+N\+AR, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16P}}, pcm\+\_\+s16le\+\_\+planar, \char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_af9f98b8f345604f01834e852683caada}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S24\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+s24be, \char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ac29a3b4677cc3750e6cf1e7938379530}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S24\+D\+A\+UD, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+s24daud, \char`\"{}P\+CM \mbox{\hyperlink{rematrix__init_8c_a8af890148d3dfc649c6f2a805563f8b0}{D}}-\/Cinema audio signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a621cb1ea5aa896784285ced13a88e0aa}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S24\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+s24le, \char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_aa56a135dfb7343247caf5c28768380eb}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S24\+L\+E\+\_\+\+P\+L\+A\+N\+AR, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}, pcm\+\_\+s24le\+\_\+planar, \char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ac80ba8dbd8a31e9055cc19ebcf0b0aaa}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S32\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+s32be, \char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a459191213a034e09acb9eb3f84f39125}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S32\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+s32le, \char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_af256d3390f9c7c516325637a43ac1eab}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S32\+L\+E\+\_\+\+P\+L\+A\+N\+AR, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}, pcm\+\_\+s32le\+\_\+planar, \char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a5a26643968da9d5f650310138fa721e1}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U8, \mbox{\hyperlink{audioconvert_8c_ada3f2f20e8b592fea3bf924182793cc8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8}}, pcm\+\_\+u8, \char`\"{}P\+CM unsigned 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a611d02c86a36d5c15c1ea27e89b77e11}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U16\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+u16be, \char`\"{}P\+CM unsigned 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a872bff7604b523c9ab80bbd679a58a03}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U16\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+u16le, \char`\"{}P\+CM unsigned 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a3c500f56120d15833563b7c4cd045a2e}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U24\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+u24be, \char`\"{}P\+CM unsigned 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a1ecf0c9485024159419ead3050cfb01d}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U24\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+u24le, \char`\"{}P\+CM unsigned 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a2def2fc709be89ce157782be69067ed9}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U32\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+u32be, \char`\"{}P\+CM unsigned 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_aa83b4438f7db9c4a411b251e14808f4f}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+U32\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}, pcm\+\_\+u32le, \char`\"{}P\+CM unsigned 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_adbdf6c603de797f9d3ffb170244aead7}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S64\+BE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a59a56ed0ec7b70ecda41c5ae943f256e}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S64}}, pcm\+\_\+s64be, \char`\"{}P\+CM signed 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_a663dff8464dc047c978e531feea6d178}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+S64\+LE, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a59a56ed0ec7b70ecda41c5ae943f256e}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S64}}, pcm\+\_\+s64le, \char`\"{}P\+CM signed 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{})
+\item 
+\mbox{\hyperlink{libavcodec_2pcm_8c_ac006876d4e7f033f1c1d8d8c9808a0ca}{P\+C\+M\+\_\+\+C\+O\+D\+EC}} (P\+C\+M\+\_\+\+V\+I\+DC, \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}, pcm\+\_\+vidc, \char`\"{}P\+CM Archimedes V\+I\+DC\char`\"{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+P\+CM codecs 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a9f3b55dc9c50755e8ddf349611732b1d}\label{libavcodec_2pcm_8c_a9f3b55dc9c50755e8ddf349611732b1d}} 
+\index{pcm.c@{pcm.c}!DECODE@{DECODE}}
+\index{DECODE@{DECODE}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{DECODE}{DECODE}}
+{\footnotesize\ttfamily \#define D\+E\+C\+O\+DE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  }\item[{}]{endian,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{dst,  }\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  }\item[{}]{\mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{for} (; n > 0; n-\/-\/) \{                                                       \(\backslash\)}
+\DoxyCodeLine{        uint \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\# \_t v = bytestream\_get\_ \#\# endian(\&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}});                \(\backslash\)}
+\DoxyCodeLine{        AV\_WN \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\# \mbox{\hyperlink{arm_2vp56__arith_8h_a3d7d1b6b25e26030cf09f680a1aa0e81}{A}}(dst, (uint \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\# \_t)(v -\/ \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}}) << \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}});    \(\backslash\)}
+\DoxyCodeLine{        dst += \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} / 8;                                                       \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+Read P\+CM samples macro 
+\begin{DoxyParams}{Parameters}
+{\em size} & Data size of native machine format \\
+\hline
+{\em endian} & bytestream\+\_\+get\+\_\+xxx() endian suffix \\
+\hline
+{\em src} & Source pointer (variable name) \\
+\hline
+{\em dst} & Destination pointer (variable name) \\
+\hline
+{\em n} & Total number of samples (variable name) \\
+\hline
+{\em shift} & Bitshift (bits) \\
+\hline
+{\em offset} & Sample value offset \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 301 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_af208a80f42d4f0ed96eb8d2fab32e309}\label{libavcodec_2pcm_8c_af208a80f42d4f0ed96eb8d2fab32e309}} 
+\index{pcm.c@{pcm.c}!DECODE\_PLANAR@{DECODE\_PLANAR}}
+\index{DECODE\_PLANAR@{DECODE\_PLANAR}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{DECODE\_PLANAR}{DECODE\_PLANAR}}
+{\footnotesize\ttfamily \#define D\+E\+C\+O\+D\+E\+\_\+\+P\+L\+A\+N\+AR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}},  }\item[{}]{endian,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{dst,  }\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  }\item[{}]{\mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    n /= avctx-\/>channels;                                                      \(\backslash\)}
+\DoxyCodeLine{    for (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} = 0; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} < avctx-\/>channels; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}++) \{                                    \(\backslash\)}
+\DoxyCodeLine{        int \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}};                                                                 \(\backslash\)}
+\DoxyCodeLine{        dst = \mbox{\hyperlink{filter__design_8txt_a48ad71a5b40cdd5f23c601f33665a953}{frame}}-\/>extended\_data[\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}];                                         \(\backslash\)}
+\DoxyCodeLine{        for (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = n; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} > 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}-\/-\/) \{                                              \(\backslash\)}
+\DoxyCodeLine{            uint \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\# \_t v = bytestream\_get\_ \#\# endian(\&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}});            \(\backslash\)}
+\DoxyCodeLine{            AV\_WN \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\# \mbox{\hyperlink{arm_2vp56__arith_8h_a3d7d1b6b25e26030cf09f680a1aa0e81}{A}}(dst, (uint \#\# \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} \#\#\_t)(v -\/ \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}}) << \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}}); \(\backslash\)}
+\DoxyCodeLine{            dst += \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} / 8;                                                   \(\backslash\)}
+\DoxyCodeLine{        \}                                                                      \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+Definition at line 308 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ae49f68f637186ee5abc0697de6664d78}\label{libavcodec_2pcm_8c_ae49f68f637186ee5abc0697de6664d78}} 
+\index{pcm.c@{pcm.c}!ENCODE@{ENCODE}}
+\index{ENCODE@{ENCODE}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{ENCODE}{ENCODE}}
+{\footnotesize\ttfamily \#define E\+N\+C\+O\+DE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{endian,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{dst,  }\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  }\item[{}]{\mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    samples\_ \#\# \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} = (\textcolor{keyword}{const} \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *) \mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}};                              \(\backslash\)}
+\DoxyCodeLine{    for (; n > 0; n-\/-\/) \{                                                \(\backslash\)}
+\DoxyCodeLine{        register \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} v = (*samples\_ \#\# \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}}++ >> \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}}) + \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}};      \(\backslash\)}
+\DoxyCodeLine{        bytestream\_put\_ \#\# endian(\&dst, v);                             \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+Write P\+CM samples macro 
+\begin{DoxyParams}{Parameters}
+{\em type} & Datatype of native machine format \\
+\hline
+{\em endian} & bytestream\+\_\+put\+\_\+xxx() suffix \\
+\hline
+{\em src} & Source pointer (variable name) \\
+\hline
+{\em dst} & Destination pointer (variable name) \\
+\hline
+{\em n} & Total number of samples (variable name) \\
+\hline
+{\em shift} & Bitshift (bits) \\
+\hline
+{\em offset} & Sample value offset \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 69 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a891e09eeecd09a634cc25d36eec8f732}\label{libavcodec_2pcm_8c_a891e09eeecd09a634cc25d36eec8f732}} 
+\index{pcm.c@{pcm.c}!ENCODE\_PLANAR@{ENCODE\_PLANAR}}
+\index{ENCODE\_PLANAR@{ENCODE\_PLANAR}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{ENCODE\_PLANAR}{ENCODE\_PLANAR}}
+{\footnotesize\ttfamily \#define E\+N\+C\+O\+D\+E\+\_\+\+P\+L\+A\+N\+AR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{endian,  }\item[{}]{dst,  }\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}},  }\item[{}]{\mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    n /= avctx-\/>channels;                                               \(\backslash\)}
+\DoxyCodeLine{    for (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} = 0; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} < avctx-\/>channels; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}++) \{                             \(\backslash\)}
+\DoxyCodeLine{        int \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}};                                                          \(\backslash\)}
+\DoxyCodeLine{        samples\_ \#\# \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} = (\textcolor{keyword}{const} \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *) \mbox{\hyperlink{filter__design_8txt_a48ad71a5b40cdd5f23c601f33665a953}{frame}}-\/>extended\_data[\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}];      \(\backslash\)}
+\DoxyCodeLine{        \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{for}} (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = n; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} > 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}-\/-\/) \{                                       \(\backslash\)}
+\DoxyCodeLine{            register \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} v = (*samples\_ \#\# \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}}++ >> \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}}) + \mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}};  \(\backslash\)}
+\DoxyCodeLine{            bytestream\_put\_ \#\# endian(\&dst, v);                         \(\backslash\)}
+\DoxyCodeLine{        \}                                                               \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+Definition at line 76 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ad75338736a528548c7c6a3adc996e88a}\label{libavcodec_2pcm_8c_ad75338736a528548c7c6a3adc996e88a}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC}{PCM\_CODEC}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+C\+O\+D\+EC(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt\+\_\+,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name\+\_\+ }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{libavcodec_2pcm_8c_a87b49df8d46e4654d36c0f42334a857a}{PCM\_ENCODER}}(\textcolor{keywordtype}{id}, sample\_fmt\_, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, long\_name\_);                     \(\backslash\)}
+\DoxyCodeLine{    PCM\_DECODER(\textcolor{keywordtype}{id}, sample\_fmt\_, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, long\_name\_)}
+
+\end{DoxyCode}
+
+
+Definition at line 581 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aeb4d023178f95b2b980a6cda6553b0cd}\label{libavcodec_2pcm_8c_aeb4d023178f95b2b980a6cda6553b0cd}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER@{PCM\_DECODER}}
+\index{PCM\_DECODER@{PCM\_DECODER}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER}{PCM\_DECODER}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    \mbox{\hyperlink{libavcodec_2pcm_8c_aa187cf52ac19549e6c18e444a8f73a98}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+3}}(C\+O\+N\+F\+I\+G\+\_\+ \#\# \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}} \#\# \+\_\+\+D\+E\+C\+O\+D\+ER, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 578 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a56e3ae3c09cf0d1a050712a7aabd97fc}\label{libavcodec_2pcm_8c_a56e3ae3c09cf0d1a050712a7aabd97fc}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER\_0@{PCM\_DECODER\_0}}
+\index{PCM\_DECODER\_0@{PCM\_DECODER\_0}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER\_0}{PCM\_DECODER\_0}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+0(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Definition at line 559 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ac1bf88dea07ee7d1138c9b7d9e1acd49}\label{libavcodec_2pcm_8c_ac1bf88dea07ee7d1138c9b7d9e1acd49}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER\_1@{PCM\_DECODER\_1}}
+\index{PCM\_DECODER\_1@{PCM\_DECODER\_1}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER\_1}{PCM\_DECODER\_1}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+1(\begin{DoxyParamCaption}\item[{}]{id\+\_\+,  }\item[{}]{sample\+\_\+fmt\+\_\+,  }\item[{}]{name\+\_\+,  }\item[{}]{long\+\_\+name\+\_\+ }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{struct_a_v_codec}{AVCodec}} ff\_ \#\# name\_ \#\# \_decoder = \{                                        \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{struct_a_v_codec_ad3daa3e729850b573c139a83be8938ca}{name}}           = \#name\_,                                               \(\backslash\)}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(long\_name\_),                     \(\backslash\)}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},                                   \(\backslash\)}
+\DoxyCodeLine{    .id             = AV\_CODEC\_ID\_ \#\# id\_,                                  \(\backslash\)}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavcodec_2pcm_8c_a44dfbfc4f51034c3ea29f5f1ba1b3f67}{PCMDecode}}),                                    \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2pcm_8c_ab7311b36c439ed9668d594764052e2a7}{pcm\_decode\_init}},                                      \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2pcm_8c_ad4c32e0212026b6dd3e076eae0defff8}{pcm\_decode\_frame}},                                     \(\backslash\)}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},                                     \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ sample\_fmt\_,           \(\backslash\)}
+\DoxyCodeLine{                                                     AV\_SAMPLE\_FMT\_NONE \},  \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 560 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a69492c6d0bed1c51353d53a265a260f3}\label{libavcodec_2pcm_8c_a69492c6d0bed1c51353d53a265a260f3}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER\_2@{PCM\_DECODER\_2}}
+\index{PCM\_DECODER\_2@{PCM\_DECODER\_2}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER\_2}{PCM\_DECODER\_2}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+2(\begin{DoxyParamCaption}\item[{}]{cf,  }\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+ \#\# cf(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 574 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aa187cf52ac19549e6c18e444a8f73a98}\label{libavcodec_2pcm_8c_aa187cf52ac19549e6c18e444a8f73a98}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER\_3@{PCM\_DECODER\_3}}
+\index{PCM\_DECODER\_3@{PCM\_DECODER\_3}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER\_3}{PCM\_DECODER\_3}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+3(\begin{DoxyParamCaption}\item[{}]{cf,  }\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    \mbox{\hyperlink{libavcodec_2pcm_8c_a69492c6d0bed1c51353d53a265a260f3}{P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+E\+R\+\_\+2}}(cf, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 576 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a87b49df8d46e4654d36c0f42334a857a}\label{libavcodec_2pcm_8c_a87b49df8d46e4654d36c0f42334a857a}} 
+\index{pcm.c@{pcm.c}!PCM\_ENCODER@{PCM\_ENCODER}}
+\index{PCM\_ENCODER@{PCM\_ENCODER}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_ENCODER}{PCM\_ENCODER}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    \mbox{\hyperlink{libavcodec_2pcm_8c_af7d2efa9fe3c4146bc750eac24fe81b4}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+3}}(C\+O\+N\+F\+I\+G\+\_\+ \#\# \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}} \#\# \+\_\+\+E\+N\+C\+O\+D\+ER, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 556 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a2dae85f85aa94ee81e1b3700f745d6eb}\label{libavcodec_2pcm_8c_a2dae85f85aa94ee81e1b3700f745d6eb}} 
+\index{pcm.c@{pcm.c}!PCM\_ENCODER\_0@{PCM\_ENCODER\_0}}
+\index{PCM\_ENCODER\_0@{PCM\_ENCODER\_0}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_ENCODER\_0}{PCM\_ENCODER\_0}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+0(\begin{DoxyParamCaption}\item[{}]{id\+\_\+,  }\item[{}]{sample\+\_\+fmt\+\_\+,  }\item[{}]{name\+\_\+,  }\item[{}]{long\+\_\+name\+\_\+ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 538 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a18050a5e16a1602d3572c520e9df4226}\label{libavcodec_2pcm_8c_a18050a5e16a1602d3572c520e9df4226}} 
+\index{pcm.c@{pcm.c}!PCM\_ENCODER\_1@{PCM\_ENCODER\_1}}
+\index{PCM\_ENCODER\_1@{PCM\_ENCODER\_1}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_ENCODER\_1}{PCM\_ENCODER\_1}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+1(\begin{DoxyParamCaption}\item[{}]{id\+\_\+,  }\item[{}]{sample\+\_\+fmt\+\_\+,  }\item[{}]{name\+\_\+,  }\item[{}]{long\+\_\+name\+\_\+ }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{struct_a_v_codec}{AVCodec}} ff\_ \#\# name\_ \#\# \_encoder = \{                                        \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{struct_a_v_codec_ad3daa3e729850b573c139a83be8938ca}{name}}         = \#name\_,                                                 \(\backslash\)}
+\DoxyCodeLine{    .long\_name    = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(long\_name\_),                       \(\backslash\)}
+\DoxyCodeLine{    .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},                                     \(\backslash\)}
+\DoxyCodeLine{    .id           = AV\_CODEC\_ID\_ \#\# id\_,                                    \(\backslash\)}
+\DoxyCodeLine{    .init         = \mbox{\hyperlink{libavcodec_2pcm_8c_aa454d35c0f501f32a1c684ed41c885de}{pcm\_encode\_init}},                                        \(\backslash\)}
+\DoxyCodeLine{    .encode2      = \mbox{\hyperlink{libavcodec_2pcm_8c_a6a56059b2e64b17c72d3e4be8b469d49}{pcm\_encode\_frame}},                                       \(\backslash\)}
+\DoxyCodeLine{    .capabilities = \mbox{\hyperlink{group__lavc__core_ga38b16ee9a8fd4c57ffd4fef0db3481c6}{AV\_CODEC\_CAP\_VARIABLE\_FRAME\_SIZE}},                       \(\backslash\)}
+\DoxyCodeLine{    .sample\_fmts  = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ sample\_fmt\_,             \(\backslash\)}
+\DoxyCodeLine{                                                   AV\_SAMPLE\_FMT\_NONE \},    \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 539 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aca28e09a0992f22f20fcc621b5ee00d2}\label{libavcodec_2pcm_8c_aca28e09a0992f22f20fcc621b5ee00d2}} 
+\index{pcm.c@{pcm.c}!PCM\_ENCODER\_2@{PCM\_ENCODER\_2}}
+\index{PCM\_ENCODER\_2@{PCM\_ENCODER\_2}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_ENCODER\_2}{PCM\_ENCODER\_2}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+2(\begin{DoxyParamCaption}\item[{}]{cf,  }\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+ \#\# cf(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 552 of file pcm.\+c.
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_af7d2efa9fe3c4146bc750eac24fe81b4}\label{libavcodec_2pcm_8c_af7d2efa9fe3c4146bc750eac24fe81b4}} 
+\index{pcm.c@{pcm.c}!PCM\_ENCODER\_3@{PCM\_ENCODER\_3}}
+\index{PCM\_ENCODER\_3@{PCM\_ENCODER\_3}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_ENCODER\_3}{PCM\_ENCODER\_3}}
+{\footnotesize\ttfamily \#define P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+3(\begin{DoxyParamCaption}\item[{}]{cf,  }\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}},  }\item[{}]{sample\+\_\+fmt,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{long\+\_\+name }\end{DoxyParamCaption})~    \mbox{\hyperlink{libavcodec_2pcm_8c_aca28e09a0992f22f20fcc621b5ee00d2}{P\+C\+M\+\_\+\+E\+N\+C\+O\+D\+E\+R\+\_\+2}}(cf, \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}, sample\+\_\+fmt, \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, long\+\_\+name)}
+
+
+
+Definition at line 554 of file pcm.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a44dfbfc4f51034c3ea29f5f1ba1b3f67}\label{libavcodec_2pcm_8c_a44dfbfc4f51034c3ea29f5f1ba1b3f67}} 
+\index{pcm.c@{pcm.c}!PCMDecode@{PCMDecode}}
+\index{PCMDecode@{PCMDecode}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCMDecode}{PCMDecode}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_p_c_m_decode}{P\+C\+M\+Decode}} \mbox{\hyperlink{struct_p_c_m_decode}{P\+C\+M\+Decode}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a6062bf2fce4ea46f87ddad2657608286}\label{libavcodec_2pcm_8c_a6062bf2fce4ea46f87ddad2657608286}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [1/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+A\+L\+AW}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+alaw}]{,  }\item[{\char`\"{}P\+CM \mbox{\hyperlink{vf__geq_8c_adf764cbdea00d65edcd07bb9953ad2b7a42a4ade1acd55a49164099104990e09f}{A}}-\/law / G.\+711 \mbox{\hyperlink{vf__geq_8c_adf764cbdea00d65edcd07bb9953ad2b7a42a4ade1acd55a49164099104990e09f}{A}}-\/law\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a8fddf54ebe8ba5188d38964cced0425d}\label{libavcodec_2pcm_8c_a8fddf54ebe8ba5188d38964cced0425d}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [2/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F32\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}}]{,  }\item[{pcm\+\_\+f32be}]{,  }\item[{\char`\"{}P\+CM 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ac3d999bc959d78fc388066363ee140fe}\label{libavcodec_2pcm_8c_ac3d999bc959d78fc388066363ee140fe}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [3/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F32\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}}]{,  }\item[{pcm\+\_\+f32le}]{,  }\item[{\char`\"{}P\+CM 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a5d8f32a43c4fd1ff406200ae23ef7839}\label{libavcodec_2pcm_8c_a5d8f32a43c4fd1ff406200ae23ef7839}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [4/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F64\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ae35a2a6a7593723d9fe4bcefb2876606}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+D\+BL}}}]{,  }\item[{pcm\+\_\+f64be}]{,  }\item[{\char`\"{}P\+CM 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ae6f12523ca574c8e9652682ae45e7aad}\label{libavcodec_2pcm_8c_ae6f12523ca574c8e9652682ae45e7aad}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [5/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F64\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ae35a2a6a7593723d9fe4bcefb2876606}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+D\+BL}}}]{,  }\item[{pcm\+\_\+f64le}]{,  }\item[{\char`\"{}P\+CM 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} floating point little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a70f99ffffcfd2b5f250e94bff473d0a0}\label{libavcodec_2pcm_8c_a70f99ffffcfd2b5f250e94bff473d0a0}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [6/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+M\+U\+L\+AW}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+mulaw}]{,  }\item[{\char`\"{}P\+CM mu-\/law / G.\+711 mu-\/law\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a42c58391c818bff83db82469c2aecad1}\label{libavcodec_2pcm_8c_a42c58391c818bff83db82469c2aecad1}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [7/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S16\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+s16be}]{,  }\item[{\char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ad24028b7d5c8a94fa9fd7e46868e2fce}\label{libavcodec_2pcm_8c_ad24028b7d5c8a94fa9fd7e46868e2fce}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [8/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S16\+B\+E\+\_\+\+P\+L\+A\+N\+AR}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16P}}}]{,  }\item[{pcm\+\_\+s16be\+\_\+planar}]{,  }\item[{\char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a78ca0b994e1e9e733ad2b0267fbcf7ce}\label{libavcodec_2pcm_8c_a78ca0b994e1e9e733ad2b0267fbcf7ce}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [9/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S16\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+s16le}]{,  }\item[{\char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a20f0139d34faba6852611626d1e32f35}\label{libavcodec_2pcm_8c_a20f0139d34faba6852611626d1e32f35}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [10/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S16\+L\+E\+\_\+\+P\+L\+A\+N\+AR}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16P}}}]{,  }\item[{pcm\+\_\+s16le\+\_\+planar}]{,  }\item[{\char`\"{}P\+CM signed 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_af9f98b8f345604f01834e852683caada}\label{libavcodec_2pcm_8c_af9f98b8f345604f01834e852683caada}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [11/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S24\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+s24be}]{,  }\item[{\char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ac29a3b4677cc3750e6cf1e7938379530}\label{libavcodec_2pcm_8c_ac29a3b4677cc3750e6cf1e7938379530}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [12/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S24\+D\+A\+UD}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+s24daud}]{,  }\item[{\char`\"{}P\+CM \mbox{\hyperlink{rematrix__init_8c_a8af890148d3dfc649c6f2a805563f8b0}{D}}-\/Cinema audio signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a621cb1ea5aa896784285ced13a88e0aa}\label{libavcodec_2pcm_8c_a621cb1ea5aa896784285ced13a88e0aa}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [13/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S24\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+s24le}]{,  }\item[{\char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aa56a135dfb7343247caf5c28768380eb}\label{libavcodec_2pcm_8c_aa56a135dfb7343247caf5c28768380eb}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [14/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S24\+L\+E\+\_\+\+P\+L\+A\+N\+AR}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}}]{,  }\item[{pcm\+\_\+s24le\+\_\+planar}]{,  }\item[{\char`\"{}P\+CM signed 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ac80ba8dbd8a31e9055cc19ebcf0b0aaa}\label{libavcodec_2pcm_8c_ac80ba8dbd8a31e9055cc19ebcf0b0aaa}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [15/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S32\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+s32be}]{,  }\item[{\char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a459191213a034e09acb9eb3f84f39125}\label{libavcodec_2pcm_8c_a459191213a034e09acb9eb3f84f39125}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [16/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S32\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+s32le}]{,  }\item[{\char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_af256d3390f9c7c516325637a43ac1eab}\label{libavcodec_2pcm_8c_af256d3390f9c7c516325637a43ac1eab}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [17/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S32\+L\+E\+\_\+\+P\+L\+A\+N\+AR}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}}]{,  }\item[{pcm\+\_\+s32le\+\_\+planar}]{,  }\item[{\char`\"{}P\+CM signed 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_adbdf6c603de797f9d3ffb170244aead7}\label{libavcodec_2pcm_8c_adbdf6c603de797f9d3ffb170244aead7}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [18/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S64\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a59a56ed0ec7b70ecda41c5ae943f256e}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S64}}}]{,  }\item[{pcm\+\_\+s64be}]{,  }\item[{\char`\"{}P\+CM signed 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a663dff8464dc047c978e531feea6d178}\label{libavcodec_2pcm_8c_a663dff8464dc047c978e531feea6d178}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [19/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S64\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a59a56ed0ec7b70ecda41c5ae943f256e}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S64}}}]{,  }\item[{pcm\+\_\+s64le}]{,  }\item[{\char`\"{}P\+CM signed 64-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a64faac87ee3f2e8080edbf52261c3673}\label{libavcodec_2pcm_8c_a64faac87ee3f2e8080edbf52261c3673}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [20/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S8}]{,  }\item[{\mbox{\hyperlink{audioconvert_8c_ada3f2f20e8b592fea3bf924182793cc8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8}}}]{,  }\item[{pcm\+\_\+s8}]{,  }\item[{\char`\"{}P\+CM signed 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_af1ca99eb89994db987346fb2385c9899}\label{libavcodec_2pcm_8c_af1ca99eb89994db987346fb2385c9899}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [21/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+S8\+\_\+\+P\+L\+A\+N\+AR}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a6ab0109a23af37e29ea3a7282c00d311}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8P}}}]{,  }\item[{pcm\+\_\+s8\+\_\+planar}]{,  }\item[{\char`\"{}P\+CM signed 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a611d02c86a36d5c15c1ea27e89b77e11}\label{libavcodec_2pcm_8c_a611d02c86a36d5c15c1ea27e89b77e11}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [22/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U16\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+u16be}]{,  }\item[{\char`\"{}P\+CM unsigned 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a872bff7604b523c9ab80bbd679a58a03}\label{libavcodec_2pcm_8c_a872bff7604b523c9ab80bbd679a58a03}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [23/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U16\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+u16le}]{,  }\item[{\char`\"{}P\+CM unsigned 16-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a3c500f56120d15833563b7c4cd045a2e}\label{libavcodec_2pcm_8c_a3c500f56120d15833563b7c4cd045a2e}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [24/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U24\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+u24be}]{,  }\item[{\char`\"{}P\+CM unsigned 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a1ecf0c9485024159419ead3050cfb01d}\label{libavcodec_2pcm_8c_a1ecf0c9485024159419ead3050cfb01d}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [25/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U24\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+u24le}]{,  }\item[{\char`\"{}P\+CM unsigned 24-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a2def2fc709be89ce157782be69067ed9}\label{libavcodec_2pcm_8c_a2def2fc709be89ce157782be69067ed9}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [26/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U32\+BE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+u32be}]{,  }\item[{\char`\"{}P\+CM unsigned 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} big-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aa83b4438f7db9c4a411b251e14808f4f}\label{libavcodec_2pcm_8c_aa83b4438f7db9c4a411b251e14808f4f}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [27/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U32\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32}}}]{,  }\item[{pcm\+\_\+u32le}]{,  }\item[{\char`\"{}P\+CM unsigned 32-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a5a26643968da9d5f650310138fa721e1}\label{libavcodec_2pcm_8c_a5a26643968da9d5f650310138fa721e1}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [28/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+U8}]{,  }\item[{\mbox{\hyperlink{audioconvert_8c_ada3f2f20e8b592fea3bf924182793cc8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+U8}}}]{,  }\item[{pcm\+\_\+u8}]{,  }\item[{\char`\"{}P\+CM unsigned 8-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ac006876d4e7f033f1c1d8d8c9808a0ca}\label{libavcodec_2pcm_8c_ac006876d4e7f033f1c1d8d8c9808a0ca}} 
+\index{pcm.c@{pcm.c}!PCM\_CODEC@{PCM\_CODEC}}
+\index{PCM\_CODEC@{PCM\_CODEC}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_CODEC()}{PCM\_CODEC()}\hspace{0.1cm}{\footnotesize\ttfamily [29/29]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+C\+O\+D\+EC (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+V\+I\+DC}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S16}}}]{,  }\item[{pcm\+\_\+vidc}]{,  }\item[{\char`\"{}P\+CM Archimedes V\+I\+DC\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ad4c32e0212026b6dd3e076eae0defff8}\label{libavcodec_2pcm_8c_ad4c32e0212026b6dd3e076eae0defff8}} 
+\index{pcm.c@{pcm.c}!pcm\_decode\_frame@{pcm\_decode\_frame}}
+\index{pcm\_decode\_frame@{pcm\_decode\_frame}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{pcm\_decode\_frame()}{pcm\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pcm\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 320 of file pcm.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2pcm_8c_ad4c32e0212026b6dd3e076eae0defff8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_ab7311b36c439ed9668d594764052e2a7}\label{libavcodec_2pcm_8c_ab7311b36c439ed9668d594764052e2a7}} 
+\index{pcm.c@{pcm.c}!pcm\_decode\_init@{pcm\_decode\_init}}
+\index{pcm\_decode\_init@{pcm\_decode\_init}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{pcm\_decode\_init()}{pcm\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pcm\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 243 of file pcm.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavcodec_2pcm_8c_ab7311b36c439ed9668d594764052e2a7_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a2df76f980166db653d27139f304c0cf9}\label{libavcodec_2pcm_8c_a2df76f980166db653d27139f304c0cf9}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER@{PCM\_DECODER}}
+\index{PCM\_DECODER@{PCM\_DECODER}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER()}{PCM\_DECODER()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F16\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}}]{,  }\item[{pcm\+\_\+f16le}]{,  }\item[{\char`\"{}P\+CM 16.\+8 floating point little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a7a2e9d014229297f9bf80887a337ba23}\label{libavcodec_2pcm_8c_a7a2e9d014229297f9bf80887a337ba23}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER@{PCM\_DECODER}}
+\index{PCM\_DECODER@{PCM\_DECODER}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER()}{PCM\_DECODER()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+F24\+LE}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+F\+LT}}}]{,  }\item[{pcm\+\_\+f24le}]{,  }\item[{\char`\"{}P\+CM 24.\+0 floating point little-\/endian\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a6fbd7d62dc21d458d2a47360b8e12be0}\label{libavcodec_2pcm_8c_a6fbd7d62dc21d458d2a47360b8e12be0}} 
+\index{pcm.c@{pcm.c}!PCM\_DECODER@{PCM\_DECODER}}
+\index{PCM\_DECODER@{PCM\_DECODER}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{PCM\_DECODER()}{PCM\_DECODER()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily P\+C\+M\+\_\+\+D\+E\+C\+O\+D\+ER (\begin{DoxyParamCaption}\item[{P\+C\+M\+\_\+\+L\+XF}]{,  }\item[{\mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{A\+V\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+F\+M\+T\+\_\+\+S32P}}}]{,  }\item[{pcm\+\_\+lxf}]{,  }\item[{\char`\"{}P\+CM signed 20-\/\mbox{\hyperlink{cbs__mpeg2_8c_a5420f92a5fa8c2d1740e1eaf8a18aa15}{bit}} little-\/endian \mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}}\char`\"{}}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{libavcodec_2pcm_8c_a6a56059b2e64b17c72d3e4be8b469d49}\label{libavcodec_2pcm_8c_a6a56059b2e64b17c72d3e4be8b469d49}} 
+\index{pcm.c@{pcm.c}!pcm\_encode\_frame@{pcm\_encode\_frame}}
+\index{pcm\_encode\_frame@{pcm\_encode\_frame}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{pcm\_encode\_frame()}{pcm\_encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pcm\+\_\+encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 87 of file pcm.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2pcm_8c_a6a56059b2e64b17c72d3e4be8b469d49_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2pcm_8c_aa454d35c0f501f32a1c684ed41c885de}\label{libavcodec_2pcm_8c_aa454d35c0f501f32a1c684ed41c885de}} 
+\index{pcm.c@{pcm.c}!pcm\_encode\_init@{pcm\_encode\_init}}
+\index{pcm\_encode\_init@{pcm\_encode\_init}!pcm.c@{pcm.c}}
+\doxysubsubsection{\texorpdfstring{pcm\_encode\_init()}{pcm\_encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pcm\+\_\+encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 35 of file pcm.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2pcm_8c_aa454d35c0f501f32a1c684ed41c885de_cgraph}
+\end{center}
+\end{figure}

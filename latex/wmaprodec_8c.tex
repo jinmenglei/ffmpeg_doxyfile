@@ -1,0 +1,1613 @@
+\hypertarget{wmaprodec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/wmaprodec.c File Reference}
+\label{wmaprodec_8c}\index{E:/github/ffmpeg/libavcodec/wmaprodec.c@{E:/github/ffmpeg/libavcodec/wmaprodec.c}}
+
+
+wmapro decoder implementation Wmapro is an M\+D\+CT based codec comparable to wma standard or A\+AC. The decoding therefore consists of the following steps\+:  
+
+
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/ffmath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intfloat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wmaprodata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sinewin.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wma.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wma\+\_\+common.\+h\char`\"{}}\newline
+Include dependency graph for wmaprodec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_w_m_a_pro_channel_ctx}{W\+M\+A\+Pro\+Channel\+Ctx}}
+\begin{DoxyCompactList}\small\item\em frame specific decoder context for a single channel \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}}
+\begin{DoxyCompactList}\small\item\em channel group for channel transformations \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}}
+\begin{DoxyCompactList}\small\item\em main decoder context \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{struct_x_m_a_decode_ctx}{X\+M\+A\+Decode\+Ctx}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_aff60e4359f8612656121c0e8303183f3}{W\+M\+A\+P\+R\+O\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~8
+\begin{DoxyCompactList}\small\item\em max number of handled channels \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_abe31044e248ed58986088de9f2528ade}{M\+A\+X\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES}}~32
+\begin{DoxyCompactList}\small\item\em max number of subframes per channel \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a004b751f8a5906ffd88e98f5aff8a275}{M\+A\+X\+\_\+\+B\+A\+N\+DS}}~29
+\begin{DoxyCompactList}\small\item\em max number of scale factor bands \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_aec6f87b5adab846fb54ffb94851b5c00}{M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+S\+I\+ZE}}~32768
+\begin{DoxyCompactList}\small\item\em maximum compressed frame size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a93d17524ba3cb364c097e81e23ee9383}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+S\+T\+R\+E\+A\+MS}}~8
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_ae45d2214353d46188d8e354a56898770}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+L\+S\+\_\+\+S\+T\+R\+E\+AM}}~2
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_ad50f00e029870b896b21462fb4a1cbdf}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~(\mbox{\hyperlink{wmaprodec_8c_a93d17524ba3cb364c097e81e23ee9383}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+S\+T\+R\+E\+A\+MS}} $\ast$ \mbox{\hyperlink{wmaprodec_8c_ae45d2214353d46188d8e354a56898770}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+L\+S\+\_\+\+S\+T\+R\+E\+AM}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}}~6
+\begin{DoxyCompactList}\small\item\em log2 of min block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}}~13
+\begin{DoxyCompactList}\small\item\em log2 of max block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a144fa7179fd187da2be825f5b224afb3}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+S\+I\+ZE}}~(1 $<$$<$ \mbox{\hyperlink{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}})
+\begin{DoxyCompactList}\small\item\em minimum block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a08841fcd3135a1d50b5b710056831f52}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE}}~(1 $<$$<$ \mbox{\hyperlink{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}})
+\begin{DoxyCompactList}\small\item\em maximum block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a0f3dcad6d266086e53f9b6473e040e32}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+Z\+ES}}~(\mbox{\hyperlink{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}} -\/ \mbox{\hyperlink{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}} + 1)
+\begin{DoxyCompactList}\small\item\em possible block sizes \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}~9
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}{S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS}}~8
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a72d8d7b33b42d41626a5844edb80c362}{V\+E\+C4\+M\+A\+X\+D\+E\+P\+TH}}~((\mbox{\hyperlink{wmaprodata_8h_ad60d9f502264892f35deed34da9583ef}{H\+U\+F\+F\+\_\+\+V\+E\+C4\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a4ae412c3bd7232b561a09bf622301357}{V\+E\+C2\+M\+A\+X\+D\+E\+P\+TH}}~((\mbox{\hyperlink{wmaprodata_8h_ada2692bbd7f934ca9091aabe207aca1d}{H\+U\+F\+F\+\_\+\+V\+E\+C2\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a947dc56eb2c9e7641d2d37f0dabae5a5}{V\+E\+C1\+M\+A\+X\+D\+E\+P\+TH}}~((\mbox{\hyperlink{wmaprodata_8h_a23b830b668b133aa086d7d3989c16742}{H\+U\+F\+F\+\_\+\+V\+E\+C1\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_abd67eb50aa55c5afccf54328ec8c8df2}{S\+C\+A\+L\+E\+M\+A\+X\+D\+E\+P\+TH}}~((\mbox{\hyperlink{wmaprodata_8h_a8bd990016805ef8a99b2d0675be5b3ee}{H\+U\+F\+F\+\_\+\+S\+C\+A\+L\+E\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}{S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}{S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a16247cf177fadd7f58d98fa155e4194d}{S\+C\+A\+L\+E\+R\+L\+M\+A\+X\+D\+E\+P\+TH}}~((\mbox{\hyperlink{wmaprodata_8h_a1edf72f29eafe0e4e70f39ca7b38ceeb}{H\+U\+F\+F\+\_\+\+S\+C\+A\+L\+E\+\_\+\+R\+L\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a93793dbefd4e399ba38a1fa9daf79cb5}{P\+R\+I\+NT}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~\mbox{\hyperlink{group__lavu__log_gabd386ffd4b27637cf34e98d5d1a6e8ae}{av\+\_\+log}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$avctx, \mbox{\hyperlink{group__lavu__log__constants_ga5b7221c3afd06848486776bd834a58a5}{A\+V\+\_\+\+L\+O\+G\+\_\+\+D\+E\+B\+UG}}, \char`\"{} \%s = \%d\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});
+\item 
+\#define \mbox{\hyperlink{wmaprodec_8c_a4707df8e718a927218f265589451e7a9}{P\+R\+I\+N\+T\+\_\+\+H\+EX}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~\mbox{\hyperlink{group__lavu__log_gabd386ffd4b27637cf34e98d5d1a6e8ae}{av\+\_\+log}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$avctx, \mbox{\hyperlink{group__lavu__log__constants_ga5b7221c3afd06848486776bd834a58a5}{A\+V\+\_\+\+L\+O\+G\+\_\+\+D\+E\+B\+UG}}, \char`\"{} \%s = \%\char`\"{}P\+R\+Ix32\char`\"{}\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_w_m_a_pro_channel_ctx}{W\+M\+A\+Pro\+Channel\+Ctx}} \mbox{\hyperlink{wmaprodec_8c_ad28a696de3e14a72bd4510ed58cce3e3}{W\+M\+A\+Pro\+Channel\+Ctx}}
+\begin{DoxyCompactList}\small\item\em frame specific decoder context for a single channel \end{DoxyCompactList}\item 
+typedef struct \mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}} \mbox{\hyperlink{wmaprodec_8c_a6e0bad5ceda11351d55d2e7f0be51ded}{W\+M\+A\+Pro\+Channel\+Grp}}
+\begin{DoxyCompactList}\small\item\em channel group for channel transformations \end{DoxyCompactList}\item 
+typedef struct \mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} \mbox{\hyperlink{wmaprodec_8c_a96292ef77b7f08ec3b83efbbbb9db3fb}{W\+M\+A\+Pro\+Decode\+Ctx}}
+\begin{DoxyCompactList}\small\item\em main decoder context \end{DoxyCompactList}\item 
+typedef struct \mbox{\hyperlink{struct_x_m_a_decode_ctx}{X\+M\+A\+Decode\+Ctx}} \mbox{\hyperlink{wmaprodec_8c_ab0b7843c306518aec9962a28b56da601}{X\+M\+A\+Decode\+Ctx}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a114acf1806208b73f0f501efea6b6d40}{dump\+\_\+context}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em helper function to print the most important members of the context \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_af49f6251c36613bfddd44d6bf0edcc88}{decode\+\_\+end}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Uninitialize the decoder and free all resources. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_acad063789ba3f74d8177cec7f1524b55}{wmapro\+\_\+decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a5810ef43c45529d921968ebb8acb006a}{get\+\_\+rate}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a44e2e16e156eeb4b5d4658995e90a601}{decode\+\_\+init}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+stream)
+\begin{DoxyCompactList}\small\item\em Initialize the decoder. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_ad400bcee0fb0b013019e1b0c64a58f59}{wmapro\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\begin{DoxyCompactList}\small\item\em Initialize the decoder. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_ac16f18cc940598c6584b587e400aae0e}{decode\+\_\+subframe\+\_\+length}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\begin{DoxyCompactList}\small\item\em Decode the subframe length. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_aedd50aa7e00dd4b6b65b8eb53e4526b1}{decode\+\_\+tilehdr}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Decode how the data in the frame is split into subframes. Every W\+MA frame contains the encoded data for a fixed number of samples per channel. The data for every channel might be split into several subframes. This function will reconstruct the list of subframes for every channel. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a96cee75181f00a66a144b412df7f2e02}{decode\+\_\+decorrelation\+\_\+matrix}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}} $\ast$chgroup)
+\begin{DoxyCompactList}\small\item\em Calculate a decorrelation matrix from the bitstream parameters. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a6d74e5a120e911ad30b6cca41c7cf6d3}{decode\+\_\+channel\+\_\+transform}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Decode channel transformation parameters. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_ae2eb31e6e7fb741a4a3a30968fe1b120}{decode\+\_\+coeffs}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\begin{DoxyCompactList}\small\item\em Extract the coefficients from the bitstream. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_afe12511e66ddd0b577bf9602e896d3eb}{decode\+\_\+scale\+\_\+factors}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Extract scale factors from the bitstream. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_aaa67e655a9611a70ee1710b1093fb67e}{inverse\+\_\+channel\+\_\+transform}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Reconstruct the individual channel data. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a02e54539ddf2e4a32d59e94723066ef9}{wmapro\+\_\+window}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Apply sine window and reconstruct the output buffer. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_ac4374071fdcc08940909677cc527d320}{decode\+\_\+subframe}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Decode a single subframe (block). \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a3947ce3094d708b8963679bb59739523}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr)
+\begin{DoxyCompactList}\small\item\em Decode one W\+MA frame. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a035dace710cc8be894d69f1219cc34dd}{remaining\+\_\+bits}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb)
+\begin{DoxyCompactList}\small\item\em Calculate remaining input buffer length. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a599472217fd9b642c037be6b0f75bf02}{save\+\_\+bits}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mjpeg2jpeg__bsf_8c_a7171d7a6736250cb1c93100b33ee0ea3}{append}})
+\begin{DoxyCompactList}\small\item\em Fill the bit reservoir with a (partial) frame. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_ae22da1301e4386e95324073cef6921b4}{decode\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_aaab4d0fce83ce484c88722ab43aec9be}{wmapro\+\_\+decode\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\begin{DoxyCompactList}\small\item\em Decode a single W\+MA packet. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b}{xma\+\_\+decode\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a}{xma\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3}{xma\+\_\+decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b}{flush}} (\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a1f1d7585e71d740ef1d09c4f1037acec}{wmapro\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\begin{DoxyCompactList}\small\item\em Clear decoder buffers (for seeking). \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmaprodec_8c_a2566fcee35905bfd917d3e1832f6ce9f}{xma\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_a0221f374e31e9eaec463cb2852be60c0}{sf\+\_\+vlc}}
+\begin{DoxyCompactList}\small\item\em scale factor D\+P\+CM vlc \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_aa6be684888e3438a73aaa095dd9f1073}{sf\+\_\+rl\+\_\+vlc}}
+\begin{DoxyCompactList}\small\item\em scale factor run length vlc \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_a304c8f4ffd541de3a3560e8546f1d459}{vec4\+\_\+vlc}}
+\begin{DoxyCompactList}\small\item\em 4 coefficients per symbol \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_a7b897ef373d1bb8f282fcaafeae32237}{vec2\+\_\+vlc}}
+\begin{DoxyCompactList}\small\item\em 2 coefficients per symbol \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_a9add746c4e4a95b1b65201efd98bb0ce}{vec1\+\_\+vlc}}
+\begin{DoxyCompactList}\small\item\em 1 coefficient per symbol \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{wmaprodec_8c_a584cd19c074acfe801367b2e1a1f08b1}{coef\+\_\+vlc}} \mbox{[}2\mbox{]}
+\begin{DoxyCompactList}\small\item\em coefficient run length vlc codes \end{DoxyCompactList}\item 
+static float \mbox{\hyperlink{wmaprodec_8c_a30d7e1c0f5f27fb2430f0353779807a5}{sin64}} \mbox{[}33\mbox{]}
+\begin{DoxyCompactList}\small\item\em sine table for decorrelation \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{wmaprodec_8c_ad0b19ac73c78b571e9d4321bc5f25f4c}{ff\+\_\+wmapro\+\_\+decoder}}
+\begin{DoxyCompactList}\small\item\em wmapro decoder \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{wmaprodec_8c_a80aa3a3b96cb451dc7aa4572f2b9672b}{ff\+\_\+xma1\+\_\+decoder}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{wmaprodec_8c_a1140183516c0e9cec10b77338c641783}{ff\+\_\+xma2\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+wmapro decoder implementation Wmapro is an M\+D\+CT based codec comparable to wma standard or A\+AC. The decoding therefore consists of the following steps\+: 
+
+
+\begin{DoxyItemize}
+\item bitstream decoding
+\item reconstruction of per-\/channel data
+\item rescaling and inverse quantization
+\item I\+M\+D\+CT
+\item windowing and overlapp-\/add
+\end{DoxyItemize}
+
+The compressed wmapro bitstream is split into individual packets. Every such packet contains one or more wma frames. The compressed frames may have a variable length and frames may cross packet boundaries. Common to all wmapro frames is the number of samples that are stored in a frame. The number of samples and a few other decode flags are stored as extradata that has to be passed to the decoder.
+
+The wmapro frames themselves are again split into a variable number of subframes. Every subframe contains the data for 2$^\wedge$N time domain samples where N varies between 7 and 12.
+
+Example wmapro bitstream (in samples)\+:\hypertarget{wmaprodec_8c_autotoc_md22}{}\doxysubsubsection{$\vert$$\vert$   packet 0           $\vert$$\vert$ packet 1 $\vert$$\vert$ packet 2      packets}\label{wmaprodec_8c_autotoc_md22}
+\hypertarget{wmaprodec_8c_autotoc_md23}{}\doxysubsubsection{$\vert$$\vert$ frame 0      $\vert$$\vert$ frame 1       $\vert$$\vert$ frame 2    $\vert$$\vert$    frames}\label{wmaprodec_8c_autotoc_md23}
+\hypertarget{wmaprodec_8c_autotoc_md24}{}\doxysubsubsection{$\vert$$\vert$   $\vert$      $\vert$   $\vert$$\vert$   $\vert$   $\vert$   $\vert$   $\vert$$\vert$            $\vert$$\vert$    subframes of channel 0}\label{wmaprodec_8c_autotoc_md24}
+\hypertarget{wmaprodec_8c_autotoc_md25}{}\doxysubsubsection{$\vert$$\vert$      $\vert$   $\vert$   $\vert$$\vert$   $\vert$   $\vert$   $\vert$   $\vert$$\vert$            $\vert$$\vert$    subframes of channel 1}\label{wmaprodec_8c_autotoc_md25}
+The frame layouts for the individual channels of a wma frame does not need to be the same.
+
+However, if the offsets and lengths of several subframes of a frame are the same, the subframes of the channels can be grouped. Every group may then use special coding techniques like M/S stereo coding to improve the compression ratio. These channel transformations do not need to be applied to a whole subframe. Instead, they can also work on individual scale factor bands (see below). The coefficients that carry the audio signal in the frequency domain are transmitted as huffman-\/coded vectors with 4, 2 and 1 elements. In addition to that, the encoder can switch to a runlevel coding scheme by transmitting subframe\+\_\+length / 128 zero coefficients.
+
+Before the audio signal can be converted to the time domain, the coefficients have to be rescaled and inverse quantized. A subframe is therefore split into several scale factor bands that get scaled individually. Scale factors are submitted for every frame but they might be shared between the subframes of a channel. Scale factors are initially D\+P\+C\+M-\/coded. Once scale factors are shared, the differences are transmitted as runlevel codes. Every subframe length and offset combination in the frame layout shares a common quantization factor that can be adjusted for every channel by a modifier. After the inverse quantization, the coefficients get processed by an I\+M\+D\+CT. The resulting values are then windowed with a sine window and the first half of the values are added to the second half of the output from the previous subframe in order to reconstruct the output samples. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{wmaprodec_8c_a004b751f8a5906ffd88e98f5aff8a275}\label{wmaprodec_8c_a004b751f8a5906ffd88e98f5aff8a275}} 
+\index{wmaprodec.c@{wmaprodec.c}!MAX\_BANDS@{MAX\_BANDS}}
+\index{MAX\_BANDS@{MAX\_BANDS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BANDS}{MAX\_BANDS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+A\+N\+DS~29}
+
+
+
+max number of scale factor bands 
+
+
+
+Definition at line 107 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_aec6f87b5adab846fb54ffb94851b5c00}\label{wmaprodec_8c_aec6f87b5adab846fb54ffb94851b5c00}} 
+\index{wmaprodec.c@{wmaprodec.c}!MAX\_FRAMESIZE@{MAX\_FRAMESIZE}}
+\index{MAX\_FRAMESIZE@{MAX\_FRAMESIZE}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_FRAMESIZE}{MAX\_FRAMESIZE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+S\+I\+ZE~32768}
+
+
+
+maximum compressed frame size 
+
+
+
+Definition at line 108 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_abe31044e248ed58986088de9f2528ade}\label{wmaprodec_8c_abe31044e248ed58986088de9f2528ade}} 
+\index{wmaprodec.c@{wmaprodec.c}!MAX\_SUBFRAMES@{MAX\_SUBFRAMES}}
+\index{MAX\_SUBFRAMES@{MAX\_SUBFRAMES}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_SUBFRAMES}{MAX\_SUBFRAMES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES~32}
+
+
+
+max number of subframes per channel 
+
+
+
+Definition at line 106 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a93793dbefd4e399ba38a1fa9daf79cb5}\label{wmaprodec_8c_a93793dbefd4e399ba38a1fa9daf79cb5}} 
+\index{wmaprodec.c@{wmaprodec.c}!PRINT@{PRINT}}
+\index{PRINT@{PRINT}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{PRINT}{PRINT}}
+{\footnotesize\ttfamily \#define P\+R\+I\+NT(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~\mbox{\hyperlink{group__lavu__log_gabd386ffd4b27637cf34e98d5d1a6e8ae}{av\+\_\+log}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$avctx, \mbox{\hyperlink{group__lavu__log__constants_ga5b7221c3afd06848486776bd834a58a5}{A\+V\+\_\+\+L\+O\+G\+\_\+\+D\+E\+B\+UG}}, \char`\"{} \%s = \%d\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});}
+
+\mbox{\Hypertarget{wmaprodec_8c_a4707df8e718a927218f265589451e7a9}\label{wmaprodec_8c_a4707df8e718a927218f265589451e7a9}} 
+\index{wmaprodec.c@{wmaprodec.c}!PRINT\_HEX@{PRINT\_HEX}}
+\index{PRINT\_HEX@{PRINT\_HEX}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{PRINT\_HEX}{PRINT\_HEX}}
+{\footnotesize\ttfamily \#define P\+R\+I\+N\+T\+\_\+\+H\+EX(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~\mbox{\hyperlink{group__lavu__log_gabd386ffd4b27637cf34e98d5d1a6e8ae}{av\+\_\+log}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$avctx, \mbox{\hyperlink{group__lavu__log__constants_ga5b7221c3afd06848486776bd834a58a5}{A\+V\+\_\+\+L\+O\+G\+\_\+\+D\+E\+B\+UG}}, \char`\"{} \%s = \%\char`\"{}P\+R\+Ix32\char`\"{}\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});}
+
+\mbox{\Hypertarget{wmaprodec_8c_abd67eb50aa55c5afccf54328ec8c8df2}\label{wmaprodec_8c_abd67eb50aa55c5afccf54328ec8c8df2}} 
+\index{wmaprodec.c@{wmaprodec.c}!SCALEMAXDEPTH@{SCALEMAXDEPTH}}
+\index{SCALEMAXDEPTH@{SCALEMAXDEPTH}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{SCALEMAXDEPTH}{SCALEMAXDEPTH}}
+{\footnotesize\ttfamily \#define S\+C\+A\+L\+E\+M\+A\+X\+D\+E\+P\+TH~((\mbox{\hyperlink{wmaprodata_8h_a8bd990016805ef8a99b2d0675be5b3ee}{H\+U\+F\+F\+\_\+\+S\+C\+A\+L\+E\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}{S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}{S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 125 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a16247cf177fadd7f58d98fa155e4194d}\label{wmaprodec_8c_a16247cf177fadd7f58d98fa155e4194d}} 
+\index{wmaprodec.c@{wmaprodec.c}!SCALERLMAXDEPTH@{SCALERLMAXDEPTH}}
+\index{SCALERLMAXDEPTH@{SCALERLMAXDEPTH}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{SCALERLMAXDEPTH}{SCALERLMAXDEPTH}}
+{\footnotesize\ttfamily \#define S\+C\+A\+L\+E\+R\+L\+M\+A\+X\+D\+E\+P\+TH~((\mbox{\hyperlink{wmaprodata_8h_a1edf72f29eafe0e4e70f39ca7b38ceeb}{H\+U\+F\+F\+\_\+\+S\+C\+A\+L\+E\+\_\+\+R\+L\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 126 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}\label{wmaprodec_8c_ab9f63d5f69a48e60aba080a1b9baf277}} 
+\index{wmaprodec.c@{wmaprodec.c}!SCALEVLCBITS@{SCALEVLCBITS}}
+\index{SCALEVLCBITS@{SCALEVLCBITS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{SCALEVLCBITS}{SCALEVLCBITS}}
+{\footnotesize\ttfamily \#define S\+C\+A\+L\+E\+V\+L\+C\+B\+I\+TS~8}
+
+
+
+Definition at line 121 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a947dc56eb2c9e7641d2d37f0dabae5a5}\label{wmaprodec_8c_a947dc56eb2c9e7641d2d37f0dabae5a5}} 
+\index{wmaprodec.c@{wmaprodec.c}!VEC1MAXDEPTH@{VEC1MAXDEPTH}}
+\index{VEC1MAXDEPTH@{VEC1MAXDEPTH}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{VEC1MAXDEPTH}{VEC1MAXDEPTH}}
+{\footnotesize\ttfamily \#define V\+E\+C1\+M\+A\+X\+D\+E\+P\+TH~((\mbox{\hyperlink{wmaprodata_8h_a23b830b668b133aa086d7d3989c16742}{H\+U\+F\+F\+\_\+\+V\+E\+C1\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 124 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a4ae412c3bd7232b561a09bf622301357}\label{wmaprodec_8c_a4ae412c3bd7232b561a09bf622301357}} 
+\index{wmaprodec.c@{wmaprodec.c}!VEC2MAXDEPTH@{VEC2MAXDEPTH}}
+\index{VEC2MAXDEPTH@{VEC2MAXDEPTH}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{VEC2MAXDEPTH}{VEC2MAXDEPTH}}
+{\footnotesize\ttfamily \#define V\+E\+C2\+M\+A\+X\+D\+E\+P\+TH~((\mbox{\hyperlink{wmaprodata_8h_ada2692bbd7f934ca9091aabe207aca1d}{H\+U\+F\+F\+\_\+\+V\+E\+C2\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 123 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a72d8d7b33b42d41626a5844edb80c362}\label{wmaprodec_8c_a72d8d7b33b42d41626a5844edb80c362}} 
+\index{wmaprodec.c@{wmaprodec.c}!VEC4MAXDEPTH@{VEC4MAXDEPTH}}
+\index{VEC4MAXDEPTH@{VEC4MAXDEPTH}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{VEC4MAXDEPTH}{VEC4MAXDEPTH}}
+{\footnotesize\ttfamily \#define V\+E\+C4\+M\+A\+X\+D\+E\+P\+TH~((\mbox{\hyperlink{wmaprodata_8h_ad60d9f502264892f35deed34da9583ef}{H\+U\+F\+F\+\_\+\+V\+E\+C4\+\_\+\+M\+A\+X\+B\+I\+TS}}+\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}}-\/1)/\mbox{\hyperlink{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}{V\+L\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 122 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}\label{wmaprodec_8c_a722e0757c60eeea72bc19f5b36914388}} 
+\index{wmaprodec.c@{wmaprodec.c}!VLCBITS@{VLCBITS}}
+\index{VLCBITS@{VLCBITS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{VLCBITS}{VLCBITS}}
+{\footnotesize\ttfamily \#define V\+L\+C\+B\+I\+TS~9}
+
+
+
+Definition at line 120 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}\label{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_BLOCK\_MAX\_BITS@{WMAPRO\_BLOCK\_MAX\_BITS}}
+\index{WMAPRO\_BLOCK\_MAX\_BITS@{WMAPRO\_BLOCK\_MAX\_BITS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_BLOCK\_MAX\_BITS}{WMAPRO\_BLOCK\_MAX\_BITS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS~13}
+
+
+
+log2 of max block size 
+
+
+
+Definition at line 114 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a08841fcd3135a1d50b5b710056831f52}\label{wmaprodec_8c_a08841fcd3135a1d50b5b710056831f52}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_BLOCK\_MAX\_SIZE@{WMAPRO\_BLOCK\_MAX\_SIZE}}
+\index{WMAPRO\_BLOCK\_MAX\_SIZE@{WMAPRO\_BLOCK\_MAX\_SIZE}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_BLOCK\_MAX\_SIZE}{WMAPRO\_BLOCK\_MAX\_SIZE}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE~(1 $<$$<$ \mbox{\hyperlink{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}})}
+
+
+
+maximum block size 
+
+
+
+Definition at line 116 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}\label{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_BLOCK\_MIN\_BITS@{WMAPRO\_BLOCK\_MIN\_BITS}}
+\index{WMAPRO\_BLOCK\_MIN\_BITS@{WMAPRO\_BLOCK\_MIN\_BITS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_BLOCK\_MIN\_BITS}{WMAPRO\_BLOCK\_MIN\_BITS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS~6}
+
+
+
+log2 of min block size 
+
+
+
+Definition at line 113 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a144fa7179fd187da2be825f5b224afb3}\label{wmaprodec_8c_a144fa7179fd187da2be825f5b224afb3}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_BLOCK\_MIN\_SIZE@{WMAPRO\_BLOCK\_MIN\_SIZE}}
+\index{WMAPRO\_BLOCK\_MIN\_SIZE@{WMAPRO\_BLOCK\_MIN\_SIZE}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_BLOCK\_MIN\_SIZE}{WMAPRO\_BLOCK\_MIN\_SIZE}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+S\+I\+ZE~(1 $<$$<$ \mbox{\hyperlink{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}})}
+
+
+
+minimum block size 
+
+
+
+Definition at line 115 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a0f3dcad6d266086e53f9b6473e040e32}\label{wmaprodec_8c_a0f3dcad6d266086e53f9b6473e040e32}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_BLOCK\_SIZES@{WMAPRO\_BLOCK\_SIZES}}
+\index{WMAPRO\_BLOCK\_SIZES@{WMAPRO\_BLOCK\_SIZES}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_BLOCK\_SIZES}{WMAPRO\_BLOCK\_SIZES}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+Z\+ES~(\mbox{\hyperlink{wmaprodec_8c_aea902d1dda4a02742c0852ec8f93f421}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}} -\/ \mbox{\hyperlink{wmaprodec_8c_a3723b8a8b1222dc9db7ef44d37d64a6d}{W\+M\+A\+P\+R\+O\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}} + 1)}
+
+
+
+possible block sizes 
+
+
+
+Definition at line 117 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_aff60e4359f8612656121c0e8303183f3}\label{wmaprodec_8c_aff60e4359f8612656121c0e8303183f3}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAPRO\_MAX\_CHANNELS@{WMAPRO\_MAX\_CHANNELS}}
+\index{WMAPRO\_MAX\_CHANNELS@{WMAPRO\_MAX\_CHANNELS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAPRO\_MAX\_CHANNELS}{WMAPRO\_MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+P\+R\+O\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~8}
+
+
+
+max number of handled channels 
+
+current decoder limitations 
+
+Definition at line 105 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_ad50f00e029870b896b21462fb4a1cbdf}\label{wmaprodec_8c_ad50f00e029870b896b21462fb4a1cbdf}} 
+\index{wmaprodec.c@{wmaprodec.c}!XMA\_MAX\_CHANNELS@{XMA\_MAX\_CHANNELS}}
+\index{XMA\_MAX\_CHANNELS@{XMA\_MAX\_CHANNELS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{XMA\_MAX\_CHANNELS}{XMA\_MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~(\mbox{\hyperlink{wmaprodec_8c_a93d17524ba3cb364c097e81e23ee9383}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+S\+T\+R\+E\+A\+MS}} $\ast$ \mbox{\hyperlink{wmaprodec_8c_ae45d2214353d46188d8e354a56898770}{X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+L\+S\+\_\+\+S\+T\+R\+E\+AM}})}
+
+
+
+Definition at line 111 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_ae45d2214353d46188d8e354a56898770}\label{wmaprodec_8c_ae45d2214353d46188d8e354a56898770}} 
+\index{wmaprodec.c@{wmaprodec.c}!XMA\_MAX\_CHANNELS\_STREAM@{XMA\_MAX\_CHANNELS\_STREAM}}
+\index{XMA\_MAX\_CHANNELS\_STREAM@{XMA\_MAX\_CHANNELS\_STREAM}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{XMA\_MAX\_CHANNELS\_STREAM}{XMA\_MAX\_CHANNELS\_STREAM}}
+{\footnotesize\ttfamily \#define X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+L\+S\+\_\+\+S\+T\+R\+E\+AM~2}
+
+
+
+Definition at line 110 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a93d17524ba3cb364c097e81e23ee9383}\label{wmaprodec_8c_a93d17524ba3cb364c097e81e23ee9383}} 
+\index{wmaprodec.c@{wmaprodec.c}!XMA\_MAX\_STREAMS@{XMA\_MAX\_STREAMS}}
+\index{XMA\_MAX\_STREAMS@{XMA\_MAX\_STREAMS}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{XMA\_MAX\_STREAMS}{XMA\_MAX\_STREAMS}}
+{\footnotesize\ttfamily \#define X\+M\+A\+\_\+\+M\+A\+X\+\_\+\+S\+T\+R\+E\+A\+MS~8}
+
+
+
+Definition at line 109 of file wmaprodec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{wmaprodec_8c_ad28a696de3e14a72bd4510ed58cce3e3}\label{wmaprodec_8c_ad28a696de3e14a72bd4510ed58cce3e3}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAProChannelCtx@{WMAProChannelCtx}}
+\index{WMAProChannelCtx@{WMAProChannelCtx}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAProChannelCtx}{WMAProChannelCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_w_m_a_pro_channel_ctx}{W\+M\+A\+Pro\+Channel\+Ctx}} \mbox{\hyperlink{struct_w_m_a_pro_channel_ctx}{W\+M\+A\+Pro\+Channel\+Ctx}}}
+
+
+
+frame specific decoder context for a single channel 
+
+\mbox{\Hypertarget{wmaprodec_8c_a6e0bad5ceda11351d55d2e7f0be51ded}\label{wmaprodec_8c_a6e0bad5ceda11351d55d2e7f0be51ded}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAProChannelGrp@{WMAProChannelGrp}}
+\index{WMAProChannelGrp@{WMAProChannelGrp}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAProChannelGrp}{WMAProChannelGrp}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}} \mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}}}
+
+
+
+channel group for channel transformations 
+
+\mbox{\Hypertarget{wmaprodec_8c_a96292ef77b7f08ec3b83efbbbb9db3fb}\label{wmaprodec_8c_a96292ef77b7f08ec3b83efbbbb9db3fb}} 
+\index{wmaprodec.c@{wmaprodec.c}!WMAProDecodeCtx@{WMAProDecodeCtx}}
+\index{WMAProDecodeCtx@{WMAProDecodeCtx}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{WMAProDecodeCtx}{WMAProDecodeCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} \mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}}}
+
+
+
+main decoder context 
+
+\mbox{\Hypertarget{wmaprodec_8c_ab0b7843c306518aec9962a28b56da601}\label{wmaprodec_8c_ab0b7843c306518aec9962a28b56da601}} 
+\index{wmaprodec.c@{wmaprodec.c}!XMADecodeCtx@{XMADecodeCtx}}
+\index{XMADecodeCtx@{XMADecodeCtx}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{XMADecodeCtx}{XMADecodeCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_x_m_a_decode_ctx}{X\+M\+A\+Decode\+Ctx}} \mbox{\hyperlink{struct_x_m_a_decode_ctx}{X\+M\+A\+Decode\+Ctx}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{wmaprodec_8c_a6d74e5a120e911ad30b6cca41c7cf6d3}\label{wmaprodec_8c_a6d74e5a120e911ad30b6cca41c7cf6d3}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_channel\_transform@{decode\_channel\_transform}}
+\index{decode\_channel\_transform@{decode\_channel\_transform}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_channel\_transform()}{decode\_channel\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+channel\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode channel transformation parameters. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+$>$= 0 in case of success, $<$ 0 in case of bitstream errors 
+\end{DoxyReturn}
+in the one channel case channel transforms are pointless
+
+decode channel mask
+
+decode transform type
+
+cos(pi/4)
+
+F\+I\+X\+ME\+: more than 6 coupled channels not supported
+
+decode transform on / off
+
+transform can be enabled for individual bands
+
+Definition at line 786 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a6d74e5a120e911ad30b6cca41c7cf6d3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a6d74e5a120e911ad30b6cca41c7cf6d3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_ae2eb31e6e7fb741a4a3a30968fe1b120}\label{wmaprodec_8c_ae2eb31e6e7fb741a4a3a30968fe1b120}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_coeffs@{decode\_coeffs}}
+\index{decode\_coeffs@{decode\_coeffs}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_coeffs()}{decode\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Extract the coefficients from the bitstream. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em c} & current channel number \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 in case of bitstream errors 
+\end{DoxyReturn}
+decode vector coefficients (consumes up to 167 bits per iteration for 4 vector coded large values)
+
+decode sign
+
+switch to run level mode when subframe\+\_\+len / 128 zeros were found in a row
+
+decode run level coded coefficients
+
+Definition at line 900 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ae2eb31e6e7fb741a4a3a30968fe1b120_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ae2eb31e6e7fb741a4a3a30968fe1b120_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a96cee75181f00a66a144b412df7f2e02}\label{wmaprodec_8c_a96cee75181f00a66a144b412df7f2e02}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_decorrelation\_matrix@{decode\_decorrelation\_matrix}}
+\index{decode\_decorrelation\_matrix@{decode\_decorrelation\_matrix}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_decorrelation\_matrix()}{decode\_decorrelation\_matrix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+decorrelation\+\_\+matrix (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_w_m_a_pro_channel_grp}{W\+M\+A\+Pro\+Channel\+Grp}} $\ast$}]{chgroup }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Calculate a decorrelation matrix from the bitstream parameters. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em chgroup} & channel group for which the matrix needs to be calculated \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 736 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a96cee75181f00a66a144b412df7f2e02_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a96cee75181f00a66a144b412df7f2e02_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_af49f6251c36613bfddd44d6bf0edcc88}\label{wmaprodec_8c_af49f6251c36613bfddd44d6bf0edcc88}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Uninitialize the decoder and free all resources. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 274 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{wmaprodec_8c_af49f6251c36613bfddd44d6bf0edcc88_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a3947ce3094d708b8963679bb59739523}\label{wmaprodec_8c_a3947ce3094d708b8963679bb59739523}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode one W\+MA frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if the trailer bit indicates that this is the last frame, 1 if there are additional frames 
+\end{DoxyReturn}
+get frame length
+
+decode tile information
+
+read postproc transform
+
+read drc info
+
+no idea what these are for, might be the number of samples that need to be skipped at the beginning or end of a stream
+
+usually true for the first frame
+
+sometimes true for the last frame
+
+reset subframe states
+
+decode all subframes
+
+copy samples to the output buffer
+
+reuse second half of the I\+M\+D\+CT output for the next frame
+
+F\+I\+X\+ME\+: not sure if this is always an error
+
+skip the rest of the frame data
+
+decode trailer bit
+
+Definition at line 1421 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a3947ce3094d708b8963679bb59739523_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a3947ce3094d708b8963679bb59739523_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a44e2e16e156eeb4b5d4658995e90a601}\label{wmaprodec_8c_a44e2e16e156eeb4b5d4658995e90a601}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+stream }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Initialize the decoder. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 otherwise 
+\end{DoxyReturn}
+dump the extradata
+
+generic init
+
+frame info
+
+get frame len
+
+subframe info
+
+init previous block len
+
+extract lfe channel position
+
+calculate number of scale factor bands and their offsets for every possible block size
+
+Scale factors can be shared between blocks of different size as every block has a different scale factor band layout. The matrix sf\+\_\+offsets is needed to find the correct scale factor.
+
+init M\+D\+CT, F\+I\+X\+ME\+: only init needed sizes
+
+init M\+D\+CT windows\+: simple sine window
+
+calculate subwoofer cutoff values
+
+calculate sine values for the decorrelation matrix
+
+Definition at line 315 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{wmaprodec_8c_a44e2e16e156eeb4b5d4658995e90a601_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{wmaprodec_8c_a44e2e16e156eeb4b5d4658995e90a601_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_ae22da1301e4386e95324073cef6921b4}\label{wmaprodec_8c_ae22da1301e4386e95324073cef6921b4}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_packet@{decode\_packet}}
+\index{decode\_packet@{decode\_packet}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_packet()}{decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Must output remaining samples after stream end. W\+M\+A\+P\+RO 5.\+1 created by X\+W\+MA encoder don\textquotesingle{}t though (maybe only 1/2ch streams need it).
+
+clean output buffer and copy last I\+M\+D\+CT samples
+
+sanity check for the buffer length
+
+parse packet header
+
+get number of bits that need to be added to the previous frame
+
+check for packet loss
+
+append the previous frame data to the remaining data from the previous packet to create a full frame
+
+decode the cross packet frame if it is valid
+
+reset number of saved bits so that the decoder does not start to decode incomplete frames in the s-\/$>$len\+\_\+prefix == 0 case
+
+when the frames do not have a length prefix, we don\textquotesingle{}t know the compressed length of the individual frames however, we know what part of a new packet belongs to the previous frame therefore we save the incoming packet first, then we append the \char`\"{}previous frame\char`\"{} data from the next packet so that we get a buffer that only contains full frames
+
+save the rest of the data so that it can be decoded with the next packet
+
+Definition at line 1602 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ae22da1301e4386e95324073cef6921b4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=321pt]{wmaprodec_8c_ae22da1301e4386e95324073cef6921b4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_afe12511e66ddd0b577bf9602e896d3eb}\label{wmaprodec_8c_afe12511e66ddd0b577bf9602e896d3eb}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_scale\_factors@{decode\_scale\_factors}}
+\index{decode\_scale\_factors@{decode\_scale\_factors}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_scale\_factors()}{decode\_scale\_factors()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+scale\+\_\+factors (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Extract scale factors from the bitstream. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 in case of bitstream errors 
+\end{DoxyReturn}
+should never consume more than 5344 bits M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS $\ast$ (1 + M\+A\+X\+\_\+\+B\+A\+N\+DS $\ast$ 23)
+
+resample scale factors for the new block size as the scale factors might need to be resampled several times before some new values are transmitted, a backup of the last transmitted scale factors is kept in saved\+\_\+scale\+\_\+factors
+
+decode D\+P\+CM coded scale factors
+
+run level decode differences to the resampled factors
+
+swap buffers
+
+calculate new scale factor maximum
+
+Definition at line 1003 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_afe12511e66ddd0b577bf9602e896d3eb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_afe12511e66ddd0b577bf9602e896d3eb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_ac4374071fdcc08940909677cc527d320}\label{wmaprodec_8c_ac4374071fdcc08940909677cc527d320}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_subframe@{decode\_subframe}}
+\index{decode\_subframe@{decode\_subframe}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subframe()}{decode\_subframe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subframe (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode a single subframe (block). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 when decoding failed 
+\end{DoxyReturn}
+reset channel context and find the next block offset and size == the next block of the channel with the smallest number of decoded samples
+
+get a list of all channels that contain the estimated block
+
+subtract already processed samples
+
+and count if there are multiple subframes that match our profile
+
+check if the frame will be complete after processing the estimated block
+
+calculate number of scale factor bands and their offsets
+
+configure the decoder for the current subframe
+
+skip extended header if any
+
+no idea for what the following bit is used
+
+decode number of vector coded coefficients
+
+decode quantization step
+
+decode quantization step modifiers for every channel
+
+decode scale factors
+
+parse coefficients
+
+reconstruct the per channel data
+
+inverse quantization and rescaling
+
+apply imdct (imdct\+\_\+half == D\+C\+T\+IV with reverse)
+
+window and overlapp-\/add
+
+handled one subframe
+
+Definition at line 1181 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ac4374071fdcc08940909677cc527d320_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ac4374071fdcc08940909677cc527d320_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_ac16f18cc940598c6584b587e400aae0e}\label{wmaprodec_8c_ac16f18cc940598c6584b587e400aae0e}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_subframe\_length@{decode\_subframe\_length}}
+\index{decode\_subframe\_length@{decode\_subframe\_length}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subframe\_length()}{decode\_subframe\_length()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subframe\+\_\+length (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode the subframe length. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context \\
+\hline
+{\em offset} & sample offset in the frame \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+decoded subframe length on success, $<$ 0 in case of an error 
+\end{DoxyReturn}
+no need to read from the bitstream when only one length is possible
+
+1 bit indicates if the subframe is of maximum length
+
+sanity check the length
+
+Definition at line 594 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ac16f18cc940598c6584b587e400aae0e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ac16f18cc940598c6584b587e400aae0e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_aedd50aa7e00dd4b6b65b8eb53e4526b1}\label{wmaprodec_8c_aedd50aa7e00dd4b6b65b8eb53e4526b1}} 
+\index{wmaprodec.c@{wmaprodec.c}!decode\_tilehdr@{decode\_tilehdr}}
+\index{decode\_tilehdr@{decode\_tilehdr}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_tilehdr()}{decode\_tilehdr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+tilehdr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode how the data in the frame is split into subframes. Every W\+MA frame contains the encoded data for a fixed number of samples per channel. The data for every channel might be split into several subframes. This function will reconstruct the list of subframes for every channel. 
+
+If the subframes are not evenly split, the algorithm estimates the channels with the lowest number of total samples. Afterwards, for each of these channels a bit is read from the bitstream that indicates if the channel contains a subframe with the next subframe size that is going to be read from the bitstream or not. If a channel contains such a subframe, the subframe size gets added to the channel\textquotesingle{}s subframe list. The algorithm repeats these steps until the frame is properly divided between the individual channels.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 in case of an error 
+\end{DoxyReturn}
+$<$ sum of samples for all currently known subframes of a channel
+
+$<$ flag indicating if a channel contains the current subframe
+
+$<$ number of channels that contain the current subframe
+
+$<$ flag indicating that all channels use the same subframe offsets and sizes
+
+$<$ smallest sum of samples (channels with this length will be processed first)
+
+reset tiling information
+
+loop until the frame data is split between the subframes
+
+check which channels contain the subframe
+
+get subframe length, subframe\+\_\+len == 0 is not allowed
+
+add subframes to the individual channels and find new min\+\_\+channel\+\_\+len
+
+Definition at line 645 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_aedd50aa7e00dd4b6b65b8eb53e4526b1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_aedd50aa7e00dd4b6b65b8eb53e4526b1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a114acf1806208b73f0f501efea6b6d40}\label{wmaprodec_8c_a114acf1806208b73f0f501efea6b6d40}} 
+\index{wmaprodec.c@{wmaprodec.c}!dump\_context@{dump\_context}}
+\index{dump\_context@{dump\_context}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{dump\_context()}{dump\_context()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dump\+\_\+context (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+helper function to print the most important members of the context 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 255 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a114acf1806208b73f0f501efea6b6d40_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b}\label{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b}} 
+\index{wmaprodec.c@{wmaprodec.c}!flush@{flush}}
+\index{flush@{flush}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{flush()}{flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+reset output buffer as a part of it is used during the windowing of a new frame
+
+Definition at line 1959 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a5810ef43c45529d921968ebb8acb006a}\label{wmaprodec_8c_a5810ef43c45529d921968ebb8acb006a}} 
+\index{wmaprodec.c@{wmaprodec.c}!get\_rate@{get\_rate}}
+\index{get\_rate@{get\_rate}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{get\_rate()}{get\_rate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+rate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 295 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a5810ef43c45529d921968ebb8acb006a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_aaa67e655a9611a70ee1710b1093fb67e}\label{wmaprodec_8c_aaa67e655a9611a70ee1710b1093fb67e}} 
+\index{wmaprodec.c@{wmaprodec.c}!inverse\_channel\_transform@{inverse\_channel\_transform}}
+\index{inverse\_channel\_transform@{inverse\_channel\_transform}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{inverse\_channel\_transform()}{inverse\_channel\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inverse\+\_\+channel\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Reconstruct the individual channel data. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+multichannel decorrelation
+
+multiply values with the decorrelation\+\_\+matrix
+
+Definition at line 1096 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_aaa67e655a9611a70ee1710b1093fb67e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a035dace710cc8be894d69f1219cc34dd}\label{wmaprodec_8c_a035dace710cc8be894d69f1219cc34dd}} 
+\index{wmaprodec.c@{wmaprodec.c}!remaining\_bits@{remaining\_bits}}
+\index{remaining\_bits@{remaining\_bits}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{remaining\_bits()}{remaining\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} remaining\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Calculate remaining input buffer length. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em gb} & bitstream reader context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+remaining size in bits 
+\end{DoxyReturn}
+
+
+Definition at line 1543 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{wmaprodec_8c_a035dace710cc8be894d69f1219cc34dd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a035dace710cc8be894d69f1219cc34dd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a599472217fd9b642c037be6b0f75bf02}\label{wmaprodec_8c_a599472217fd9b642c037be6b0f75bf02}} 
+\index{wmaprodec.c@{wmaprodec.c}!save\_bits@{save\_bits}}
+\index{save\_bits@{save\_bits}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{save\_bits()}{save\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} save\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{append }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Fill the bit reservoir with a (partial) frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em gb} & bitstream reader context \\
+\hline
+{\em len} & length of the partial frame \\
+\hline
+{\em append} & decides whether to reset the buffer or not \\
+\hline
+\end{DoxyParams}
+when the frame data does not need to be concatenated, the input buffer is reset and additional bits from the previous frame are copied and skipped later so that a fast byte copy is possible
+
+Definition at line 1555 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a599472217fd9b642c037be6b0f75bf02_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a599472217fd9b642c037be6b0f75bf02_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_acad063789ba3f74d8177cec7f1524b55}\label{wmaprodec_8c_acad063789ba3f74d8177cec7f1524b55}} 
+\index{wmaprodec.c@{wmaprodec.c}!wmapro\_decode\_end@{wmapro\_decode\_end}}
+\index{wmapro\_decode\_end@{wmapro\_decode\_end}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{wmapro\_decode\_end()}{wmapro\_decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wmapro\+\_\+decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 286 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{wmaprodec_8c_acad063789ba3f74d8177cec7f1524b55_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_ad400bcee0fb0b013019e1b0c64a58f59}\label{wmaprodec_8c_ad400bcee0fb0b013019e1b0c64a58f59}} 
+\index{wmaprodec.c@{wmaprodec.c}!wmapro\_decode\_init@{wmapro\_decode\_init}}
+\index{wmapro\_decode\_init@{wmapro\_decode\_init}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{wmapro\_decode\_init()}{wmapro\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wmapro\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Initialize the decoder. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 581 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_ad400bcee0fb0b013019e1b0c64a58f59_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_aaab4d0fce83ce484c88722ab43aec9be}\label{wmaprodec_8c_aaab4d0fce83ce484c88722ab43aec9be}} 
+\index{wmaprodec.c@{wmaprodec.c}!wmapro\_decode\_packet@{wmapro\_decode\_packet}}
+\index{wmapro\_decode\_packet@{wmapro\_decode\_packet}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{wmapro\_decode\_packet()}{wmapro\_decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wmapro\+\_\+decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode a single W\+MA packet. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & codec context \\
+\hline
+{\em data} & the output buffer \\
+\hline
+{\em avpkt} & input packet \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+number of bytes that were read from the input buffer 
+\end{DoxyReturn}
+
+
+Definition at line 1772 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_aaab4d0fce83ce484c88722ab43aec9be_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a1f1d7585e71d740ef1d09c4f1037acec}\label{wmaprodec_8c_a1f1d7585e71d740ef1d09c4f1037acec}} 
+\index{wmaprodec.c@{wmaprodec.c}!wmapro\_flush@{wmapro\_flush}}
+\index{wmapro\_flush@{wmapro\_flush}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{wmapro\_flush()}{wmapro\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wmapro\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Clear decoder buffers (for seeking). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & codec context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1977 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{wmaprodec_8c_a1f1d7585e71d740ef1d09c4f1037acec_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a02e54539ddf2e4a32d59e94723066ef9}\label{wmaprodec_8c_a02e54539ddf2e4a32d59e94723066ef9}} 
+\index{wmaprodec.c@{wmaprodec.c}!wmapro\_window@{wmapro\_window}}
+\index{wmapro\_window@{wmapro\_window}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{wmapro\_window()}{wmapro\_window()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wmapro\+\_\+window (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_w_m_a_pro_decode_ctx}{W\+M\+A\+Pro\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Apply sine window and reconstruct the output buffer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1151 of file wmaprodec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a02e54539ddf2e4a32d59e94723066ef9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3}\label{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3}} 
+\index{wmaprodec.c@{wmaprodec.c}!xma\_decode\_end@{xma\_decode\_end}}
+\index{xma\_decode\_end@{xma\_decode\_end}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{xma\_decode\_end()}{xma\_decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} xma\+\_\+decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1945 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a}\label{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a}} 
+\index{wmaprodec.c@{wmaprodec.c}!xma\_decode\_init@{xma\_decode\_init}}
+\index{xma\_decode\_init@{xma\_decode\_init}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{xma\_decode\_init()}{xma\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} xma\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1888 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b}\label{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b}} 
+\index{wmaprodec.c@{wmaprodec.c}!xma\_decode\_packet@{xma\_decode\_packet}}
+\index{xma\_decode\_packet@{xma\_decode\_packet}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{xma\_decode\_packet()}{xma\_decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} xma\+\_\+decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1789 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmaprodec_8c_a2566fcee35905bfd917d3e1832f6ce9f}\label{wmaprodec_8c_a2566fcee35905bfd917d3e1832f6ce9f}} 
+\index{wmaprodec.c@{wmaprodec.c}!xma\_flush@{xma\_flush}}
+\index{xma\_flush@{xma\_flush}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{xma\_flush()}{xma\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} xma\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1984 of file wmaprodec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=214pt]{wmaprodec_8c_a2566fcee35905bfd917d3e1832f6ce9f_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{wmaprodec_8c_a584cd19c074acfe801367b2e1a1f08b1}\label{wmaprodec_8c_a584cd19c074acfe801367b2e1a1f08b1}} 
+\index{wmaprodec.c@{wmaprodec.c}!coef\_vlc@{coef\_vlc}}
+\index{coef\_vlc@{coef\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{coef\_vlc}{coef\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} coef\+\_\+vlc\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+coefficient run length vlc codes 
+
+
+
+Definition at line 133 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_ad0b19ac73c78b571e9d4321bc5f25f4c}\label{wmaprodec_8c_ad0b19ac73c78b571e9d4321bc5f25f4c}} 
+\index{wmaprodec.c@{wmaprodec.c}!ff\_wmapro\_decoder@{ff\_wmapro\_decoder}}
+\index{ff\_wmapro\_decoder@{ff\_wmapro\_decoder}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_wmapro\_decoder}{ff\_wmapro\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+wmapro\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}wmapro"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Windows Media Audio 9 Professional"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceafc80a116ff2921f47e3eb20fc9f070da}{AV\_CODEC\_ID\_WMAPRO}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{wmaprodec_8c_a96292ef77b7f08ec3b83efbbbb9db3fb}{WMAProDecodeCtx}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{wmaprodec_8c_ad400bcee0fb0b013019e1b0c64a58f59}{wmapro\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{wmaprodec_8c_acad063789ba3f74d8177cec7f1524b55}{wmapro\_decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{wmaprodec_8c_aaab4d0fce83ce484c88722ab43aec9be}{wmapro\_decode\_packet}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b}{flush}}          = \mbox{\hyperlink{wmaprodec_8c_a1f1d7585e71d740ef1d09c4f1037acec}{wmapro\_flush}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+wmapro decoder 
+
+
+
+Definition at line 2000 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a80aa3a3b96cb451dc7aa4572f2b9672b}\label{wmaprodec_8c_a80aa3a3b96cb451dc7aa4572f2b9672b}} 
+\index{wmaprodec.c@{wmaprodec.c}!ff\_xma1\_decoder@{ff\_xma1\_decoder}}
+\index{ff\_xma1\_decoder@{ff\_xma1\_decoder}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_xma1\_decoder}{ff\_xma1\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+xma1\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}xma1"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Xbox Media Audio 1"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea2b080674c70f0d41bf3429b84fe84826}{AV\_CODEC\_ID\_XMA1}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{wmaprodec_8c_ab0b7843c306518aec9962a28b56da601}{XMADecodeCtx}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a}{xma\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3}{xma\_decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b}{xma\_decode\_packet}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2016 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a1140183516c0e9cec10b77338c641783}\label{wmaprodec_8c_a1140183516c0e9cec10b77338c641783}} 
+\index{wmaprodec.c@{wmaprodec.c}!ff\_xma2\_decoder@{ff\_xma2\_decoder}}
+\index{ff\_xma2\_decoder@{ff\_xma2\_decoder}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_xma2\_decoder}{ff\_xma2\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+xma2\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}xma2"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Xbox Media Audio 2"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea3a859113bb7c33aa1dcd0e1fc8383e83}{AV\_CODEC\_ID\_XMA2}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{wmaprodec_8c_ab0b7843c306518aec9962a28b56da601}{XMADecodeCtx}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{wmaprodec_8c_a471fffb60196cef496ced45f4df34c2a}{xma\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{wmaprodec_8c_a57f90370da83bcf0e46e0222760963e3}{xma\_decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{wmaprodec_8c_a94b73ad43695f3a28256759ed4fc858b}{xma\_decode\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{wmaprodec_8c_abf9d81379d37e36d39ac7926028d922b}{flush}}          = \mbox{\hyperlink{wmaprodec_8c_a2566fcee35905bfd917d3e1832f6ce9f}{xma\_flush}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2031 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_aa6be684888e3438a73aaa095dd9f1073}\label{wmaprodec_8c_aa6be684888e3438a73aaa095dd9f1073}} 
+\index{wmaprodec.c@{wmaprodec.c}!sf\_rl\_vlc@{sf\_rl\_vlc}}
+\index{sf\_rl\_vlc@{sf\_rl\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{sf\_rl\_vlc}{sf\_rl\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} sf\+\_\+rl\+\_\+vlc\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+scale factor run length vlc 
+
+
+
+Definition at line 129 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a0221f374e31e9eaec463cb2852be60c0}\label{wmaprodec_8c_a0221f374e31e9eaec463cb2852be60c0}} 
+\index{wmaprodec.c@{wmaprodec.c}!sf\_vlc@{sf\_vlc}}
+\index{sf\_vlc@{sf\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{sf\_vlc}{sf\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} sf\+\_\+vlc\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+scale factor D\+P\+CM vlc 
+
+
+
+Definition at line 128 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a30d7e1c0f5f27fb2430f0353779807a5}\label{wmaprodec_8c_a30d7e1c0f5f27fb2430f0353779807a5}} 
+\index{wmaprodec.c@{wmaprodec.c}!sin64@{sin64}}
+\index{sin64@{sin64}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{sin64}{sin64}}
+{\footnotesize\ttfamily float sin64\mbox{[}33\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+sine table for decorrelation 
+
+
+
+Definition at line 134 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a9add746c4e4a95b1b65201efd98bb0ce}\label{wmaprodec_8c_a9add746c4e4a95b1b65201efd98bb0ce}} 
+\index{wmaprodec.c@{wmaprodec.c}!vec1\_vlc@{vec1\_vlc}}
+\index{vec1\_vlc@{vec1\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{vec1\_vlc}{vec1\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} vec1\+\_\+vlc\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+1 coefficient per symbol 
+
+
+
+Definition at line 132 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a7b897ef373d1bb8f282fcaafeae32237}\label{wmaprodec_8c_a7b897ef373d1bb8f282fcaafeae32237}} 
+\index{wmaprodec.c@{wmaprodec.c}!vec2\_vlc@{vec2\_vlc}}
+\index{vec2\_vlc@{vec2\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{vec2\_vlc}{vec2\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} vec2\+\_\+vlc\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+2 coefficients per symbol 
+
+
+
+Definition at line 131 of file wmaprodec.\+c.
+
+\mbox{\Hypertarget{wmaprodec_8c_a304c8f4ffd541de3a3560e8546f1d459}\label{wmaprodec_8c_a304c8f4ffd541de3a3560e8546f1d459}} 
+\index{wmaprodec.c@{wmaprodec.c}!vec4\_vlc@{vec4\_vlc}}
+\index{vec4\_vlc@{vec4\_vlc}!wmaprodec.c@{wmaprodec.c}}
+\doxysubsubsection{\texorpdfstring{vec4\_vlc}{vec4\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} vec4\+\_\+vlc\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+4 coefficients per symbol 
+
+
+
+Definition at line 130 of file wmaprodec.\+c.
+

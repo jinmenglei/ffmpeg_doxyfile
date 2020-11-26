@@ -1,0 +1,1157 @@
+\hypertarget{libavcodec_2flacenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/flacenc.c File Reference}
+\label{libavcodec_2flacenc_8c}\index{E:/github/ffmpeg/libavcodec/flacenc.c@{E:/github/ffmpeg/libavcodec/flacenc.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/crc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intmath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/md5.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bswapdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}golomb.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lpc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}flac.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}flacdata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}flacdsp.\+h\char`\"{}}\newline
+Include dependency graph for flacenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}}
+\item 
+struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}}
+\item 
+struct \mbox{\hyperlink{struct_flac_frame}{Flac\+Frame}}
+\item 
+struct \mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a0c4c04d16d53ed55b377cde71e5761bb}{F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+C\+O\+N\+S\+T\+A\+NT}}~0
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a53457c2215c59c0003c9d58909eba33c}{F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+V\+E\+R\+B\+A\+T\+IM}}~1
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a2071a7614c1ec9a585b5b014308c4645}{F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+F\+I\+X\+ED}}~8
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_abc7d797ce95654f8aa83f9fd020c1e53}{F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+L\+PC}}~32
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a444887e39bf87e74aba9bfcdc37f3634}{M\+A\+X\+\_\+\+F\+I\+X\+E\+D\+\_\+\+O\+R\+D\+ER}}~4
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+\_\+\+O\+R\+D\+ER}}~8
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}~(1 $<$$<$ \mbox{\hyperlink{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+\_\+\+O\+R\+D\+ER}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a28d74f12ffb30cb35582db8b8cd09145}{M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+P\+R\+E\+C\+I\+S\+I\+ON}}~15
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a73b1527131c1672ecf52ecde82ac7877}{M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~0
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a4f9737b36d50e72db17778323e4850ad}{M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~15
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_aa6511263ed363cb5f43d493d844c5ee1}{C\+O\+P\+Y\+\_\+\+S\+A\+M\+P\+L\+ES}}(\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a3f91b38650d6404b6c4acd5259818f3a}{rice\+\_\+encode\+\_\+count}}(sum,  n,  k)~(((n)$\ast$((k)+1))+((sum-\/(n$>$$>$1))$>$$>$(k)))
+\item 
+\#define \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a244fd24bfa983ec8a98a711f27e39789}{Compression\+Options}}
+\item 
+typedef struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}} \mbox{\hyperlink{libavcodec_2flacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}{Rice\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a1509a209470107b4900b0a68b1a61339}{Flac\+Subframe}}
+\item 
+typedef struct \mbox{\hyperlink{struct_flac_frame}{Flac\+Frame}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a8adce633298dc72eae1c65c75b4eb294}{Flac\+Frame}}
+\item 
+typedef struct \mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a536ccc4d926ade06fc5eddeb97df039a}{Flac\+Encode\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004}{Coding\+Mode}} \{ \mbox{\hyperlink{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004af8e3275b140d626ab9e8829842e3d6b2}{C\+O\+D\+I\+N\+G\+\_\+\+M\+O\+D\+E\+\_\+\+R\+I\+CE}} = 4, 
+\mbox{\hyperlink{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004a3677a95410ececb2beca1b420fe5c1e8}{C\+O\+D\+I\+N\+G\+\_\+\+M\+O\+D\+E\+\_\+\+R\+I\+C\+E2}} = 5
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a0d7c4e8930f598b38dfdd805fd409ccf}{write\+\_\+streaminfo}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{api-h264-slice-test_8c_adc7ed4d9991bc47d473e178bd4fe9a49}{header}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a8abff2044e55dfb5b36f26b7f825592f}{select\+\_\+blocksize}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} samplerate, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+time\+\_\+ms)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a275f913dfa0c71230a7d5a517c7d7fe3}{dprint\+\_\+compression\+\_\+options}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a7629a804b5d81b8dfc046ba08567f9f1}{flac\+\_\+encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a0eb35c6fcdf7f990891c2e22ddcc9c7c}{init\+\_\+frame}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+samples)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a27f2e4d94b9e2aa5f4ddd3ac8ef3b8d2}{copy\+\_\+samples}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{libavcodec_2flacenc_8c_aa9e887176ca8b9bb149afa7a4068639c}{rice\+\_\+count\+\_\+exact}} (const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$res, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{libavcodec_2flacenc_8c_a84e468f289b4c4a3b6964e3961eb8143}{subframe\+\_\+count\+\_\+exact}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} $\ast$\mbox{\hyperlink{dnn__backend__native__layer__mathbinary_8c_aec238e230db0cd41b80558db403931dd}{sub}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+order)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a623ec678a4ba02b5e43d70dc51c615ac}{find\+\_\+optimal\+\_\+param}} (uint64\+\_\+t sum, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+param)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_added8f9a629e93439be75443b9584388}{find\+\_\+optimal\+\_\+param\+\_\+exact}} (uint64\+\_\+t sums\mbox{[}32\mbox{]}\mbox{[}\mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+param)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{libavcodec_2flacenc_8c_a3e70b41bf6b44f28ff648f7ca87e3ff7}{calc\+\_\+optimal\+\_\+rice\+\_\+params}} (\mbox{\hyperlink{struct_rice_context}{Rice\+Context}} $\ast$rc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} porder, uint64\+\_\+t sums\mbox{[}32\mbox{]}\mbox{[}\mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+order, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+param, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} exact)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a5a0f1a746d96841c5d747db7f954472c}{calc\+\_\+sum\+\_\+top}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pmax, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} kmax, const uint32\+\_\+t $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+order, uint64\+\_\+t sums\mbox{[}32\mbox{]}\mbox{[}\mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_af575330076b3cce9046038e6968f86d4}{calc\+\_\+sum\+\_\+next}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}}, uint64\+\_\+t sums\mbox{[}32\mbox{]}\mbox{[}\mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} kmax)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{libavcodec_2flacenc_8c_a434c4769775b3c476503fc81d93a6d27}{calc\+\_\+rice\+\_\+params}} (\mbox{\hyperlink{struct_rice_context}{Rice\+Context}} $\ast$rc, uint32\+\_\+t udata\mbox{[}\mbox{\hyperlink{flac_8h_a33b2016dc3be2fe151e3d9a942a2dee7}{F\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+B\+L\+O\+C\+K\+S\+I\+ZE}}\mbox{]}, uint64\+\_\+t sums\mbox{[}32\mbox{]}\mbox{[}\mbox{\hyperlink{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pmin, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pmax, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+order, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} exact)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a68bd57e281f9078c2ad461b324894be4}{get\+\_\+max\+\_\+p\+\_\+order}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+porder, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order)
+\item 
+static uint64\+\_\+t \mbox{\hyperlink{libavcodec_2flacenc_8c_afc8c9c0d3fb46a026cc55eca67871eed}{find\+\_\+subframe\+\_\+rice\+\_\+params}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} $\ast$\mbox{\hyperlink{dnn__backend__native__layer__mathbinary_8c_aec238e230db0cd41b80558db403931dd}{sub}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pred\+\_\+order)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a4f6eee918c823d5bd206a8f7e39a9c93}{encode\+\_\+residual\+\_\+fixed}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$res, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$smp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a15e52be5db1bfd5c6eceafd8aeb5349c}{encode\+\_\+residual\+\_\+ch}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_aea2746695c560eba062920f234ebfb1f}{count\+\_\+frame\+\_\+header}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a8313739ff992d1acfa148521a1b9879f}{encode\+\_\+frame}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_af49eb790b0190127fd6a602b02aec9f2}{remove\+\_\+wasted\+\_\+bits}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a309b53a044216e1cace0a88788d96059}{estimate\+\_\+stereo\+\_\+mode}} (const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$left\+\_\+ch, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$right\+\_\+ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+rice\+\_\+param)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a6a71b8adaded3891b3f80f7d04211767}{channel\+\_\+decorrelation}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a5ccf650a96fdfa308ec43c097ecabb9f}{write\+\_\+utf8}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, uint32\+\_\+t \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a40941a61a39916045e2e0620d6ed3b6c}{write\+\_\+frame\+\_\+header}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a001e1b35983b5676b4b1595197730863}{write\+\_\+subframes}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a1b43fa0625a6038e8df759ccffeb05b8}{write\+\_\+frame\+\_\+footer}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a61ed14069de6f0283ce652c9ad913ae1}{write\+\_\+frame}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_adb1664acf6a0320249ac77fa53058687}{update\+\_\+md5\+\_\+sum}} (\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_afc2597bbc770c01a4c89c8a25fdc7705}{flac\+\_\+encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet\+\_\+ptr)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a1e5881fb6d752abd3fb1130771e77002}{flac\+\_\+encode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a43dc3dbebe61b1954df99e45adcc25a9}{flac\+\_\+encoder\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2flacenc_8c_a9887d76b40d1574aa75e389bab78b599}{ff\+\_\+flac\+\_\+encoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_aa6511263ed363cb5f43d493d844c5ee1}\label{libavcodec_2flacenc_8c_aa6511263ed363cb5f43d493d844c5ee1}} 
+\index{flacenc.c@{flacenc.c}!COPY\_SAMPLES@{COPY\_SAMPLES}}
+\index{COPY\_SAMPLES@{COPY\_SAMPLES}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{COPY\_SAMPLES}{COPY\_SAMPLES}}
+{\footnotesize\ttfamily \#define C\+O\+P\+Y\+\_\+\+S\+A\+M\+P\+L\+ES(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                     \(\backslash\)}
+\DoxyCodeLine{    const \textcolor{keywordtype}{int} \#\# \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}} \#\# \_t *samples0 = \mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}};                    \(\backslash\)}
+\DoxyCodeLine{    frame = \&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>frame;                                              \(\backslash\)}
+\DoxyCodeLine{    for (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = 0, j = 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < \mbox{\hyperlink{filter__design_8txt_a48ad71a5b40cdd5f23c601f33665a953}{frame}}-\/>blocksize; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}++)                   \(\backslash\)}
+\DoxyCodeLine{        \textcolor{keywordflow}{for} (ch = 0; ch < \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>channels; ch++, j++)                   \(\backslash\)}
+\DoxyCodeLine{            \mbox{\hyperlink{filter__design_8txt_a48ad71a5b40cdd5f23c601f33665a953}{frame}}-\/>subframes[ch].samples[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}] = samples0[j] >> \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}}; \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a0c4c04d16d53ed55b377cde71e5761bb}\label{libavcodec_2flacenc_8c_a0c4c04d16d53ed55b377cde71e5761bb}} 
+\index{flacenc.c@{flacenc.c}!FLAC\_SUBFRAME\_CONSTANT@{FLAC\_SUBFRAME\_CONSTANT}}
+\index{FLAC\_SUBFRAME\_CONSTANT@{FLAC\_SUBFRAME\_CONSTANT}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAC\_SUBFRAME\_CONSTANT}{FLAC\_SUBFRAME\_CONSTANT}}
+{\footnotesize\ttfamily \#define F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+C\+O\+N\+S\+T\+A\+NT~0}
+
+
+
+Definition at line 38 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a2071a7614c1ec9a585b5b014308c4645}\label{libavcodec_2flacenc_8c_a2071a7614c1ec9a585b5b014308c4645}} 
+\index{flacenc.c@{flacenc.c}!FLAC\_SUBFRAME\_FIXED@{FLAC\_SUBFRAME\_FIXED}}
+\index{FLAC\_SUBFRAME\_FIXED@{FLAC\_SUBFRAME\_FIXED}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAC\_SUBFRAME\_FIXED}{FLAC\_SUBFRAME\_FIXED}}
+{\footnotesize\ttfamily \#define F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+F\+I\+X\+ED~8}
+
+
+
+Definition at line 40 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_abc7d797ce95654f8aa83f9fd020c1e53}\label{libavcodec_2flacenc_8c_abc7d797ce95654f8aa83f9fd020c1e53}} 
+\index{flacenc.c@{flacenc.c}!FLAC\_SUBFRAME\_LPC@{FLAC\_SUBFRAME\_LPC}}
+\index{FLAC\_SUBFRAME\_LPC@{FLAC\_SUBFRAME\_LPC}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAC\_SUBFRAME\_LPC}{FLAC\_SUBFRAME\_LPC}}
+{\footnotesize\ttfamily \#define F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+L\+PC~32}
+
+
+
+Definition at line 41 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a53457c2215c59c0003c9d58909eba33c}\label{libavcodec_2flacenc_8c_a53457c2215c59c0003c9d58909eba33c}} 
+\index{flacenc.c@{flacenc.c}!FLAC\_SUBFRAME\_VERBATIM@{FLAC\_SUBFRAME\_VERBATIM}}
+\index{FLAC\_SUBFRAME\_VERBATIM@{FLAC\_SUBFRAME\_VERBATIM}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAC\_SUBFRAME\_VERBATIM}{FLAC\_SUBFRAME\_VERBATIM}}
+{\footnotesize\ttfamily \#define F\+L\+A\+C\+\_\+\+S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+V\+E\+R\+B\+A\+T\+IM~1}
+
+
+
+Definition at line 39 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{flacenc.c@{flacenc.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1463 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a444887e39bf87e74aba9bfcdc37f3634}\label{libavcodec_2flacenc_8c_a444887e39bf87e74aba9bfcdc37f3634}} 
+\index{flacenc.c@{flacenc.c}!MAX\_FIXED\_ORDER@{MAX\_FIXED\_ORDER}}
+\index{MAX\_FIXED\_ORDER@{MAX\_FIXED\_ORDER}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_FIXED\_ORDER}{MAX\_FIXED\_ORDER}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+F\+I\+X\+E\+D\+\_\+\+O\+R\+D\+ER~4}
+
+
+
+Definition at line 43 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a28d74f12ffb30cb35582db8b8cd09145}\label{libavcodec_2flacenc_8c_a28d74f12ffb30cb35582db8b8cd09145}} 
+\index{flacenc.c@{flacenc.c}!MAX\_LPC\_PRECISION@{MAX\_LPC\_PRECISION}}
+\index{MAX\_LPC\_PRECISION@{MAX\_LPC\_PRECISION}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_LPC\_PRECISION}{MAX\_LPC\_PRECISION}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+P\+R\+E\+C\+I\+S\+I\+ON~15}
+
+
+
+Definition at line 46 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a4f9737b36d50e72db17778323e4850ad}\label{libavcodec_2flacenc_8c_a4f9737b36d50e72db17778323e4850ad}} 
+\index{flacenc.c@{flacenc.c}!MAX\_LPC\_SHIFT@{MAX\_LPC\_SHIFT}}
+\index{MAX\_LPC\_SHIFT@{MAX\_LPC\_SHIFT}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_LPC\_SHIFT}{MAX\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~15}
+
+
+
+Definition at line 48 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}\label{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}} 
+\index{flacenc.c@{flacenc.c}!MAX\_PARTITION\_ORDER@{MAX\_PARTITION\_ORDER}}
+\index{MAX\_PARTITION\_ORDER@{MAX\_PARTITION\_ORDER}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_PARTITION\_ORDER}{MAX\_PARTITION\_ORDER}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+\_\+\+O\+R\+D\+ER~8}
+
+
+
+Definition at line 44 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}\label{libavcodec_2flacenc_8c_aaf6e4db40a3aa761b6ae40b9f676f5ec}} 
+\index{flacenc.c@{flacenc.c}!MAX\_PARTITIONS@{MAX\_PARTITIONS}}
+\index{MAX\_PARTITIONS@{MAX\_PARTITIONS}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_PARTITIONS}{MAX\_PARTITIONS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS~(1 $<$$<$ \mbox{\hyperlink{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}{M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+\_\+\+O\+R\+D\+ER}})}
+
+
+
+Definition at line 45 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a73b1527131c1672ecf52ecde82ac7877}\label{libavcodec_2flacenc_8c_a73b1527131c1672ecf52ecde82ac7877}} 
+\index{flacenc.c@{flacenc.c}!MIN\_LPC\_SHIFT@{MIN\_LPC\_SHIFT}}
+\index{MIN\_LPC\_SHIFT@{MIN\_LPC\_SHIFT}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_LPC\_SHIFT}{MIN\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~0}
+
+
+
+Definition at line 47 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a3f91b38650d6404b6c4acd5259818f3a}\label{libavcodec_2flacenc_8c_a3f91b38650d6404b6c4acd5259818f3a}} 
+\index{flacenc.c@{flacenc.c}!rice\_encode\_count@{rice\_encode\_count}}
+\index{rice\_encode\_count@{rice\_encode\_count}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{rice\_encode\_count}{rice\_encode\_count}}
+{\footnotesize\ttfamily \#define rice\+\_\+encode\+\_\+count(\begin{DoxyParamCaption}\item[{}]{sum,  }\item[{}]{n,  }\item[{}]{k }\end{DoxyParamCaption})~(((n)$\ast$((k)+1))+((sum-\/(n$>$$>$1))$>$$>$(k)))}
+
+
+
+Definition at line 601 of file flacenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a244fd24bfa983ec8a98a711f27e39789}\label{libavcodec_2flacenc_8c_a244fd24bfa983ec8a98a711f27e39789}} 
+\index{flacenc.c@{flacenc.c}!CompressionOptions@{CompressionOptions}}
+\index{CompressionOptions@{CompressionOptions}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{CompressionOptions}{CompressionOptions}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}} \mbox{\hyperlink{struct_compression_options}{Compression\+Options}}}
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a536ccc4d926ade06fc5eddeb97df039a}\label{libavcodec_2flacenc_8c_a536ccc4d926ade06fc5eddeb97df039a}} 
+\index{flacenc.c@{flacenc.c}!FlacEncodeContext@{FlacEncodeContext}}
+\index{FlacEncodeContext@{FlacEncodeContext}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FlacEncodeContext}{FlacEncodeContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} \mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}}}
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a8adce633298dc72eae1c65c75b4eb294}\label{libavcodec_2flacenc_8c_a8adce633298dc72eae1c65c75b4eb294}} 
+\index{flacenc.c@{flacenc.c}!FlacFrame@{FlacFrame}}
+\index{FlacFrame@{FlacFrame}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FlacFrame}{FlacFrame}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_flac_frame}{Flac\+Frame}} \mbox{\hyperlink{struct_flac_frame}{Flac\+Frame}}}
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a1509a209470107b4900b0a68b1a61339}\label{libavcodec_2flacenc_8c_a1509a209470107b4900b0a68b1a61339}} 
+\index{flacenc.c@{flacenc.c}!FlacSubframe@{FlacSubframe}}
+\index{FlacSubframe@{FlacSubframe}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{FlacSubframe}{FlacSubframe}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} \mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}}}
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}\label{libavcodec_2flacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}} 
+\index{flacenc.c@{flacenc.c}!RiceContext@{RiceContext}}
+\index{RiceContext@{RiceContext}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{RiceContext}{RiceContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}} \mbox{\hyperlink{struct_rice_context}{Rice\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004}\label{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004}} 
+\index{flacenc.c@{flacenc.c}!CodingMode@{CodingMode}}
+\index{CodingMode@{CodingMode}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{CodingMode}{CodingMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004}{Coding\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CODING\_MODE\_RICE@{CODING\_MODE\_RICE}!flacenc.c@{flacenc.c}}\index{flacenc.c@{flacenc.c}!CODING\_MODE\_RICE@{CODING\_MODE\_RICE}}}\mbox{\Hypertarget{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004af8e3275b140d626ab9e8829842e3d6b2}\label{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004af8e3275b140d626ab9e8829842e3d6b2}} 
+C\+O\+D\+I\+N\+G\+\_\+\+M\+O\+D\+E\+\_\+\+R\+I\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CODING\_MODE\_RICE2@{CODING\_MODE\_RICE2}!flacenc.c@{flacenc.c}}\index{flacenc.c@{flacenc.c}!CODING\_MODE\_RICE2@{CODING\_MODE\_RICE2}}}\mbox{\Hypertarget{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004a3677a95410ececb2beca1b420fe5c1e8}\label{libavcodec_2flacenc_8c_a06d910d03505636718e2e48e7cc03004a3677a95410ececb2beca1b420fe5c1e8}} 
+C\+O\+D\+I\+N\+G\+\_\+\+M\+O\+D\+E\+\_\+\+R\+I\+C\+E2&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 50 of file flacenc.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a3e70b41bf6b44f28ff648f7ca87e3ff7}\label{libavcodec_2flacenc_8c_a3e70b41bf6b44f28ff648f7ca87e3ff7}} 
+\index{flacenc.c@{flacenc.c}!calc\_optimal\_rice\_params@{calc\_optimal\_rice\_params}}
+\index{calc\_optimal\_rice\_params@{calc\_optimal\_rice\_params}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_optimal\_rice\_params()}{calc\_optimal\_rice\_params()}}
+{\footnotesize\ttfamily static uint64\+\_\+t calc\+\_\+optimal\+\_\+rice\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_rice_context}{Rice\+Context}} $\ast$}]{rc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{porder,  }\item[{uint64\+\_\+t}]{sums\mbox{[}32\mbox{]}\mbox{[}\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pred\+\_\+order,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+param,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{exact }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 635 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{libavcodec_2flacenc_8c_a3e70b41bf6b44f28ff648f7ca87e3ff7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a3e70b41bf6b44f28ff648f7ca87e3ff7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a434c4769775b3c476503fc81d93a6d27}\label{libavcodec_2flacenc_8c_a434c4769775b3c476503fc81d93a6d27}} 
+\index{flacenc.c@{flacenc.c}!calc\_rice\_params@{calc\_rice\_params}}
+\index{calc\_rice\_params@{calc\_rice\_params}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_rice\_params()}{calc\_rice\_params()}}
+{\footnotesize\ttfamily static uint64\+\_\+t calc\+\_\+rice\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_rice_context}{Rice\+Context}} $\ast$}]{rc,  }\item[{uint32\+\_\+t}]{udata\mbox{[}\+F\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+B\+L\+O\+C\+K\+S\+I\+Z\+E\mbox{]},  }\item[{uint64\+\_\+t}]{sums\mbox{[}32\mbox{]}\mbox{[}\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pmin,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pmax,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pred\+\_\+order,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{exact }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 705 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a434c4769775b3c476503fc81d93a6d27_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a434c4769775b3c476503fc81d93a6d27_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_af575330076b3cce9046038e6968f86d4}\label{libavcodec_2flacenc_8c_af575330076b3cce9046038e6968f86d4}} 
+\index{flacenc.c@{flacenc.c}!calc\_sum\_next@{calc\_sum\_next}}
+\index{calc\_sum\_next@{calc\_sum\_next}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_sum\_next()}{calc\_sum\_next()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+sum\+\_\+next (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{level,  }\item[{uint64\+\_\+t}]{sums\mbox{[}32\mbox{]}\mbox{[}\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{kmax }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 695 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_af575330076b3cce9046038e6968f86d4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a5a0f1a746d96841c5d747db7f954472c}\label{libavcodec_2flacenc_8c_a5a0f1a746d96841c5d747db7f954472c}} 
+\index{flacenc.c@{flacenc.c}!calc\_sum\_top@{calc\_sum\_top}}
+\index{calc\_sum\_top@{calc\_sum\_top}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_sum\_top()}{calc\_sum\_top()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+sum\+\_\+top (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pmax,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{kmax,  }\item[{const uint32\+\_\+t $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pred\+\_\+order,  }\item[{uint64\+\_\+t}]{sums\mbox{[}32\mbox{]}\mbox{[}\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 665 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a5a0f1a746d96841c5d747db7f954472c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a6a71b8adaded3891b3f80f7d04211767}\label{libavcodec_2flacenc_8c_a6a71b8adaded3891b3f80f7d04211767}} 
+\index{flacenc.c@{flacenc.c}!channel\_decorrelation@{channel\_decorrelation}}
+\index{channel\_decorrelation@{channel\_decorrelation}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{channel\_decorrelation()}{channel\_decorrelation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} channel\+\_\+decorrelation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Perform stereo channel decorrelation. 
+
+Definition at line 1153 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a6a71b8adaded3891b3f80f7d04211767_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=325pt]{libavcodec_2flacenc_8c_a6a71b8adaded3891b3f80f7d04211767_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a27f2e4d94b9e2aa5f4ddd3ac8ef3b8d2}\label{libavcodec_2flacenc_8c_a27f2e4d94b9e2aa5f4ddd3ac8ef3b8d2}} 
+\index{flacenc.c@{flacenc.c}!copy\_samples@{copy\_samples}}
+\index{copy\_samples@{copy\_samples}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{copy\_samples()}{copy\_samples()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} copy\+\_\+samples (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Copy channel-\/interleaved input samples into separate subframes. 
+
+Definition at line 515 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=325pt]{libavcodec_2flacenc_8c_a27f2e4d94b9e2aa5f4ddd3ac8ef3b8d2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{libavcodec_2flacenc_8c_a27f2e4d94b9e2aa5f4ddd3ac8ef3b8d2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_aea2746695c560eba062920f234ebfb1f}\label{libavcodec_2flacenc_8c_aea2746695c560eba062920f234ebfb1f}} 
+\index{flacenc.c@{flacenc.c}!count\_frame\_header@{count\_frame\_header}}
+\index{count\_frame\_header@{count\_frame\_header}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{count\_frame\_header()}{count\_frame\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count\+\_\+frame\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1021 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_aea2746695c560eba062920f234ebfb1f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a275f913dfa0c71230a7d5a517c7d7fe3}\label{libavcodec_2flacenc_8c_a275f913dfa0c71230a7d5a517c7d7fe3}} 
+\index{flacenc.c@{flacenc.c}!dprint\_compression\_options@{dprint\_compression\_options}}
+\index{dprint\_compression\_options@{dprint\_compression\_options}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{dprint\_compression\_options()}{dprint\_compression\_options()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dprint\+\_\+compression\+\_\+options (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 181 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=303pt]{libavcodec_2flacenc_8c_a275f913dfa0c71230a7d5a517c7d7fe3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a8313739ff992d1acfa148521a1b9879f}\label{libavcodec_2flacenc_8c_a8313739ff992d1acfa148521a1b9879f}} 
+\index{flacenc.c@{flacenc.c}!encode\_frame@{encode\_frame}}
+\index{encode\_frame@{encode\_frame}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_frame()}{encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1057 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a8313739ff992d1acfa148521a1b9879f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{libavcodec_2flacenc_8c_a8313739ff992d1acfa148521a1b9879f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a15e52be5db1bfd5c6eceafd8aeb5349c}\label{libavcodec_2flacenc_8c_a15e52be5db1bfd5c6eceafd8aeb5349c}} 
+\index{flacenc.c@{flacenc.c}!encode\_residual\_ch@{encode\_residual\_ch}}
+\index{encode\_residual\_ch@{encode\_residual\_ch}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_residual\_ch()}{encode\_residual\_ch()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+residual\+\_\+ch (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 822 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a15e52be5db1bfd5c6eceafd8aeb5349c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a15e52be5db1bfd5c6eceafd8aeb5349c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a4f6eee918c823d5bd206a8f7e39a9c93}\label{libavcodec_2flacenc_8c_a4f6eee918c823d5bd206a8f7e39a9c93}} 
+\index{flacenc.c@{flacenc.c}!encode\_residual\_fixed@{encode\_residual\_fixed}}
+\index{encode\_residual\_fixed@{encode\_residual\_fixed}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_residual\_fixed()}{encode\_residual\_fixed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} encode\+\_\+residual\+\_\+fixed (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{res,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{smp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 771 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a4f6eee918c823d5bd206a8f7e39a9c93_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a309b53a044216e1cace0a88788d96059}\label{libavcodec_2flacenc_8c_a309b53a044216e1cace0a88788d96059}} 
+\index{flacenc.c@{flacenc.c}!estimate\_stereo\_mode@{estimate\_stereo\_mode}}
+\index{estimate\_stereo\_mode@{estimate\_stereo\_mode}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{estimate\_stereo\_mode()}{estimate\_stereo\_mode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} estimate\+\_\+stereo\+\_\+mode (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{left\+\_\+ch,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{right\+\_\+ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+rice\+\_\+param }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1109 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{libavcodec_2flacenc_8c_a309b53a044216e1cace0a88788d96059_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a309b53a044216e1cace0a88788d96059_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a623ec678a4ba02b5e43d70dc51c615ac}\label{libavcodec_2flacenc_8c_a623ec678a4ba02b5e43d70dc51c615ac}} 
+\index{flacenc.c@{flacenc.c}!find\_optimal\_param@{find\_optimal\_param}}
+\index{find\_optimal\_param@{find\_optimal\_param}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_optimal\_param()}{find\_optimal\_param()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+optimal\+\_\+param (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{sum,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+param }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Solve for d/dk(rice\+\_\+encode\+\_\+count) = n-\/((sum-\/(n$>$$>$1))$>$$>$(k+1)) = 0. 
+
+Definition at line 606 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a623ec678a4ba02b5e43d70dc51c615ac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_added8f9a629e93439be75443b9584388}\label{libavcodec_2flacenc_8c_added8f9a629e93439be75443b9584388}} 
+\index{flacenc.c@{flacenc.c}!find\_optimal\_param\_exact@{find\_optimal\_param\_exact}}
+\index{find\_optimal\_param\_exact@{find\_optimal\_param\_exact}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_optimal\_param\_exact()}{find\_optimal\_param\_exact()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+optimal\+\_\+param\+\_\+exact (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{sums\mbox{[}32\mbox{]}\mbox{[}\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+N\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+param }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 618 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_added8f9a629e93439be75443b9584388_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_afc8c9c0d3fb46a026cc55eca67871eed}\label{libavcodec_2flacenc_8c_afc8c9c0d3fb46a026cc55eca67871eed}} 
+\index{flacenc.c@{flacenc.c}!find\_subframe\_rice\_params@{find\_subframe\_rice\_params}}
+\index{find\_subframe\_rice\_params@{find\_subframe\_rice\_params}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_subframe\_rice\_params()}{find\_subframe\_rice\_params()}}
+{\footnotesize\ttfamily static uint64\+\_\+t find\+\_\+subframe\+\_\+rice\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} $\ast$}]{sub,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pred\+\_\+order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 754 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_afc8c9c0d3fb46a026cc55eca67871eed_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_afc8c9c0d3fb46a026cc55eca67871eed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a1e5881fb6d752abd3fb1130771e77002}\label{libavcodec_2flacenc_8c_a1e5881fb6d752abd3fb1130771e77002}} 
+\index{flacenc.c@{flacenc.c}!flac\_encode\_close@{flac\_encode\_close}}
+\index{flac\_encode\_close@{flac\_encode\_close}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{flac\_encode\_close()}{flac\_encode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} flac\+\_\+encode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1450 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{libavcodec_2flacenc_8c_a1e5881fb6d752abd3fb1130771e77002_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_afc2597bbc770c01a4c89c8a25fdc7705}\label{libavcodec_2flacenc_8c_afc2597bbc770c01a4c89c8a25fdc7705}} 
+\index{flacenc.c@{flacenc.c}!flac\_encode\_frame@{flac\_encode\_frame}}
+\index{flac\_encode\_frame@{flac\_encode\_frame}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{flac\_encode\_frame()}{flac\_encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} flac\+\_\+encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1359 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_afc2597bbc770c01a4c89c8a25fdc7705_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a7629a804b5d81b8dfc046ba08567f9f1}\label{libavcodec_2flacenc_8c_a7629a804b5d81b8dfc046ba08567f9f1}} 
+\index{flacenc.c@{flacenc.c}!flac\_encode\_init@{flac\_encode\_init}}
+\index{flac\_encode\_init@{flac\_encode\_init}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{flac\_encode\_init()}{flac\_encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} flac\+\_\+encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 239 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a7629a804b5d81b8dfc046ba08567f9f1_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a68bd57e281f9078c2ad461b324894be4}\label{libavcodec_2flacenc_8c_a68bd57e281f9078c2ad461b324894be4}} 
+\index{flacenc.c@{flacenc.c}!get\_max\_p\_order@{get\_max\_p\_order}}
+\index{get\_max\_p\_order@{get\_max\_p\_order}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_max\_p\_order()}{get\_max\_p\_order()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+max\+\_\+p\+\_\+order (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+porder,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 745 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a68bd57e281f9078c2ad461b324894be4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a0eb35c6fcdf7f990891c2e22ddcc9c7c}\label{libavcodec_2flacenc_8c_a0eb35c6fcdf7f990891c2e22ddcc9c7c}} 
+\index{flacenc.c@{flacenc.c}!init\_frame@{init\_frame}}
+\index{init\_frame@{init\_frame}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{init\_frame()}{init\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 470 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=207pt]{libavcodec_2flacenc_8c_a0eb35c6fcdf7f990891c2e22ddcc9c7c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{libavcodec_2flacenc_8c_a0eb35c6fcdf7f990891c2e22ddcc9c7c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_af49eb790b0190127fd6a602b02aec9f2}\label{libavcodec_2flacenc_8c_af49eb790b0190127fd6a602b02aec9f2}} 
+\index{flacenc.c@{flacenc.c}!remove\_wasted\_bits@{remove\_wasted\_bits}}
+\index{remove\_wasted\_bits@{remove\_wasted\_bits}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{remove\_wasted\_bits()}{remove\_wasted\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} remove\+\_\+wasted\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1077 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_af49eb790b0190127fd6a602b02aec9f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=318pt]{libavcodec_2flacenc_8c_af49eb790b0190127fd6a602b02aec9f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_aa9e887176ca8b9bb149afa7a4068639c}\label{libavcodec_2flacenc_8c_aa9e887176ca8b9bb149afa7a4068639c}} 
+\index{flacenc.c@{flacenc.c}!rice\_count\_exact@{rice\_count\_exact}}
+\index{rice\_count\_exact@{rice\_count\_exact}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{rice\_count\_exact()}{rice\_count\_exact()}}
+{\footnotesize\ttfamily static uint64\+\_\+t rice\+\_\+count\+\_\+exact (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{res,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 537 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_aa9e887176ca8b9bb149afa7a4068639c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a8abff2044e55dfb5b36f26b7f825592f}\label{libavcodec_2flacenc_8c_a8abff2044e55dfb5b36f26b7f825592f}} 
+\index{flacenc.c@{flacenc.c}!select\_blocksize@{select\_blocksize}}
+\index{select\_blocksize@{select\_blocksize}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{select\_blocksize()}{select\_blocksize()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} select\+\_\+blocksize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{samplerate,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{block\+\_\+time\+\_\+ms }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Set blocksize based on samplerate. Choose the closest predefined blocksize $>$= B\+L\+O\+C\+K\+\_\+\+T\+I\+M\+E\+\_\+\+MS milliseconds. 
+
+Definition at line 162 of file flacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{libavcodec_2flacenc_8c_a8abff2044e55dfb5b36f26b7f825592f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a84e468f289b4c4a3b6964e3961eb8143}\label{libavcodec_2flacenc_8c_a84e468f289b4c4a3b6964e3961eb8143}} 
+\index{flacenc.c@{flacenc.c}!subframe\_count\_exact@{subframe\_count\_exact}}
+\index{subframe\_count\_exact@{subframe\_count\_exact}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{subframe\_count\_exact()}{subframe\_count\_exact()}}
+{\footnotesize\ttfamily static uint64\+\_\+t subframe\+\_\+count\+\_\+exact (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_flac_subframe}{Flac\+Subframe}} $\ast$}]{sub,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pred\+\_\+order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 551 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=322pt]{libavcodec_2flacenc_8c_a84e468f289b4c4a3b6964e3961eb8143_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a84e468f289b4c4a3b6964e3961eb8143_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_adb1664acf6a0320249ac77fa53058687}\label{libavcodec_2flacenc_8c_adb1664acf6a0320249ac77fa53058687}} 
+\index{flacenc.c@{flacenc.c}!update\_md5\_sum@{update\_md5\_sum}}
+\index{update\_md5\_sum@{update\_md5\_sum}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{update\_md5\_sum()}{update\_md5\_sum()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+md5\+\_\+sum (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1323 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_adb1664acf6a0320249ac77fa53058687_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{libavcodec_2flacenc_8c_adb1664acf6a0320249ac77fa53058687_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a61ed14069de6f0283ce652c9ad913ae1}\label{libavcodec_2flacenc_8c_a61ed14069de6f0283ce652c9ad913ae1}} 
+\index{flacenc.c@{flacenc.c}!write\_frame@{write\_frame}}
+\index{write\_frame@{write\_frame}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_frame()}{write\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1313 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a61ed14069de6f0283ce652c9ad913ae1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{libavcodec_2flacenc_8c_a61ed14069de6f0283ce652c9ad913ae1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a1b43fa0625a6038e8df759ccffeb05b8}\label{libavcodec_2flacenc_8c_a1b43fa0625a6038e8df759ccffeb05b8}} 
+\index{flacenc.c@{flacenc.c}!write\_frame\_footer@{write\_frame\_footer}}
+\index{write\_frame\_footer@{write\_frame\_footer}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_frame\_footer()}{write\_frame\_footer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+frame\+\_\+footer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1302 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a1b43fa0625a6038e8df759ccffeb05b8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a1b43fa0625a6038e8df759ccffeb05b8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a40941a61a39916045e2e0620d6ed3b6c}\label{libavcodec_2flacenc_8c_a40941a61a39916045e2e0620d6ed3b6c}} 
+\index{flacenc.c@{flacenc.c}!write\_frame\_header@{write\_frame\_header}}
+\index{write\_frame\_header@{write\_frame\_header}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_frame\_header()}{write\_frame\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+frame\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1205 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a40941a61a39916045e2e0620d6ed3b6c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a40941a61a39916045e2e0620d6ed3b6c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a0d7c4e8930f598b38dfdd805fd409ccf}\label{libavcodec_2flacenc_8c_a0d7c4e8930f598b38dfdd805fd409ccf}} 
+\index{flacenc.c@{flacenc.c}!write\_streaminfo@{write\_streaminfo}}
+\index{write\_streaminfo@{write\_streaminfo}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_streaminfo()}{write\_streaminfo()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+streaminfo (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{header }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Write streaminfo metadata block to byte array. 
+
+Definition at line 135 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=345pt]{libavcodec_2flacenc_8c_a0d7c4e8930f598b38dfdd805fd409ccf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{libavcodec_2flacenc_8c_a0d7c4e8930f598b38dfdd805fd409ccf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a001e1b35983b5676b4b1595197730863}\label{libavcodec_2flacenc_8c_a001e1b35983b5676b4b1595197730863}} 
+\index{flacenc.c@{flacenc.c}!write\_subframes@{write\_subframes}}
+\index{write\_subframes@{write\_subframes}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_subframes()}{write\_subframes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+subframes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_flac_encode_context}{Flac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1242 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a001e1b35983b5676b4b1595197730863_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a001e1b35983b5676b4b1595197730863_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a5ccf650a96fdfa308ec43c097ecabb9f}\label{libavcodec_2flacenc_8c_a5ccf650a96fdfa308ec43c097ecabb9f}} 
+\index{flacenc.c@{flacenc.c}!write\_utf8@{write\_utf8}}
+\index{write\_utf8@{write\_utf8}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_utf8()}{write\_utf8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+utf8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{uint32\+\_\+t}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1198 of file flacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=290pt]{libavcodec_2flacenc_8c_a5ccf650a96fdfa308ec43c097ecabb9f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2flacenc_8c_a5ccf650a96fdfa308ec43c097ecabb9f_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a9887d76b40d1574aa75e389bab78b599}\label{libavcodec_2flacenc_8c_a9887d76b40d1574aa75e389bab78b599}} 
+\index{flacenc.c@{flacenc.c}!ff\_flac\_encoder@{ff\_flac\_encoder}}
+\index{ff\_flac\_encoder@{ff\_flac\_encoder}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{ff\_flac\_encoder}{ff\_flac\_encoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+flac\+\_\+encoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}flac"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}FLAC (Free Lossless Audio Codec)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceabab880efbebbd91d3817debef9e4dc00}{AV\_CODEC\_ID\_FLAC}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavcodec_2flacenc_8c_a536ccc4d926ade06fc5eddeb97df039a}{FlacEncodeContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2flacenc_8c_a7629a804b5d81b8dfc046ba08567f9f1}{flac\_encode\_init}},}
+\DoxyCodeLine{    .encode2        = \mbox{\hyperlink{libavcodec_2flacenc_8c_afc2597bbc770c01a4c89c8a25fdc7705}{flac\_encode\_frame}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2flacenc_8c_a1e5881fb6d752abd3fb1130771e77002}{flac\_encode\_close}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_gaded181844ec3ab19897704086dc2ee03}{AV\_CODEC\_CAP\_SMALL\_LAST\_FRAME}} | \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aea6132df57aebc3f76e10665395c46af}{AV\_SAMPLE\_FMT\_S16}},}
+\DoxyCodeLine{                                                     \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{AV\_SAMPLE\_FMT\_S32}},}
+\DoxyCodeLine{                                                     \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{libavcodec_2flacenc_8c_a43dc3dbebe61b1954df99e45adcc25a9}{flac\_encoder\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1502 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a43dc3dbebe61b1954df99e45adcc25a9}\label{libavcodec_2flacenc_8c_a43dc3dbebe61b1954df99e45adcc25a9}} 
+\index{flacenc.c@{flacenc.c}!flac\_encoder\_class@{flac\_encoder\_class}}
+\index{flac\_encoder\_class@{flac\_encoder\_class}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{flac\_encoder\_class}{flac\_encoder\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} flac\+\_\+encoder\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}FLAC encoder"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1495 of file flacenc.\+c.
+
+\mbox{\Hypertarget{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{flacenc.c@{flacenc.c}!options@{options}}
+\index{options@{options}!flacenc.c@{flacenc.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}lpc\_coeff\_precision"{}}, \textcolor{stringliteral}{"{}LPC coefficient precision"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.lpc\_coeff\_precision), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 15 \}, 0, \mbox{\hyperlink{libavcodec_2flacenc_8c_a28d74f12ffb30cb35582db8b8cd09145}{MAX\_LPC\_PRECISION}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}lpc\_type"{}}, \textcolor{stringliteral}{"{}LPC algorithm"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.lpc\_type), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089ae34e02022b39214c1e51a68c79253b03}{FF\_LPC\_TYPE\_DEFAULT}} \}, \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089ae34e02022b39214c1e51a68c79253b03}{FF\_LPC\_TYPE\_DEFAULT}}, \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089afef8f2964f62ba5a729df5d82651179d}{FF\_LPC\_TYPE\_NB}}-\/1, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}lpc\_type"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}none"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089a076ba0028424e368dadda494f8ae1b27}{FF\_LPC\_TYPE\_NONE}} \},     INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}lpc\_type"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}fixed"{}},    \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089a9a6f9220b83da46c446eb747a2228684}{FF\_LPC\_TYPE\_FIXED}} \},    INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}lpc\_type"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}levinson"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089aa83d535208a826f522a84594b6721c8c}{FF\_LPC\_TYPE\_LEVINSON}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}lpc\_type"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}cholesky"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a458f426f89affd4566f158738e5b3089a38b39727d7fcb3b07dd9ff8a7152ba13}{FF\_LPC\_TYPE\_CHOLESKY}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}lpc\_type"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}lpc\_passes"{}}, \textcolor{stringliteral}{"{}Number of passes to use for Cholesky factorization during LPC analysis"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.lpc\_passes),  \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 2 \}, 1, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}min\_partition\_order"{}},  \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.min\_partition\_order),  \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/1 \},      -\/1, \mbox{\hyperlink{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}{MAX\_PARTITION\_ORDER}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}max\_partition\_order"{}},  \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.max\_partition\_order),  \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/1 \},      -\/1, \mbox{\hyperlink{libavcodec_2flacenc_8c_a09e949eb1a96f35ac1522dae5155e818}{MAX\_PARTITION\_ORDER}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}prediction\_order\_method"{}}, \textcolor{stringliteral}{"{}Search method for selecting prediction order"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.prediction\_order\_method), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/1 \}, -\/1, \mbox{\hyperlink{lpc_8h_aa64b1314d917b4b2e6722e92412733be}{ORDER\_METHOD\_LOG}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}estimation"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a1ca3a3b4de34b03f39290e6517d5203d}{ORDER\_METHOD\_EST}} \},    INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}2level"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_afb8437acf85edac56b65479f78f776be}{ORDER\_METHOD\_2LEVEL}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}4level"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a1c095c0c63882a706d029592c7040d45}{ORDER\_METHOD\_4LEVEL}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}8level"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_ab157e3ec1426e6da8422a5ab3c75d985}{ORDER\_METHOD\_8LEVEL}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}search"{}},     \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_a20cb9c9584a6c4304d7c0d6df755f3f5}{ORDER\_METHOD\_SEARCH}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}log"{}},        \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = \mbox{\hyperlink{lpc_8h_aa64b1314d917b4b2e6722e92412733be}{ORDER\_METHOD\_LOG}} \},    INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}predm"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}ch\_mode"{}}, \textcolor{stringliteral}{"{}Stereo decorrelation mode"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.ch\_mode), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba57ad1df0bb2a10218fdec86ce0f7a9d7}{FLAC\_CHMODE\_MID\_SIDE}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}auto"{}},       \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = -\/1                      \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}indep"{}},      \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55bac45a1e20665135e06c289a1d1debfa57}{FLAC\_CHMODE\_INDEPENDENT}} \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}left\_side"{}},  \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba95c20411df326ae0f1a85eb538612199}{FLAC\_CHMODE\_LEFT\_SIDE}}   \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}right\_side"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba41745d42a23e8cb74a6452f30a3d99ad}{FLAC\_CHMODE\_RIGHT\_SIDE}}  \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}mid\_side"{}},   \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{ .i64 = \mbox{\hyperlink{group__avoptions_gga06fc87d81c62e9abb8790b6e5713c55ba57ad1df0bb2a10218fdec86ce0f7a9d7}{FLAC\_CHMODE\_MID\_SIDE}}    \}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}ch\_mode"{}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}exact\_rice\_parameters"{}}, \textcolor{stringliteral}{"{}Calculate rice parameters exactly"{}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.exact\_rice\_parameters), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = 0 \}, 0, 1, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}multi\_dim\_quant"{}},       \textcolor{stringliteral}{"{}Multi-\/dimensional quantization"{}},    offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.multi\_dim\_quant),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = 0 \}, 0, 1, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}min\_prediction\_order"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.min\_prediction\_order), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, \mbox{\hyperlink{lpc_8h_a3fccddab58274c32cbd7e3791c442db3}{MAX\_LPC\_ORDER}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{\{ \textcolor{stringliteral}{"{}max\_prediction\_order"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, offsetof(\mbox{\hyperlink{struct_flac_encode_context}{FlacEncodeContext}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.max\_prediction\_order), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = -\/1 \}, -\/1, \mbox{\hyperlink{lpc_8h_a3fccddab58274c32cbd7e3791c442db3}{MAX\_LPC\_ORDER}}, \mbox{\hyperlink{libavcodec_2flacenc_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{\{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1464 of file flacenc.\+c.
+

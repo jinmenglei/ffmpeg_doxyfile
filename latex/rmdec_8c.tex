@@ -1,0 +1,975 @@
+\hypertarget{rmdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/rmdec.c File Reference}
+\label{rmdec_8c}\index{E:/github/ffmpeg/libavformat/rmdec.c@{E:/github/ffmpeg/libavformat/rmdec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/dict.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rmsipr.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rm.\+h\char`\"{}}\newline
+Include dependency graph for rmdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}}
+\item 
+struct \mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{rmdec_8c_aa39f55235f98e5721910ce08b3850e66}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+G\+E\+NR}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}\textquotesingle{}, \textquotesingle{}e\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em interleaving for Cooker/\+A\+T\+R\+AC \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_a06b80a4fd5f0c1df3e353c4479d57c77}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+I\+N\+T0}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}I\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}t\textquotesingle{}, \textquotesingle{}0\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em no interleaving needed \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_af0634a050ecca720fda19186472e941c}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+I\+N\+T4}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}I\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}t\textquotesingle{}, \textquotesingle{}4\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em interleaving for 28.\+8 \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_a7f74482fc4387cf327fade250b69c073}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+S\+I\+PR}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}\textquotesingle{}, \textquotesingle{}p\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em interleaving for Sipro \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_a6a2fca5cf1a5ce27d03048512b5118db}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+V\+B\+RF}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}v\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em V\+BR case for A\+AC. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_a329abba6dd0b7ce872eedef943cf2e0f}{D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+V\+B\+RS}}~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}v\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\textquotesingle{})
+\begin{DoxyCompactList}\small\item\em V\+BR case for A\+AC. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rmdec_8c_a4fe00987076e8982fb1ae00fe51245d0}{R\+A\+W\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+ZE}}~1000
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}} \mbox{\hyperlink{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}{R\+M\+Demux\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}{rm\+\_\+read\+\_\+close}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rmdec_8c_aad3b4e0bdf384ac8ece7893056942bdf}{get\+\_\+strl}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, char $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rmdec_8c_af4af5b96f7d62ed59f2b799d17e8a816}{get\+\_\+str8}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, char $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a7b741f826565218a39efaa059fda66f8}{rm\+\_\+read\+\_\+extradata}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_codec_parameters}{A\+V\+Codec\+Parameters}} $\ast$par, unsigned \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rmdec_8c_a03adb28b26209a60d6913e2920a89a09}{rm\+\_\+read\+\_\+metadata}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wide)
+\item 
+\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$ \mbox{\hyperlink{rmdec_8c_a57eb1776f2a87119196c5f579f4d3786}{ff\+\_\+rm\+\_\+alloc\+\_\+rmstream}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rmdec_8c_a7fec9de59bbf0a8197425d417520df18}{ff\+\_\+rm\+\_\+free\+\_\+rmstream}} (\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$rms)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a3da3ebc591a23ef586d00e08d1d44474}{rm\+\_\+read\+\_\+audio\+\_\+stream\+\_\+info}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$ast, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+all)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_ad947b3e88c2426d82404e85602dd3838}{ff\+\_\+rm\+\_\+read\+\_\+mdpr\+\_\+codecdata}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$rst, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} codec\+\_\+data\+\_\+size, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$mime)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a2de97ca3f8bda6f3f79477e303568a7a}{rm\+\_\+read\+\_\+index}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_aa35d15ac6d600a58285c89d61603a8d6}{rm\+\_\+read\+\_\+header\+\_\+old}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_abed9ba91b945d16f4618c34f7ede12d0}{rm\+\_\+read\+\_\+multi}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, char $\ast$mime)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a1b8b0c2119fde5f800b7c2da08d63a9f}{rm\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a2ed086d7d14dca6f08258f7c3d49cb9c}{get\+\_\+num}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a75034e74b4d2278c2f49382b6daf74e8}{rm\+\_\+sync}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, int64\+\_\+t $\ast$timestamp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$stream\+\_\+index, int64\+\_\+t $\ast$\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a233e6ec014a280a169356c8b52513a3d}{rm\+\_\+assemble\+\_\+video\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}} $\ast$rm, \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$vst, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$pseq, int64\+\_\+t $\ast$timestamp)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rmdec_8c_adc8bf2e6538ddc860bfbac8ed1176b5b}{rm\+\_\+ac3\+\_\+swap\+\_\+bytes}} (\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a7a9b67164c6f982c42ed54f56f5151ee}{readfull}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_ad81cc41622651b1c14ca7ae34ab28954}{ff\+\_\+rm\+\_\+parse\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$ast, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$seq, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, int64\+\_\+t timestamp)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a91a7d107b57da04241c2b107dae481ec}{ff\+\_\+rm\+\_\+retrieve\+\_\+cache}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$ast, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_afe13fb38915cc0f26792ec8e9b7989c5}{rm\+\_\+read\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a1f253e75e11eb5f40f0d4d3643fc0bb3}{rm\+\_\+probe}} (const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$p)
+\item 
+static int64\+\_\+t \mbox{\hyperlink{rmdec_8c_a5067ab0910948d751d665b375a79da5a}{rm\+\_\+read\+\_\+dts}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t $\ast$ppos, int64\+\_\+t pos\+\_\+limit)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_ae7316fa189a2fe0399742ed98206e7bb}{rm\+\_\+read\+\_\+seek}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t \mbox{\hyperlink{transcode__aac_8c_a4fbb704fb96c36a78a36eee010306ce7}{pts}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_a997bd3df3247572a98f4a71dad6db918}{ivr\+\_\+probe}} (const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_abe9289a608a48d200d0e3a8e644ff698}{ivr\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rmdec_8c_ad7f0c75bb4577c73a4afcf5d400d2c90}{ivr\+\_\+read\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{rmdec_8c_a086245faf5552ab9401d90f8854e9b8b}{ff\+\_\+rm\+\_\+demuxer}}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{rmdec_8c_aa3ad19bc48fb2fe0d7c6b1c6b6130ba7}{ff\+\_\+rdt\+\_\+demuxer}}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{rmdec_8c_a8894e4f064da7f9bb1dc0a926a7899a2}{ff\+\_\+ivr\+\_\+demuxer}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{rmdec_8c_aa39f55235f98e5721910ce08b3850e66}\label{rmdec_8c_aa39f55235f98e5721910ce08b3850e66}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_GENR@{DEINT\_ID\_GENR}}
+\index{DEINT\_ID\_GENR@{DEINT\_ID\_GENR}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_GENR}{DEINT\_ID\_GENR}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+G\+E\+NR~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}\textquotesingle{}, \textquotesingle{}e\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{})}
+
+
+
+interleaving for Cooker/\+A\+T\+R\+AC 
+
+
+
+Definition at line 36 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a06b80a4fd5f0c1df3e353c4479d57c77}\label{rmdec_8c_a06b80a4fd5f0c1df3e353c4479d57c77}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_INT0@{DEINT\_ID\_INT0}}
+\index{DEINT\_ID\_INT0@{DEINT\_ID\_INT0}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_INT0}{DEINT\_ID\_INT0}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+I\+N\+T0~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}I\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}t\textquotesingle{}, \textquotesingle{}0\textquotesingle{})}
+
+
+
+no interleaving needed 
+
+
+
+Definition at line 37 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_af0634a050ecca720fda19186472e941c}\label{rmdec_8c_af0634a050ecca720fda19186472e941c}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_INT4@{DEINT\_ID\_INT4}}
+\index{DEINT\_ID\_INT4@{DEINT\_ID\_INT4}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_INT4}{DEINT\_ID\_INT4}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+I\+N\+T4~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}I\textquotesingle{}, \textquotesingle{}n\textquotesingle{}, \textquotesingle{}t\textquotesingle{}, \textquotesingle{}4\textquotesingle{})}
+
+
+
+interleaving for 28.\+8 
+
+
+
+Definition at line 38 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a7f74482fc4387cf327fade250b69c073}\label{rmdec_8c_a7f74482fc4387cf327fade250b69c073}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_SIPR@{DEINT\_ID\_SIPR}}
+\index{DEINT\_ID\_SIPR@{DEINT\_ID\_SIPR}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_SIPR}{DEINT\_ID\_SIPR}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+S\+I\+PR~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}\textquotesingle{}, \textquotesingle{}p\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{})}
+
+
+
+interleaving for Sipro 
+
+
+
+Definition at line 39 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a6a2fca5cf1a5ce27d03048512b5118db}\label{rmdec_8c_a6a2fca5cf1a5ce27d03048512b5118db}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_VBRF@{DEINT\_ID\_VBRF}}
+\index{DEINT\_ID\_VBRF@{DEINT\_ID\_VBRF}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_VBRF}{DEINT\_ID\_VBRF}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+V\+B\+RF~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}v\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}\textquotesingle{})}
+
+
+
+V\+BR case for A\+AC. 
+
+
+
+Definition at line 40 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a329abba6dd0b7ce872eedef943cf2e0f}\label{rmdec_8c_a329abba6dd0b7ce872eedef943cf2e0f}} 
+\index{rmdec.c@{rmdec.c}!DEINT\_ID\_VBRS@{DEINT\_ID\_VBRS}}
+\index{DEINT\_ID\_VBRS@{DEINT\_ID\_VBRS}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{DEINT\_ID\_VBRS}{DEINT\_ID\_VBRS}}
+{\footnotesize\ttfamily \#define D\+E\+I\+N\+T\+\_\+\+I\+D\+\_\+\+V\+B\+RS~\mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{M\+K\+T\+AG}}(\textquotesingle{}v\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\textquotesingle{}, \textquotesingle{}\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\textquotesingle{})}
+
+
+
+V\+BR case for A\+AC. 
+
+
+
+Definition at line 41 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a4fe00987076e8982fb1ae00fe51245d0}\label{rmdec_8c_a4fe00987076e8982fb1ae00fe51245d0}} 
+\index{rmdec.c@{rmdec.c}!RAW\_PACKET\_SIZE@{RAW\_PACKET\_SIZE}}
+\index{RAW\_PACKET\_SIZE@{RAW\_PACKET\_SIZE}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{RAW\_PACKET\_SIZE}{RAW\_PACKET\_SIZE}}
+{\footnotesize\ttfamily \#define R\+A\+W\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+ZE~1000}
+
+
+
+Definition at line 684 of file rmdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}\label{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}} 
+\index{rmdec.c@{rmdec.c}!RMDemuxContext@{RMDemuxContext}}
+\index{RMDemuxContext@{RMDemuxContext}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{RMDemuxContext}{RMDemuxContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}} \mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{rmdec_8c_a57eb1776f2a87119196c5f579f4d3786}\label{rmdec_8c_a57eb1776f2a87119196c5f579f4d3786}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_alloc\_rmstream@{ff\_rm\_alloc\_rmstream}}
+\index{ff\_rm\_alloc\_rmstream@{ff\_rm\_alloc\_rmstream}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_alloc\_rmstream()}{ff\_rm\_alloc\_rmstream()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}}$\ast$ ff\+\_\+rm\+\_\+alloc\+\_\+rmstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 107 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{rmdec_8c_a57eb1776f2a87119196c5f579f4d3786_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a57eb1776f2a87119196c5f579f4d3786_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a7fec9de59bbf0a8197425d417520df18}\label{rmdec_8c_a7fec9de59bbf0a8197425d417520df18}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_free\_rmstream@{ff\_rm\_free\_rmstream}}
+\index{ff\_rm\_free\_rmstream@{ff\_rm\_free\_rmstream}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_free\_rmstream()}{ff\_rm\_free\_rmstream()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+rm\+\_\+free\+\_\+rmstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{rms }\end{DoxyParamCaption})}
+
+
+
+Definition at line 116 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7fec9de59bbf0a8197425d417520df18_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7fec9de59bbf0a8197425d417520df18_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_ad81cc41622651b1c14ca7ae34ab28954}\label{rmdec_8c_ad81cc41622651b1c14ca7ae34ab28954}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_parse\_packet@{ff\_rm\_parse\_packet}}
+\index{ff\_rm\_parse\_packet@{ff\_rm\_parse\_packet}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_parse\_packet()}{ff\_rm\_parse\_packet()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+rm\+\_\+parse\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{rst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{seq,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags,  }\item[{int64\+\_\+t}]{ts }\end{DoxyParamCaption})}
+
+Parse one rm-\/stream packet from the input bytestream.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context containing R\+M\+Context and \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} for stream reading \\
+\hline
+{\em pb} & context to read the data from \\
+\hline
+{\em st} & stream to which the packet to be read belongs \\
+\hline
+{\em rst} & Real-\/specific stream information \\
+\hline
+{\em len} & packet length to read from the input \\
+\hline
+{\em pkt} & packet location to store the parsed packet data \\
+\hline
+{\em seq} & pointer to an integer containing the sequence number, may be updated \\
+\hline
+{\em flags} & the packet flags \\
+\hline
+{\em ts} & timestamp of the current packet \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+$<$0 on error, 0 if a packet was placed in the pkt pointer. A value $>$0 means that no data was placed in pkt, but that cached data is available by calling \mbox{\hyperlink{rm_8h_ad01bd4a36f1e68bcd4bde134fa90ecb8}{ff\+\_\+rm\+\_\+retrieve\+\_\+cache()}}. 
+\end{DoxyReturn}
+
+
+Definition at line 887 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_ad81cc41622651b1c14ca7ae34ab28954_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{rmdec_8c_ad81cc41622651b1c14ca7ae34ab28954_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_ad947b3e88c2426d82404e85602dd3838}\label{rmdec_8c_ad947b3e88c2426d82404e85602dd3838}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_read\_mdpr\_codecdata@{ff\_rm\_read\_mdpr\_codecdata}}
+\index{ff\_rm\_read\_mdpr\_codecdata@{ff\_rm\_read\_mdpr\_codecdata}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_read\_mdpr\_codecdata()}{ff\_rm\_read\_mdpr\_codecdata()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+rm\+\_\+read\+\_\+mdpr\+\_\+codecdata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{rst,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{codec\+\_\+data\+\_\+size,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{mime }\end{DoxyParamCaption})}
+
+Read the M\+D\+PR chunk, which contains stream-\/specific codec initialization parameters.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context containing R\+M\+Context and \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} for stream reading \\
+\hline
+{\em pb} & context to read the data from \\
+\hline
+{\em st} & the stream that the M\+D\+PR chunk belongs to and where to store the parameters read from the chunk into \\
+\hline
+{\em rst} & real-\/specific stream information \\
+\hline
+{\em codec\+\_\+data\+\_\+size} & size of the M\+D\+PR chunk \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, errno codes on error 
+\end{DoxyReturn}
+
+
+Definition at line 316 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_ad947b3e88c2426d82404e85602dd3838_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_ad947b3e88c2426d82404e85602dd3838_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a91a7d107b57da04241c2b107dae481ec}\label{rmdec_8c_a91a7d107b57da04241c2b107dae481ec}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_retrieve\_cache@{ff\_rm\_retrieve\_cache}}
+\index{ff\_rm\_retrieve\_cache@{ff\_rm\_retrieve\_cache}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_retrieve\_cache()}{ff\_rm\_retrieve\_cache()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+rm\+\_\+retrieve\+\_\+cache (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{rst,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})}
+
+Retrieve one cached packet from the rm-\/context. The real container can store several packets (as interpreted by the codec) in a single container packet, which means the demuxer holds some back when the first container packet is parsed and returned. The result is that rm-\/$>$audio\+\_\+pkt\+\_\+cnt is a positive number, the amount of cached packets. Using this function, each of those packets can be retrieved sequentially.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context containing R\+M\+Context and \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} for stream reading \\
+\hline
+{\em pb} & context to read the data from \\
+\hline
+{\em st} & stream that this packet belongs to \\
+\hline
+{\em rst} & Real-\/specific stream information \\
+\hline
+{\em pkt} & location to store the packet data \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the number of samples left for subsequent calls to this same function, or 0 if all samples have been retrieved. 
+\end{DoxyReturn}
+
+
+Definition at line 975 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a91a7d107b57da04241c2b107dae481ec_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=313pt]{rmdec_8c_a91a7d107b57da04241c2b107dae481ec_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a2ed086d7d14dca6f08258f7c3d49cb9c}\label{rmdec_8c_a2ed086d7d14dca6f08258f7c3d49cb9c}} 
+\index{rmdec.c@{rmdec.c}!get\_num@{get\_num}}
+\index{get\_num@{get\_num}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_num()}{get\_num()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+num (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 667 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a2ed086d7d14dca6f08258f7c3d49cb9c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a2ed086d7d14dca6f08258f7c3d49cb9c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_af4af5b96f7d62ed59f2b799d17e8a816}\label{rmdec_8c_af4af5b96f7d62ed59f2b799d17e8a816}} 
+\index{rmdec.c@{rmdec.c}!get\_str8@{get\_str8}}
+\index{get\_str8@{get\_str8}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_str8()}{get\_str8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+str8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{char $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 79 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_af4af5b96f7d62ed59f2b799d17e8a816_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_af4af5b96f7d62ed59f2b799d17e8a816_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_aad3b4e0bdf384ac8ece7893056942bdf}\label{rmdec_8c_aad3b4e0bdf384ac8ece7893056942bdf}} 
+\index{rmdec.c@{rmdec.c}!get\_strl@{get\_strl}}
+\index{get\_strl@{get\_strl}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_strl()}{get\_strl()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+strl (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{char $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 71 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_aad3b4e0bdf384ac8ece7893056942bdf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_aad3b4e0bdf384ac8ece7893056942bdf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a997bd3df3247572a98f4a71dad6db918}\label{rmdec_8c_a997bd3df3247572a98f4a71dad6db918}} 
+\index{rmdec.c@{rmdec.c}!ivr\_probe@{ivr\_probe}}
+\index{ivr\_probe@{ivr\_probe}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ivr\_probe()}{ivr\_probe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ivr\+\_\+probe (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1166 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_abe9289a608a48d200d0e3a8e644ff698}\label{rmdec_8c_abe9289a608a48d200d0e3a8e644ff698}} 
+\index{rmdec.c@{rmdec.c}!ivr\_read\_header@{ivr\_read\_header}}
+\index{ivr\_read\_header@{ivr\_read\_header}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ivr\_read\_header()}{ivr\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ivr\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1175 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_abe9289a608a48d200d0e3a8e644ff698_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_ad7f0c75bb4577c73a4afcf5d400d2c90}\label{rmdec_8c_ad7f0c75bb4577c73a4afcf5d400d2c90}} 
+\index{rmdec.c@{rmdec.c}!ivr\_read\_packet@{ivr\_read\_packet}}
+\index{ivr\_read\_packet@{ivr\_read\_packet}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ivr\_read\_packet()}{ivr\_read\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ivr\+\_\+read\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1317 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_ad7f0c75bb4577c73a4afcf5d400d2c90_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a7a9b67164c6f982c42ed54f56f5151ee}\label{rmdec_8c_a7a9b67164c6f982c42ed54f56f5151ee}} 
+\index{rmdec.c@{rmdec.c}!readfull@{readfull}}
+\index{readfull@{readfull}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{readfull()}{readfull()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} readfull (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 876 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7a9b67164c6f982c42ed54f56f5151ee_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7a9b67164c6f982c42ed54f56f5151ee_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_adc8bf2e6538ddc860bfbac8ed1176b5b}\label{rmdec_8c_adc8bf2e6538ddc860bfbac8ed1176b5b}} 
+\index{rmdec.c@{rmdec.c}!rm\_ac3\_swap\_bytes@{rm\_ac3\_swap\_bytes}}
+\index{rm\_ac3\_swap\_bytes@{rm\_ac3\_swap\_bytes}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_ac3\_swap\_bytes()}{rm\_ac3\_swap\_bytes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} rm\+\_\+ac3\+\_\+swap\+\_\+bytes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 862 of file rmdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_adc8bf2e6538ddc860bfbac8ed1176b5b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a233e6ec014a280a169356c8b52513a3d}\label{rmdec_8c_a233e6ec014a280a169356c8b52513a3d}} 
+\index{rmdec.c@{rmdec.c}!rm\_assemble\_video\_frame@{rm\_assemble\_video\_frame}}
+\index{rm\_assemble\_video\_frame@{rm\_assemble\_video\_frame}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_assemble\_video\_frame()}{rm\_assemble\_video\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+assemble\+\_\+video\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_r_m_demux_context}{R\+M\+Demux\+Context}} $\ast$}]{rm,  }\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{vst,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{pseq,  }\item[{int64\+\_\+t $\ast$}]{timestamp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 759 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a233e6ec014a280a169356c8b52513a3d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a233e6ec014a280a169356c8b52513a3d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a1f253e75e11eb5f40f0d4d3643fc0bb3}\label{rmdec_8c_a1f253e75e11eb5f40f0d4d3643fc0bb3}} 
+\index{rmdec.c@{rmdec.c}!rm\_probe@{rm\_probe}}
+\index{rm\_probe@{rm\_probe}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_probe()}{rm\_probe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+probe (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1075 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a3da3ebc591a23ef586d00e08d1d44474}\label{rmdec_8c_a3da3ebc591a23ef586d00e08d1d44474}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_audio\_stream\_info@{rm\_read\_audio\_stream\_info}}
+\index{rm\_read\_audio\_stream\_info@{rm\_read\_audio\_stream\_info}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_audio\_stream\_info()}{rm\_read\_audio\_stream\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+audio\+\_\+stream\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_r_m_stream}{R\+M\+Stream}} $\ast$}]{ast,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{read\+\_\+all }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 124 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a3da3ebc591a23ef586d00e08d1d44474_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a3da3ebc591a23ef586d00e08d1d44474_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}\label{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_close@{rm\_read\_close}}
+\index{rm\_read\_close@{rm\_read\_close}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_close()}{rm\_read\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1065 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a5067ab0910948d751d665b375a79da5a}\label{rmdec_8c_a5067ab0910948d751d665b375a79da5a}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_dts@{rm\_read\_dts}}
+\index{rm\_read\_dts@{rm\_read\_dts}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_dts()}{rm\_read\_dts()}}
+{\footnotesize\ttfamily static int64\+\_\+t rm\+\_\+read\+\_\+dts (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t $\ast$}]{ppos,  }\item[{int64\+\_\+t}]{pos\+\_\+limit }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1088 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a5067ab0910948d751d665b375a79da5a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a7b741f826565218a39efaa059fda66f8}\label{rmdec_8c_a7b741f826565218a39efaa059fda66f8}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_extradata@{rm\_read\_extradata}}
+\index{rm\_read\_extradata@{rm\_read\_extradata}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_extradata()}{rm\_read\_extradata()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+extradata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_codec_parameters}{A\+V\+Codec\+Parameters}} $\ast$}]{par,  }\item[{unsigned}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 84 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7b741f826565218a39efaa059fda66f8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a7b741f826565218a39efaa059fda66f8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a1b8b0c2119fde5f800b7c2da08d63a9f}\label{rmdec_8c_a1b8b0c2119fde5f800b7c2da08d63a9f}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_header@{rm\_read\_header}}
+\index{rm\_read\_header@{rm\_read\_header}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_header()}{rm\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 537 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a1b8b0c2119fde5f800b7c2da08d63a9f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_aa35d15ac6d600a58285c89d61603a8d6}\label{rmdec_8c_aa35d15ac6d600a58285c89d61603a8d6}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_header\_old@{rm\_read\_header\_old}}
+\index{rm\_read\_header\_old@{rm\_read\_header\_old}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_header\_old()}{rm\_read\_header\_old()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+header\+\_\+old (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 481 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_aa35d15ac6d600a58285c89d61603a8d6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{rmdec_8c_aa35d15ac6d600a58285c89d61603a8d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a2de97ca3f8bda6f3f79477e303568a7a}\label{rmdec_8c_a2de97ca3f8bda6f3f79477e303568a7a}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_index@{rm\_read\_index}}
+\index{rm\_read\_index@{rm\_read\_index}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_index()}{rm\_read\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+this function assumes that the demuxer has already seeked to the start of the I\+N\+DX chunk, and will bail out if not. 
+
+Definition at line 425 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a2de97ca3f8bda6f3f79477e303568a7a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{rmdec_8c_a2de97ca3f8bda6f3f79477e303568a7a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a03adb28b26209a60d6913e2920a89a09}\label{rmdec_8c_a03adb28b26209a60d6913e2920a89a09}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_metadata@{rm\_read\_metadata}}
+\index{rm\_read\_metadata@{rm\_read\_metadata}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_metadata()}{rm\_read\_metadata()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} rm\+\_\+read\+\_\+metadata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{wide }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 93 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a03adb28b26209a60d6913e2920a89a09_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a03adb28b26209a60d6913e2920a89a09_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_abed9ba91b945d16f4618c34f7ede12d0}\label{rmdec_8c_abed9ba91b945d16f4618c34f7ede12d0}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_multi@{rm\_read\_multi}}
+\index{rm\_read\_multi@{rm\_read\_multi}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_multi()}{rm\_read\_multi()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+multi (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{char $\ast$}]{mime }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 496 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_abed9ba91b945d16f4618c34f7ede12d0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{rmdec_8c_abed9ba91b945d16f4618c34f7ede12d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_afe13fb38915cc0f26792ec8e9b7989c5}\label{rmdec_8c_afe13fb38915cc0f26792ec8e9b7989c5}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_packet@{rm\_read\_packet}}
+\index{rm\_read\_packet@{rm\_read\_packet}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_packet()}{rm\_read\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1007 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_afe13fb38915cc0f26792ec8e9b7989c5_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_ae7316fa189a2fe0399742ed98206e7bb}\label{rmdec_8c_ae7316fa189a2fe0399742ed98206e7bb}} 
+\index{rmdec.c@{rmdec.c}!rm\_read\_seek@{rm\_read\_seek}}
+\index{rm\_read\_seek@{rm\_read\_seek}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_read\_seek()}{rm\_read\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+read\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{pts,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1134 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_ae7316fa189a2fe0399742ed98206e7bb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rmdec_8c_a75034e74b4d2278c2f49382b6daf74e8}\label{rmdec_8c_a75034e74b4d2278c2f49382b6daf74e8}} 
+\index{rmdec.c@{rmdec.c}!rm\_sync@{rm\_sync}}
+\index{rm\_sync@{rm\_sync}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{rm\_sync()}{rm\_sync()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rm\+\_\+sync (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{int64\+\_\+t $\ast$}]{timestamp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{flags,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{stream\+\_\+index,  }\item[{int64\+\_\+t $\ast$}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 686 of file rmdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rmdec_8c_a75034e74b4d2278c2f49382b6daf74e8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{rmdec_8c_a75034e74b4d2278c2f49382b6daf74e8_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{rmdec_8c_a8894e4f064da7f9bb1dc0a926a7899a2}\label{rmdec_8c_a8894e4f064da7f9bb1dc0a926a7899a2}} 
+\index{rmdec.c@{rmdec.c}!ff\_ivr\_demuxer@{ff\_ivr\_demuxer}}
+\index{ff\_ivr\_demuxer@{ff\_ivr\_demuxer}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_ivr\_demuxer}{ff\_ivr\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+ivr\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}ivr"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}IVR (Internet Video Recording)"{}}),}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}{RMDemuxContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavformat_2jvdec_8c_a4517a6dcebdb863ba6840921970a41ac}{read\_probe}}     = \mbox{\hyperlink{rmdec_8c_a997bd3df3247572a98f4a71dad6db918}{ivr\_probe}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{ffv1dec_8c_a0b9c6775a65106fc8bf33cd388ec715c}{read\_header}}    = \mbox{\hyperlink{rmdec_8c_abe9289a608a48d200d0e3a8e644ff698}{ivr\_read\_header}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avio__reading_8c_a3a86bff38e7cb9093d0a32316b73b29c}{read\_packet}}    = \mbox{\hyperlink{rmdec_8c_ad7f0c75bb4577c73a4afcf5d400d2c90}{ivr\_read\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_a3469cc7152b70da4356d17e698a55850}{read\_close}}     = \mbox{\hyperlink{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}{rm\_read\_close}},}
+\DoxyCodeLine{    .extensions     = \textcolor{stringliteral}{"{}ivr"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1398 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_aa3ad19bc48fb2fe0d7c6b1c6b6130ba7}\label{rmdec_8c_aa3ad19bc48fb2fe0d7c6b1c6b6130ba7}} 
+\index{rmdec.c@{rmdec.c}!ff\_rdt\_demuxer@{ff\_rdt\_demuxer}}
+\index{ff\_rdt\_demuxer@{ff\_rdt\_demuxer}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rdt\_demuxer}{ff\_rdt\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+rdt\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}rdt"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}RDT demuxer"{}}),}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}{RMDemuxContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_a3469cc7152b70da4356d17e698a55850}{read\_close}}     = \mbox{\hyperlink{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}{rm\_read\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{avformat_8h_a752cce390d480521919aa5d8be24ac0b}{AVFMT\_NOFILE}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1158 of file rmdec.\+c.
+
+\mbox{\Hypertarget{rmdec_8c_a086245faf5552ab9401d90f8854e9b8b}\label{rmdec_8c_a086245faf5552ab9401d90f8854e9b8b}} 
+\index{rmdec.c@{rmdec.c}!ff\_rm\_demuxer@{ff\_rm\_demuxer}}
+\index{ff\_rm\_demuxer@{ff\_rm\_demuxer}!rmdec.c@{rmdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_rm\_demuxer}{ff\_rm\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+rm\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}rm"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}RealMedia"{}}),}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{rmdec_8c_a1142b2a31674b8b9ad7de9759cdd3a32}{RMDemuxContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavformat_2jvdec_8c_a4517a6dcebdb863ba6840921970a41ac}{read\_probe}}     = \mbox{\hyperlink{rmdec_8c_a1f253e75e11eb5f40f0d4d3643fc0bb3}{rm\_probe}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{ffv1dec_8c_a0b9c6775a65106fc8bf33cd388ec715c}{read\_header}}    = \mbox{\hyperlink{rmdec_8c_a1b8b0c2119fde5f800b7c2da08d63a9f}{rm\_read\_header}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avio__reading_8c_a3a86bff38e7cb9093d0a32316b73b29c}{read\_packet}}    = \mbox{\hyperlink{rmdec_8c_afe13fb38915cc0f26792ec8e9b7989c5}{rm\_read\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_a3469cc7152b70da4356d17e698a55850}{read\_close}}     = \mbox{\hyperlink{rmdec_8c_a4e05a352fa3a0a51c13149c152b25d90}{rm\_read\_close}},}
+\DoxyCodeLine{    .read\_timestamp = \mbox{\hyperlink{rmdec_8c_a5067ab0910948d751d665b375a79da5a}{rm\_read\_dts}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_aaf64d43f28f7aaf168968366472d52d7}{read\_seek}}      = \mbox{\hyperlink{rmdec_8c_ae7316fa189a2fe0399742ed98206e7bb}{rm\_read\_seek}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1146 of file rmdec.\+c.
+

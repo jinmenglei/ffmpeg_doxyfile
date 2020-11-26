@@ -1,0 +1,1590 @@
+\hypertarget{webp_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/webp.c File Reference}
+\label{webp_8c}\index{E:/github/ffmpeg/libavcodec/webp.c@{E:/github/ffmpeg/libavcodec/webp.c}}
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}exif.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vp8.\+h\char`\"{}}\newline
+Include dependency graph for webp.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}}
+\item 
+struct \mbox{\hyperlink{struct_image_context}{Image\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{webp_8c_ab9ef831966fb2c5f522c19e809354830}{B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}}
+\item 
+\#define \mbox{\hyperlink{webp_8c_aa1483d255dbae6a9c6a10075fbea6bd8}{V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+A\+N\+I\+M\+A\+T\+I\+ON}}~0x02
+\item 
+\#define \mbox{\hyperlink{webp_8c_ad94eef14d3a5cc9f55c8ad441920c06d}{V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+X\+M\+P\+\_\+\+M\+E\+T\+A\+D\+A\+TA}}~0x04
+\item 
+\#define \mbox{\hyperlink{webp_8c_a7d86794231171fa44821f8c23ca0cb59}{V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+E\+X\+I\+F\+\_\+\+M\+E\+T\+A\+D\+A\+TA}}~0x08
+\item 
+\#define \mbox{\hyperlink{webp_8c_a5f1afb84162b12ec2c3ec65ace5e5c57}{V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+A\+L\+P\+HA}}~0x10
+\item 
+\#define \mbox{\hyperlink{webp_8c_a33514b5d71e5a70c179c6db1387daaae}{V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+I\+CC}}~0x20
+\item 
+\#define \mbox{\hyperlink{webp_8c_aaf814e11977f47f35464ebb44d4c9675}{M\+A\+X\+\_\+\+P\+A\+L\+E\+T\+T\+E\+\_\+\+S\+I\+ZE}}~256
+\item 
+\#define \mbox{\hyperlink{webp_8c_add5ef7da5ca319c3d18d76e3c186bd35}{M\+A\+X\+\_\+\+C\+A\+C\+H\+E\+\_\+\+B\+I\+TS}}~11
+\item 
+\#define \mbox{\hyperlink{webp_8c_a22ed04d49e008cb4295a8b366c4f2f3b}{N\+U\+M\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES}}~19
+\item 
+\#define \mbox{\hyperlink{webp_8c_ab457800fa26a0d302aa89e88b67de6c1}{H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+S\+\_\+\+P\+E\+R\+\_\+\+M\+E\+T\+A\+\_\+\+C\+O\+DE}}~5
+\item 
+\#define \mbox{\hyperlink{webp_8c_a795b513af719422687dafb558e63e4ff}{N\+U\+M\+\_\+\+L\+I\+T\+E\+R\+A\+L\+\_\+\+C\+O\+D\+ES}}~256
+\item 
+\#define \mbox{\hyperlink{webp_8c_aa803921583cd0d074e424bd5a596e456}{N\+U\+M\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES}}~24
+\item 
+\#define \mbox{\hyperlink{webp_8c_acff57804c17f845fde49bc2693dd9d9b}{N\+U\+M\+\_\+\+D\+I\+S\+T\+A\+N\+C\+E\+\_\+\+C\+O\+D\+ES}}~40
+\item 
+\#define \mbox{\hyperlink{webp_8c_aeb00246adfcdf3aebb049287802ccd8c}{N\+U\+M\+\_\+\+S\+H\+O\+R\+T\+\_\+\+D\+I\+S\+T\+A\+N\+C\+ES}}~120
+\item 
+\#define \mbox{\hyperlink{webp_8c_a8b5d685837de02f1ce809d43e25fb069}{M\+A\+X\+\_\+\+H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+TH}}~15
+\item 
+\#define \mbox{\hyperlink{webp_8c_a46dcf9892faca75ba9d41dba211f8231}{G\+E\+T\+\_\+\+P\+I\+X\+EL}}(\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}},  x,  y)~    ((\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})-\/$>$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}\mbox{[}0\mbox{]} + (y) $\ast$ \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}-\/$>$linesize\mbox{[}0\mbox{]} + 4 $\ast$ (x))
+\item 
+\#define \mbox{\hyperlink{webp_8c_acc883f33c3ad04a7d9e893b23d44c25a}{G\+E\+T\+\_\+\+P\+I\+X\+E\+L\+\_\+\+C\+O\+MP}}(\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}},  x,  y,  \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})~    ($\ast$((\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})-\/$>$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}\mbox{[}0\mbox{]} + (y) $\ast$ \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}-\/$>$linesize\mbox{[}0\mbox{]} + 4 $\ast$ (x) + \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}))
+\item 
+\#define \mbox{\hyperlink{webp_8c_acacf2ad87d583299da78fbdd1dc53148}{P\+A\+R\+S\+E\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE}}(\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} \mbox{\hyperlink{webp_8c_acf20cdca7f5a02fc529dcacacad102d4}{Huff\+Reader}}
+\item 
+typedef struct \mbox{\hyperlink{struct_image_context}{Image\+Context}} \mbox{\hyperlink{webp_8c_a3f54ad85aa8209d73fde1812b04b40eb}{Image\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} \mbox{\hyperlink{webp_8c_a2eb5bc647825c95ae2ea501d179f4207}{Web\+P\+Context}}
+\item 
+typedef \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ \mbox{\hyperlink{webp_8c_a8c78c67c6ad61665e6f7cf17df01b29f}{inv\+\_\+predict\+\_\+func}}) (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{webp_8c_a1d5deb123fafa57ea7043c40f118c05b}{Alpha\+Compression}} \{ \mbox{\hyperlink{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba2097fdb9dccb8064e69541fad4a002b9}{A\+L\+P\+H\+A\+\_\+\+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba82527b220293ec92200cbe54c7e971fd}{A\+L\+P\+H\+A\+\_\+\+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+V\+P8L}}
+ \}
+\item 
+enum \mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}{Alpha\+Filter}} \{ \mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a4f228286877a99cd1af44424ebcb6b1e}{A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9aca0aa4062963b1c54e280275b5ae198a}{A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+H\+O\+R\+I\+Z\+O\+N\+T\+AL}}, 
+\mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a6f270a60c2e62877b664d2cd966c44ee}{A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+V\+E\+R\+T\+I\+C\+AL}}, 
+\mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a5b760221ef843318a80c5a9d28207ab6}{A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+G\+R\+A\+D\+I\+E\+NT}}
+ \}
+\item 
+enum \mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2}{Transform\+Type}} \{ \newline
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 0, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}{C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 1, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}{S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+G\+R\+E\+EN}} = 2, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}{C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+N\+G\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 3, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}{DI}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}{D\+II}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}{T\+D\+II}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}{L\+A\+TT}}, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}{N\+B\+\_\+\+T\+T\+Y\+PE}}
+ \}
+\item 
+enum \mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}{Prediction\+Mode}} \{ \newline
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da95069a026bc57fd9e1a7b73f254f04d0}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+B\+L\+A\+CK}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7dac6baaaaf190f42867bf2100ed79d0c13}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+L}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5a2623cf0a956b63d4395727c4e39e44}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+T}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da25685ff0ca32aaeb4d90825d7f52ccd1}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+TR}}, 
+\newline
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6840fb5892a233b2a77daa974cf4fa29}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+TL}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7dae104a89d35a61b0629a41f99ed52946b}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+TR}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6d4efb8e0927e9220b9c2c8b452ae197}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+TL}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da2790c0a2f7819df581955bd80626da5b}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+T}}, 
+\newline
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da48aa6a48ea71e512112d2fe6d1b3070a}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+L\+\_\+T}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5d9bfa0030dfa064d32df0aad768818e}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+TR}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da62336dd2be98957b9870778ce67e41da}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+T\+L\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+TR}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da7d0963653d9cddc871780f462bc24b2a}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+S\+E\+L\+E\+CT}}, 
+\newline
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da066364dadd5d4d1d16b02ee6b1c21c32}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+D\+D\+\_\+\+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+F\+U\+LL}}, 
+\mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7da864909dd536f7522e5ebbb5205d3b4dc}{P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+D\+D\+\_\+\+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+H\+A\+LF}}
+ \}
+\item 
+enum \mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5}{Huffman\+Index}} \{ \newline
+\mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a3b0ffef67f069019bfad9f46b982febb}{H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+G\+R\+E\+EN}} = 0, 
+\mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a328fef01beb0724eb48a1ffdc511b88f}{H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+R\+ED}} = 1, 
+\mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a9edfb26e4f9fd705be4dd4d3f739aa95}{H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+B\+L\+UE}} = 2, 
+\mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5aa58279bd00e62bdea1c27d7299180fe2}{H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+A\+L\+P\+HA}} = 3, 
+\newline
+\mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5ad84acf8fa3ce761ba657d3053dd390aa}{H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+D\+I\+ST}} = 4
+ \}
+\item 
+enum \mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}{Image\+Role}} \{ \newline
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147ae6a47653f84c9dbb3e42ebf6ea72cef5}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+A\+R\+GB}}, 
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a73bacd8811cdf11be83e830b3f9aa490}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+E\+N\+T\+R\+O\+PY}}, 
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a488ab39c0e4d0a2df4e3e8d6183d43a4}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+P\+R\+E\+D\+I\+C\+T\+OR}}, 
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a4a144b2247bf9535b398c303f668c6bb}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}}, 
+\newline
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147aa3c930490f94db2b3654ce5a64376f58}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+NG}}, 
+\mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a861db511312b97e131e88689b5bed124}{I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+NB}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a126c5abf0fb031b45b2a77dec5c818aa}{image\+\_\+ctx\+\_\+free}} (\mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$\mbox{\hyperlink{vf__colormatrix_8c_ad116363516b0293a59b40e02af04a018}{img}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_af2e822ecf130e81d621d2e54d0412f0e}{huff\+\_\+reader\+\_\+get\+\_\+symbol}} (\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_ae4411f2aeedb4f4f48540b90666928ee}{huff\+\_\+reader\+\_\+build\+\_\+canonical}} (\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$code\+\_\+lengths, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alphabet\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a8f369bca07dd226561e821ee50bcbcb8}{read\+\_\+huffman\+\_\+code\+\_\+simple}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$hc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a0a3d428d33827903591cb79d8a9b9bbb}{read\+\_\+huffman\+\_\+code\+\_\+normal}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$hc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alphabet\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a94b1344775623995403f5c11cbed9421}{decode\+\_\+entropy\+\_\+coded\+\_\+image}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, enum \mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}{Image\+Role}} role, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_ad005a947f027c8ac64229b411022486f}{decode\+\_\+entropy\+\_\+image}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_af585503aa924b2e03fbd810e321c78f5}{parse\+\_\+transform\+\_\+predictor}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a3b3210a52deae4c158eaa1414a64d2bb}{parse\+\_\+transform\+\_\+color}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_abebaf6f316a1ef29d9c158151a40a58a}{parse\+\_\+transform\+\_\+color\+\_\+indexing}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$ \mbox{\hyperlink{webp_8c_ae57cec2c86e306c71896c17640fbc1d5}{get\+\_\+huffman\+\_\+group}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$\mbox{\hyperlink{vf__colormatrix_8c_ad116363516b0293a59b40e02af04a018}{img}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a5e1923b29dcde61e81c0a1a48dcd946c}{color\+\_\+cache\+\_\+put}} (\mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$\mbox{\hyperlink{vf__colormatrix_8c_ad116363516b0293a59b40e02af04a018}{img}}, uint32\+\_\+t \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a5f06c953491f443b63ee5f994de0248e}{inv\+\_\+predict\+\_\+0}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_ae0f0358d7a7bc56a5f00345f1535825c}{inv\+\_\+predict\+\_\+1}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_abc5d41ce784126515a0107eb851d61fd}{inv\+\_\+predict\+\_\+2}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a86552a19a8c0722b76066c9ff8496cef}{inv\+\_\+predict\+\_\+3}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a43ea5348c6ca50fa0113595759709292}{inv\+\_\+predict\+\_\+4}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_afb1daa02d93d7de92a737af16dbe90fd}{inv\+\_\+predict\+\_\+5}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_aa5527c6d06c1c8a25c0b88b32833f778}{inv\+\_\+predict\+\_\+6}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a2620e8b2c399f2e7ae2a577facf58cbb}{inv\+\_\+predict\+\_\+7}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a22236c4f2abac50b7f14a3dac7519408}{inv\+\_\+predict\+\_\+8}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a69b0baccb61c526776f3ea599695a106}{inv\+\_\+predict\+\_\+9}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a0bac2bce7da8f820a6cb22345cdf9626}{inv\+\_\+predict\+\_\+10}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a6154049475382fba40b19240090f398c}{inv\+\_\+predict\+\_\+11}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_af10e1e93b01ed2c3dc6f1354399a40f7}{inv\+\_\+predict\+\_\+12}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{webp_8c_a5f272592193c907956660126c4fac710}{clamp\+\_\+add\+\_\+subtract\+\_\+half}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_acb67aff90e27b452765551ae28b17f8b}{inv\+\_\+predict\+\_\+13}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a4f40d65516bdcaec47c14913356d6250}{inverse\+\_\+prediction}} (\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, enum \mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}{Prediction\+Mode}} m, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a91bcc66a75b9764e4e1e7a6e679f088f}{apply\+\_\+predictor\+\_\+transform}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{webp_8c_a22c95786ed28ff828bb8d84d3c3ab846}{color\+\_\+transform\+\_\+delta}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} color\+\_\+pred, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{structcolor}{color}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a1956748b2163ad1547eb8a4bac098e39}{apply\+\_\+color\+\_\+transform}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a62d1ef3c27200072a24bb7c14816fc4a}{apply\+\_\+subtract\+\_\+green\+\_\+transform}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_aa934a528026049d2bccc516a520a27ec}{apply\+\_\+color\+\_\+indexing\+\_\+transform}} (\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_ad946777cb9f4abf6488789d77b31350f}{update\+\_\+canvas\+\_\+size}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a67616604ea6d195388325f3fbf2d1389}{vp8\+\_\+lossless\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$data\+\_\+start, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} data\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+alpha\+\_\+chunk)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{webp_8c_a2e8ef0d60d3c05312ba88a3fc6e335c0}{alpha\+\_\+inverse\+\_\+prediction}} (\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, enum \mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}{Alpha\+Filter}} m)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_ae0c7301c7b56362bb91d7e54aca91c38}{vp8\+\_\+lossy\+\_\+decode\+\_\+alpha}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$p, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$data\+\_\+start, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} data\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a655b5488e45220d56aa6ddb3af396c70}{vp8\+\_\+lossy\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$data\+\_\+start, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} data\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a4b17bd13954e06dec268dca89f374c23}{webp\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{webp_8c_a26d5023e7200bc924b1284ec400563fd}{webp\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const uint16\+\_\+t \mbox{\hyperlink{webp_8c_ad86db4e0ce81a7b8262c0403a2e31721}{alphabet\+\_\+sizes}} \mbox{[}\mbox{\hyperlink{webp_8c_ab457800fa26a0d302aa89e88b67de6c1}{H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+S\+\_\+\+P\+E\+R\+\_\+\+M\+E\+T\+A\+\_\+\+C\+O\+DE}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{webp_8c_a47f91b1e23d3b1d7be27b84880ec779d}{code\+\_\+length\+\_\+code\+\_\+order}} \mbox{[}\mbox{\hyperlink{webp_8c_a22ed04d49e008cb4295a8b366c4f2f3b}{N\+U\+M\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES}}\mbox{]}
+\item 
+static const int8\+\_\+t \mbox{\hyperlink{webp_8c_a5e105327e4dc1fac0b7fc43e0b45f01c}{lz77\+\_\+distance\+\_\+offsets}} \mbox{[}\mbox{\hyperlink{webp_8c_aeb00246adfcdf3aebb049287802ccd8c}{N\+U\+M\+\_\+\+S\+H\+O\+R\+T\+\_\+\+D\+I\+S\+T\+A\+N\+C\+ES}}\mbox{]}\mbox{[}2\mbox{]}
+\item 
+static const \mbox{\hyperlink{webp_8c_a8c78c67c6ad61665e6f7cf17df01b29f}{inv\+\_\+predict\+\_\+func}} \mbox{\hyperlink{webp_8c_ae6a695ae4a9a64737ce689948351e4a3}{inverse\+\_\+predict}} \mbox{[}14\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{webp_8c_aad0bffbabdec1405f3f07373a648227e}{ff\+\_\+webp\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+WebP image decoder
+
+\begin{DoxyAuthor}{Author}
+Aneesh Dogra \href{mailto:aneesh@sugarlabs.org}{\texttt{ aneesh@sugarlabs.\+org}} Container and Lossy decoding
+
+Justin Ruggles \href{mailto:justin.ruggles@gmail.com}{\texttt{ justin.\+ruggles@gmail.\+com}} Lossless decoder Compressed alpha for lossy
+
+James Almer \href{mailto:jamrial@gmail.com}{\texttt{ jamrial@gmail.\+com}} Exif metadata I\+CC profile
+\end{DoxyAuthor}
+Unimplemented\+:
+\begin{DoxyItemize}
+\item Animation
+\item X\+MP metadata 
+\end{DoxyItemize}
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{webp_8c_ab9ef831966fb2c5f522c19e809354830}\label{webp_8c_ab9ef831966fb2c5f522c19e809354830}} 
+\index{webp.c@{webp.c}!BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}}
+\index{BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{BITSTREAM\_READER\_LE}{BITSTREAM\_READER\_LE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}
+
+
+
+Definition at line 45 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a46dcf9892faca75ba9d41dba211f8231}\label{webp_8c_a46dcf9892faca75ba9d41dba211f8231}} 
+\index{webp.c@{webp.c}!GET\_PIXEL@{GET\_PIXEL}}
+\index{GET\_PIXEL@{GET\_PIXEL}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{GET\_PIXEL}{GET\_PIXEL}}
+{\footnotesize\ttfamily \#define G\+E\+T\+\_\+\+P\+I\+X\+EL(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}},  }\item[{}]{x,  }\item[{}]{y }\end{DoxyParamCaption})~    ((\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})-\/$>$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}\mbox{[}0\mbox{]} + (y) $\ast$ \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}-\/$>$linesize\mbox{[}0\mbox{]} + 4 $\ast$ (x))}
+
+
+
+Definition at line 212 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_acc883f33c3ad04a7d9e893b23d44c25a}\label{webp_8c_acc883f33c3ad04a7d9e893b23d44c25a}} 
+\index{webp.c@{webp.c}!GET\_PIXEL\_COMP@{GET\_PIXEL\_COMP}}
+\index{GET\_PIXEL\_COMP@{GET\_PIXEL\_COMP}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{GET\_PIXEL\_COMP}{GET\_PIXEL\_COMP}}
+{\footnotesize\ttfamily \#define G\+E\+T\+\_\+\+P\+I\+X\+E\+L\+\_\+\+C\+O\+MP(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}},  }\item[{}]{x,  }\item[{}]{y,  }\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}} }\end{DoxyParamCaption})~    ($\ast$((\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})-\/$>$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}\mbox{[}0\mbox{]} + (y) $\ast$ \mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}-\/$>$linesize\mbox{[}0\mbox{]} + 4 $\ast$ (x) + \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}))}
+
+
+
+Definition at line 215 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_ab457800fa26a0d302aa89e88b67de6c1}\label{webp_8c_ab457800fa26a0d302aa89e88b67de6c1}} 
+\index{webp.c@{webp.c}!HUFFMAN\_CODES\_PER\_META\_CODE@{HUFFMAN\_CODES\_PER\_META\_CODE}}
+\index{HUFFMAN\_CODES\_PER\_META\_CODE@{HUFFMAN\_CODES\_PER\_META\_CODE}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{HUFFMAN\_CODES\_PER\_META\_CODE}{HUFFMAN\_CODES\_PER\_META\_CODE}}
+{\footnotesize\ttfamily \#define H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+S\+\_\+\+P\+E\+R\+\_\+\+M\+E\+T\+A\+\_\+\+C\+O\+DE~5}
+
+
+
+Definition at line 63 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_add5ef7da5ca319c3d18d76e3c186bd35}\label{webp_8c_add5ef7da5ca319c3d18d76e3c186bd35}} 
+\index{webp.c@{webp.c}!MAX\_CACHE\_BITS@{MAX\_CACHE\_BITS}}
+\index{MAX\_CACHE\_BITS@{MAX\_CACHE\_BITS}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_CACHE\_BITS}{MAX\_CACHE\_BITS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+C\+A\+C\+H\+E\+\_\+\+B\+I\+TS~11}
+
+
+
+Definition at line 61 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a8b5d685837de02f1ce809d43e25fb069}\label{webp_8c_a8b5d685837de02f1ce809d43e25fb069}} 
+\index{webp.c@{webp.c}!MAX\_HUFFMAN\_CODE\_LENGTH@{MAX\_HUFFMAN\_CODE\_LENGTH}}
+\index{MAX\_HUFFMAN\_CODE\_LENGTH@{MAX\_HUFFMAN\_CODE\_LENGTH}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_HUFFMAN\_CODE\_LENGTH}{MAX\_HUFFMAN\_CODE\_LENGTH}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+TH~15}
+
+
+
+Definition at line 68 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aaf814e11977f47f35464ebb44d4c9675}\label{webp_8c_aaf814e11977f47f35464ebb44d4c9675}} 
+\index{webp.c@{webp.c}!MAX\_PALETTE\_SIZE@{MAX\_PALETTE\_SIZE}}
+\index{MAX\_PALETTE\_SIZE@{MAX\_PALETTE\_SIZE}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_PALETTE\_SIZE}{MAX\_PALETTE\_SIZE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+P\+A\+L\+E\+T\+T\+E\+\_\+\+S\+I\+ZE~256}
+
+
+
+Definition at line 60 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a22ed04d49e008cb4295a8b366c4f2f3b}\label{webp_8c_a22ed04d49e008cb4295a8b366c4f2f3b}} 
+\index{webp.c@{webp.c}!NUM\_CODE\_LENGTH\_CODES@{NUM\_CODE\_LENGTH\_CODES}}
+\index{NUM\_CODE\_LENGTH\_CODES@{NUM\_CODE\_LENGTH\_CODES}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_CODE\_LENGTH\_CODES}{NUM\_CODE\_LENGTH\_CODES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES~19}
+
+
+
+Definition at line 62 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_acff57804c17f845fde49bc2693dd9d9b}\label{webp_8c_acff57804c17f845fde49bc2693dd9d9b}} 
+\index{webp.c@{webp.c}!NUM\_DISTANCE\_CODES@{NUM\_DISTANCE\_CODES}}
+\index{NUM\_DISTANCE\_CODES@{NUM\_DISTANCE\_CODES}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_DISTANCE\_CODES}{NUM\_DISTANCE\_CODES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+D\+I\+S\+T\+A\+N\+C\+E\+\_\+\+C\+O\+D\+ES~40}
+
+
+
+Definition at line 66 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aa803921583cd0d074e424bd5a596e456}\label{webp_8c_aa803921583cd0d074e424bd5a596e456}} 
+\index{webp.c@{webp.c}!NUM\_LENGTH\_CODES@{NUM\_LENGTH\_CODES}}
+\index{NUM\_LENGTH\_CODES@{NUM\_LENGTH\_CODES}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_LENGTH\_CODES}{NUM\_LENGTH\_CODES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES~24}
+
+
+
+Definition at line 65 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a795b513af719422687dafb558e63e4ff}\label{webp_8c_a795b513af719422687dafb558e63e4ff}} 
+\index{webp.c@{webp.c}!NUM\_LITERAL\_CODES@{NUM\_LITERAL\_CODES}}
+\index{NUM\_LITERAL\_CODES@{NUM\_LITERAL\_CODES}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_LITERAL\_CODES}{NUM\_LITERAL\_CODES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+L\+I\+T\+E\+R\+A\+L\+\_\+\+C\+O\+D\+ES~256}
+
+
+
+Definition at line 64 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aeb00246adfcdf3aebb049287802ccd8c}\label{webp_8c_aeb00246adfcdf3aebb049287802ccd8c}} 
+\index{webp.c@{webp.c}!NUM\_SHORT\_DISTANCES@{NUM\_SHORT\_DISTANCES}}
+\index{NUM\_SHORT\_DISTANCES@{NUM\_SHORT\_DISTANCES}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_SHORT\_DISTANCES}{NUM\_SHORT\_DISTANCES}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+S\+H\+O\+R\+T\+\_\+\+D\+I\+S\+T\+A\+N\+C\+ES~120}
+
+
+
+Definition at line 67 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_acacf2ad87d583299da78fbdd1dc53148}\label{webp_8c_acacf2ad87d583299da78fbdd1dc53148}} 
+\index{webp.c@{webp.c}!PARSE\_BLOCK\_SIZE@{PARSE\_BLOCK\_SIZE}}
+\index{PARSE\_BLOCK\_SIZE@{PARSE\_BLOCK\_SIZE}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{PARSE\_BLOCK\_SIZE}{PARSE\_BLOCK\_SIZE}}
+{\footnotesize\ttfamily \#define P\+A\+R\+S\+E\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                         \(\backslash\)}
+\DoxyCodeLine{    block\_bits = \mbox{\hyperlink{get__bits_8h_abd82eee339b2471e5d9b4bfecfdc6b5f}{get\_bits}}(\&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, 3) + 2;                                   \(\backslash\)}
+\DoxyCodeLine{    blocks\_w   = \mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((\mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}), 1 << \mbox{\hyperlink{imm4_8c_a55a197a3ed20b8d9e5282e61be250c18}{block\_bits}}) >> \mbox{\hyperlink{imm4_8c_a55a197a3ed20b8d9e5282e61be250c18}{block\_bits}};               \(\backslash\)}
+\DoxyCodeLine{    blocks\_h   = \mbox{\hyperlink{macros_8h_acae4ba605b3a7d535b7ac058ffe96892}{FFALIGN}}((\mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}), 1 << \mbox{\hyperlink{imm4_8c_a55a197a3ed20b8d9e5282e61be250c18}{block\_bits}}) >> \mbox{\hyperlink{imm4_8c_a55a197a3ed20b8d9e5282e61be250c18}{block\_bits}};               \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+Definition at line 418 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a5f1afb84162b12ec2c3ec65ace5e5c57}\label{webp_8c_a5f1afb84162b12ec2c3ec65ace5e5c57}} 
+\index{webp.c@{webp.c}!VP8X\_FLAG\_ALPHA@{VP8X\_FLAG\_ALPHA}}
+\index{VP8X\_FLAG\_ALPHA@{VP8X\_FLAG\_ALPHA}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{VP8X\_FLAG\_ALPHA}{VP8X\_FLAG\_ALPHA}}
+{\footnotesize\ttfamily \#define V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+A\+L\+P\+HA~0x10}
+
+
+
+Definition at line 57 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aa1483d255dbae6a9c6a10075fbea6bd8}\label{webp_8c_aa1483d255dbae6a9c6a10075fbea6bd8}} 
+\index{webp.c@{webp.c}!VP8X\_FLAG\_ANIMATION@{VP8X\_FLAG\_ANIMATION}}
+\index{VP8X\_FLAG\_ANIMATION@{VP8X\_FLAG\_ANIMATION}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{VP8X\_FLAG\_ANIMATION}{VP8X\_FLAG\_ANIMATION}}
+{\footnotesize\ttfamily \#define V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+A\+N\+I\+M\+A\+T\+I\+ON~0x02}
+
+
+
+Definition at line 54 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a7d86794231171fa44821f8c23ca0cb59}\label{webp_8c_a7d86794231171fa44821f8c23ca0cb59}} 
+\index{webp.c@{webp.c}!VP8X\_FLAG\_EXIF\_METADATA@{VP8X\_FLAG\_EXIF\_METADATA}}
+\index{VP8X\_FLAG\_EXIF\_METADATA@{VP8X\_FLAG\_EXIF\_METADATA}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{VP8X\_FLAG\_EXIF\_METADATA}{VP8X\_FLAG\_EXIF\_METADATA}}
+{\footnotesize\ttfamily \#define V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+E\+X\+I\+F\+\_\+\+M\+E\+T\+A\+D\+A\+TA~0x08}
+
+
+
+Definition at line 56 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a33514b5d71e5a70c179c6db1387daaae}\label{webp_8c_a33514b5d71e5a70c179c6db1387daaae}} 
+\index{webp.c@{webp.c}!VP8X\_FLAG\_ICC@{VP8X\_FLAG\_ICC}}
+\index{VP8X\_FLAG\_ICC@{VP8X\_FLAG\_ICC}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{VP8X\_FLAG\_ICC}{VP8X\_FLAG\_ICC}}
+{\footnotesize\ttfamily \#define V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+I\+CC~0x20}
+
+
+
+Definition at line 58 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_ad94eef14d3a5cc9f55c8ad441920c06d}\label{webp_8c_ad94eef14d3a5cc9f55c8ad441920c06d}} 
+\index{webp.c@{webp.c}!VP8X\_FLAG\_XMP\_METADATA@{VP8X\_FLAG\_XMP\_METADATA}}
+\index{VP8X\_FLAG\_XMP\_METADATA@{VP8X\_FLAG\_XMP\_METADATA}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{VP8X\_FLAG\_XMP\_METADATA}{VP8X\_FLAG\_XMP\_METADATA}}
+{\footnotesize\ttfamily \#define V\+P8\+X\+\_\+\+F\+L\+A\+G\+\_\+\+X\+M\+P\+\_\+\+M\+E\+T\+A\+D\+A\+TA~0x04}
+
+
+
+Definition at line 55 of file webp.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{webp_8c_acf20cdca7f5a02fc529dcacacad102d4}\label{webp_8c_acf20cdca7f5a02fc529dcacacad102d4}} 
+\index{webp.c@{webp.c}!HuffReader@{HuffReader}}
+\index{HuffReader@{HuffReader}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{HuffReader}{HuffReader}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}}}
+
+\mbox{\Hypertarget{webp_8c_a3f54ad85aa8209d73fde1812b04b40eb}\label{webp_8c_a3f54ad85aa8209d73fde1812b04b40eb}} 
+\index{webp.c@{webp.c}!ImageContext@{ImageContext}}
+\index{ImageContext@{ImageContext}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{ImageContext}{ImageContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_image_context}{Image\+Context}} \mbox{\hyperlink{struct_image_context}{Image\+Context}}}
+
+\mbox{\Hypertarget{webp_8c_a8c78c67c6ad61665e6f7cf17df01b29f}\label{webp_8c_a8c78c67c6ad61665e6f7cf17df01b29f}} 
+\index{webp.c@{webp.c}!inv\_predict\_func@{inv\_predict\_func}}
+\index{inv\_predict\_func@{inv\_predict\_func}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_func}{inv\_predict\_func}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ inv\+\_\+predict\+\_\+func) (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+l, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tl, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+t, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$p\+\_\+tr)}
+
+
+
+Definition at line 884 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a2eb5bc647825c95ae2ea501d179f4207}\label{webp_8c_a2eb5bc647825c95ae2ea501d179f4207}} 
+\index{webp.c@{webp.c}!WebPContext@{WebPContext}}
+\index{WebPContext@{WebPContext}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{WebPContext}{WebPContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} \mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{webp_8c_a1d5deb123fafa57ea7043c40f118c05b}\label{webp_8c_a1d5deb123fafa57ea7043c40f118c05b}} 
+\index{webp.c@{webp.c}!AlphaCompression@{AlphaCompression}}
+\index{AlphaCompression@{AlphaCompression}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{AlphaCompression}{AlphaCompression}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_a1d5deb123fafa57ea7043c40f118c05b}{Alpha\+Compression}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_COMPRESSION\_NONE@{ALPHA\_COMPRESSION\_NONE}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_COMPRESSION\_NONE@{ALPHA\_COMPRESSION\_NONE}}}\mbox{\Hypertarget{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba2097fdb9dccb8064e69541fad4a002b9}\label{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba2097fdb9dccb8064e69541fad4a002b9}} 
+A\+L\+P\+H\+A\+\_\+\+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_COMPRESSION\_VP8L@{ALPHA\_COMPRESSION\_VP8L}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_COMPRESSION\_VP8L@{ALPHA\_COMPRESSION\_VP8L}}}\mbox{\Hypertarget{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba82527b220293ec92200cbe54c7e971fd}\label{webp_8c_a1d5deb123fafa57ea7043c40f118c05ba82527b220293ec92200cbe54c7e971fd}} 
+A\+L\+P\+H\+A\+\_\+\+C\+O\+M\+P\+R\+E\+S\+S\+I\+O\+N\+\_\+\+V\+P8L&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 98 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}\label{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}} 
+\index{webp.c@{webp.c}!AlphaFilter@{AlphaFilter}}
+\index{AlphaFilter@{AlphaFilter}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{AlphaFilter}{AlphaFilter}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}{Alpha\+Filter}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_FILTER\_NONE@{ALPHA\_FILTER\_NONE}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_FILTER\_NONE@{ALPHA\_FILTER\_NONE}}}\mbox{\Hypertarget{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a4f228286877a99cd1af44424ebcb6b1e}\label{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a4f228286877a99cd1af44424ebcb6b1e}} 
+A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_FILTER\_HORIZONTAL@{ALPHA\_FILTER\_HORIZONTAL}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_FILTER\_HORIZONTAL@{ALPHA\_FILTER\_HORIZONTAL}}}\mbox{\Hypertarget{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9aca0aa4062963b1c54e280275b5ae198a}\label{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9aca0aa4062963b1c54e280275b5ae198a}} 
+A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+H\+O\+R\+I\+Z\+O\+N\+T\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_FILTER\_VERTICAL@{ALPHA\_FILTER\_VERTICAL}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_FILTER\_VERTICAL@{ALPHA\_FILTER\_VERTICAL}}}\mbox{\Hypertarget{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a6f270a60c2e62877b664d2cd966c44ee}\label{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a6f270a60c2e62877b664d2cd966c44ee}} 
+A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+V\+E\+R\+T\+I\+C\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALPHA\_FILTER\_GRADIENT@{ALPHA\_FILTER\_GRADIENT}!webp.c@{webp.c}}\index{webp.c@{webp.c}!ALPHA\_FILTER\_GRADIENT@{ALPHA\_FILTER\_GRADIENT}}}\mbox{\Hypertarget{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a5b760221ef843318a80c5a9d28207ab6}\label{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9a5b760221ef843318a80c5a9d28207ab6}} 
+A\+L\+P\+H\+A\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+G\+R\+A\+D\+I\+E\+NT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 103 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5}} 
+\index{webp.c@{webp.c}!HuffmanIndex@{HuffmanIndex}}
+\index{HuffmanIndex@{HuffmanIndex}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{HuffmanIndex}{HuffmanIndex}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5}{Huffman\+Index}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HUFF\_IDX\_GREEN@{HUFF\_IDX\_GREEN}!webp.c@{webp.c}}\index{webp.c@{webp.c}!HUFF\_IDX\_GREEN@{HUFF\_IDX\_GREEN}}}\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a3b0ffef67f069019bfad9f46b982febb}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a3b0ffef67f069019bfad9f46b982febb}} 
+H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+G\+R\+E\+EN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HUFF\_IDX\_RED@{HUFF\_IDX\_RED}!webp.c@{webp.c}}\index{webp.c@{webp.c}!HUFF\_IDX\_RED@{HUFF\_IDX\_RED}}}\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a328fef01beb0724eb48a1ffdc511b88f}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a328fef01beb0724eb48a1ffdc511b88f}} 
+H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+R\+ED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HUFF\_IDX\_BLUE@{HUFF\_IDX\_BLUE}!webp.c@{webp.c}}\index{webp.c@{webp.c}!HUFF\_IDX\_BLUE@{HUFF\_IDX\_BLUE}}}\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a9edfb26e4f9fd705be4dd4d3f739aa95}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5a9edfb26e4f9fd705be4dd4d3f739aa95}} 
+H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+B\+L\+UE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HUFF\_IDX\_ALPHA@{HUFF\_IDX\_ALPHA}!webp.c@{webp.c}}\index{webp.c@{webp.c}!HUFF\_IDX\_ALPHA@{HUFF\_IDX\_ALPHA}}}\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5aa58279bd00e62bdea1c27d7299180fe2}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5aa58279bd00e62bdea1c27d7299180fe2}} 
+H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+A\+L\+P\+HA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HUFF\_IDX\_DIST@{HUFF\_IDX\_DIST}!webp.c@{webp.c}}\index{webp.c@{webp.c}!HUFF\_IDX\_DIST@{HUFF\_IDX\_DIST}}}\mbox{\Hypertarget{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5ad84acf8fa3ce761ba657d3053dd390aa}\label{webp_8c_a47f91f98def0ff3efe929af2b72b9fc5ad84acf8fa3ce761ba657d3053dd390aa}} 
+H\+U\+F\+F\+\_\+\+I\+D\+X\+\_\+\+D\+I\+ST&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 134 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}} 
+\index{webp.c@{webp.c}!ImageRole@{ImageRole}}
+\index{ImageRole@{ImageRole}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{ImageRole}{ImageRole}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}{Image\+Role}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_ARGB@{IMAGE\_ROLE\_ARGB}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_ARGB@{IMAGE\_ROLE\_ARGB}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147ae6a47653f84c9dbb3e42ebf6ea72cef5}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147ae6a47653f84c9dbb3e42ebf6ea72cef5}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+A\+R\+GB&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_ENTROPY@{IMAGE\_ROLE\_ENTROPY}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_ENTROPY@{IMAGE\_ROLE\_ENTROPY}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a73bacd8811cdf11be83e830b3f9aa490}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a73bacd8811cdf11be83e830b3f9aa490}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+E\+N\+T\+R\+O\+PY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_PREDICTOR@{IMAGE\_ROLE\_PREDICTOR}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_PREDICTOR@{IMAGE\_ROLE\_PREDICTOR}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a488ab39c0e4d0a2df4e3e8d6183d43a4}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a488ab39c0e4d0a2df4e3e8d6183d43a4}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+P\+R\+E\+D\+I\+C\+T\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_COLOR\_TRANSFORM@{IMAGE\_ROLE\_COLOR\_TRANSFORM}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_COLOR\_TRANSFORM@{IMAGE\_ROLE\_COLOR\_TRANSFORM}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a4a144b2247bf9535b398c303f668c6bb}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a4a144b2247bf9535b398c303f668c6bb}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_COLOR\_INDEXING@{IMAGE\_ROLE\_COLOR\_INDEXING}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_COLOR\_INDEXING@{IMAGE\_ROLE\_COLOR\_INDEXING}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147aa3c930490f94db2b3654ce5a64376f58}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147aa3c930490f94db2b3654ce5a64376f58}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_ROLE\_NB@{IMAGE\_ROLE\_NB}!webp.c@{webp.c}}\index{webp.c@{webp.c}!IMAGE\_ROLE\_NB@{IMAGE\_ROLE\_NB}}}\mbox{\Hypertarget{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a861db511312b97e131e88689b5bed124}\label{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147a861db511312b97e131e88689b5bed124}} 
+I\+M\+A\+G\+E\+\_\+\+R\+O\+L\+E\+\_\+\+NB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 148 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}} 
+\index{webp.c@{webp.c}!PredictionMode@{PredictionMode}}
+\index{PredictionMode@{PredictionMode}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{PredictionMode}{PredictionMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}{Prediction\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_BLACK@{PRED\_MODE\_BLACK}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_BLACK@{PRED\_MODE\_BLACK}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da95069a026bc57fd9e1a7b73f254f04d0}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da95069a026bc57fd9e1a7b73f254f04d0}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+B\+L\+A\+CK&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_L@{PRED\_MODE\_L}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_L@{PRED\_MODE\_L}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7dac6baaaaf190f42867bf2100ed79d0c13}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7dac6baaaaf190f42867bf2100ed79d0c13}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+L&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_T@{PRED\_MODE\_T}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_T@{PRED\_MODE\_T}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5a2623cf0a956b63d4395727c4e39e44}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5a2623cf0a956b63d4395727c4e39e44}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+T&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_TR@{PRED\_MODE\_TR}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_TR@{PRED\_MODE\_TR}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da25685ff0ca32aaeb4d90825d7f52ccd1}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da25685ff0ca32aaeb4d90825d7f52ccd1}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_TL@{PRED\_MODE\_TL}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_TL@{PRED\_MODE\_TL}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6840fb5892a233b2a77daa974cf4fa29}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6840fb5892a233b2a77daa974cf4fa29}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+TL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_T\_AVG\_L\_TR@{PRED\_MODE\_AVG\_T\_AVG\_L\_TR}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_T\_AVG\_L\_TR@{PRED\_MODE\_AVG\_T\_AVG\_L\_TR}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7dae104a89d35a61b0629a41f99ed52946b}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7dae104a89d35a61b0629a41f99ed52946b}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_L\_TL@{PRED\_MODE\_AVG\_L\_TL}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_L\_TL@{PRED\_MODE\_AVG\_L\_TL}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6d4efb8e0927e9220b9c2c8b452ae197}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da6d4efb8e0927e9220b9c2c8b452ae197}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+TL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_L\_T@{PRED\_MODE\_AVG\_L\_T}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_L\_T@{PRED\_MODE\_AVG\_L\_T}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da2790c0a2f7819df581955bd80626da5b}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da2790c0a2f7819df581955bd80626da5b}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+T&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_TL\_T@{PRED\_MODE\_AVG\_TL\_T}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_TL\_T@{PRED\_MODE\_AVG\_TL\_T}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da48aa6a48ea71e512112d2fe6d1b3070a}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da48aa6a48ea71e512112d2fe6d1b3070a}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+L\+\_\+T&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_T\_TR@{PRED\_MODE\_AVG\_T\_TR}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_T\_TR@{PRED\_MODE\_AVG\_T\_TR}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5d9bfa0030dfa064d32df0aad768818e}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da5d9bfa0030dfa064d32df0aad768818e}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_AVG\_AVG\_L\_TL\_AVG\_T\_TR@{PRED\_MODE\_AVG\_AVG\_L\_TL\_AVG\_T\_TR}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_AVG\_AVG\_L\_TL\_AVG\_T\_TR@{PRED\_MODE\_AVG\_AVG\_L\_TL\_AVG\_T\_TR}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da62336dd2be98957b9870778ce67e41da}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da62336dd2be98957b9870778ce67e41da}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+V\+G\+\_\+\+A\+V\+G\+\_\+\+L\+\_\+\+T\+L\+\_\+\+A\+V\+G\+\_\+\+T\+\_\+\+TR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_SELECT@{PRED\_MODE\_SELECT}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_SELECT@{PRED\_MODE\_SELECT}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da7d0963653d9cddc871780f462bc24b2a}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da7d0963653d9cddc871780f462bc24b2a}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+S\+E\+L\+E\+CT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_ADD\_SUBTRACT\_FULL@{PRED\_MODE\_ADD\_SUBTRACT\_FULL}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_ADD\_SUBTRACT\_FULL@{PRED\_MODE\_ADD\_SUBTRACT\_FULL}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da066364dadd5d4d1d16b02ee6b1c21c32}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da066364dadd5d4d1d16b02ee6b1c21c32}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+D\+D\+\_\+\+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+F\+U\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRED\_MODE\_ADD\_SUBTRACT\_HALF@{PRED\_MODE\_ADD\_SUBTRACT\_HALF}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PRED\_MODE\_ADD\_SUBTRACT\_HALF@{PRED\_MODE\_ADD\_SUBTRACT\_HALF}}}\mbox{\Hypertarget{webp_8c_a2b6fc81136f2e6b856ef355878212f7da864909dd536f7522e5ebbb5205d3b4dc}\label{webp_8c_a2b6fc81136f2e6b856ef355878212f7da864909dd536f7522e5ebbb5205d3b4dc}} 
+P\+R\+E\+D\+\_\+\+M\+O\+D\+E\+\_\+\+A\+D\+D\+\_\+\+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+H\+A\+LF&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 117 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2}} 
+\index{webp.c@{webp.c}!TransformType@{TransformType}}
+\index{TransformType@{TransformType}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{TransformType}{TransformType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2}{Transform\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PREDICTOR\_TRANSFORM@{PREDICTOR\_TRANSFORM}!webp.c@{webp.c}}\index{webp.c@{webp.c}!PREDICTOR\_TRANSFORM@{PREDICTOR\_TRANSFORM}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}} 
+P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_TRANSFORM@{COLOR\_TRANSFORM}!webp.c@{webp.c}}\index{webp.c@{webp.c}!COLOR\_TRANSFORM@{COLOR\_TRANSFORM}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}} 
+C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUBTRACT\_GREEN@{SUBTRACT\_GREEN}!webp.c@{webp.c}}\index{webp.c@{webp.c}!SUBTRACT\_GREEN@{SUBTRACT\_GREEN}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}} 
+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+G\+R\+E\+EN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_INDEXING\_TRANSFORM@{COLOR\_INDEXING\_TRANSFORM}!webp.c@{webp.c}}\index{webp.c@{webp.c}!COLOR\_INDEXING\_TRANSFORM@{COLOR\_INDEXING\_TRANSFORM}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}} 
+C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+N\+G\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DI@{DI}!webp.c@{webp.c}}\index{webp.c@{webp.c}!DI@{DI}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}} 
+DI&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DII@{DII}!webp.c@{webp.c}}\index{webp.c@{webp.c}!DII@{DII}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}} 
+D\+II&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TDII@{TDII}!webp.c@{webp.c}}\index{webp.c@{webp.c}!TDII@{TDII}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}} 
+T\+D\+II&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LATT@{LATT}!webp.c@{webp.c}}\index{webp.c@{webp.c}!LATT@{LATT}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}} 
+L\+A\+TT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_TTYPE@{NB\_TTYPE}!webp.c@{webp.c}}\index{webp.c@{webp.c}!NB\_TTYPE@{NB\_TTYPE}}}\mbox{\Hypertarget{webp_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}\label{webp_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}} 
+N\+B\+\_\+\+T\+T\+Y\+PE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 110 of file webp.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{webp_8c_a2e8ef0d60d3c05312ba88a3fc6e335c0}\label{webp_8c_a2e8ef0d60d3c05312ba88a3fc6e335c0}} 
+\index{webp.c@{webp.c}!alpha\_inverse\_prediction@{alpha\_inverse\_prediction}}
+\index{alpha\_inverse\_prediction@{alpha\_inverse\_prediction}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{alpha\_inverse\_prediction()}{alpha\_inverse\_prediction()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} alpha\+\_\+inverse\+\_\+prediction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{enum \mbox{\hyperlink{webp_8c_a75f7aeb5d90266d59fbcf5368da009f9}{Alpha\+Filter}}}]{m }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1192 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a2e8ef0d60d3c05312ba88a3fc6e335c0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_aa934a528026049d2bccc516a520a27ec}\label{webp_8c_aa934a528026049d2bccc516a520a27ec}} 
+\index{webp.c@{webp.c}!apply\_color\_indexing\_transform@{apply\_color\_indexing\_transform}}
+\index{apply\_color\_indexing\_transform@{apply\_color\_indexing\_transform}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{apply\_color\_indexing\_transform()}{apply\_color\_indexing\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+color\+\_\+indexing\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 993 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_aa934a528026049d2bccc516a520a27ec_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_aa934a528026049d2bccc516a520a27ec_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a1956748b2163ad1547eb8a4bac098e39}\label{webp_8c_a1956748b2163ad1547eb8a4bac098e39}} 
+\index{webp.c@{webp.c}!apply\_color\_transform@{apply\_color\_transform}}
+\index{apply\_color\_transform@{apply\_color\_transform}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{apply\_color\_transform()}{apply\_color\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+color\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 954 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a1956748b2163ad1547eb8a4bac098e39_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a1956748b2163ad1547eb8a4bac098e39_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a91bcc66a75b9764e4e1e7a6e679f088f}\label{webp_8c_a91bcc66a75b9764e4e1e7a6e679f088f}} 
+\index{webp.c@{webp.c}!apply\_predictor\_transform@{apply\_predictor\_transform}}
+\index{apply\_predictor\_transform@{apply\_predictor\_transform}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{apply\_predictor\_transform()}{apply\_predictor\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+predictor\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 917 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=338pt]{webp_8c_a91bcc66a75b9764e4e1e7a6e679f088f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a91bcc66a75b9764e4e1e7a6e679f088f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a62d1ef3c27200072a24bb7c14816fc4a}\label{webp_8c_a62d1ef3c27200072a24bb7c14816fc4a}} 
+\index{webp.c@{webp.c}!apply\_subtract\_green\_transform@{apply\_subtract\_green\_transform}}
+\index{apply\_subtract\_green\_transform@{apply\_subtract\_green\_transform}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{apply\_subtract\_green\_transform()}{apply\_subtract\_green\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+subtract\+\_\+green\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 978 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a62d1ef3c27200072a24bb7c14816fc4a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a5f272592193c907956660126c4fac710}\label{webp_8c_a5f272592193c907956660126c4fac710}} 
+\index{webp.c@{webp.c}!clamp\_add\_subtract\_half@{clamp\_add\_subtract\_half}}
+\index{clamp\_add\_subtract\_half@{clamp\_add\_subtract\_half}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{clamp\_add\_subtract\_half()}{clamp\_add\_subtract\_half()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} clamp\+\_\+add\+\_\+subtract\+\_\+half (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{a,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 868 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{webp_8c_a5f272592193c907956660126c4fac710_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a5e1923b29dcde61e81c0a1a48dcd946c}\label{webp_8c_a5e1923b29dcde61e81c0a1a48dcd946c}} 
+\index{webp.c@{webp.c}!color\_cache\_put@{color\_cache\_put}}
+\index{color\_cache\_put@{color\_cache\_put}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{color\_cache\_put()}{color\_cache\_put()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} color\+\_\+cache\+\_\+put (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$}]{img,  }\item[{uint32\+\_\+t}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 542 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a5e1923b29dcde61e81c0a1a48dcd946c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a22c95786ed28ff828bb8d84d3c3ab846}\label{webp_8c_a22c95786ed28ff828bb8d84d3c3ab846}} 
+\index{webp.c@{webp.c}!color\_transform\_delta@{color\_transform\_delta}}
+\index{color\_transform\_delta@{color\_transform\_delta}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{color\_transform\_delta()}{color\_transform\_delta()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} color\+\_\+transform\+\_\+delta (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{color\+\_\+pred,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{color }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 948 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{webp_8c_a22c95786ed28ff828bb8d84d3c3ab846_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a22c95786ed28ff828bb8d84d3c3ab846_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a94b1344775623995403f5c11cbed9421}\label{webp_8c_a94b1344775623995403f5c11cbed9421}} 
+\index{webp.c@{webp.c}!decode\_entropy\_coded\_image@{decode\_entropy\_coded\_image}}
+\index{decode\_entropy\_coded\_image@{decode\_entropy\_coded\_image}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{decode\_entropy\_coded\_image()}{decode\_entropy\_coded\_image()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+entropy\+\_\+coded\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s,  }\item[{enum \mbox{\hyperlink{webp_8c_abf4c9395e0fff7e89a18eeb0ff8cf147}{Image\+Role}}}]{role,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 548 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a94b1344775623995403f5c11cbed9421_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a94b1344775623995403f5c11cbed9421_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_ad005a947f027c8ac64229b411022486f}\label{webp_8c_ad005a947f027c8ac64229b411022486f}} 
+\index{webp.c@{webp.c}!decode\_entropy\_image@{decode\_entropy\_image}}
+\index{decode\_entropy\_image@{decode\_entropy\_image}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{decode\_entropy\_image()}{decode\_entropy\_image()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+entropy\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 424 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ad005a947f027c8ac64229b411022486f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ad005a947f027c8ac64229b411022486f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_ae57cec2c86e306c71896c17640fbc1d5}\label{webp_8c_ae57cec2c86e306c71896c17640fbc1d5}} 
+\index{webp.c@{webp.c}!get\_huffman\_group@{get\_huffman\_group}}
+\index{get\_huffman\_group@{get\_huffman\_group}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{get\_huffman\_group()}{get\_huffman\_group()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}}$\ast$ get\+\_\+huffman\+\_\+group (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$}]{img,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 525 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ae57cec2c86e306c71896c17640fbc1d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_ae4411f2aeedb4f4f48540b90666928ee}\label{webp_8c_ae4411f2aeedb4f4f48540b90666928ee}} 
+\index{webp.c@{webp.c}!huff\_reader\_build\_canonical@{huff\_reader\_build\_canonical}}
+\index{huff\_reader\_build\_canonical@{huff\_reader\_build\_canonical}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{huff\_reader\_build\_canonical()}{huff\_reader\_build\_canonical()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huff\+\_\+reader\+\_\+build\+\_\+canonical (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$}]{r,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{code\+\_\+lengths,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alphabet\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 246 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ae4411f2aeedb4f4f48540b90666928ee_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ae4411f2aeedb4f4f48540b90666928ee_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_af2e822ecf130e81d621d2e54d0412f0e}\label{webp_8c_af2e822ecf130e81d621d2e54d0412f0e}} 
+\index{webp.c@{webp.c}!huff\_reader\_get\_symbol@{huff\_reader\_get\_symbol}}
+\index{huff\_reader\_get\_symbol@{huff\_reader\_get\_symbol}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{huff\_reader\_get\_symbol()}{huff\_reader\_get\_symbol()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huff\+\_\+reader\+\_\+get\+\_\+symbol (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$}]{r,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 235 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_af2e822ecf130e81d621d2e54d0412f0e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_af2e822ecf130e81d621d2e54d0412f0e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a126c5abf0fb031b45b2a77dec5c818aa}\label{webp_8c_a126c5abf0fb031b45b2a77dec5c818aa}} 
+\index{webp.c@{webp.c}!image\_ctx\_free@{image\_ctx\_free}}
+\index{image\_ctx\_free@{image\_ctx\_free}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{image\_ctx\_free()}{image\_ctx\_free()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} image\+\_\+ctx\+\_\+free (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_image_context}{Image\+Context}} $\ast$}]{img }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 218 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a126c5abf0fb031b45b2a77dec5c818aa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a126c5abf0fb031b45b2a77dec5c818aa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a5f06c953491f443b63ee5f994de0248e}\label{webp_8c_a5f06c953491f443b63ee5f994de0248e}} 
+\index{webp.c@{webp.c}!inv\_predict\_0@{inv\_predict\_0}}
+\index{inv\_predict\_0@{inv\_predict\_0}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_0()}{inv\_predict\_0()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+0 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 750 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_ae0f0358d7a7bc56a5f00345f1535825c}\label{webp_8c_ae0f0358d7a7bc56a5f00345f1535825c}} 
+\index{webp.c@{webp.c}!inv\_predict\_1@{inv\_predict\_1}}
+\index{inv\_predict\_1@{inv\_predict\_1}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_1()}{inv\_predict\_1()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+1 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 757 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a0bac2bce7da8f820a6cb22345cdf9626}\label{webp_8c_a0bac2bce7da8f820a6cb22345cdf9626}} 
+\index{webp.c@{webp.c}!inv\_predict\_10@{inv\_predict\_10}}
+\index{inv\_predict\_10@{inv\_predict\_10}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_10()}{inv\_predict\_10()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+10 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 835 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a6154049475382fba40b19240090f398c}\label{webp_8c_a6154049475382fba40b19240090f398c}} 
+\index{webp.c@{webp.c}!inv\_predict\_11@{inv\_predict\_11}}
+\index{inv\_predict\_11@{inv\_predict\_11}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_11()}{inv\_predict\_11()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+11 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 845 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=223pt]{webp_8c_a6154049475382fba40b19240090f398c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_af10e1e93b01ed2c3dc6f1354399a40f7}\label{webp_8c_af10e1e93b01ed2c3dc6f1354399a40f7}} 
+\index{webp.c@{webp.c}!inv\_predict\_12@{inv\_predict\_12}}
+\index{inv\_predict\_12@{inv\_predict\_12}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_12()}{inv\_predict\_12()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+12 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 859 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_acb67aff90e27b452765551ae28b17f8b}\label{webp_8c_acb67aff90e27b452765551ae28b17f8b}} 
+\index{webp.c@{webp.c}!inv\_predict\_13@{inv\_predict\_13}}
+\index{inv\_predict\_13@{inv\_predict\_13}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_13()}{inv\_predict\_13()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+13 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 875 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{webp_8c_acb67aff90e27b452765551ae28b17f8b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_abc5d41ce784126515a0107eb851d61fd}\label{webp_8c_abc5d41ce784126515a0107eb851d61fd}} 
+\index{webp.c@{webp.c}!inv\_predict\_2@{inv\_predict\_2}}
+\index{inv\_predict\_2@{inv\_predict\_2}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_2()}{inv\_predict\_2()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+2 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 764 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a86552a19a8c0722b76066c9ff8496cef}\label{webp_8c_a86552a19a8c0722b76066c9ff8496cef}} 
+\index{webp.c@{webp.c}!inv\_predict\_3@{inv\_predict\_3}}
+\index{inv\_predict\_3@{inv\_predict\_3}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_3()}{inv\_predict\_3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 771 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a43ea5348c6ca50fa0113595759709292}\label{webp_8c_a43ea5348c6ca50fa0113595759709292}} 
+\index{webp.c@{webp.c}!inv\_predict\_4@{inv\_predict\_4}}
+\index{inv\_predict\_4@{inv\_predict\_4}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_4()}{inv\_predict\_4()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+4 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 778 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_afb1daa02d93d7de92a737af16dbe90fd}\label{webp_8c_afb1daa02d93d7de92a737af16dbe90fd}} 
+\index{webp.c@{webp.c}!inv\_predict\_5@{inv\_predict\_5}}
+\index{inv\_predict\_5@{inv\_predict\_5}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_5()}{inv\_predict\_5()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+5 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 785 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aa5527c6d06c1c8a25c0b88b32833f778}\label{webp_8c_aa5527c6d06c1c8a25c0b88b32833f778}} 
+\index{webp.c@{webp.c}!inv\_predict\_6@{inv\_predict\_6}}
+\index{inv\_predict\_6@{inv\_predict\_6}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_6()}{inv\_predict\_6()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+6 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 795 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a2620e8b2c399f2e7ae2a577facf58cbb}\label{webp_8c_a2620e8b2c399f2e7ae2a577facf58cbb}} 
+\index{webp.c@{webp.c}!inv\_predict\_7@{inv\_predict\_7}}
+\index{inv\_predict\_7@{inv\_predict\_7}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_7()}{inv\_predict\_7()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+7 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 805 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a22236c4f2abac50b7f14a3dac7519408}\label{webp_8c_a22236c4f2abac50b7f14a3dac7519408}} 
+\index{webp.c@{webp.c}!inv\_predict\_8@{inv\_predict\_8}}
+\index{inv\_predict\_8@{inv\_predict\_8}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_8()}{inv\_predict\_8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 815 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a69b0baccb61c526776f3ea599695a106}\label{webp_8c_a69b0baccb61c526776f3ea599695a106}} 
+\index{webp.c@{webp.c}!inv\_predict\_9@{inv\_predict\_9}}
+\index{inv\_predict\_9@{inv\_predict\_9}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inv\_predict\_9()}{inv\_predict\_9()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inv\+\_\+predict\+\_\+9 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+l,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tl,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+t,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{p\+\_\+tr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 825 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a4f40d65516bdcaec47c14913356d6250}\label{webp_8c_a4f40d65516bdcaec47c14913356d6250}} 
+\index{webp.c@{webp.c}!inverse\_prediction@{inverse\_prediction}}
+\index{inverse\_prediction@{inverse\_prediction}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inverse\_prediction()}{inverse\_prediction()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inverse\+\_\+prediction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{enum \mbox{\hyperlink{webp_8c_a2b6fc81136f2e6b856ef355878212f7d}{Prediction\+Mode}}}]{m,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 895 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a4f40d65516bdcaec47c14913356d6250_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a3b3210a52deae4c158eaa1414a64d2bb}\label{webp_8c_a3b3210a52deae4c158eaa1414a64d2bb}} 
+\index{webp.c@{webp.c}!parse\_transform\_color@{parse\_transform\_color}}
+\index{parse\_transform\_color@{parse\_transform\_color}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{parse\_transform\_color()}{parse\_transform\_color()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+transform\+\_\+color (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 474 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a3b3210a52deae4c158eaa1414a64d2bb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a3b3210a52deae4c158eaa1414a64d2bb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_abebaf6f316a1ef29d9c158151a40a58a}\label{webp_8c_abebaf6f316a1ef29d9c158151a40a58a}} 
+\index{webp.c@{webp.c}!parse\_transform\_color\_indexing@{parse\_transform\_color\_indexing}}
+\index{parse\_transform\_color\_indexing@{parse\_transform\_color\_indexing}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{parse\_transform\_color\_indexing()}{parse\_transform\_color\_indexing()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+transform\+\_\+color\+\_\+indexing (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 490 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_abebaf6f316a1ef29d9c158151a40a58a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_abebaf6f316a1ef29d9c158151a40a58a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_af585503aa924b2e03fbd810e321c78f5}\label{webp_8c_af585503aa924b2e03fbd810e321c78f5}} 
+\index{webp.c@{webp.c}!parse\_transform\_predictor@{parse\_transform\_predictor}}
+\index{parse\_transform\_predictor@{parse\_transform\_predictor}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{parse\_transform\_predictor()}{parse\_transform\_predictor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+transform\+\_\+predictor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 458 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_af585503aa924b2e03fbd810e321c78f5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_af585503aa924b2e03fbd810e321c78f5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a0a3d428d33827903591cb79d8a9b9bbb}\label{webp_8c_a0a3d428d33827903591cb79d8a9b9bbb}} 
+\index{webp.c@{webp.c}!read\_huffman\_code\_normal@{read\_huffman\_code\_normal}}
+\index{read\_huffman\_code\_normal@{read\_huffman\_code\_normal}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{read\_huffman\_code\_normal()}{read\_huffman\_code\_normal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+huffman\+\_\+code\+\_\+normal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$}]{hc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alphabet\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 323 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a0a3d428d33827903591cb79d8a9b9bbb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a0a3d428d33827903591cb79d8a9b9bbb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a8f369bca07dd226561e821ee50bcbcb8}\label{webp_8c_a8f369bca07dd226561e821ee50bcbcb8}} 
+\index{webp.c@{webp.c}!read\_huffman\_code\_simple@{read\_huffman\_code\_simple}}
+\index{read\_huffman\_code\_simple@{read\_huffman\_code\_simple}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{read\_huffman\_code\_simple()}{read\_huffman\_code\_simple()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read\+\_\+huffman\+\_\+code\+\_\+simple (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_web_p_context}{Web\+P\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_huff_reader}{Huff\+Reader}} $\ast$}]{hc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 308 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a8f369bca07dd226561e821ee50bcbcb8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a8f369bca07dd226561e821ee50bcbcb8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_ad946777cb9f4abf6488789d77b31350f}\label{webp_8c_ad946777cb9f4abf6488789d77b31350f}} 
+\index{webp.c@{webp.c}!update\_canvas\_size@{update\_canvas\_size}}
+\index{update\_canvas\_size@{update\_canvas\_size}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{update\_canvas\_size()}{update\_canvas\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+canvas\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1064 of file webp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ad946777cb9f4abf6488789d77b31350f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a67616604ea6d195388325f3fbf2d1389}\label{webp_8c_a67616604ea6d195388325f3fbf2d1389}} 
+\index{webp.c@{webp.c}!vp8\_lossless\_decode\_frame@{vp8\_lossless\_decode\_frame}}
+\index{vp8\_lossless\_decode\_frame@{vp8\_lossless\_decode\_frame}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{vp8\_lossless\_decode\_frame()}{vp8\_lossless\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vp8\+\_\+lossless\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{data\+\_\+start,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{data\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+alpha\+\_\+chunk }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1079 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a67616604ea6d195388325f3fbf2d1389_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a67616604ea6d195388325f3fbf2d1389_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_ae0c7301c7b56362bb91d7e54aca91c38}\label{webp_8c_ae0c7301c7b56362bb91d7e54aca91c38}} 
+\index{webp.c@{webp.c}!vp8\_lossy\_decode\_alpha@{vp8\_lossy\_decode\_alpha}}
+\index{vp8\_lossy\_decode\_alpha@{vp8\_lossy\_decode\_alpha}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{vp8\_lossy\_decode\_alpha()}{vp8\_lossy\_decode\_alpha()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vp8\+\_\+lossy\+\_\+decode\+\_\+alpha (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{data\+\_\+start,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{data\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1235 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ae0c7301c7b56362bb91d7e54aca91c38_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_ae0c7301c7b56362bb91d7e54aca91c38_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a655b5488e45220d56aa6ddb3af396c70}\label{webp_8c_a655b5488e45220d56aa6ddb3af396c70}} 
+\index{webp.c@{webp.c}!vp8\_lossy\_decode\_frame@{vp8\_lossy\_decode\_frame}}
+\index{vp8\_lossy\_decode\_frame@{vp8\_lossy\_decode\_frame}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{vp8\_lossy\_decode\_frame()}{vp8\_lossy\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vp8\+\_\+lossy\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{data\+\_\+start,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{data\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1288 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a655b5488e45220d56aa6ddb3af396c70_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=346pt]{webp_8c_a655b5488e45220d56aa6ddb3af396c70_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a26d5023e7200bc924b1284ec400563fd}\label{webp_8c_a26d5023e7200bc924b1284ec400563fd}} 
+\index{webp.c@{webp.c}!webp\_decode\_close@{webp\_decode\_close}}
+\index{webp\_decode\_close@{webp\_decode\_close}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{webp\_decode\_close()}{webp\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} webp\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1530 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a26d5023e7200bc924b1284ec400563fd_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{webp_8c_a4b17bd13954e06dec268dca89f374c23}\label{webp_8c_a4b17bd13954e06dec268dca89f374c23}} 
+\index{webp.c@{webp.c}!webp\_decode\_frame@{webp\_decode\_frame}}
+\index{webp\_decode\_frame@{webp\_decode\_frame}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{webp\_decode\_frame()}{webp\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} webp\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1331 of file webp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{webp_8c_a4b17bd13954e06dec268dca89f374c23_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{webp_8c_ad86db4e0ce81a7b8262c0403a2e31721}\label{webp_8c_ad86db4e0ce81a7b8262c0403a2e31721}} 
+\index{webp.c@{webp.c}!alphabet\_sizes@{alphabet\_sizes}}
+\index{alphabet\_sizes@{alphabet\_sizes}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{alphabet\_sizes}{alphabet\_sizes}}
+{\footnotesize\ttfamily const uint16\+\_\+t alphabet\+\_\+sizes\mbox{[}\mbox{\hyperlink{webp_8c_ab457800fa26a0d302aa89e88b67de6c1}{H\+U\+F\+F\+M\+A\+N\+\_\+\+C\+O\+D\+E\+S\+\_\+\+P\+E\+R\+\_\+\+M\+E\+T\+A\+\_\+\+C\+O\+DE}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_a795b513af719422687dafb558e63e4ff}{NUM\_LITERAL\_CODES}} + \mbox{\hyperlink{webp_8c_aa803921583cd0d074e424bd5a596e456}{NUM\_LENGTH\_CODES}},}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_a795b513af719422687dafb558e63e4ff}{NUM\_LITERAL\_CODES}}, \mbox{\hyperlink{webp_8c_a795b513af719422687dafb558e63e4ff}{NUM\_LITERAL\_CODES}}, \mbox{\hyperlink{webp_8c_a795b513af719422687dafb558e63e4ff}{NUM\_LITERAL\_CODES}},}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_acff57804c17f845fde49bc2693dd9d9b}{NUM\_DISTANCE\_CODES}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 70 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a47f91b1e23d3b1d7be27b84880ec779d}\label{webp_8c_a47f91b1e23d3b1d7be27b84880ec779d}} 
+\index{webp.c@{webp.c}!code\_length\_code\_order@{code\_length\_code\_order}}
+\index{code\_length\_code\_order@{code\_length\_code\_order}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{code\_length\_code\_order}{code\_length\_code\_order}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} code\+\_\+length\+\_\+code\+\_\+order\mbox{[}\mbox{\hyperlink{webp_8c_a22ed04d49e008cb4295a8b366c4f2f3b}{N\+U\+M\+\_\+\+C\+O\+D\+E\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+C\+O\+D\+ES}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 76 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_aad0bffbabdec1405f3f07373a648227e}\label{webp_8c_aad0bffbabdec1405f3f07373a648227e}} 
+\index{webp.c@{webp.c}!ff\_webp\_decoder@{ff\_webp\_decoder}}
+\index{ff\_webp\_decoder@{ff\_webp\_decoder}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_webp\_decoder}{ff\_webp\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+webp\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}webp"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}WebP image"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceac9eb9136ca924db98aa71306a1530b41}{AV\_CODEC\_ID\_WEBP}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{webp_8c_a2eb5bc647825c95ae2ea501d179f4207}{WebPContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{webp_8c_a4b17bd13954e06dec268dca89f374c23}{webp\_decode\_frame}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{webp_8c_a26d5023e7200bc924b1284ec400563fd}{webp\_decode\_close}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1540 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_ae6a695ae4a9a64737ce689948351e4a3}\label{webp_8c_ae6a695ae4a9a64737ce689948351e4a3}} 
+\index{webp.c@{webp.c}!inverse\_predict@{inverse\_predict}}
+\index{inverse\_predict@{inverse\_predict}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{inverse\_predict}{inverse\_predict}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{webp_8c_a8c78c67c6ad61665e6f7cf17df01b29f}{inv\+\_\+predict\+\_\+func}} inverse\+\_\+predict\mbox{[}14\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_a5f06c953491f443b63ee5f994de0248e}{inv\_predict\_0}},  \mbox{\hyperlink{webp_8c_ae0f0358d7a7bc56a5f00345f1535825c}{inv\_predict\_1}},  \mbox{\hyperlink{webp_8c_abc5d41ce784126515a0107eb851d61fd}{inv\_predict\_2}},  \mbox{\hyperlink{webp_8c_a86552a19a8c0722b76066c9ff8496cef}{inv\_predict\_3}},}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_a43ea5348c6ca50fa0113595759709292}{inv\_predict\_4}},  \mbox{\hyperlink{webp_8c_afb1daa02d93d7de92a737af16dbe90fd}{inv\_predict\_5}},  \mbox{\hyperlink{webp_8c_aa5527c6d06c1c8a25c0b88b32833f778}{inv\_predict\_6}},  \mbox{\hyperlink{webp_8c_a2620e8b2c399f2e7ae2a577facf58cbb}{inv\_predict\_7}},}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_a22236c4f2abac50b7f14a3dac7519408}{inv\_predict\_8}},  \mbox{\hyperlink{webp_8c_a69b0baccb61c526776f3ea599695a106}{inv\_predict\_9}},  \mbox{\hyperlink{webp_8c_a0bac2bce7da8f820a6cb22345cdf9626}{inv\_predict\_10}}, \mbox{\hyperlink{webp_8c_a6154049475382fba40b19240090f398c}{inv\_predict\_11}},}
+\DoxyCodeLine{    \mbox{\hyperlink{webp_8c_af10e1e93b01ed2c3dc6f1354399a40f7}{inv\_predict\_12}}, \mbox{\hyperlink{webp_8c_acb67aff90e27b452765551ae28b17f8b}{inv\_predict\_13}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 888 of file webp.\+c.
+
+\mbox{\Hypertarget{webp_8c_a5e105327e4dc1fac0b7fc43e0b45f01c}\label{webp_8c_a5e105327e4dc1fac0b7fc43e0b45f01c}} 
+\index{webp.c@{webp.c}!lz77\_distance\_offsets@{lz77\_distance\_offsets}}
+\index{lz77\_distance\_offsets@{lz77\_distance\_offsets}!webp.c@{webp.c}}
+\doxysubsubsection{\texorpdfstring{lz77\_distance\_offsets}{lz77\_distance\_offsets}}
+{\footnotesize\ttfamily const int8\+\_\+t lz77\+\_\+distance\+\_\+offsets\mbox{[}\mbox{\hyperlink{webp_8c_aeb00246adfcdf3aebb049287802ccd8c}{N\+U\+M\+\_\+\+S\+H\+O\+R\+T\+\_\+\+D\+I\+S\+T\+A\+N\+C\+ES}}\mbox{]}\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{  0, 1 \}, \{  1, 0 \}, \{  1, 1 \}, \{ -\/1, 1 \}, \{  0, 2 \}, \{  2, 0 \}, \{  1, 2 \}, \{ -\/1, 2 \},}
+\DoxyCodeLine{    \{  2, 1 \}, \{ -\/2, 1 \}, \{  2, 2 \}, \{ -\/2, 2 \}, \{  0, 3 \}, \{  3, 0 \}, \{  1, 3 \}, \{ -\/1, 3 \},}
+\DoxyCodeLine{    \{  3, 1 \}, \{ -\/3, 1 \}, \{  2, 3 \}, \{ -\/2, 3 \}, \{  3, 2 \}, \{ -\/3, 2 \}, \{  0, 4 \}, \{  4, 0 \},}
+\DoxyCodeLine{    \{  1, 4 \}, \{ -\/1, 4 \}, \{  4, 1 \}, \{ -\/4, 1 \}, \{  3, 3 \}, \{ -\/3, 3 \}, \{  2, 4 \}, \{ -\/2, 4 \},}
+\DoxyCodeLine{    \{  4, 2 \}, \{ -\/4, 2 \}, \{  0, 5 \}, \{  3, 4 \}, \{ -\/3, 4 \}, \{  4, 3 \}, \{ -\/4, 3 \}, \{  5, 0 \},}
+\DoxyCodeLine{    \{  1, 5 \}, \{ -\/1, 5 \}, \{  5, 1 \}, \{ -\/5, 1 \}, \{  2, 5 \}, \{ -\/2, 5 \}, \{  5, 2 \}, \{ -\/5, 2 \},}
+\DoxyCodeLine{    \{  4, 4 \}, \{ -\/4, 4 \}, \{  3, 5 \}, \{ -\/3, 5 \}, \{  5, 3 \}, \{ -\/5, 3 \}, \{  0, 6 \}, \{  6, 0 \},}
+\DoxyCodeLine{    \{  1, 6 \}, \{ -\/1, 6 \}, \{  6, 1 \}, \{ -\/6, 1 \}, \{  2, 6 \}, \{ -\/2, 6 \}, \{  6, 2 \}, \{ -\/6, 2 \},}
+\DoxyCodeLine{    \{  4, 5 \}, \{ -\/4, 5 \}, \{  5, 4 \}, \{ -\/5, 4 \}, \{  3, 6 \}, \{ -\/3, 6 \}, \{  6, 3 \}, \{ -\/6, 3 \},}
+\DoxyCodeLine{    \{  0, 7 \}, \{  7, 0 \}, \{  1, 7 \}, \{ -\/1, 7 \}, \{  5, 5 \}, \{ -\/5, 5 \}, \{  7, 1 \}, \{ -\/7, 1 \},}
+\DoxyCodeLine{    \{  4, 6 \}, \{ -\/4, 6 \}, \{  6, 4 \}, \{ -\/6, 4 \}, \{  2, 7 \}, \{ -\/2, 7 \}, \{  7, 2 \}, \{ -\/7, 2 \},}
+\DoxyCodeLine{    \{  3, 7 \}, \{ -\/3, 7 \}, \{  7, 3 \}, \{ -\/7, 3 \}, \{  5, 6 \}, \{ -\/5, 6 \}, \{  6, 5 \}, \{ -\/6, 5 \},}
+\DoxyCodeLine{    \{  8, 0 \}, \{  4, 7 \}, \{ -\/4, 7 \}, \{  7, 4 \}, \{ -\/7, 4 \}, \{  8, 1 \}, \{  8, 2 \}, \{  6, 6 \},}
+\DoxyCodeLine{    \{ -\/6, 6 \}, \{  8, 3 \}, \{  5, 7 \}, \{ -\/5, 7 \}, \{  7, 5 \}, \{ -\/7, 5 \}, \{  8, 4 \}, \{  6, 7 \},}
+\DoxyCodeLine{    \{ -\/6, 7 \}, \{  7, 6 \}, \{ -\/7, 6 \}, \{  8, 5 \}, \{  7, 7 \}, \{ -\/7, 7 \}, \{  8, 6 \}, \{  8, 7 \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 80 of file webp.\+c.
+

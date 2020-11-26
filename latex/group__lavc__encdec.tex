@@ -1,0 +1,58 @@
+\hypertarget{group__lavc__encdec}{}\doxysection{send/receive encoding and decoding A\+PI overview}
+\label{group__lavc__encdec}\index{send/receive encoding and decoding API overview@{send/receive encoding and decoding API overview}}
+Collaboration diagram for send/receive encoding and decoding A\+PI overview\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{group__lavc__encdec}
+\end{center}
+\end{figure}
+The \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}}/avcodec\+\_\+receive\+\_\+frame()/avcodec\+\_\+send\+\_\+frame()/ \mbox{\hyperlink{group__lavc__decoding_ga5b8eff59cf259747cf0b31563e38ded6}{avcodec\+\_\+receive\+\_\+packet()}} functions provide an encode/decode A\+PI, which decouples input and output.
+
+The A\+PI is very similar for encoding/decoding and audio/video, and works as follows\+:
+\begin{DoxyItemize}
+\item Set up and open the \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} as usual.
+\item Send valid input\+:
+\begin{DoxyItemize}
+\item For decoding, call \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} to give the decoder raw compressed data in an \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}}.
+\item For encoding, call \mbox{\hyperlink{group__lavc__decoding_ga9395cb802a5febf1f00df31497779169}{avcodec\+\_\+send\+\_\+frame()}} to give the encoder an \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} containing uncompressed audio or video.
+\end{DoxyItemize}
+
+In both cases, it is recommended that A\+V\+Packets and A\+V\+Frames are refcounted, or libavcodec might have to copy the input data. (libavformat always returns refcounted A\+V\+Packets, and \mbox{\hyperlink{group__lavu__frame_ga6b1acbfa82c79bf7fd78d868572f0ceb}{av\+\_\+frame\+\_\+get\+\_\+buffer()}} allocates refcounted A\+V\+Frames.)
+\item Receive output in a loop. Periodically call one of the avcodec\+\_\+receive\+\_\+$\ast$() functions and process their output\+:
+\begin{DoxyItemize}
+\item For decoding, call \mbox{\hyperlink{group__lavc__decoding_ga11e6542c4e66d3028668788a1a74217c}{avcodec\+\_\+receive\+\_\+frame()}}. On success, it will return an \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} containing uncompressed audio or video data.
+\item For encoding, call \mbox{\hyperlink{group__lavc__decoding_ga5b8eff59cf259747cf0b31563e38ded6}{avcodec\+\_\+receive\+\_\+packet()}}. On success, it will return an \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} with a compressed frame.
+\end{DoxyItemize}
+
+Repeat this call until it returns \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} or an error. The \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} return value means that new input data is required to return new output. In this case, continue with sending input. For each input frame/packet, the codec will typically return 1 output frame/packet, but it can also be 0 or more than 1.
+\end{DoxyItemize}
+
+At the beginning of decoding or encoding, the codec might accept multiple input frames/packets without returning a frame, until its internal buffers are filled. This situation is handled transparently if you follow the steps outlined above.
+
+In theory, sending input can result in E\+A\+G\+A\+IN -\/ this should happen only if not all output was received. You can use this to structure alternative decode or encode loops other than the one suggested above. For example, you could try sending new input on each iteration, and try to receive output if that returns E\+A\+G\+A\+IN.
+
+End of stream situations. These require \char`\"{}flushing\char`\"{} (aka draining) the codec, as the codec might buffer multiple frames or packets internally for performance or out of necessity (consider B-\/frames). This is handled as follows\+:
+\begin{DoxyItemize}
+\item Instead of valid input, send N\+U\+LL to the \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} (decoding) or \mbox{\hyperlink{group__lavc__decoding_ga9395cb802a5febf1f00df31497779169}{avcodec\+\_\+send\+\_\+frame()}} (encoding) functions. This will enter draining mode.
+\item Call \mbox{\hyperlink{group__lavc__decoding_ga11e6542c4e66d3028668788a1a74217c}{avcodec\+\_\+receive\+\_\+frame()}} (decoding) or \mbox{\hyperlink{group__lavc__decoding_ga5b8eff59cf259747cf0b31563e38ded6}{avcodec\+\_\+receive\+\_\+packet()}} (encoding) in a loop until A\+V\+E\+R\+R\+O\+R\+\_\+\+E\+OF is returned. The functions will not return \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}}, unless you forgot to enter draining mode.
+\item Before decoding can be resumed again, the codec has to be reset with \mbox{\hyperlink{group__lavc__misc_gaf60b0e076f822abcb2700eb601d352a6}{avcodec\+\_\+flush\+\_\+buffers()}}.
+\end{DoxyItemize}
+
+Using the A\+PI as outlined above is highly recommended. But it is also possible to call functions outside of this rigid schema. For example, you can call \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} repeatedly without calling \mbox{\hyperlink{group__lavc__decoding_ga11e6542c4e66d3028668788a1a74217c}{avcodec\+\_\+receive\+\_\+frame()}}. In this case, \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} will succeed until the codec\textquotesingle{}s internal buffer has been filled up (which is typically of size 1 per output frame, after initial input), and then reject input with \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}}. Once it starts rejecting input, you have no choice but to read at least some output.
+
+Not all codecs will follow a rigid and predictable dataflow; the only guarantee is that an \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} return value on a send/receive call on one end implies that a receive/send call on the other end will succeed, or at least will not fail with \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}}. In general, no codec will permit unlimited buffering of input or output.
+
+This A\+PI replaces the following legacy functions\+:
+\begin{DoxyItemize}
+\item \mbox{\hyperlink{group__lavc__decoding_ga3ac51525b7ad8bca4ced9f3446e96532}{avcodec\+\_\+decode\+\_\+video2()}} and \mbox{\hyperlink{group__lavc__decoding_gaaa1fbe477c04455cdc7a994090100db4}{avcodec\+\_\+decode\+\_\+audio4()}}\+: Use \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} to feed input to the decoder, then use \mbox{\hyperlink{group__lavc__decoding_ga11e6542c4e66d3028668788a1a74217c}{avcodec\+\_\+receive\+\_\+frame()}} to receive decoded frames after each packet. Unlike with the old video decoding A\+PI, multiple frames might result from a packet. For audio, splitting the input packet into frames by partially decoding packets becomes transparent to the A\+PI user. You never need to feed an \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} to the A\+PI twice (unless it is rejected with \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} -\/ then no data was read from the packet). Additionally, sending a flush/draining packet is required only once.
+\item \mbox{\hyperlink{group__lavc__encoding_ga2c08a4729f72f9bdac41b5533c4f2642}{avcodec\+\_\+encode\+\_\+video2()}}/avcodec\+\_\+encode\+\_\+audio2()\+: Use \mbox{\hyperlink{group__lavc__decoding_ga9395cb802a5febf1f00df31497779169}{avcodec\+\_\+send\+\_\+frame()}} to feed input to the encoder, then use \mbox{\hyperlink{group__lavc__decoding_ga5b8eff59cf259747cf0b31563e38ded6}{avcodec\+\_\+receive\+\_\+packet()}} to receive encoded packets. Providing user-\/allocated buffers for \mbox{\hyperlink{group__lavc__decoding_ga5b8eff59cf259747cf0b31563e38ded6}{avcodec\+\_\+receive\+\_\+packet()}} is not possible.
+\item The new A\+PI does not handle subtitles yet.
+\end{DoxyItemize}
+
+Mixing new and old function calls on the same \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} is not allowed, and will result in undefined behavior.
+
+Some codecs might require using the new A\+PI; using the old A\+PI will return an error when calling it. All codecs support the new A\+PI.
+
+A codec is not allowed to return \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} for both sending and receiving. This would be an invalid state, which could put the codec user into an endless loop. The A\+PI has no concept of time either\+: it cannot happen that trying to do \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} results in \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}}, but a repeated call 1 second later accepts the packet (with no other receive/flush A\+PI calls involved). The A\+PI is a strict state machine, and the passage of time is not supposed to influence it. Some timing-\/dependent behavior might still be deemed acceptable in certain cases. But it must never result in both send/receive returning E\+A\+G\+A\+IN at the same time at any point. It must also absolutely be avoided that the current state is \char`\"{}unstable\char`\"{} and can \char`\"{}flip-\/flop\char`\"{} between the send/receive A\+P\+Is allowing progress. For example, it\textquotesingle{}s not allowed that the codec randomly decides that it actually wants to consume a packet now instead of returning a frame, after it just returned \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} on an \mbox{\hyperlink{group__lavc__decoding_ga58bc4bf1e0ac59e27362597e467efff3}{avcodec\+\_\+send\+\_\+packet()}} call. 

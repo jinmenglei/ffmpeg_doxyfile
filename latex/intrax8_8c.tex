@@ -1,0 +1,805 @@
+\hypertarget{intrax8_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/intrax8.c File Reference}
+\label{intrax8_8c}\index{E:/github/ffmpeg/libavcodec/intrax8.c@{E:/github/ffmpeg/libavcodec/intrax8.c}}
+
+
+Intra\+X8 (J-\/\+Frame) subdecoder, used by W\+M\+V2 and V\+C-\/1.  
+
+
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}idctdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}msmpeg4data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}intrax8huf.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}intrax8.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}intrax8dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpegutils.\+h\char`\"{}}\newline
+Include dependency graph for intrax8.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(table\+\_\+bits,  max\+\_\+bits)~    ((max\+\_\+bits + table\+\_\+bits -\/ 1) / table\+\_\+bits)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_ab33094be20c26cf567aa5c10ef1fa45d}{D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}~9
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a22aafdeb1aea6a19151065636e6ff7ca}{A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}~9
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}{O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}~7
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a1179b5d76c0dbbcae3363aa50dceeedb}{D\+C\+\_\+\+V\+L\+C\+\_\+\+M\+TD}}~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{vc1__block_8c_ab33094be20c26cf567aa5c10ef1fa45d}{D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_a313a9344234b81da72ac79a0a07ebf16}{M\+A\+X\+\_\+\+D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a8030db81da81add9a77d0f518f88153d}{A\+C\+\_\+\+V\+L\+C\+\_\+\+M\+TD}}~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{vc1_8h_a22aafdeb1aea6a19151065636e6ff7ca}{A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_abf397193903bef6b87d65b0f8a928bff}{M\+A\+X\+\_\+\+A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a1d9b85b0b66d7caf79b08a78d0395051}{O\+R\+\_\+\+V\+L\+C\+\_\+\+M\+TD}}~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}{O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_a4ca333312ddffc21fb240ee3584a2a7c}{M\+A\+X\+\_\+\+O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a78be248a523b13fc8c364683e3f17122}{init\+\_\+ac\+\_\+vlc}}(dst,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a70d47a933b753bcefbc8a81e7eef7e34}{init\+\_\+dc\+\_\+vlc}}(dst,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a9a8730317af64749ecb064455232f107}{init\+\_\+or\+\_\+vlc}}(dst,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_ab7fb8460bc7af9e005bc1369f710bfbd}{extra\+\_\+bits}}(eb)~(eb)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a1fed697ece506a501c18673dfc98ee0d}{extra\+\_\+run}}~(0x\+FF $<$$<$ 8)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_aa7b11efb5fde1e08c3ebff0a67bce7fd}{extra\+\_\+level}}~(0x00 $<$$<$ 8)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a76517f64820f4cefef2ceb565719c568}{run\+\_\+offset}}(\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}})~((\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $<$$<$ 16)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a7efce5b0ef8b23a2d15d90de100be889}{level\+\_\+offset}}(l)~((l) $<$$<$ 24)
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a9edaf7575e69d8b92a291ae937a9acb5}{B}}(x,  y)~\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}-\/$>$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}\mbox{[}0\mbox{]}\mbox{[}\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}-\/$>$idct\+\_\+permutation\mbox{[}(x) + (y) $\ast$ 8\mbox{]}\mbox{]}
+\item 
+\#define \mbox{\hyperlink{intrax8_8c_a16a0f7e7053a679c9bf4289b441a2be7}{T}}(x)~((x) $\ast$ dc\+\_\+level + 0x8000) $>$$>$ 16;
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_ad6f9e365283953ea780595c262dccd97}{x8\+\_\+vlc\+\_\+init}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a1e8d375312f66b31f4edf5a1f3e5940a}{x8\+\_\+reset\+\_\+vlc\+\_\+tables}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_ab895a91308647a561ae79eb2f34298d6}{x8\+\_\+select\+\_\+ac\+\_\+table}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_a5aa3e91e04b256ff7b965067c64e0be2}{x8\+\_\+get\+\_\+orient\+\_\+vlc}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_af2b8b27f6ec8cb42e8e4debfc18bc7fc}{x8\+\_\+get\+\_\+ac\+\_\+rlf}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const \mbox{\hyperlink{svq3_8c_aa90bc2b9950a6a9a3144876047f8bee2}{run}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const final)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_a8bd9bfe386e7638397e687d3d683bbf2}{x8\+\_\+get\+\_\+dc\+\_\+rlf}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const final)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_ad19e1ad14f08aaf2e9b521d162018637}{x8\+\_\+setup\+\_\+spatial\+\_\+predictor}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__waveform_8c_a155491a071a66a7795f49f3a5e079fac}{chroma}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a14fe3fbc1b4c3007eed7d05fe54e87cb}{x8\+\_\+update\+\_\+predictions}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} orient, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} est\+\_\+run)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a407055e348c32dd0e8e56e85d22126ae}{x8\+\_\+get\+\_\+prediction\+\_\+chroma}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_aaa67ad352e5bcc25ae1aa6f5a40ea1fc}{x8\+\_\+get\+\_\+prediction}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a85360aee6e97e45432dfbc16621933ae}{x8\+\_\+ac\+\_\+compensation}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} direction, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dc\+\_\+level)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a587c10f539a89262cafc54fa2827af1d}{dsp\+\_\+x8\+\_\+put\+\_\+solidcolor}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} pix, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, const ptrdiff\+\_\+t linesize)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_ae5a2c004a40451cf6472823bd4dd2d9a}{x8\+\_\+decode\+\_\+intra\+\_\+mb}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__waveform_8c_a155491a071a66a7795f49f3a5e079fac}{chroma}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_ae6db174d697428dce77da2a75e6bc3ab}{x8\+\_\+init\+\_\+block\+\_\+index}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})
+\item 
+\mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_a05198162bde3e58c5c1bbb3cac4bb04a}{ff\+\_\+intrax8\+\_\+common\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{struct_i_d_c_t_d_s_p_context}{I\+D\+C\+T\+D\+S\+P\+Context}} $\ast$idsp, int16\+\_\+t($\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}})\mbox{[}64\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+last\+\_\+index\mbox{[}12\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+width, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+height)
+\item 
+\mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{intrax8_8c_a3a795ee6fa6a33ae2401576ec273fc56}{ff\+\_\+intrax8\+\_\+common\+\_\+end}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{intrax8_8c_a12af242430218b9a481accc8312d1c73}{ff\+\_\+intrax8\+\_\+decode\+\_\+picture}} (\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{struct_picture}{Picture}} $\ast$pict, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$mb\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$mb\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dquant, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} quant\+\_\+offset, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} loopfilter, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lowdelay)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{intrax8_8c_a166aeb9ea0e5daba5997443ec78ac55d}{j\+\_\+ac\+\_\+vlc}} \mbox{[}2\mbox{]}\mbox{[}2\mbox{]}\mbox{[}8\mbox{]}
+\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{intrax8_8c_aa39ada4340cd52c999c9e69d61e734cf}{j\+\_\+dc\+\_\+vlc}} \mbox{[}2\mbox{]}\mbox{[}8\mbox{]}
+\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{intrax8_8c_a52cbf9e61da56985317191a20fbd30d7}{j\+\_\+orient\+\_\+vlc}} \mbox{[}2\mbox{]}\mbox{[}4\mbox{]}
+\item 
+static const uint32\+\_\+t \mbox{\hyperlink{intrax8_8c_a5589805888de114a6ded2a32fb6683f8}{ac\+\_\+decode\+\_\+table}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{intrax8_8c_a8d2885559548297cde200625178764a2}{dc\+\_\+index\+\_\+offset}} \mbox{[}$\,$\mbox{]}
+\item 
+static const int16\+\_\+t \mbox{\hyperlink{intrax8_8c_a37c2d278f8bd858b10b36b90b3d35cef}{quant\+\_\+table}} \mbox{[}64\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Intra\+X8 (J-\/\+Frame) subdecoder, used by W\+M\+V2 and V\+C-\/1. 
+
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{intrax8_8c_a22aafdeb1aea6a19151065636e6ff7ca}\label{intrax8_8c_a22aafdeb1aea6a19151065636e6ff7ca}} 
+\index{intrax8.c@{intrax8.c}!AC\_VLC\_BITS@{AC\_VLC\_BITS}}
+\index{AC\_VLC\_BITS@{AC\_VLC\_BITS}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{AC\_VLC\_BITS}{AC\_VLC\_BITS}}
+{\footnotesize\ttfamily \#define A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS~9}
+
+
+
+Definition at line 38 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a8030db81da81add9a77d0f518f88153d}\label{intrax8_8c_a8030db81da81add9a77d0f518f88153d}} 
+\index{intrax8.c@{intrax8.c}!AC\_VLC\_MTD@{AC\_VLC\_MTD}}
+\index{AC\_VLC\_MTD@{AC\_VLC\_MTD}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{AC\_VLC\_MTD}{AC\_VLC\_MTD}}
+{\footnotesize\ttfamily \#define A\+C\+\_\+\+V\+L\+C\+\_\+\+M\+TD~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{vc1_8h_a22aafdeb1aea6a19151065636e6ff7ca}{A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_abf397193903bef6b87d65b0f8a928bff}{M\+A\+X\+\_\+\+A\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 42 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a9edaf7575e69d8b92a291ae937a9acb5}\label{intrax8_8c_a9edaf7575e69d8b92a291ae937a9acb5}} 
+\index{intrax8.c@{intrax8.c}!B@{B}}
+\index{B@{B}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{B}{B}}
+{\footnotesize\ttfamily \#define B(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{y }\end{DoxyParamCaption})~\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}-\/$>$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}\mbox{[}0\mbox{]}\mbox{[}\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}-\/$>$idct\+\_\+permutation\mbox{[}(x) + (y) $\ast$ 8\mbox{]}\mbox{]}}
+
+\mbox{\Hypertarget{intrax8_8c_ab33094be20c26cf567aa5c10ef1fa45d}\label{intrax8_8c_ab33094be20c26cf567aa5c10ef1fa45d}} 
+\index{intrax8.c@{intrax8.c}!DC\_VLC\_BITS@{DC\_VLC\_BITS}}
+\index{DC\_VLC\_BITS@{DC\_VLC\_BITS}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{DC\_VLC\_BITS}{DC\_VLC\_BITS}}
+{\footnotesize\ttfamily \#define D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS~9}
+
+
+
+Definition at line 37 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a1179b5d76c0dbbcae3363aa50dceeedb}\label{intrax8_8c_a1179b5d76c0dbbcae3363aa50dceeedb}} 
+\index{intrax8.c@{intrax8.c}!DC\_VLC\_MTD@{DC\_VLC\_MTD}}
+\index{DC\_VLC\_MTD@{DC\_VLC\_MTD}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{DC\_VLC\_MTD}{DC\_VLC\_MTD}}
+{\footnotesize\ttfamily \#define D\+C\+\_\+\+V\+L\+C\+\_\+\+M\+TD~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{vc1__block_8c_ab33094be20c26cf567aa5c10ef1fa45d}{D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_a313a9344234b81da72ac79a0a07ebf16}{M\+A\+X\+\_\+\+D\+C\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 41 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_ab7fb8460bc7af9e005bc1369f710bfbd}\label{intrax8_8c_ab7fb8460bc7af9e005bc1369f710bfbd}} 
+\index{intrax8.c@{intrax8.c}!extra\_bits@{extra\_bits}}
+\index{extra\_bits@{extra\_bits}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{extra\_bits}{extra\_bits}}
+{\footnotesize\ttfamily \#define extra\+\_\+bits(\begin{DoxyParamCaption}\item[{}]{eb }\end{DoxyParamCaption})~(eb)}
+
+
+
+Definition at line 159 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_aa7b11efb5fde1e08c3ebff0a67bce7fd}\label{intrax8_8c_aa7b11efb5fde1e08c3ebff0a67bce7fd}} 
+\index{intrax8.c@{intrax8.c}!extra\_level@{extra\_level}}
+\index{extra\_level@{extra\_level}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{extra\_level}{extra\_level}}
+{\footnotesize\ttfamily \#define extra\+\_\+level~(0x00 $<$$<$ 8)}
+
+
+
+Definition at line 161 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a1fed697ece506a501c18673dfc98ee0d}\label{intrax8_8c_a1fed697ece506a501c18673dfc98ee0d}} 
+\index{intrax8.c@{intrax8.c}!extra\_run@{extra\_run}}
+\index{extra\_run@{extra\_run}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{extra\_run}{extra\_run}}
+{\footnotesize\ttfamily \#define extra\+\_\+run~(0x\+FF $<$$<$ 8)}
+
+
+
+Definition at line 160 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a78be248a523b13fc8c364683e3f17122}\label{intrax8_8c_a78be248a523b13fc8c364683e3f17122}} 
+\index{intrax8.c@{intrax8.c}!init\_ac\_vlc@{init\_ac\_vlc}}
+\index{init\_ac\_vlc@{init\_ac\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{init\_ac\_vlc}{init\_ac\_vlc}}
+{\footnotesize\ttfamily \#define init\+\_\+ac\+\_\+vlc(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                                      \(\backslash\)}
+\DoxyCodeLine{        dst.table           = \&\mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}}];                                 \(\backslash\)}
+\DoxyCodeLine{        dst.table\_allocated = \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx];                                 \(\backslash\)}
+\DoxyCodeLine{        offset             += \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx++];                               \(\backslash\)}
+\DoxyCodeLine{        init\_vlc(\&dst, \mbox{\hyperlink{intrax8_8c_a22aafdeb1aea6a19151065636e6ff7ca}{AC\_VLC\_BITS}}, 77, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[1], 4, 2, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[0], 4, 2,         \(\backslash\)}
+\DoxyCodeLine{                 \mbox{\hyperlink{vlc_8h_a243805445ae22e8021dd3f07439d7506}{INIT\_VLC\_USE\_NEW\_STATIC}});                                    \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while}(0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{intrax8_8c_a70d47a933b753bcefbc8a81e7eef7e34}\label{intrax8_8c_a70d47a933b753bcefbc8a81e7eef7e34}} 
+\index{intrax8.c@{intrax8.c}!init\_dc\_vlc@{init\_dc\_vlc}}
+\index{init\_dc\_vlc@{init\_dc\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{init\_dc\_vlc}{init\_dc\_vlc}}
+{\footnotesize\ttfamily \#define init\+\_\+dc\+\_\+vlc(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                                      \(\backslash\)}
+\DoxyCodeLine{        dst.table           = \&\mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}}];                                 \(\backslash\)}
+\DoxyCodeLine{        dst.table\_allocated = \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx];                                 \(\backslash\)}
+\DoxyCodeLine{        offset             += \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx++];                               \(\backslash\)}
+\DoxyCodeLine{        init\_vlc(\&dst, \mbox{\hyperlink{intrax8_8c_ab33094be20c26cf567aa5c10ef1fa45d}{DC\_VLC\_BITS}}, 34, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[1], 4, 2, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[0], 4, 2,         \(\backslash\)}
+\DoxyCodeLine{                 \mbox{\hyperlink{vlc_8h_a243805445ae22e8021dd3f07439d7506}{INIT\_VLC\_USE\_NEW\_STATIC}});                                    \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while}(0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{intrax8_8c_a9a8730317af64749ecb064455232f107}\label{intrax8_8c_a9a8730317af64749ecb064455232f107}} 
+\index{intrax8.c@{intrax8.c}!init\_or\_vlc@{init\_or\_vlc}}
+\index{init\_or\_vlc@{init\_or\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{init\_or\_vlc}{init\_or\_vlc}}
+{\footnotesize\ttfamily \#define init\+\_\+or\+\_\+vlc(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                                      \(\backslash\)}
+\DoxyCodeLine{        dst.table           = \&\mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{writing__filters_8txt_ae1df9c886af8e844bb8849d403b76663}{offset}}];                                 \(\backslash\)}
+\DoxyCodeLine{        dst.table\_allocated = \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx];                                 \(\backslash\)}
+\DoxyCodeLine{        offset             += \mbox{\hyperlink{img2dec_8c_a98ca8d52365848dfa8cdfd76c17860e6}{sizes}}[sizeidx++];                               \(\backslash\)}
+\DoxyCodeLine{        init\_vlc(\&dst, \mbox{\hyperlink{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}{OR\_VLC\_BITS}}, 12, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[1], 4, 2, \&\mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}[0], 4, 2,         \(\backslash\)}
+\DoxyCodeLine{                 \mbox{\hyperlink{vlc_8h_a243805445ae22e8021dd3f07439d7506}{INIT\_VLC\_USE\_NEW\_STATIC}});                                    \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while}(0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{intrax8_8c_a7efce5b0ef8b23a2d15d90de100be889}\label{intrax8_8c_a7efce5b0ef8b23a2d15d90de100be889}} 
+\index{intrax8.c@{intrax8.c}!level\_offset@{level\_offset}}
+\index{level\_offset@{level\_offset}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{level\_offset}{level\_offset}}
+{\footnotesize\ttfamily \#define level\+\_\+offset(\begin{DoxyParamCaption}\item[{}]{l }\end{DoxyParamCaption})~((l) $<$$<$ 24)}
+
+
+
+Definition at line 163 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}\label{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}} 
+\index{intrax8.c@{intrax8.c}!MAX\_TABLE\_DEPTH@{MAX\_TABLE\_DEPTH}}
+\index{MAX\_TABLE\_DEPTH@{MAX\_TABLE\_DEPTH}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_TABLE\_DEPTH}{MAX\_TABLE\_DEPTH}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH(\begin{DoxyParamCaption}\item[{}]{table\+\_\+bits,  }\item[{}]{max\+\_\+bits }\end{DoxyParamCaption})~    ((max\+\_\+bits + table\+\_\+bits -\/ 1) / table\+\_\+bits)}
+
+
+
+Definition at line 34 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}\label{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}} 
+\index{intrax8.c@{intrax8.c}!OR\_VLC\_BITS@{OR\_VLC\_BITS}}
+\index{OR\_VLC\_BITS@{OR\_VLC\_BITS}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{OR\_VLC\_BITS}{OR\_VLC\_BITS}}
+{\footnotesize\ttfamily \#define O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS~7}
+
+
+
+Definition at line 39 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a1d9b85b0b66d7caf79b08a78d0395051}\label{intrax8_8c_a1d9b85b0b66d7caf79b08a78d0395051}} 
+\index{intrax8.c@{intrax8.c}!OR\_VLC\_MTD@{OR\_VLC\_MTD}}
+\index{OR\_VLC\_MTD@{OR\_VLC\_MTD}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{OR\_VLC\_MTD}{OR\_VLC\_MTD}}
+{\footnotesize\ttfamily \#define O\+R\+\_\+\+V\+L\+C\+\_\+\+M\+TD~\mbox{\hyperlink{intrax8_8c_aaf28c0bbd74393e574ec66855a8b9e0d}{M\+A\+X\+\_\+\+T\+A\+B\+L\+E\+\_\+\+D\+E\+P\+TH}}(\mbox{\hyperlink{intrax8_8c_a5397709d93171a5a5b572520d8d3117b}{O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}, \mbox{\hyperlink{intrax8huf_8h_a4ca333312ddffc21fb240ee3584a2a7c}{M\+A\+X\+\_\+\+O\+R\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 43 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a76517f64820f4cefef2ceb565719c568}\label{intrax8_8c_a76517f64820f4cefef2ceb565719c568}} 
+\index{intrax8.c@{intrax8.c}!run\_offset@{run\_offset}}
+\index{run\_offset@{run\_offset}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{run\_offset}{run\_offset}}
+{\footnotesize\ttfamily \#define run\+\_\+offset(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}} }\end{DoxyParamCaption})~((\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $<$$<$ 16)}
+
+
+
+Definition at line 162 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a16a0f7e7053a679c9bf4289b441a2be7}\label{intrax8_8c_a16a0f7e7053a679c9bf4289b441a2be7}} 
+\index{intrax8.c@{intrax8.c}!T@{T}}
+\index{T@{T}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{T}{T}}
+{\footnotesize\ttfamily \#define T(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x) $\ast$ dc\+\_\+level + 0x8000) $>$$>$ 16;}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{intrax8_8c_a587c10f539a89262cafc54fa2827af1d}\label{intrax8_8c_a587c10f539a89262cafc54fa2827af1d}} 
+\index{intrax8.c@{intrax8.c}!dsp\_x8\_put\_solidcolor@{dsp\_x8\_put\_solidcolor}}
+\index{dsp\_x8\_put\_solidcolor@{dsp\_x8\_put\_solidcolor}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{dsp\_x8\_put\_solidcolor()}{dsp\_x8\_put\_solidcolor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dsp\+\_\+x8\+\_\+put\+\_\+solidcolor (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{pix,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{const ptrdiff\+\_\+t}]{linesize }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 546 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a587c10f539a89262cafc54fa2827af1d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a3a795ee6fa6a33ae2401576ec273fc56}\label{intrax8_8c_a3a795ee6fa6a33ae2401576ec273fc56}} 
+\index{intrax8.c@{intrax8.c}!ff\_intrax8\_common\_end@{ff\_intrax8\_common\_end}}
+\index{ff\_intrax8\_common\_end@{ff\_intrax8\_common\_end}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{ff\_intrax8\_common\_end()}{ff\_intrax8\_common\_end()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+intrax8\+\_\+common\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w }\end{DoxyParamCaption})}
+
+Destroy Intra\+X8 frame structure. 
+\begin{DoxyParams}{Parameters}
+{\em w} & pointer to \mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 768 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a3a795ee6fa6a33ae2401576ec273fc56_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a05198162bde3e58c5c1bbb3cac4bb04a}\label{intrax8_8c_a05198162bde3e58c5c1bbb3cac4bb04a}} 
+\index{intrax8.c@{intrax8.c}!ff\_intrax8\_common\_init@{ff\_intrax8\_common\_init}}
+\index{ff\_intrax8\_common\_init@{ff\_intrax8\_common\_init}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{ff\_intrax8\_common\_init()}{ff\_intrax8\_common\_init()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+intrax8\+\_\+common\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w,  }\item[{\mbox{\hyperlink{struct_i_d_c_t_d_s_p_context}{I\+D\+C\+T\+D\+S\+P\+Context}} $\ast$}]{idsp,  }\item[{int16\+\_\+t($\ast$)}]{block\mbox{[}64\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{block\+\_\+last\+\_\+index\mbox{[}12\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+height }\end{DoxyParamCaption})}
+
+Initialize Intra\+X8 frame decoder. 
+\begin{DoxyParams}{Parameters}
+{\em avctx} & pointer to \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} \\
+\hline
+{\em w} & pointer to \mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} \\
+\hline
+{\em idsp} & pointer to \mbox{\hyperlink{struct_i_d_c_t_d_s_p_context}{I\+D\+C\+T\+D\+S\+P\+Context}} \\
+\hline
+{\em block} & pointer to block array \\
+\hline
+{\em block\+\_\+last\+\_\+index} & pointer to index array \\
+\hline
+{\em mb\+\_\+width} & macroblock width \\
+\hline
+{\em mb\+\_\+height} & macroblock height \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, a negative A\+V\+E\+R\+R\+OR value on error 
+\end{DoxyReturn}
+
+
+Definition at line 728 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{intrax8_8c_a05198162bde3e58c5c1bbb3cac4bb04a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a05198162bde3e58c5c1bbb3cac4bb04a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a12af242430218b9a481accc8312d1c73}\label{intrax8_8c_a12af242430218b9a481accc8312d1c73}} 
+\index{intrax8.c@{intrax8.c}!ff\_intrax8\_decode\_picture@{ff\_intrax8\_decode\_picture}}
+\index{ff\_intrax8\_decode\_picture@{ff\_intrax8\_decode\_picture}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{ff\_intrax8\_decode\_picture()}{ff\_intrax8\_decode\_picture()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+intrax8\+\_\+decode\+\_\+picture (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w,  }\item[{\mbox{\hyperlink{struct_picture}{Picture}} $\ast$}]{pict,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{mb\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{mb\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{quant,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{halfpq,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{loopfilter,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lowdelay }\end{DoxyParamCaption})}
+
+Decode single Intra\+X8 frame. lowres decoding is theoretically impossible. 
+\begin{DoxyParams}{Parameters}
+{\em w} & pointer to \mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} \\
+\hline
+{\em pict} & the output \mbox{\hyperlink{struct_picture}{Picture}} containing an \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} \\
+\hline
+{\em gb} & open bitstream reader \\
+\hline
+{\em mb\+\_\+x} & pointer to the x coordinate of the current macroblock \\
+\hline
+{\em mb\+\_\+y} & pointer to the y coordinate of the current macroblock \\
+\hline
+{\em dquant} & doubled quantizer, it would be odd in case of V\+C-\/1 halfpq==1. \\
+\hline
+{\em quant\+\_\+offset} & offset away from zero \\
+\hline
+{\em loopfilter} & enable filter after decoding a block \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 773 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a12af242430218b9a481accc8312d1c73_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a12af242430218b9a481accc8312d1c73_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a85360aee6e97e45432dfbc16621933ae}\label{intrax8_8c_a85360aee6e97e45432dfbc16621933ae}} 
+\index{intrax8.c@{intrax8.c}!x8\_ac\_compensation@{x8\_ac\_compensation}}
+\index{x8\_ac\_compensation@{x8\_ac\_compensation}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_ac\_compensation()}{x8\_ac\_compensation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+ac\+\_\+compensation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{direction,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dc\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 475 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a85360aee6e97e45432dfbc16621933ae_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_ae5a2c004a40451cf6472823bd4dd2d9a}\label{intrax8_8c_ae5a2c004a40451cf6472823bd4dd2d9a}} 
+\index{intrax8.c@{intrax8.c}!x8\_decode\_intra\_mb@{x8\_decode\_intra\_mb}}
+\index{x8\_decode\_intra\_mb@{x8\_decode\_intra\_mb}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_decode\_intra\_mb()}{x8\_decode\_intra\_mb()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x8\+\_\+decode\+\_\+intra\+\_\+mb (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chroma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 567 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ae5a2c004a40451cf6472823bd4dd2d9a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ae5a2c004a40451cf6472823bd4dd2d9a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_af2b8b27f6ec8cb42e8e4debfc18bc7fc}\label{intrax8_8c_af2b8b27f6ec8cb42e8e4debfc18bc7fc}} 
+\index{intrax8.c@{intrax8.c}!x8\_get\_ac\_rlf@{x8\_get\_ac\_rlf}}
+\index{x8\_get\_ac\_rlf@{x8\_get\_ac\_rlf}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_get\_ac\_rlf()}{x8\_get\_ac\_rlf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+get\+\_\+ac\+\_\+rlf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const}]{run,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const}]{level,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const}]{final }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 206 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_af2b8b27f6ec8cb42e8e4debfc18bc7fc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_af2b8b27f6ec8cb42e8e4debfc18bc7fc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a8bd9bfe386e7638397e687d3d683bbf2}\label{intrax8_8c_a8bd9bfe386e7638397e687d3d683bbf2}} 
+\index{intrax8.c@{intrax8.c}!x8\_get\_dc\_rlf@{x8\_get\_dc\_rlf}}
+\index{x8\_get\_dc\_rlf@{x8\_get\_dc\_rlf}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_get\_dc\_rlf()}{x8\_get\_dc\_rlf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x8\+\_\+get\+\_\+dc\+\_\+rlf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const}]{level,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$const}]{final }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 286 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a8bd9bfe386e7638397e687d3d683bbf2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a8bd9bfe386e7638397e687d3d683bbf2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a5aa3e91e04b256ff7b965067c64e0be2}\label{intrax8_8c_a5aa3e91e04b256ff7b965067c64e0be2}} 
+\index{intrax8.c@{intrax8.c}!x8\_get\_orient\_vlc@{x8\_get\_orient\_vlc}}
+\index{x8\_get\_orient\_vlc@{x8\_get\_orient\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_get\_orient\_vlc()}{x8\_get\_orient\_vlc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x8\+\_\+get\+\_\+orient\+\_\+vlc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 149 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a5aa3e91e04b256ff7b965067c64e0be2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a5aa3e91e04b256ff7b965067c64e0be2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_aaa67ad352e5bcc25ae1aa6f5a40ea1fc}\label{intrax8_8c_aaa67ad352e5bcc25ae1aa6f5a40ea1fc}} 
+\index{intrax8.c@{intrax8.c}!x8\_get\_prediction@{x8\_get\_prediction}}
+\index{x8\_get\_prediction@{x8\_get\_prediction}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_get\_prediction()}{x8\_get\_prediction()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+get\+\_\+prediction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 406 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_aaa67ad352e5bcc25ae1aa6f5a40ea1fc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a407055e348c32dd0e8e56e85d22126ae}\label{intrax8_8c_a407055e348c32dd0e8e56e85d22126ae}} 
+\index{intrax8.c@{intrax8.c}!x8\_get\_prediction\_chroma@{x8\_get\_prediction\_chroma}}
+\index{x8\_get\_prediction\_chroma@{x8\_get\_prediction\_chroma}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_get\_prediction\_chroma()}{x8\_get\_prediction\_chroma()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+get\+\_\+prediction\+\_\+chroma (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 390 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a407055e348c32dd0e8e56e85d22126ae_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_ae6db174d697428dce77da2a75e6bc3ab}\label{intrax8_8c_ae6db174d697428dce77da2a75e6bc3ab}} 
+\index{intrax8.c@{intrax8.c}!x8\_init\_block\_index@{x8\_init\_block\_index}}
+\index{x8\_init\_block\_index@{x8\_init\_block\_index}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_init\_block\_index()}{x8\_init\_block\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+init\+\_\+block\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 711 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ae6db174d697428dce77da2a75e6bc3ab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a1e8d375312f66b31f4edf5a1f3e5940a}\label{intrax8_8c_a1e8d375312f66b31f4edf5a1f3e5940a}} 
+\index{intrax8.c@{intrax8.c}!x8\_reset\_vlc\_tables@{x8\_reset\_vlc\_tables}}
+\index{x8\_reset\_vlc\_tables@{x8\_reset\_vlc\_tables}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_reset\_vlc\_tables()}{x8\_reset\_vlc\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+reset\+\_\+vlc\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 127 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a1e8d375312f66b31f4edf5a1f3e5940a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_ab895a91308647a561ae79eb2f34298d6}\label{intrax8_8c_ab895a91308647a561ae79eb2f34298d6}} 
+\index{intrax8.c@{intrax8.c}!x8\_select\_ac\_table@{x8\_select\_ac\_table}}
+\index{x8\_select\_ac\_table@{x8\_select\_ac\_table}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_select\_ac\_table()}{x8\_select\_ac\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+select\+\_\+ac\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 134 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=268pt]{intrax8_8c_ab895a91308647a561ae79eb2f34298d6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ab895a91308647a561ae79eb2f34298d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_ad19e1ad14f08aaf2e9b521d162018637}\label{intrax8_8c_ad19e1ad14f08aaf2e9b521d162018637}} 
+\index{intrax8.c@{intrax8.c}!x8\_setup\_spatial\_predictor@{x8\_setup\_spatial\_predictor}}
+\index{x8\_setup\_spatial\_predictor@{x8\_setup\_spatial\_predictor}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_setup\_spatial\_predictor()}{x8\_setup\_spatial\_predictor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x8\+\_\+setup\+\_\+spatial\+\_\+predictor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chroma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 322 of file intrax8.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ad19e1ad14f08aaf2e9b521d162018637_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ad19e1ad14f08aaf2e9b521d162018637_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_a14fe3fbc1b4c3007eed7d05fe54e87cb}\label{intrax8_8c_a14fe3fbc1b4c3007eed7d05fe54e87cb}} 
+\index{intrax8.c@{intrax8.c}!x8\_update\_predictions@{x8\_update\_predictions}}
+\index{x8\_update\_predictions@{x8\_update\_predictions}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_update\_predictions()}{x8\_update\_predictions()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} x8\+\_\+update\+\_\+predictions (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_intra_x8_context}{Intra\+X8\+Context}} $\ast$const}]{w,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{orient,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{est\+\_\+run }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 380 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_a14fe3fbc1b4c3007eed7d05fe54e87cb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{intrax8_8c_ad6f9e365283953ea780595c262dccd97}\label{intrax8_8c_ad6f9e365283953ea780595c262dccd97}} 
+\index{intrax8.c@{intrax8.c}!x8\_vlc\_init@{x8\_vlc\_init}}
+\index{x8\_vlc\_init@{x8\_vlc\_init}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{x8\_vlc\_init()}{x8\_vlc\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x8\+\_\+vlc\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 49 of file intrax8.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{intrax8_8c_ad6f9e365283953ea780595c262dccd97_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{intrax8_8c_a5589805888de114a6ded2a32fb6683f8}\label{intrax8_8c_a5589805888de114a6ded2a32fb6683f8}} 
+\index{intrax8.c@{intrax8.c}!ac\_decode\_table@{ac\_decode\_table}}
+\index{ac\_decode\_table@{ac\_decode\_table}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{ac\_decode\_table}{ac\_decode\_table}}
+{\footnotesize\ttfamily const uint32\+\_\+t ac\+\_\+decode\+\_\+table\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 164 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a8d2885559548297cde200625178764a2}\label{intrax8_8c_a8d2885559548297cde200625178764a2}} 
+\index{intrax8.c@{intrax8.c}!dc\_index\_offset@{dc\_index\_offset}}
+\index{dc\_index\_offset@{dc\_index\_offset}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{dc\_index\_offset}{dc\_index\_offset}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} dc\+\_\+index\+\_\+offset\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0, 1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 282 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a166aeb9ea0e5daba5997443ec78ac55d}\label{intrax8_8c_a166aeb9ea0e5daba5997443ec78ac55d}} 
+\index{intrax8.c@{intrax8.c}!j\_ac\_vlc@{j\_ac\_vlc}}
+\index{j\_ac\_vlc@{j\_ac\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{j\_ac\_vlc}{j\_ac\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} j\+\_\+ac\+\_\+vlc\mbox{[}2\mbox{]}\mbox{[}2\mbox{]}\mbox{[}8\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 45 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_aa39ada4340cd52c999c9e69d61e734cf}\label{intrax8_8c_aa39ada4340cd52c999c9e69d61e734cf}} 
+\index{intrax8.c@{intrax8.c}!j\_dc\_vlc@{j\_dc\_vlc}}
+\index{j\_dc\_vlc@{j\_dc\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{j\_dc\_vlc}{j\_dc\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} j\+\_\+dc\+\_\+vlc\mbox{[}2\mbox{]}\mbox{[}8\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 46 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a52cbf9e61da56985317191a20fbd30d7}\label{intrax8_8c_a52cbf9e61da56985317191a20fbd30d7}} 
+\index{intrax8.c@{intrax8.c}!j\_orient\_vlc@{j\_orient\_vlc}}
+\index{j\_orient\_vlc@{j\_orient\_vlc}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{j\_orient\_vlc}{j\_orient\_vlc}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} j\+\_\+orient\+\_\+vlc\mbox{[}2\mbox{]}\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 47 of file intrax8.\+c.
+
+\mbox{\Hypertarget{intrax8_8c_a37c2d278f8bd858b10b36b90b3d35cef}\label{intrax8_8c_a37c2d278f8bd858b10b36b90b3d35cef}} 
+\index{intrax8.c@{intrax8.c}!quant\_table@{quant\_table}}
+\index{quant\_table@{quant\_table}!intrax8.c@{intrax8.c}}
+\doxysubsubsection{\texorpdfstring{quant\_table}{quant\_table}}
+{\footnotesize\ttfamily const int16\+\_\+t quant\+\_\+table\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    256, 256, 256, 256, 256, 256, 259, 262,}
+\DoxyCodeLine{    265, 269, 272, 275, 278, 282, 285, 288,}
+\DoxyCodeLine{    292, 295, 299, 303, 306, 310, 314, 317,}
+\DoxyCodeLine{    321, 325, 329, 333, 337, 341, 345, 349,}
+\DoxyCodeLine{    353, 358, 362, 366, 371, 375, 379, 384,}
+\DoxyCodeLine{    389, 393, 398, 403, 408, 413, 417, 422,}
+\DoxyCodeLine{    428, 433, 438, 443, 448, 454, 459, 465,}
+\DoxyCodeLine{    470, 476, 482, 488, 493, 499, 505, 511,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 556 of file intrax8.\+c.
+

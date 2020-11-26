@@ -1,0 +1,652 @@
+\hypertarget{vf__deflicker_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+deflicker.c File Reference}
+\label{vf__deflicker_8c}\index{E:/github/ffmpeg/libavfilter/vf\_deflicker.c@{E:/github/ffmpeg/libavfilter/vf\_deflicker.c}}
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/qsort.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bufferqueue.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+deflicker.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}~129
+\item 
+\#define \mbox{\hyperlink{vf__deflicker_8c_a70ed59adcb4159ac551058053e649640}{S\+I\+ZE}}~\mbox{\hyperlink{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}
+\item 
+\#define \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}} \mbox{\hyperlink{vf__deflicker_8c_a56040b88f6e756c4a59c0ca9647600d7}{Deflicker\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314}{smooth\+\_\+mode}} \{ \newline
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aaf965da0c99aa1938c5222a381cde78b}{A\+R\+I\+T\+H\+M\+E\+T\+I\+C\+\_\+\+M\+E\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a683c07f1a44604d6e6946c718176addd}{G\+E\+O\+M\+E\+T\+R\+I\+C\+\_\+\+M\+E\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac508b4636fd9afcb0752c9a7603671a9}{H\+A\+R\+M\+O\+N\+I\+C\+\_\+\+M\+E\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ab4fa2da1c089e434234891613af7bd5b}{Q\+U\+A\+D\+R\+A\+T\+I\+C\+\_\+\+M\+E\+AN}}, 
+\newline
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a19ea9842774a78799c07b50cdde8193e}{C\+U\+B\+I\+C\+\_\+\+M\+E\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aa60fa4372c77dfe220bbec49bdfa732f}{P\+O\+W\+E\+R\+\_\+\+M\+E\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314afa725c81b10b52c8fc109ea7bc936063}{M\+E\+D\+I\+AN}}, 
+\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac02adf98cf81e3ef48d9c523904f9cf1}{N\+B\+\_\+\+S\+M\+O\+O\+T\+H\+\_\+\+M\+O\+DE}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__deflicker_8c_ab2f961faca5ee7600c1bcd40a55582ec}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (deflicker)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a9e10a9e5c7db2bfb2ddf35175c1b5c8d}{deflicker8}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, ptrdiff\+\_\+t src\+\_\+linesize, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, ptrdiff\+\_\+t dst\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, float \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_af037f9f52f58822b54cc5f1d9f1a5981}{deflicker16}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ssrc, ptrdiff\+\_\+t src\+\_\+linesize, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ddst, ptrdiff\+\_\+t dst\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, float \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static float \mbox{\hyperlink{vf__deflicker_8c_ad5617d8eaff47f9f0b8c31a8e66f0d0c}{calc\+\_\+avgy8}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static float \mbox{\hyperlink{vf__deflicker_8c_af53bc55227aaa980b4dba38a8a329cc4}{calc\+\_\+avgy16}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_a2dddfdf9ad465c86ae0bf4ee0176cb4c}{get\+\_\+am\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_a1c1955765f896095689c1e654673a0d6}{get\+\_\+gm\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_ab82d824711a29de574ede8bf64ccdd5e}{get\+\_\+hm\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_a3d15b11ced3fc1e58ef85ce3d0144b23}{get\+\_\+qm\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_ad7ff518e128197dc28ed112b3ab2338d}{get\+\_\+cm\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_af4d082e15221aa71da359a23fe0168c6}{get\+\_\+pm\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a356a2f490ac74996a9a9b146ed903646}{comparef}} (const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_a614c87bf7a15eee62a36178338044a64}{get\+\_\+median\+\_\+factor}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deflicker_8c_a72949c8fcad3f201712a3569fc6888cb}{request\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__deflicker_8c_abaf210cd154cfa08f5f1efa23e464b42}{deflicker\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__deflicker_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__deflicker_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__deflicker_8c_a0f377baaa70d3e21a8e5ccf06bb3b003}{ff\+\_\+vf\+\_\+deflicker}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}\label{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!FF\_BUFQUEUE\_SIZE@{FF\_BUFQUEUE\_SIZE}}
+\index{FF\_BUFQUEUE\_SIZE@{FF\_BUFQUEUE\_SIZE}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{FF\_BUFQUEUE\_SIZE}{FF\_BUFQUEUE\_SIZE}}
+{\footnotesize\ttfamily \#define F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE~129}
+
+
+
+Definition at line 27 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 74 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}}, x)}
+
+
+
+Definition at line 73 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_a70ed59adcb4159ac551058053e649640}\label{vf__deflicker_8c_a70ed59adcb4159ac551058053e649640}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!SIZE@{SIZE}}
+\index{SIZE@{SIZE}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{SIZE}{SIZE}}
+{\footnotesize\ttfamily \#define S\+I\+ZE~\mbox{\hyperlink{vf__deflicker_8c_a168bfc24195160677a1d8c367bd8fe8e}{F\+F\+\_\+\+B\+U\+F\+Q\+U\+E\+U\+E\+\_\+\+S\+I\+ZE}}}
+
+
+
+Definition at line 34 of file vf\+\_\+deflicker.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__deflicker_8c_a56040b88f6e756c4a59c0ca9647600d7}\label{vf__deflicker_8c_a56040b88f6e756c4a59c0ca9647600d7}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!DeflickerContext@{DeflickerContext}}
+\index{DeflickerContext@{DeflickerContext}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{DeflickerContext}{DeflickerContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}} \mbox{\hyperlink{struct_deflicker_context}{Deflicker\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!smooth\_mode@{smooth\_mode}}
+\index{smooth\_mode@{smooth\_mode}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{smooth\_mode}{smooth\_mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314}{smooth\+\_\+mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ARITHMETIC\_MEAN@{ARITHMETIC\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!ARITHMETIC\_MEAN@{ARITHMETIC\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aaf965da0c99aa1938c5222a381cde78b}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aaf965da0c99aa1938c5222a381cde78b}} 
+A\+R\+I\+T\+H\+M\+E\+T\+I\+C\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{GEOMETRIC\_MEAN@{GEOMETRIC\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!GEOMETRIC\_MEAN@{GEOMETRIC\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a683c07f1a44604d6e6946c718176addd}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a683c07f1a44604d6e6946c718176addd}} 
+G\+E\+O\+M\+E\+T\+R\+I\+C\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HARMONIC\_MEAN@{HARMONIC\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!HARMONIC\_MEAN@{HARMONIC\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac508b4636fd9afcb0752c9a7603671a9}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac508b4636fd9afcb0752c9a7603671a9}} 
+H\+A\+R\+M\+O\+N\+I\+C\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{QUADRATIC\_MEAN@{QUADRATIC\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!QUADRATIC\_MEAN@{QUADRATIC\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ab4fa2da1c089e434234891613af7bd5b}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ab4fa2da1c089e434234891613af7bd5b}} 
+Q\+U\+A\+D\+R\+A\+T\+I\+C\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CUBIC\_MEAN@{CUBIC\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!CUBIC\_MEAN@{CUBIC\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a19ea9842774a78799c07b50cdde8193e}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a19ea9842774a78799c07b50cdde8193e}} 
+C\+U\+B\+I\+C\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{POWER\_MEAN@{POWER\_MEAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!POWER\_MEAN@{POWER\_MEAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aa60fa4372c77dfe220bbec49bdfa732f}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aa60fa4372c77dfe220bbec49bdfa732f}} 
+P\+O\+W\+E\+R\+\_\+\+M\+E\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MEDIAN@{MEDIAN}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!MEDIAN@{MEDIAN}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314afa725c81b10b52c8fc109ea7bc936063}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314afa725c81b10b52c8fc109ea7bc936063}} 
+M\+E\+D\+I\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_SMOOTH\_MODE@{NB\_SMOOTH\_MODE}!vf\_deflicker.c@{vf\_deflicker.c}}\index{vf\_deflicker.c@{vf\_deflicker.c}!NB\_SMOOTH\_MODE@{NB\_SMOOTH\_MODE}}}\mbox{\Hypertarget{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac02adf98cf81e3ef48d9c523904f9cf1}\label{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac02adf98cf81e3ef48d9c523904f9cf1}} 
+N\+B\+\_\+\+S\+M\+O\+O\+T\+H\+\_\+\+M\+O\+DE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 36 of file vf\+\_\+deflicker.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__deflicker_8c_ab2f961faca5ee7600c1bcd40a55582ec}\label{vf__deflicker_8c_ab2f961faca5ee7600c1bcd40a55582ec}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{deflicker}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__deflicker_8c_af53bc55227aaa980b4dba38a8a329cc4}\label{vf__deflicker_8c_af53bc55227aaa980b4dba38a8a329cc4}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!calc\_avgy16@{calc\_avgy16}}
+\index{calc\_avgy16@{calc\_avgy16}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{calc\_avgy16()}{calc\_avgy16()}}
+{\footnotesize\ttfamily static float calc\+\_\+avgy16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 189 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=254pt]{vf__deflicker_8c_af53bc55227aaa980b4dba38a8a329cc4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_ad5617d8eaff47f9f0b8c31a8e66f0d0c}\label{vf__deflicker_8c_ad5617d8eaff47f9f0b8c31a8e66f0d0c}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!calc\_avgy8@{calc\_avgy8}}
+\index{calc\_avgy8@{calc\_avgy8}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{calc\_avgy8()}{calc\_avgy8()}}
+{\footnotesize\ttfamily static float calc\+\_\+avgy8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 166 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{vf__deflicker_8c_ad5617d8eaff47f9f0b8c31a8e66f0d0c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a356a2f490ac74996a9a9b146ed903646}\label{vf__deflicker_8c_a356a2f490ac74996a9a9b146ed903646}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!comparef@{comparef}}
+\index{comparef@{comparef}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{comparef()}{comparef()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} comparef (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{a,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 305 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{vf__deflicker_8c_a356a2f490ac74996a9a9b146ed903646_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_a356a2f490ac74996a9a9b146ed903646_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__deflicker_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 321 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_af037f9f52f58822b54cc5f1d9f1a5981}\label{vf__deflicker_8c_af037f9f52f58822b54cc5f1d9f1a5981}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!deflicker16@{deflicker16}}
+\index{deflicker16@{deflicker16}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{deflicker16()}{deflicker16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} deflicker16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ssrc,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+linesize,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ddst,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{float}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 143 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=247pt]{vf__deflicker_8c_af037f9f52f58822b54cc5f1d9f1a5981_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a9e10a9e5c7db2bfb2ddf35175c1b5c8d}\label{vf__deflicker_8c_a9e10a9e5c7db2bfb2ddf35175c1b5c8d}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!deflicker8@{deflicker8}}
+\index{deflicker8@{deflicker8}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{deflicker8()}{deflicker8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} deflicker8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+linesize,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{float}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 124 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=242pt]{vf__deflicker_8c_a9e10a9e5c7db2bfb2ddf35175c1b5c8d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27}\label{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 360 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a2dddfdf9ad465c86ae0bf4ee0176cb4c}\label{vf__deflicker_8c_a2dddfdf9ad465c86ae0bf4ee0176cb4c}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_am\_factor@{get\_am\_factor}}
+\index{get\_am\_factor@{get\_am\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_am\_factor()}{get\_am\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+am\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 212 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_a2dddfdf9ad465c86ae0bf4ee0176cb4c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_ad7ff518e128197dc28ed112b3ab2338d}\label{vf__deflicker_8c_ad7ff518e128197dc28ed112b3ab2338d}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_cm\_factor@{get\_cm\_factor}}
+\index{get\_cm\_factor@{get\_cm\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_cm\_factor()}{get\_cm\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+cm\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 273 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{vf__deflicker_8c_ad7ff518e128197dc28ed112b3ab2338d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_ad7ff518e128197dc28ed112b3ab2338d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a1c1955765f896095689c1e654673a0d6}\label{vf__deflicker_8c_a1c1955765f896095689c1e654673a0d6}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_gm\_factor@{get\_gm\_factor}}
+\index{get\_gm\_factor@{get\_gm\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_gm\_factor()}{get\_gm\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+gm\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 227 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_a1c1955765f896095689c1e654673a0d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_ab82d824711a29de574ede8bf64ccdd5e}\label{vf__deflicker_8c_ab82d824711a29de574ede8bf64ccdd5e}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_hm\_factor@{get\_hm\_factor}}
+\index{get\_hm\_factor@{get\_hm\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_hm\_factor()}{get\_hm\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+hm\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 242 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_ab82d824711a29de574ede8bf64ccdd5e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a614c87bf7a15eee62a36178338044a64}\label{vf__deflicker_8c_a614c87bf7a15eee62a36178338044a64}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_median\_factor@{get\_median\_factor}}
+\index{get\_median\_factor@{get\_median\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_median\_factor()}{get\_median\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+median\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 311 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_a614c87bf7a15eee62a36178338044a64_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{vf__deflicker_8c_a614c87bf7a15eee62a36178338044a64_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_af4d082e15221aa71da359a23fe0168c6}\label{vf__deflicker_8c_af4d082e15221aa71da359a23fe0168c6}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_pm\_factor@{get\_pm\_factor}}
+\index{get\_pm\_factor@{get\_pm\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_pm\_factor()}{get\_pm\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+pm\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 289 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_af4d082e15221aa71da359a23fe0168c6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a3d15b11ced3fc1e58ef85ce3d0144b23}\label{vf__deflicker_8c_a3d15b11ced3fc1e58ef85ce3d0144b23}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!get\_qm\_factor@{get\_qm\_factor}}
+\index{get\_qm\_factor@{get\_qm\_factor}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{get\_qm\_factor()}{get\_qm\_factor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+qm\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{float $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 257 of file vf\+\_\+deflicker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{vf__deflicker_8c_a3d15b11ced3fc1e58ef85ce3d0144b23_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 94 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_a72949c8fcad3f201712a3569fc6888cb}\label{vf__deflicker_8c_a72949c8fcad3f201712a3569fc6888cb}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!request\_frame@{request\_frame}}
+\index{request\_frame@{request\_frame}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{request\_frame()}{request\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} request\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 419 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_a72949c8fcad3f201712a3569fc6888cb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 442 of file vf\+\_\+deflicker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__deflicker_8c_abaf210cd154cfa08f5f1efa23e464b42}\label{vf__deflicker_8c_abaf210cd154cfa08f5f1efa23e464b42}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!deflicker\_options@{deflicker\_options}}
+\index{deflicker\_options@{deflicker\_options}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{deflicker\_options}{deflicker\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} deflicker\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}size"{}},  \textcolor{stringliteral}{"{}set how many frames to use"{}},  \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=5\}, 2, \mbox{\hyperlink{vf__deflicker_8c_a70ed59adcb4159ac551058053e649640}{SIZE}}, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}s"{}},     \textcolor{stringliteral}{"{}set how many frames to use"{}},  \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=5\}, 2, \mbox{\hyperlink{vf__deflicker_8c_a70ed59adcb4159ac551058053e649640}{SIZE}}, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}mode"{}},  \textcolor{stringliteral}{"{}set how to smooth luminance"{}}, \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=0\}, 0, \mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac02adf98cf81e3ef48d9c523904f9cf1}{NB\_SMOOTH\_MODE}}-\/1, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}m"{}},     \textcolor{stringliteral}{"{}set how to smooth luminance"{}}, \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=0\}, 0, \mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac02adf98cf81e3ef48d9c523904f9cf1}{NB\_SMOOTH\_MODE}}-\/1, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}am"{}},      \textcolor{stringliteral}{"{}arithmetic mean"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aaf965da0c99aa1938c5222a381cde78b}{ARITHMETIC\_MEAN}}\},  0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}gm"{}},      \textcolor{stringliteral}{"{}geometric mean"{}},  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a683c07f1a44604d6e6946c718176addd}{GEOMETRIC\_MEAN}}\},   0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}hm"{}},      \textcolor{stringliteral}{"{}harmonic mean"{}},   0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ac508b4636fd9afcb0752c9a7603671a9}{HARMONIC\_MEAN}}\},    0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}qm"{}},      \textcolor{stringliteral}{"{}quadratic mean"{}},  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314ab4fa2da1c089e434234891613af7bd5b}{QUADRATIC\_MEAN}}\},   0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}cm"{}},      \textcolor{stringliteral}{"{}cubic mean"{}},      0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314a19ea9842774a78799c07b50cdde8193e}{CUBIC\_MEAN}}\},       0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}pm"{}},      \textcolor{stringliteral}{"{}power mean"{}},      0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314aa60fa4372c77dfe220bbec49bdfa732f}{POWER\_MEAN}}\},       0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}median"{}},  \textcolor{stringliteral}{"{}median"{}},          0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__deflicker_8c_a72e93259220c5f5f87299d31dabe8314afa725c81b10b52c8fc109ea7bc936063}{MEDIAN}}\},           0, 0, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bypass"{}}, \textcolor{stringliteral}{"{}leave frames unchanged"{}},  \mbox{\hyperlink{vf__deflicker_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(bypass), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64=0\}, 0, 1, \mbox{\hyperlink{vf__deflicker_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 76 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_a0f377baaa70d3e21a8e5ccf06bb3b003}\label{vf__deflicker_8c_a0f377baaa70d3e21a8e5ccf06bb3b003}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!ff\_vf\_deflicker@{ff\_vf\_deflicker}}
+\index{ff\_vf\_deflicker@{ff\_vf\_deflicker}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_deflicker}{ff\_vf\_deflicker}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+deflicker}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}deflicker"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Remove temporal frame luminance variations."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__deflicker_8c_a56040b88f6e756c4a59c0ca9647600d7}{DeflickerContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&deflicker\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__deflicker_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__deflicker_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__deflicker_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}        = \mbox{\hyperlink{vf__deflicker_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__deflicker_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__deflicker_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 469 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{vf__deflicker_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!inputs@{inputs}}
+\index{inputs@{inputs}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__deflicker_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__deflicker_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 450 of file vf\+\_\+deflicker.\+c.
+
+\mbox{\Hypertarget{vf__deflicker_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{vf__deflicker_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{vf\_deflicker.c@{vf\_deflicker.c}!outputs@{outputs}}
+\index{outputs@{outputs}!vf\_deflicker.c@{vf\_deflicker.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .request\_frame = \mbox{\hyperlink{vf__deflicker_8c_a72949c8fcad3f201712a3569fc6888cb}{request\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 460 of file vf\+\_\+deflicker.\+c.
+

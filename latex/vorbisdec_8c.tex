@@ -1,0 +1,905 @@
+\hypertarget{vorbisdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/vorbisdec.c File Reference}
+\label{vorbisdec_8c}\index{E:/github/ffmpeg/libavcodec/vorbisdec.c@{E:/github/ffmpeg/libavcodec/vorbisdec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vorbis.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vorbisdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}xiph.\+h\char`\"{}}\newline
+Include dependency graph for vorbisdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structvorbis__codebook}{vorbis\+\_\+codebook}}
+\item 
+struct \mbox{\hyperlink{structvorbis__floor}{vorbis\+\_\+floor}}
+\item 
+union \mbox{\hyperlink{unionvorbis__floor_1_1vorbis__floor__u}{vorbis\+\_\+floor\+::vorbis\+\_\+floor\+\_\+u}}
+\item 
+struct \mbox{\hyperlink{structvorbis__floor_1_1vorbis__floor__u_1_1vorbis__floor0__s}{vorbis\+\_\+floor\+::vorbis\+\_\+floor\+\_\+u\+::vorbis\+\_\+floor0\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{structvorbis__floor_1_1vorbis__floor__u_1_1vorbis__floor1__s}{vorbis\+\_\+floor\+::vorbis\+\_\+floor\+\_\+u\+::vorbis\+\_\+floor1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}}
+\item 
+struct \mbox{\hyperlink{structvorbis__mapping}{vorbis\+\_\+mapping}}
+\item 
+struct \mbox{\hyperlink{structvorbis__mode}{vorbis\+\_\+mode}}
+\item 
+struct \mbox{\hyperlink{structvorbis__context__s}{vorbis\+\_\+context\+\_\+s}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_ab9ef831966fb2c5f522c19e809354830}{B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}}
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_a09d0b41869c61a93740b0da1f0f65570}{V\+\_\+\+N\+B\+\_\+\+B\+I\+TS}}~8
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_a4e6ab5d9c9f7ced957db84dfda36b486}{V\+\_\+\+N\+B\+\_\+\+B\+I\+T\+S2}}~11
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_a16346c45a3bd60512843417319f5daaf}{V\+\_\+\+M\+A\+X\+\_\+\+V\+L\+CS}}~(1 $<$$<$ 16)
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_aa98bdbd57792be1a8d243b050d9776c4}{V\+\_\+\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS}}~(1 $<$$<$ 20)
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_a43594c35b7731f77735f9ee0a8439679}{B\+A\+RK}}(x)~    (13.\+1\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ atan(0.\+00074\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x)) + 2.\+24\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ atan(1.\+85e-\/8\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x) $\ast$ (x)) + 1e-\/4\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x))
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_aa8f9e77d06c1cbc599f6eb4254ef7971}{V\+A\+L\+I\+D\+A\+T\+E\+\_\+\+I\+N\+D\+EX}}(idx,  limit)
+\item 
+\#define \mbox{\hyperlink{vorbisdec_8c_a118d4407cb7c16bf13fd4acd6de2c311}{G\+E\+T\+\_\+\+V\+A\+L\+I\+D\+A\+T\+E\+D\+\_\+\+I\+N\+D\+EX}}(idx,  \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  limit)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__codebook}{vorbis\+\_\+codebook}} \mbox{\hyperlink{vorbisdec_8c_add996a98dfebd9161c43f2efa1853d6a}{vorbis\+\_\+codebook}}
+\item 
+typedef union vorbis\+\_\+floor\+\_\+u \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}}
+\item 
+typedef struct vorbis\+\_\+floor0\+\_\+s \mbox{\hyperlink{vorbisdec_8c_a345459b32b2bc75249c3260257c02d96}{vorbis\+\_\+floor0}}
+\item 
+typedef struct vorbis\+\_\+floor1\+\_\+s \mbox{\hyperlink{vorbisdec_8c_a9b140f1e5ca1c8bfafdaa58df7957a58}{vorbis\+\_\+floor1}}
+\item 
+typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vorbisdec_8c_a0f5488588be73c95cf04763b0014f332}{vorbis\+\_\+floor\+\_\+decode\+\_\+func}}) (struct \mbox{\hyperlink{structvorbis__context__s}{vorbis\+\_\+context\+\_\+s}} $\ast$, \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$, float $\ast$)
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__floor}{vorbis\+\_\+floor}} \mbox{\hyperlink{vorbisdec_8c_a6891f3a93f001d42635c9293a5583b7e}{vorbis\+\_\+floor}}
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} \mbox{\hyperlink{vorbisdec_8c_a55dea4a6efa37dde86029d12fd226bf9}{vorbis\+\_\+residue}}
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__mapping}{vorbis\+\_\+mapping}} \mbox{\hyperlink{vorbisdec_8c_aeeafdc0ba9321e1e79b264b6b9713d2a}{vorbis\+\_\+mapping}}
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__mode}{vorbis\+\_\+mode}} \mbox{\hyperlink{vorbisdec_8c_a1c97ebe2d11f636140d0f338452f40d0}{vorbis\+\_\+mode}}
+\item 
+typedef struct \mbox{\hyperlink{structvorbis__context__s}{vorbis\+\_\+context\+\_\+s}} \mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static float \mbox{\hyperlink{vorbisdec_8c_a21dbd4f00909aee6602a16b329d71872}{vorbisfloat2float}} (unsigned \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vorbisdec_8c_ac4acded914ad8af4566c4b87eda4b427}{vorbis\+\_\+free}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a5fd83bcb4ca55912c57cd50d76be3bcf}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+codebooks}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ab1385a1679ad37352932ada49b66240b}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+tdtransforms}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ab8b8ee82a22cee8a6aed469204197a8f}{vorbis\+\_\+floor0\+\_\+decode}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$vfu, float $\ast$vec)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_af9b942ca34ea261dd39567ff07d77a72}{create\+\_\+map}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, unsigned floor\+\_\+number)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a941df5a981fdafa3d44af1dacf7e3409}{vorbis\+\_\+floor1\+\_\+decode}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$vfu, float $\ast$vec)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ada6da52126ef8c2708bf0a7910bf85fa}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+floors}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a5bc48e67590da82dd62641838bdf1015}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+residues}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a8bf3e4e5b35d7eef1c7f25377e6d3780}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+mappings}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ace1841dbaaabcd3e17dfe3342abfd96e}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+modes}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_af2f0bb2100a446eef3edd2d2eff59595}{vorbis\+\_\+parse\+\_\+setup\+\_\+hdr}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a84d656a41f50860c9cc71a99d4864e6b}{vorbis\+\_\+parse\+\_\+id\+\_\+hdr}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a21238e478c9791b7a5f619e2da702f58}{vorbis\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ae918fcda5925e69ddc7b814d73c1cb2b}{setup\+\_\+classifs}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$vr, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$do\+\_\+not\+\_\+decode, unsigned ch\+\_\+used, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} partition\+\_\+count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ptns\+\_\+to\+\_\+read)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a8cc041c68729056cfaccc5b2f065c866}{vorbis\+\_\+residue\+\_\+decode\+\_\+internal}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$vr, unsigned ch, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$do\+\_\+not\+\_\+decode, float $\ast$vec, unsigned vlen, unsigned ch\+\_\+left, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vr\+\_\+type)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ac27c027eddb59bc72a6a17f3bd84f8ef}{vorbis\+\_\+residue\+\_\+decode}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$vr, unsigned ch, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$do\+\_\+not\+\_\+decode, float $\ast$vec, unsigned vlen, unsigned ch\+\_\+left)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vorbisdec_8c_a390c59928ec8ea7907aacb1bab94898b}{ff\+\_\+vorbis\+\_\+inverse\+\_\+coupling}} (float $\ast$mag, float $\ast$ang, intptr\+\_\+t blocksize)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a66cb7f7751c4778d6678d5f1831ceb2f}{vorbis\+\_\+parse\+\_\+audio\+\_\+packet}} (\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$vc, float $\ast$$\ast$floor\+\_\+ptr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_a10d4082160898a4bcb6efb591ae6db5c}{vorbis\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbisdec_8c_ad48f9fed42e0b6accc93ea110377d181}{vorbis\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vorbisdec_8c_a40ed53c2862433548b468bfbedce97f2}{vorbis\+\_\+decode\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \mbox{\hyperlink{vorbisdec_8c_ac5545d56b03902f706c5c9ded8b7b316}{idx\+\_\+err\+\_\+str}} \mbox{[}$\,$\mbox{]} = \char`\"{}Index \mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}} \%d \mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}} of range (0 -\/ \%d) \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \%\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}} at \%s\+:\%i\textbackslash{}n\char`\"{}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{vorbisdec_8c_a898dbc2be2f807c2319867ae48ba1a57}{ff\+\_\+vorbis\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Vorbis I decoder \begin{DoxyAuthor}{Author}
+Denes Balatoni ( dbalatoni programozo hu )
+\end{DoxyAuthor}
+This file is part of F\+Fmpeg.
+
+F\+Fmpeg is free software; you can redistribute it and/or modify it under the terms of the G\+NU Lesser General Public License as published by the Free Software Foundation; either version 2.\+1 of the License, or (at your option) any later version.
+
+F\+Fmpeg is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU Lesser General Public License for more details.
+
+You should have received a copy of the G\+NU Lesser General Public License along with F\+Fmpeg; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-\/1301 U\+SA
+
+Vorbis I decoder \begin{DoxyAuthor}{Author}
+Denes Balatoni ( dbalatoni programozo hu ) 
+\end{DoxyAuthor}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vorbisdec_8c_a43594c35b7731f77735f9ee0a8439679}\label{vorbisdec_8c_a43594c35b7731f77735f9ee0a8439679}} 
+\index{vorbisdec.c@{vorbisdec.c}!BARK@{BARK}}
+\index{BARK@{BARK}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{BARK}{BARK}}
+{\footnotesize\ttfamily \#define B\+A\+RK(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~    (13.\+1\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ atan(0.\+00074\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x)) + 2.\+24\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ atan(1.\+85e-\/8\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x) $\ast$ (x)) + 1e-\/4\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}} $\ast$ (x))}
+
+
+
+Definition at line 159 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_ab9ef831966fb2c5f522c19e809354830}\label{vorbisdec_8c_ab9ef831966fb2c5f522c19e809354830}} 
+\index{vorbisdec.c@{vorbisdec.c}!BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}}
+\index{BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{BITSTREAM\_READER\_LE}{BITSTREAM\_READER\_LE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}
+
+
+
+Definition at line 35 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a118d4407cb7c16bf13fd4acd6de2c311}\label{vorbisdec_8c_a118d4407cb7c16bf13fd4acd6de2c311}} 
+\index{vorbisdec.c@{vorbisdec.c}!GET\_VALIDATED\_INDEX@{GET\_VALIDATED\_INDEX}}
+\index{GET\_VALIDATED\_INDEX@{GET\_VALIDATED\_INDEX}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{GET\_VALIDATED\_INDEX}{GET\_VALIDATED\_INDEX}}
+{\footnotesize\ttfamily \#define G\+E\+T\+\_\+\+V\+A\+L\+I\+D\+A\+T\+E\+D\+\_\+\+I\+N\+D\+EX(\begin{DoxyParamCaption}\item[{}]{idx,  }\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  }\item[{}]{limit }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{\(\backslash\)}
+\DoxyCodeLine{        idx = \mbox{\hyperlink{get__bits_8h_abd82eee339b2471e5d9b4bfecfdc6b5f}{get\_bits}}(gb, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}});\(\backslash\)}
+\DoxyCodeLine{        VALIDATE\_INDEX(idx, limit)\(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+Definition at line 170 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_aa98bdbd57792be1a8d243b050d9776c4}\label{vorbisdec_8c_aa98bdbd57792be1a8d243b050d9776c4}} 
+\index{vorbisdec.c@{vorbisdec.c}!V\_MAX\_PARTITIONS@{V\_MAX\_PARTITIONS}}
+\index{V\_MAX\_PARTITIONS@{V\_MAX\_PARTITIONS}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{V\_MAX\_PARTITIONS}{V\_MAX\_PARTITIONS}}
+{\footnotesize\ttfamily \#define V\+\_\+\+M\+A\+X\+\_\+\+P\+A\+R\+T\+I\+T\+I\+O\+NS~(1 $<$$<$ 20)}
+
+
+
+Definition at line 47 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a16346c45a3bd60512843417319f5daaf}\label{vorbisdec_8c_a16346c45a3bd60512843417319f5daaf}} 
+\index{vorbisdec.c@{vorbisdec.c}!V\_MAX\_VLCS@{V\_MAX\_VLCS}}
+\index{V\_MAX\_VLCS@{V\_MAX\_VLCS}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{V\_MAX\_VLCS}{V\_MAX\_VLCS}}
+{\footnotesize\ttfamily \#define V\+\_\+\+M\+A\+X\+\_\+\+V\+L\+CS~(1 $<$$<$ 16)}
+
+
+
+Definition at line 46 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a09d0b41869c61a93740b0da1f0f65570}\label{vorbisdec_8c_a09d0b41869c61a93740b0da1f0f65570}} 
+\index{vorbisdec.c@{vorbisdec.c}!V\_NB\_BITS@{V\_NB\_BITS}}
+\index{V\_NB\_BITS@{V\_NB\_BITS}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{V\_NB\_BITS}{V\_NB\_BITS}}
+{\footnotesize\ttfamily \#define V\+\_\+\+N\+B\+\_\+\+B\+I\+TS~8}
+
+
+
+Definition at line 44 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a4e6ab5d9c9f7ced957db84dfda36b486}\label{vorbisdec_8c_a4e6ab5d9c9f7ced957db84dfda36b486}} 
+\index{vorbisdec.c@{vorbisdec.c}!V\_NB\_BITS2@{V\_NB\_BITS2}}
+\index{V\_NB\_BITS2@{V\_NB\_BITS2}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{V\_NB\_BITS2}{V\_NB\_BITS2}}
+{\footnotesize\ttfamily \#define V\+\_\+\+N\+B\+\_\+\+B\+I\+T\+S2~11}
+
+
+
+Definition at line 45 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_aa8f9e77d06c1cbc599f6eb4254ef7971}\label{vorbisdec_8c_aa8f9e77d06c1cbc599f6eb4254ef7971}} 
+\index{vorbisdec.c@{vorbisdec.c}!VALIDATE\_INDEX@{VALIDATE\_INDEX}}
+\index{VALIDATE\_INDEX@{VALIDATE\_INDEX}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{VALIDATE\_INDEX}{VALIDATE\_INDEX}}
+{\footnotesize\ttfamily \#define V\+A\+L\+I\+D\+A\+T\+E\+\_\+\+I\+N\+D\+EX(\begin{DoxyParamCaption}\item[{}]{idx,  }\item[{}]{limit }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{if} (idx >= limit) \{\(\backslash\)}
+\DoxyCodeLine{        av\_log(vc-\/>avctx, \mbox{\hyperlink{group__lavu__log__constants_gaffe151ff4cd8a24b2e77ac8d9616c85c}{AV\_LOG\_ERROR}},\(\backslash\)}
+\DoxyCodeLine{               \mbox{\hyperlink{vorbisdec_8c_ac5545d56b03902f706c5c9ded8b7b316}{idx\_err\_str}},\(\backslash\)}
+\DoxyCodeLine{               (\textcolor{keywordtype}{int})(idx), (\textcolor{keywordtype}{int})(limit -\/ 1), \#idx, \_\_FILE\_\_, \_\_LINE\_\_);\(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};\(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+Definition at line 163 of file vorbisdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vorbisdec_8c_add996a98dfebd9161c43f2efa1853d6a}\label{vorbisdec_8c_add996a98dfebd9161c43f2efa1853d6a}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_codebook@{vorbis\_codebook}}
+\index{vorbis\_codebook@{vorbis\_codebook}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_codebook}{vorbis\_codebook}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__codebook}{vorbis\+\_\+codebook}} \mbox{\hyperlink{structvorbis__codebook}{vorbis\+\_\+codebook}}}
+
+\mbox{\Hypertarget{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}\label{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_context@{vorbis\_context}}
+\index{vorbis\_context@{vorbis\_context}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_context}{vorbis\_context}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__context__s}{vorbis\+\_\+context\+\_\+s}} \mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}}}
+
+\mbox{\Hypertarget{vorbisdec_8c_a6891f3a93f001d42635c9293a5583b7e}\label{vorbisdec_8c_a6891f3a93f001d42635c9293a5583b7e}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor@{vorbis\_floor}}
+\index{vorbis\_floor@{vorbis\_floor}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor}{vorbis\_floor}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__floor}{vorbis\+\_\+floor}} \mbox{\hyperlink{structvorbis__floor}{vorbis\+\_\+floor}}}
+
+\mbox{\Hypertarget{vorbisdec_8c_a345459b32b2bc75249c3260257c02d96}\label{vorbisdec_8c_a345459b32b2bc75249c3260257c02d96}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor0@{vorbis\_floor0}}
+\index{vorbis\_floor0@{vorbis\_floor0}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor0}{vorbis\_floor0}}
+{\footnotesize\ttfamily typedef struct vorbis\+\_\+floor0\+\_\+s \mbox{\hyperlink{vorbisdec_8c_a345459b32b2bc75249c3260257c02d96}{vorbis\+\_\+floor0}}}
+
+
+
+Definition at line 1 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a9b140f1e5ca1c8bfafdaa58df7957a58}\label{vorbisdec_8c_a9b140f1e5ca1c8bfafdaa58df7957a58}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor1@{vorbis\_floor1}}
+\index{vorbis\_floor1@{vorbis\_floor1}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor1}{vorbis\_floor1}}
+{\footnotesize\ttfamily typedef struct vorbis\+\_\+floor1\+\_\+s \mbox{\hyperlink{vorbisdec_8c_a9b140f1e5ca1c8bfafdaa58df7957a58}{vorbis\+\_\+floor1}}}
+
+
+
+Definition at line 1 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}\label{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor\_data@{vorbis\_floor\_data}}
+\index{vorbis\_floor\_data@{vorbis\_floor\_data}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor\_data}{vorbis\_floor\_data}}
+{\footnotesize\ttfamily typedef union vorbis\+\_\+floor\+\_\+u \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}}}
+
+
+
+Definition at line 1 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a0f5488588be73c95cf04763b0014f332}\label{vorbisdec_8c_a0f5488588be73c95cf04763b0014f332}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor\_decode\_func@{vorbis\_floor\_decode\_func}}
+\index{vorbis\_floor\_decode\_func@{vorbis\_floor\_decode\_func}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor\_decode\_func}{vorbis\_floor\_decode\_func}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ vorbis\+\_\+floor\+\_\+decode\+\_\+func) (struct \mbox{\hyperlink{structvorbis__context__s}{vorbis\+\_\+context\+\_\+s}} $\ast$, \mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$, float $\ast$)}
+
+
+
+Definition at line 63 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_aeeafdc0ba9321e1e79b264b6b9713d2a}\label{vorbisdec_8c_aeeafdc0ba9321e1e79b264b6b9713d2a}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_mapping@{vorbis\_mapping}}
+\index{vorbis\_mapping@{vorbis\_mapping}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_mapping}{vorbis\_mapping}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__mapping}{vorbis\+\_\+mapping}} \mbox{\hyperlink{structvorbis__mapping}{vorbis\+\_\+mapping}}}
+
+\mbox{\Hypertarget{vorbisdec_8c_a1c97ebe2d11f636140d0f338452f40d0}\label{vorbisdec_8c_a1c97ebe2d11f636140d0f338452f40d0}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_mode@{vorbis\_mode}}
+\index{vorbis\_mode@{vorbis\_mode}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_mode}{vorbis\_mode}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__mode}{vorbis\+\_\+mode}} \mbox{\hyperlink{structvorbis__mode}{vorbis\+\_\+mode}}}
+
+\mbox{\Hypertarget{vorbisdec_8c_a55dea4a6efa37dde86029d12fd226bf9}\label{vorbisdec_8c_a55dea4a6efa37dde86029d12fd226bf9}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_residue@{vorbis\_residue}}
+\index{vorbis\_residue@{vorbis\_residue}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_residue}{vorbis\_residue}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} \mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vorbisdec_8c_af9b942ca34ea261dd39567ff07d77a72}\label{vorbisdec_8c_af9b942ca34ea261dd39567ff07d77a72}} 
+\index{vorbisdec.c@{vorbisdec.c}!create\_map@{create\_map}}
+\index{create\_map@{create\_map}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{create\_map()}{create\_map()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} create\+\_\+map (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{unsigned}]{floor\+\_\+number }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 850 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_af9b942ca34ea261dd39567ff07d77a72_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_af9b942ca34ea261dd39567ff07d77a72_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a390c59928ec8ea7907aacb1bab94898b}\label{vorbisdec_8c_a390c59928ec8ea7907aacb1bab94898b}} 
+\index{vorbisdec.c@{vorbisdec.c}!ff\_vorbis\_inverse\_coupling@{ff\_vorbis\_inverse\_coupling}}
+\index{ff\_vorbis\_inverse\_coupling@{ff\_vorbis\_inverse\_coupling}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vorbis\_inverse\_coupling()}{ff\_vorbis\_inverse\_coupling()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+vorbis\+\_\+inverse\+\_\+coupling (\begin{DoxyParamCaption}\item[{float $\ast$}]{mag,  }\item[{float $\ast$}]{ang,  }\item[{intptr\+\_\+t}]{blocksize }\end{DoxyParamCaption})}
+
+
+
+Definition at line 1578 of file vorbisdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a390c59928ec8ea7907aacb1bab94898b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ae918fcda5925e69ddc7b814d73c1cb2b}\label{vorbisdec_8c_ae918fcda5925e69ddc7b814d73c1cb2b}} 
+\index{vorbisdec.c@{vorbisdec.c}!setup\_classifs@{setup\_classifs}}
+\index{setup\_classifs@{setup\_classifs}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{setup\_classifs()}{setup\_classifs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} setup\+\_\+classifs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{\mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$}]{vr,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{do\+\_\+not\+\_\+decode,  }\item[{unsigned}]{ch\+\_\+used,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{partition\+\_\+count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ptns\+\_\+to\+\_\+read }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1336 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ae918fcda5925e69ddc7b814d73c1cb2b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ae918fcda5925e69ddc7b814d73c1cb2b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ad48f9fed42e0b6accc93ea110377d181}\label{vorbisdec_8c_ad48f9fed42e0b6accc93ea110377d181}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_decode\_close@{vorbis\_decode\_close}}
+\index{vorbis\_decode\_close@{vorbis\_decode\_close}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_decode\_close()}{vorbis\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1862 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ad48f9fed42e0b6accc93ea110377d181_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a40ed53c2862433548b468bfbedce97f2}\label{vorbisdec_8c_a40ed53c2862433548b468bfbedce97f2}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_decode\_flush@{vorbis\_decode\_flush}}
+\index{vorbis\_decode\_flush@{vorbis\_decode\_flush}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_decode\_flush()}{vorbis\_decode\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} vorbis\+\_\+decode\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1871 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_a10d4082160898a4bcb6efb591ae6db5c}\label{vorbisdec_8c_a10d4082160898a4bcb6efb591ae6db5c}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_decode\_frame@{vorbis\_decode\_frame}}
+\index{vorbis\_decode\_frame@{vorbis\_decode\_frame}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_decode\_frame()}{vorbis\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1767 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a10d4082160898a4bcb6efb591ae6db5c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a21238e478c9791b7a5f619e2da702f58}\label{vorbisdec_8c_a21238e478c9791b7a5f619e2da702f58}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_decode\_init@{vorbis\_decode\_init}}
+\index{vorbis\_decode\_init@{vorbis\_decode\_init}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_decode\_init()}{vorbis\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1030 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{vorbisdec_8c_a21238e478c9791b7a5f619e2da702f58_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ab8b8ee82a22cee8a6aed469204197a8f}\label{vorbisdec_8c_ab8b8ee82a22cee8a6aed469204197a8f}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor0\_decode@{vorbis\_floor0\_decode}}
+\index{vorbis\_floor0\_decode@{vorbis\_floor0\_decode}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor0\_decode()}{vorbis\_floor0\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+floor0\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{\mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$}]{vfu,  }\item[{float $\ast$}]{vec }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1095 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ab8b8ee82a22cee8a6aed469204197a8f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ab8b8ee82a22cee8a6aed469204197a8f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a941df5a981fdafa3d44af1dacf7e3409}\label{vorbisdec_8c_a941df5a981fdafa3d44af1dacf7e3409}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_floor1\_decode@{vorbis\_floor1\_decode}}
+\index{vorbis\_floor1\_decode@{vorbis\_floor1\_decode}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_floor1\_decode()}{vorbis\_floor1\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+floor1\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{\mbox{\hyperlink{vorbisdec_8c_a6e2ce511d1a2900287942128184f5ed2}{vorbis\+\_\+floor\+\_\+data}} $\ast$}]{vfu,  }\item[{float $\ast$}]{vec }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1209 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a941df5a981fdafa3d44af1dacf7e3409_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a941df5a981fdafa3d44af1dacf7e3409_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ac4acded914ad8af4566c4b87eda4b427}\label{vorbisdec_8c_ac4acded914ad8af4566c4b87eda4b427}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_free@{vorbis\_free}}
+\index{vorbis\_free@{vorbis\_free}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_free()}{vorbis\_free()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} vorbis\+\_\+free (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 188 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{vorbisdec_8c_ac4acded914ad8af4566c4b87eda4b427_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=285pt]{vorbisdec_8c_ac4acded914ad8af4566c4b87eda4b427_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a66cb7f7751c4778d6678d5f1831ceb2f}\label{vorbisdec_8c_a66cb7f7751c4778d6678d5f1831ceb2f}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_audio\_packet@{vorbis\_parse\_audio\_packet}}
+\index{vorbis\_parse\_audio\_packet@{vorbis\_parse\_audio\_packet}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_audio\_packet()}{vorbis\_parse\_audio\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+audio\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{float $\ast$$\ast$}]{floor\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1604 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a66cb7f7751c4778d6678d5f1831ceb2f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=322pt]{vorbisdec_8c_a66cb7f7751c4778d6678d5f1831ceb2f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a84d656a41f50860c9cc71a99d4864e6b}\label{vorbisdec_8c_a84d656a41f50860c9cc71a99d4864e6b}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_id\_hdr@{vorbis\_parse\_id\_hdr}}
+\index{vorbis\_parse\_id\_hdr@{vorbis\_parse\_id\_hdr}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_id\_hdr()}{vorbis\_parse\_id\_hdr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+id\+\_\+hdr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 960 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a84d656a41f50860c9cc71a99d4864e6b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=325pt]{vorbisdec_8c_a84d656a41f50860c9cc71a99d4864e6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_af2f0bb2100a446eef3edd2d2eff59595}\label{vorbisdec_8c_af2f0bb2100a446eef3edd2d2eff59595}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr@{vorbis\_parse\_setup\_hdr}}
+\index{vorbis\_parse\_setup\_hdr@{vorbis\_parse\_setup\_hdr}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr()}{vorbis\_parse\_setup\_hdr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 914 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_af2f0bb2100a446eef3edd2d2eff59595_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=342pt]{vorbisdec_8c_af2f0bb2100a446eef3edd2d2eff59595_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a5fd83bcb4ca55912c57cd50d76be3bcf}\label{vorbisdec_8c_a5fd83bcb4ca55912c57cd50d76be3bcf}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_codebooks@{vorbis\_parse\_setup\_hdr\_codebooks}}
+\index{vorbis\_parse\_setup\_hdr\_codebooks@{vorbis\_parse\_setup\_hdr\_codebooks}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_codebooks()}{vorbis\_parse\_setup\_hdr\_codebooks()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+codebooks (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 238 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a5fd83bcb4ca55912c57cd50d76be3bcf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a5fd83bcb4ca55912c57cd50d76be3bcf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ada6da52126ef8c2708bf0a7910bf85fa}\label{vorbisdec_8c_ada6da52126ef8c2708bf0a7910bf85fa}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_floors@{vorbis\_parse\_setup\_hdr\_floors}}
+\index{vorbis\_parse\_setup\_hdr\_floors@{vorbis\_parse\_setup\_hdr\_floors}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_floors()}{vorbis\_parse\_setup\_hdr\_floors()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+floors (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 499 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ada6da52126ef8c2708bf0a7910bf85fa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ada6da52126ef8c2708bf0a7910bf85fa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a8bf3e4e5b35d7eef1c7f25377e6d3780}\label{vorbisdec_8c_a8bf3e4e5b35d7eef1c7f25377e6d3780}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_mappings@{vorbis\_parse\_setup\_hdr\_mappings}}
+\index{vorbis\_parse\_setup\_hdr\_mappings@{vorbis\_parse\_setup\_hdr\_mappings}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_mappings()}{vorbis\_parse\_setup\_hdr\_mappings()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+mappings (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 770 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a8bf3e4e5b35d7eef1c7f25377e6d3780_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a8bf3e4e5b35d7eef1c7f25377e6d3780_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ace1841dbaaabcd3e17dfe3342abfd96e}\label{vorbisdec_8c_ace1841dbaaabcd3e17dfe3342abfd96e}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_modes@{vorbis\_parse\_setup\_hdr\_modes}}
+\index{vorbis\_parse\_setup\_hdr\_modes@{vorbis\_parse\_setup\_hdr\_modes}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_modes()}{vorbis\_parse\_setup\_hdr\_modes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+modes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 885 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ace1841dbaaabcd3e17dfe3342abfd96e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ace1841dbaaabcd3e17dfe3342abfd96e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a5bc48e67590da82dd62641838bdf1015}\label{vorbisdec_8c_a5bc48e67590da82dd62641838bdf1015}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_residues@{vorbis\_parse\_setup\_hdr\_residues}}
+\index{vorbis\_parse\_setup\_hdr\_residues@{vorbis\_parse\_setup\_hdr\_residues}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_residues()}{vorbis\_parse\_setup\_hdr\_residues()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+residues (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 689 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a5bc48e67590da82dd62641838bdf1015_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a5bc48e67590da82dd62641838bdf1015_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ab1385a1679ad37352932ada49b66240b}\label{vorbisdec_8c_ab1385a1679ad37352932ada49b66240b}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_parse\_setup\_hdr\_tdtransforms@{vorbis\_parse\_setup\_hdr\_tdtransforms}}
+\index{vorbis\_parse\_setup\_hdr\_tdtransforms@{vorbis\_parse\_setup\_hdr\_tdtransforms}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_parse\_setup\_hdr\_tdtransforms()}{vorbis\_parse\_setup\_hdr\_tdtransforms()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+parse\+\_\+setup\+\_\+hdr\+\_\+tdtransforms (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 473 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=267pt]{vorbisdec_8c_ab1385a1679ad37352932ada49b66240b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ab1385a1679ad37352932ada49b66240b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_ac27c027eddb59bc72a6a17f3bd84f8ef}\label{vorbisdec_8c_ac27c027eddb59bc72a6a17f3bd84f8ef}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_residue\_decode@{vorbis\_residue\_decode}}
+\index{vorbis\_residue\_decode@{vorbis\_residue\_decode}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_residue\_decode()}{vorbis\_residue\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+residue\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{\mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$}]{vr,  }\item[{unsigned}]{ch,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{do\+\_\+not\+\_\+decode,  }\item[{float $\ast$}]{vec,  }\item[{unsigned}]{vlen,  }\item[{unsigned}]{ch\+\_\+left }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1560 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ac27c027eddb59bc72a6a17f3bd84f8ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_ac27c027eddb59bc72a6a17f3bd84f8ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a8cc041c68729056cfaccc5b2f065c866}\label{vorbisdec_8c_a8cc041c68729056cfaccc5b2f065c866}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbis\_residue\_decode\_internal@{vorbis\_residue\_decode\_internal}}
+\index{vorbis\_residue\_decode\_internal@{vorbis\_residue\_decode\_internal}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbis\_residue\_decode\_internal()}{vorbis\_residue\_decode\_internal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vorbis\+\_\+residue\+\_\+decode\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\+\_\+context}} $\ast$}]{vc,  }\item[{\mbox{\hyperlink{structvorbis__residue}{vorbis\+\_\+residue}} $\ast$}]{vr,  }\item[{unsigned}]{ch,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{do\+\_\+not\+\_\+decode,  }\item[{float $\ast$}]{vec,  }\item[{unsigned}]{vlen,  }\item[{unsigned}]{ch\+\_\+left,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vr\+\_\+type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1385 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a8cc041c68729056cfaccc5b2f065c866_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a8cc041c68729056cfaccc5b2f065c866_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vorbisdec_8c_a21dbd4f00909aee6602a16b329d71872}\label{vorbisdec_8c_a21dbd4f00909aee6602a16b329d71872}} 
+\index{vorbisdec.c@{vorbisdec.c}!vorbisfloat2float@{vorbisfloat2float}}
+\index{vorbisfloat2float@{vorbisfloat2float}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{vorbisfloat2float()}{vorbisfloat2float()}}
+{\footnotesize\ttfamily static float vorbisfloat2float (\begin{DoxyParamCaption}\item[{unsigned}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 176 of file vorbisdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{vorbisdec_8c_a21dbd4f00909aee6602a16b329d71872_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vorbisdec_8c_a21dbd4f00909aee6602a16b329d71872_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vorbisdec_8c_a898dbc2be2f807c2319867ae48ba1a57}\label{vorbisdec_8c_a898dbc2be2f807c2319867ae48ba1a57}} 
+\index{vorbisdec.c@{vorbisdec.c}!ff\_vorbis\_decoder@{ff\_vorbis\_decoder}}
+\index{ff\_vorbis\_decoder@{ff\_vorbis\_decoder}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vorbis\_decoder}{ff\_vorbis\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+vorbis\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name            = \textcolor{stringliteral}{"{}vorbis"{}},}
+\DoxyCodeLine{    .long\_name       = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Vorbis"{}}),}
+\DoxyCodeLine{    .type            = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id              = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea0fac27af40d22e02bf926ecd4f7bc03a}{AV\_CODEC\_ID\_VORBIS}},}
+\DoxyCodeLine{    .priv\_data\_size  = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vorbisdec_8c_a773eb61337b9250b6f96ebed2e7c18d4}{vorbis\_context}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}            = \mbox{\hyperlink{vorbisdec_8c_a21238e478c9791b7a5f619e2da702f58}{vorbis\_decode\_init}},}
+\DoxyCodeLine{    .close           = \mbox{\hyperlink{vorbisdec_8c_ad48f9fed42e0b6accc93ea110377d181}{vorbis\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}          = \mbox{\hyperlink{vorbisdec_8c_a10d4082160898a4bcb6efb591ae6db5c}{vorbis\_decode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}           = \mbox{\hyperlink{vorbisdec_8c_a40ed53c2862433548b468bfbedce97f2}{vorbis\_decode\_flush}},}
+\DoxyCodeLine{    .capabilities    = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal   = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{dca__lbr_8c_a3e70a65f622cd9cd1b7ea3d2a19bca5d}{channel\_layouts}} = \mbox{\hyperlink{vorbis_8h_ad48f1a3e351b48e6c779ceab7080b6bc}{ff\_vorbis\_channel\_layouts}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}     = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                       \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1883 of file vorbisdec.\+c.
+
+\mbox{\Hypertarget{vorbisdec_8c_ac5545d56b03902f706c5c9ded8b7b316}\label{vorbisdec_8c_ac5545d56b03902f706c5c9ded8b7b316}} 
+\index{vorbisdec.c@{vorbisdec.c}!idx\_err\_str@{idx\_err\_str}}
+\index{idx\_err\_str@{idx\_err\_str}!vorbisdec.c@{vorbisdec.c}}
+\doxysubsubsection{\texorpdfstring{idx\_err\_str}{idx\_err\_str}}
+{\footnotesize\ttfamily const char idx\+\_\+err\+\_\+str\mbox{[}$\,$\mbox{]} = \char`\"{}Index \mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}} \%d \mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}} of range (0 -\/ \%d) \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} \%\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}} at \%s\+:\%i\textbackslash{}n\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 162 of file vorbisdec.\+c.
+

@@ -1,0 +1,645 @@
+\hypertarget{vf__stereo3d_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+stereo3d.c File Reference}
+\label{vf__stereo3d_8c}\index{E:/github/ffmpeg/libavfilter/vf\_stereo3d.c@{E:/github/ffmpeg/libavfilter/vf\_stereo3d.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}drawutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}stereo3d.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+stereo3d.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_stereo_component}{Stereo\+Component}}
+\item 
+struct \mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__stereo3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__stereo3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_stereo_component}{Stereo\+Component}} \mbox{\hyperlink{vf__stereo3d_8c_a3cc379905bfdcec63ef0e200239ca19c}{Stereo\+Component}}
+\item 
+typedef struct \mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}} \mbox{\hyperlink{vf__stereo3d_8c_a9b1bbb9deaef898398542ebc571dfacb}{Stereo3\+D\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__stereo3d_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1}{Stereo\+Code}} \{ \newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a3a6b32d21b907952eb0c1cc9efdb3d7a}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+G\+R\+AY}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a38930b7136114563cb43701ef5b199a0}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+H\+A\+LF}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac8b8598b926be64c5b2449fa0b44ef7c}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+C\+O\+L\+OR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad07f8ea5282ef32cf254a250bdd33be7}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+D\+U\+B\+O\+IS}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a008061c0870d7bd13b58f8038106005f}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+G\+R\+AY}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1a28538fb1fdeb04b7ead58866520d2f}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+H\+A\+LF}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a2fb22ecd955c51d49893e2e1e12fa2c2}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+C\+O\+L\+OR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af976c9389300b1b64994aadaf3567661}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+D\+U\+B\+O\+IS}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ab1f168f3a72dd8a416895ad8cc093d14}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+G\+R\+AY}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ae84b7c43f6ccd9cb53e33d7b243e712c}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+H\+A\+LF}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5b4bd1671e80c61f1a4924f40a8132ff}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+C\+O\+L\+OR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a28ffafeed2292268cd05a59e21ebb90f}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+D\+U\+B\+O\+IS}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5d00837d48b4c12806e249b589e8cc38}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+B\+\_\+\+G\+R\+AY}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a385583b553de75b1198e214d7e842dc3}{A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+G\+\_\+\+G\+R\+AY}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acd2cb948f527ee08f87e033b8a42e192}{M\+O\+N\+O\+\_\+L}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad59b8c49894e7d7c55e91680335203ed}{M\+O\+N\+O\+\_\+R}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a423d08b5b233f8a4977cceeabaabc4f8}{I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+R\+O\+W\+S\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a0a096cc6c3832680a57fc5732b8ecb15}{I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+R\+O\+W\+S\+\_\+\+RL}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a14457da964c330f3e0345d939036a23a}{S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a87d8d33f810ad22fbd1141e172343558}{S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+\+RL}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ac74d69c31c032f0ce48ee887cf81f8}{S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+2\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac7af159d59e25b00e6a900ae0fd14643}{S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+2\+\_\+\+RL}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aa918e5f0d537d5251751a20ff9fe3983}{A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeca98fc394332b207fd71a87f0592ae9}{A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+\+RL}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1adbb0ce4793987460f9844f81ad18e0e9}{A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+2\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acbb0b060605beac4b57f088d01110a2b}{A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+2\+\_\+\+RL}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af8ab7db4f6c0d3c6acd5823eeb3dfa6e}{A\+L\+T\+E\+R\+N\+A\+T\+I\+N\+G\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeb843feb8b4ca173055ba4eb29fdfdd6}{A\+L\+T\+E\+R\+N\+A\+T\+I\+N\+G\+\_\+\+RL}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5db801dcfb882ae6a9a5c35039a94c49}{C\+H\+E\+C\+K\+E\+R\+B\+O\+A\+R\+D\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ec4d4cdd07cf40036c57379c2594b2e}{C\+H\+E\+C\+K\+E\+R\+B\+O\+A\+R\+D\+\_\+\+RL}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1343941651ed72c8c23d7efd621a99ec}{I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+C\+O\+L\+S\+\_\+\+LR}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a913b7bc785501139489e6b718e20b4d7}{I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+C\+O\+L\+S\+\_\+\+RL}}, 
+\newline
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a616812bef5f865b88fa175a87bd88a32}{H\+D\+MI}}, 
+\mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a59592153f03d390b9b4fb326e91a32fb}{S\+T\+E\+R\+E\+O\+\_\+\+C\+O\+D\+E\+\_\+\+C\+O\+U\+NT}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__stereo3d_8c_a7ff6b03021e3d99e4a6daef9db0c65c5}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (stereo3d)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__stereo3d_8c_a29d23ee26a391042a99dbc02f82f50c2}{ana\+\_\+convert}} (const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{snow_8txt_a7c18a837a38b8c96472a1d0abe1711d1}{left}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$right)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__stereo3d_8c_a3db1d95a40c2b74b025c8edcee7e8b64}{anaglyph\+\_\+ic}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$lsrc, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{input_8c_a562e1ec88d6917d6f7a1f4bb43d463af}{rsrc}}, ptrdiff\+\_\+t dst\+\_\+linesize, ptrdiff\+\_\+t l\+\_\+linesize, ptrdiff\+\_\+t r\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+r, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+g, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+b)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__stereo3d_8c_a3dbdafa3d0d392d3ea61315519a0106a}{anaglyph}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$lsrc, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{input_8c_a562e1ec88d6917d6f7a1f4bb43d463af}{rsrc}}, ptrdiff\+\_\+t dst\+\_\+linesize, ptrdiff\+\_\+t l\+\_\+linesize, ptrdiff\+\_\+t r\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+r, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+g, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$ana\+\_\+matrix\+\_\+b)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__stereo3d_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__stereo3d_8c_a0fbb22a110fb726a8cecad69e873af91}{filter\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__stereo3d_8c_a2c7e595a1188274ec4147b301199498f}{interleave\+\_\+cols\+\_\+to\+\_\+any}} (\mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$out\+\_\+off, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} p, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} d)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__stereo3d_8c_a6488998983896e30d1b975c8d56dab48}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$inpicref)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__stereo3d_8c_a56cc63e655b96b1ab34225cf52eb2426}{ana\+\_\+coeff}} \mbox{[}$\,$\mbox{]}\mbox{[}3\mbox{]}\mbox{[}6\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__stereo3d_8c_a8c389c36f80c5b7a4b6e705869f73428}{stereo3d\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{vf__stereo3d_8c_a1c710c0ae1c27c6490dc50a392c9e561}{anaglyph\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{vf__stereo3d_8c_aec85a149e59dc7b16ac2a657ea3dc1f7}{other\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__stereo3d_8c_a70d5d24d923cf7569385428653c47589}{stereo3d\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__stereo3d_8c_adfb0d0b9cd11c49dc39194cf61e9eb3b}{stereo3d\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__stereo3d_8c_a81f5799f982b05f1be10eb36e8ffec83}{ff\+\_\+vf\+\_\+stereo3d}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__stereo3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__stereo3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 158 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__stereo3d_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}}, x)}
+
+
+
+Definition at line 157 of file vf\+\_\+stereo3d.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__stereo3d_8c_a9b1bbb9deaef898398542ebc571dfacb}\label{vf__stereo3d_8c_a9b1bbb9deaef898398542ebc571dfacb}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!Stereo3DContext@{Stereo3DContext}}
+\index{Stereo3DContext@{Stereo3DContext}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{Stereo3DContext}{Stereo3DContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}} \mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}}}
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a3cc379905bfdcec63ef0e200239ca19c}\label{vf__stereo3d_8c_a3cc379905bfdcec63ef0e200239ca19c}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!StereoComponent@{StereoComponent}}
+\index{StereoComponent@{StereoComponent}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{StereoComponent}{StereoComponent}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_stereo_component}{Stereo\+Component}} \mbox{\hyperlink{struct_stereo_component}{Stereo\+Component}}}
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__stereo3d_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!StereoCode@{StereoCode}}
+\index{StereoCode@{StereoCode}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{StereoCode}{StereoCode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1}{Stereo\+Code}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RC\_GRAY@{ANAGLYPH\_RC\_GRAY}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RC\_GRAY@{ANAGLYPH\_RC\_GRAY}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a3a6b32d21b907952eb0c1cc9efdb3d7a}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a3a6b32d21b907952eb0c1cc9efdb3d7a}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+G\+R\+AY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RC\_HALF@{ANAGLYPH\_RC\_HALF}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RC\_HALF@{ANAGLYPH\_RC\_HALF}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a38930b7136114563cb43701ef5b199a0}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a38930b7136114563cb43701ef5b199a0}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+H\+A\+LF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RC\_COLOR@{ANAGLYPH\_RC\_COLOR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RC\_COLOR@{ANAGLYPH\_RC\_COLOR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac8b8598b926be64c5b2449fa0b44ef7c}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac8b8598b926be64c5b2449fa0b44ef7c}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+C\+O\+L\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RC\_DUBOIS@{ANAGLYPH\_RC\_DUBOIS}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RC\_DUBOIS@{ANAGLYPH\_RC\_DUBOIS}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad07f8ea5282ef32cf254a250bdd33be7}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad07f8ea5282ef32cf254a250bdd33be7}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+C\+\_\+\+D\+U\+B\+O\+IS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_GM\_GRAY@{ANAGLYPH\_GM\_GRAY}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_GM\_GRAY@{ANAGLYPH\_GM\_GRAY}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a008061c0870d7bd13b58f8038106005f}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a008061c0870d7bd13b58f8038106005f}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+G\+R\+AY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_GM\_HALF@{ANAGLYPH\_GM\_HALF}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_GM\_HALF@{ANAGLYPH\_GM\_HALF}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1a28538fb1fdeb04b7ead58866520d2f}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1a28538fb1fdeb04b7ead58866520d2f}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+H\+A\+LF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_GM\_COLOR@{ANAGLYPH\_GM\_COLOR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_GM\_COLOR@{ANAGLYPH\_GM\_COLOR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a2fb22ecd955c51d49893e2e1e12fa2c2}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a2fb22ecd955c51d49893e2e1e12fa2c2}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+C\+O\+L\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_GM\_DUBOIS@{ANAGLYPH\_GM\_DUBOIS}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_GM\_DUBOIS@{ANAGLYPH\_GM\_DUBOIS}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af976c9389300b1b64994aadaf3567661}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af976c9389300b1b64994aadaf3567661}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+G\+M\+\_\+\+D\+U\+B\+O\+IS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_YB\_GRAY@{ANAGLYPH\_YB\_GRAY}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_YB\_GRAY@{ANAGLYPH\_YB\_GRAY}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ab1f168f3a72dd8a416895ad8cc093d14}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ab1f168f3a72dd8a416895ad8cc093d14}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+G\+R\+AY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_YB\_HALF@{ANAGLYPH\_YB\_HALF}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_YB\_HALF@{ANAGLYPH\_YB\_HALF}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ae84b7c43f6ccd9cb53e33d7b243e712c}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ae84b7c43f6ccd9cb53e33d7b243e712c}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+H\+A\+LF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_YB\_COLOR@{ANAGLYPH\_YB\_COLOR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_YB\_COLOR@{ANAGLYPH\_YB\_COLOR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5b4bd1671e80c61f1a4924f40a8132ff}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5b4bd1671e80c61f1a4924f40a8132ff}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+C\+O\+L\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_YB\_DUBOIS@{ANAGLYPH\_YB\_DUBOIS}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_YB\_DUBOIS@{ANAGLYPH\_YB\_DUBOIS}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a28ffafeed2292268cd05a59e21ebb90f}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a28ffafeed2292268cd05a59e21ebb90f}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+Y\+B\+\_\+\+D\+U\+B\+O\+IS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RB\_GRAY@{ANAGLYPH\_RB\_GRAY}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RB\_GRAY@{ANAGLYPH\_RB\_GRAY}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5d00837d48b4c12806e249b589e8cc38}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5d00837d48b4c12806e249b589e8cc38}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+B\+\_\+\+G\+R\+AY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ANAGLYPH\_RG\_GRAY@{ANAGLYPH\_RG\_GRAY}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ANAGLYPH\_RG\_GRAY@{ANAGLYPH\_RG\_GRAY}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a385583b553de75b1198e214d7e842dc3}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a385583b553de75b1198e214d7e842dc3}} 
+A\+N\+A\+G\+L\+Y\+P\+H\+\_\+\+R\+G\+\_\+\+G\+R\+AY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MONO\_L@{MONO\_L}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!MONO\_L@{MONO\_L}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acd2cb948f527ee08f87e033b8a42e192}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acd2cb948f527ee08f87e033b8a42e192}} 
+M\+O\+N\+O\+\_\+L&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MONO\_R@{MONO\_R}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!MONO\_R@{MONO\_R}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad59b8c49894e7d7c55e91680335203ed}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ad59b8c49894e7d7c55e91680335203ed}} 
+M\+O\+N\+O\+\_\+R&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERLEAVE\_ROWS\_LR@{INTERLEAVE\_ROWS\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!INTERLEAVE\_ROWS\_LR@{INTERLEAVE\_ROWS\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a423d08b5b233f8a4977cceeabaabc4f8}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a423d08b5b233f8a4977cceeabaabc4f8}} 
+I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+R\+O\+W\+S\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERLEAVE\_ROWS\_RL@{INTERLEAVE\_ROWS\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!INTERLEAVE\_ROWS\_RL@{INTERLEAVE\_ROWS\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a0a096cc6c3832680a57fc5732b8ecb15}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a0a096cc6c3832680a57fc5732b8ecb15}} 
+I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+R\+O\+W\+S\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SIDE\_BY\_SIDE\_LR@{SIDE\_BY\_SIDE\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!SIDE\_BY\_SIDE\_LR@{SIDE\_BY\_SIDE\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a14457da964c330f3e0345d939036a23a}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a14457da964c330f3e0345d939036a23a}} 
+S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SIDE\_BY\_SIDE\_RL@{SIDE\_BY\_SIDE\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!SIDE\_BY\_SIDE\_RL@{SIDE\_BY\_SIDE\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a87d8d33f810ad22fbd1141e172343558}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a87d8d33f810ad22fbd1141e172343558}} 
+S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SIDE\_BY\_SIDE\_2\_LR@{SIDE\_BY\_SIDE\_2\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!SIDE\_BY\_SIDE\_2\_LR@{SIDE\_BY\_SIDE\_2\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ac74d69c31c032f0ce48ee887cf81f8}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ac74d69c31c032f0ce48ee887cf81f8}} 
+S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+2\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SIDE\_BY\_SIDE\_2\_RL@{SIDE\_BY\_SIDE\_2\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!SIDE\_BY\_SIDE\_2\_RL@{SIDE\_BY\_SIDE\_2\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac7af159d59e25b00e6a900ae0fd14643}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1ac7af159d59e25b00e6a900ae0fd14643}} 
+S\+I\+D\+E\+\_\+\+B\+Y\+\_\+\+S\+I\+D\+E\+\_\+2\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ABOVE\_BELOW\_LR@{ABOVE\_BELOW\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ABOVE\_BELOW\_LR@{ABOVE\_BELOW\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aa918e5f0d537d5251751a20ff9fe3983}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aa918e5f0d537d5251751a20ff9fe3983}} 
+A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ABOVE\_BELOW\_RL@{ABOVE\_BELOW\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ABOVE\_BELOW\_RL@{ABOVE\_BELOW\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeca98fc394332b207fd71a87f0592ae9}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeca98fc394332b207fd71a87f0592ae9}} 
+A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ABOVE\_BELOW\_2\_LR@{ABOVE\_BELOW\_2\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ABOVE\_BELOW\_2\_LR@{ABOVE\_BELOW\_2\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1adbb0ce4793987460f9844f81ad18e0e9}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1adbb0ce4793987460f9844f81ad18e0e9}} 
+A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+2\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ABOVE\_BELOW\_2\_RL@{ABOVE\_BELOW\_2\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ABOVE\_BELOW\_2\_RL@{ABOVE\_BELOW\_2\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acbb0b060605beac4b57f088d01110a2b}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1acbb0b060605beac4b57f088d01110a2b}} 
+A\+B\+O\+V\+E\+\_\+\+B\+E\+L\+O\+W\+\_\+2\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALTERNATING\_LR@{ALTERNATING\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ALTERNATING\_LR@{ALTERNATING\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af8ab7db4f6c0d3c6acd5823eeb3dfa6e}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1af8ab7db4f6c0d3c6acd5823eeb3dfa6e}} 
+A\+L\+T\+E\+R\+N\+A\+T\+I\+N\+G\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALTERNATING\_RL@{ALTERNATING\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ALTERNATING\_RL@{ALTERNATING\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeb843feb8b4ca173055ba4eb29fdfdd6}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1aeb843feb8b4ca173055ba4eb29fdfdd6}} 
+A\+L\+T\+E\+R\+N\+A\+T\+I\+N\+G\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHECKERBOARD\_LR@{CHECKERBOARD\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!CHECKERBOARD\_LR@{CHECKERBOARD\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5db801dcfb882ae6a9a5c35039a94c49}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a5db801dcfb882ae6a9a5c35039a94c49}} 
+C\+H\+E\+C\+K\+E\+R\+B\+O\+A\+R\+D\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHECKERBOARD\_RL@{CHECKERBOARD\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!CHECKERBOARD\_RL@{CHECKERBOARD\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ec4d4cdd07cf40036c57379c2594b2e}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a7ec4d4cdd07cf40036c57379c2594b2e}} 
+C\+H\+E\+C\+K\+E\+R\+B\+O\+A\+R\+D\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERLEAVE\_COLS\_LR@{INTERLEAVE\_COLS\_LR}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!INTERLEAVE\_COLS\_LR@{INTERLEAVE\_COLS\_LR}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1343941651ed72c8c23d7efd621a99ec}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a1343941651ed72c8c23d7efd621a99ec}} 
+I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+C\+O\+L\+S\+\_\+\+LR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERLEAVE\_COLS\_RL@{INTERLEAVE\_COLS\_RL}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!INTERLEAVE\_COLS\_RL@{INTERLEAVE\_COLS\_RL}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a913b7bc785501139489e6b718e20b4d7}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a913b7bc785501139489e6b718e20b4d7}} 
+I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+C\+O\+L\+S\+\_\+\+RL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDMI@{HDMI}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!HDMI@{HDMI}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a616812bef5f865b88fa175a87bd88a32}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a616812bef5f865b88fa175a87bd88a32}} 
+H\+D\+MI&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STEREO\_CODE\_COUNT@{STEREO\_CODE\_COUNT}!vf\_stereo3d.c@{vf\_stereo3d.c}}\index{vf\_stereo3d.c@{vf\_stereo3d.c}!STEREO\_CODE\_COUNT@{STEREO\_CODE\_COUNT}}}\mbox{\Hypertarget{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a59592153f03d390b9b4fb326e91a32fb}\label{vf__stereo3d_8c_a59d1816c7ce98c4d4a31c218363805a1a59592153f03d390b9b4fb326e91a32fb}} 
+S\+T\+E\+R\+E\+O\+\_\+\+C\+O\+D\+E\+\_\+\+C\+O\+U\+NT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 35 of file vf\+\_\+stereo3d.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__stereo3d_8c_a29d23ee26a391042a99dbc02f82f50c2}\label{vf__stereo3d_8c_a29d23ee26a391042a99dbc02f82f50c2}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ana\_convert@{ana\_convert}}
+\index{ana\_convert@{ana\_convert}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{ana\_convert()}{ana\_convert()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} ana\+\_\+convert (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{coeff,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{left,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{right }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 315 of file vf\+\_\+stereo3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c_a29d23ee26a391042a99dbc02f82f50c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a3dbdafa3d0d392d3ea61315519a0106a}\label{vf__stereo3d_8c_a3dbdafa3d0d392d3ea61315519a0106a}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!anaglyph@{anaglyph}}
+\index{anaglyph@{anaglyph}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{anaglyph()}{anaglyph()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} anaglyph (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{lsrc,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{rsrc,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+linesize,  }\item[{ptrdiff\+\_\+t}]{l\+\_\+linesize,  }\item[{ptrdiff\+\_\+t}]{r\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+r,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+g,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 346 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{vf__stereo3d_8c_a3dbdafa3d0d392d3ea61315519a0106a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{vf__stereo3d_8c_a3dbdafa3d0d392d3ea61315519a0106a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a3db1d95a40c2b74b025c8edcee7e8b64}\label{vf__stereo3d_8c_a3db1d95a40c2b74b025c8edcee7e8b64}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!anaglyph\_ic@{anaglyph\_ic}}
+\index{anaglyph\_ic@{anaglyph\_ic}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{anaglyph\_ic()}{anaglyph\_ic()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} anaglyph\+\_\+ic (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{lsrc,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{rsrc,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+linesize,  }\item[{ptrdiff\+\_\+t}]{l\+\_\+linesize,  }\item[{ptrdiff\+\_\+t}]{r\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+r,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+g,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{ana\+\_\+matrix\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 326 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{vf__stereo3d_8c_a3db1d95a40c2b74b025c8edcee7e8b64_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{vf__stereo3d_8c_a3db1d95a40c2b74b025c8edcee7e8b64_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a7ff6b03021e3d99e4a6daef9db0c65c5}\label{vf__stereo3d_8c_a7ff6b03021e3d99e4a6daef9db0c65c5}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{stereo3d}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__stereo3d_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__stereo3d_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 366 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a6488998983896e30d1b975c8d56dab48}\label{vf__stereo3d_8c_a6488998983896e30d1b975c8d56dab48}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{inpicref }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 670 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c_a6488998983896e30d1b975c8d56dab48_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a0fbb22a110fb726a8cecad69e873af91}\label{vf__stereo3d_8c_a0fbb22a110fb726a8cecad69e873af91}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!filter\_slice@{filter\_slice}}
+\index{filter\_slice@{filter\_slice}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice()}{filter\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 609 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c_a0fbb22a110fb726a8cecad69e873af91_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{vf__stereo3d_8c_a0fbb22a110fb726a8cecad69e873af91_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a2c7e595a1188274ec4147b301199498f}\label{vf__stereo3d_8c_a2c7e595a1188274ec4147b301199498f}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!interleave\_cols\_to\_any@{interleave\_cols\_to\_any}}
+\index{interleave\_cols\_to\_any@{interleave\_cols\_to\_any}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{interleave\_cols\_to\_any()}{interleave\_cols\_to\_any()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interleave\+\_\+cols\+\_\+to\+\_\+any (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_stereo3_d_context}{Stereo3\+D\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{out\+\_\+off,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{p,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{d }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 633 of file vf\+\_\+stereo3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=295pt]{vf__stereo3d_8c_a2c7e595a1188274ec4147b301199498f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 282 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1090 of file vf\+\_\+stereo3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__stereo3d_8c_a56cc63e655b96b1ab34225cf52eb2426}\label{vf__stereo3d_8c_a56cc63e655b96b1ab34225cf52eb2426}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ana\_coeff@{ana\_coeff}}
+\index{ana\_coeff@{ana\_coeff}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{ana\_coeff}{ana\_coeff}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ana\+\_\+coeff\mbox{[}$\,$\mbox{]}\mbox{[}3\mbox{]}\mbox{[}6\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 81 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a1c710c0ae1c27c6490dc50a392c9e561}\label{vf__stereo3d_8c_a1c710c0ae1c27c6490dc50a392c9e561}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!anaglyph\_pix\_fmts@{anaglyph\_pix\_fmts}}
+\index{anaglyph\_pix\_fmts@{anaglyph\_pix\_fmts}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{anaglyph\_pix\_fmts}{anaglyph\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} anaglyph\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a107eadfcfe8c9fc751289eeb7744a6d3}{AV\_PIX\_FMT\_RGB24}}, \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5acc582ddd3f60d4cd3ddffb48116fb154}{AV\_PIX\_FMT\_BGR24}},}
+\DoxyCodeLine{    \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a0e08f8a5d0fa21c3e258816a9dcce7c3}{AV\_PIX\_FMT\_NONE}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 221 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a81f5799f982b05f1be10eb36e8ffec83}\label{vf__stereo3d_8c_a81f5799f982b05f1be10eb36e8ffec83}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!ff\_vf\_stereo3d@{ff\_vf\_stereo3d}}
+\index{ff\_vf\_stereo3d@{ff\_vf\_stereo3d}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_stereo3d}{ff\_vf\_stereo3d}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+stereo3d}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}stereo3d"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Convert video stereoscopic 3D view."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__stereo3d_8c_a9b1bbb9deaef898398542ebc571dfacb}{Stereo3DContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__stereo3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__stereo3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__stereo3d_8c_a70d5d24d923cf7569385428653c47589}{stereo3d\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__stereo3d_8c_adfb0d0b9cd11c49dc39194cf61e9eb3b}{stereo3d\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&stereo3d\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1115 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_aec85a149e59dc7b16ac2a657ea3dc1f7}\label{vf__stereo3d_8c_aec85a149e59dc7b16ac2a657ea3dc1f7}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!other\_pix\_fmts@{other\_pix\_fmts}}
+\index{other\_pix\_fmts@{other\_pix\_fmts}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{other\_pix\_fmts}{other\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} other\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 221 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a70d5d24d923cf7569385428653c47589}\label{vf__stereo3d_8c_a70d5d24d923cf7569385428653c47589}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!stereo3d\_inputs@{stereo3d\_inputs}}
+\index{stereo3d\_inputs@{stereo3d\_inputs}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{stereo3d\_inputs}{stereo3d\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} stereo3d\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{vf__stereo3d_8c_a6488998983896e30d1b975c8d56dab48}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1097 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_a8c389c36f80c5b7a4b6e705869f73428}\label{vf__stereo3d_8c_a8c389c36f80c5b7a4b6e705869f73428}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!stereo3d\_options@{stereo3d\_options}}
+\index{stereo3d\_options@{stereo3d\_options}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{stereo3d\_options}{stereo3d\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} stereo3d\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 160 of file vf\+\_\+stereo3d.\+c.
+
+\mbox{\Hypertarget{vf__stereo3d_8c_adfb0d0b9cd11c49dc39194cf61e9eb3b}\label{vf__stereo3d_8c_adfb0d0b9cd11c49dc39194cf61e9eb3b}} 
+\index{vf\_stereo3d.c@{vf\_stereo3d.c}!stereo3d\_outputs@{stereo3d\_outputs}}
+\index{stereo3d\_outputs@{stereo3d\_outputs}!vf\_stereo3d.c@{vf\_stereo3d.c}}
+\doxysubsubsection{\texorpdfstring{stereo3d\_outputs}{stereo3d\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} stereo3d\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__stereo3d_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1106 of file vf\+\_\+stereo3d.\+c.
+

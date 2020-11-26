@@ -1,0 +1,1578 @@
+\hypertarget{sbgdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/sbgdec.c File Reference}
+\label{sbgdec_8c}\index{E:/github/ffmpeg/libavformat/sbgdec.c@{E:/github/ffmpeg/libavformat/sbgdec.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/log.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for sbgdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structsbg__demuxer}{sbg\+\_\+demuxer}}
+\item 
+struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}}
+\item 
+struct \mbox{\hyperlink{structsbg__fade}{sbg\+\_\+fade}}
+\item 
+struct \mbox{\hyperlink{structsbg__timestamp}{sbg\+\_\+timestamp}}
+\item 
+struct \mbox{\hyperlink{structsbg__script__definition}{sbg\+\_\+script\+\_\+definition}}
+\item 
+struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}}
+\item 
+struct \mbox{\hyperlink{structsbg__script__tseq}{sbg\+\_\+script\+\_\+tseq}}
+\item 
+struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}}
+\item 
+struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}}
+\item 
+struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}}
+\item 
+struct \mbox{\hyperlink{structws__interval}{ws\+\_\+interval}}
+\item 
+struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_a84f12624b20985f3b76dca793e50fc79}{S\+B\+G\+\_\+\+S\+C\+A\+LE}}~(1 $<$$<$ 16)
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_a509a01c55cbe47386fe24602b7c7fda1}{D\+AY}}~(24 $\ast$ 60 $\ast$ 60)
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_ac6cd6c6ebbc6397d2d43eb674d3e49c7}{D\+A\+Y\+\_\+\+TS}}~((int64\+\_\+t)\mbox{\hyperlink{sbgdec_8c_a509a01c55cbe47386fe24602b7c7fda1}{D\+AY}} $\ast$ \mbox{\hyperlink{group__lavu__time_gaa11ed202b70e1f52bac809811a910e2a}{A\+V\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE}})
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_ac1cba5f1339aa94291d0b6f8ae9d4610}{F\+O\+R\+W\+A\+R\+D\+\_\+\+E\+R\+R\+OR}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_ac5e11bf8474c03a7829fe0b93f2fff0a}{A\+D\+D\+\_\+\+E\+D\+A\+T\+A32}}(v)~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{tomi_2intreadwrite_8h_ab107309657f5a88a288f1ed4a664738a}{A\+V\+\_\+\+W\+L32}}(edata, (v)); edata += 4; \} while(0)
+\item 
+\#define \mbox{\hyperlink{sbgdec_8c_a3e56e62953cafb45c5a675e6071e7645}{A\+D\+D\+\_\+\+E\+D\+A\+T\+A64}}(v)~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{intreadwrite_8h_afe2b605008927769720b2289ed4dad63}{A\+V\+\_\+\+W\+L64}}(edata, (v)); edata += 8; \} while(0)
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{sbgdec_8c_a59d11fa977616a044c1f607951467219}{sbg\+\_\+fade\+\_\+type}} \{ \mbox{\hyperlink{sbgdec_8c_a59d11fa977616a044c1f607951467219a3c859edfcbfd18e5c7b1a3e76adaea68}{S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+S\+I\+L\+E\+N\+CE}} = 0, 
+\mbox{\hyperlink{sbgdec_8c_a59d11fa977616a044c1f607951467219aca10a05371c1f455f41ee6b09a077f0c}{S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+S\+A\+ME}} = 1, 
+\mbox{\hyperlink{sbgdec_8c_a59d11fa977616a044c1f607951467219a29312a32198d9c81d7725fca43a8ad4b}{S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+A\+D\+A\+PT}} = 3
+ \}
+\item 
+enum \mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fad}{sbg\+\_\+synth\+\_\+type}} \{ \newline
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadaa4bf60c41cbb8201690359a2e7536d7d}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadab45992ea9ce1c5508d38a9ff74478a94}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+I\+NE}}, 
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada45c99a06cbecbf51517732ada377a876}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+I\+SE}}, 
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0f3bd4b75518ff784e39ed2fab828a52}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+B\+E\+LL}}, 
+\newline
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0b23313918d5ce1bcb4199ac59a86883}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+IX}}, 
+\mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada43e82066b4ffc8c99e81ed47d50c5e19}{S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+P\+IN}}
+ \}
+\item 
+enum \mbox{\hyperlink{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1c}{ws\+\_\+interval\+\_\+type}} \{ \mbox{\hyperlink{ffwavesynth_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}{W\+S\+\_\+\+S\+I\+NE}} = M\+K\+T\+AG(\textquotesingle{}S\textquotesingle{},\textquotesingle{}I\textquotesingle{},\textquotesingle{}N\textquotesingle{},\textquotesingle{}E\textquotesingle{}), 
+\mbox{\hyperlink{ffwavesynth_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}{W\+S\+\_\+\+N\+O\+I\+SE}} = M\+K\+T\+AG(\textquotesingle{}N\textquotesingle{},\textquotesingle{}O\textquotesingle{},\textquotesingle{}I\textquotesingle{},\textquotesingle{}S\textquotesingle{}), 
+\mbox{\hyperlink{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}{W\+S\+\_\+\+S\+I\+NE}} = M\+K\+T\+AG(\textquotesingle{}S\textquotesingle{},\textquotesingle{}I\textquotesingle{},\textquotesingle{}N\textquotesingle{},\textquotesingle{}E\textquotesingle{}), 
+\mbox{\hyperlink{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}{W\+S\+\_\+\+N\+O\+I\+SE}} = M\+K\+T\+AG(\textquotesingle{}N\textquotesingle{},\textquotesingle{}O\textquotesingle{},\textquotesingle{}I\textquotesingle{},\textquotesingle{}S\textquotesingle{})
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$ \mbox{\hyperlink{sbgdec_8c_a963bf458146c82dd211f939a4b86d115}{alloc\+\_\+array\+\_\+elem}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a92262252b3b4be7fb3a1c7958adb3deb}{array}}, size\+\_\+t elsize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$max\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a61bf1bd9e4033281712a353d39837b8a}{str\+\_\+to\+\_\+time}} (const char $\ast$str, int64\+\_\+t $\ast$rtime)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ae2d4df043f33de8b99bc1eb83ca15d31}{is\+\_\+space}} (char \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a6e0a8cfef7ebe2333ad52214621acbda}{scale\+\_\+double}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, double d, double m, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_aa1221de5332f3093f628eb9ebe5d2e8b}{lex\+\_\+space}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a4a606a083a58bd8b79b9f860d55b656f}{lex\+\_\+char}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, char \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_aba0db28d06df57963ba28bef29196c5e}{lex\+\_\+double}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, double $\ast$\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a95e5864fd6caaded3f10d82fdfca6287}{lex\+\_\+fixed}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, const char $\ast$t, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} l)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a6f4646f5c3b5b3216e306da6b05cc345}{lex\+\_\+line\+\_\+end}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a33ec4f8b813f1542bf1ba7941bc8d01a}{lex\+\_\+wsword}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$rs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a24d9b8ef82389778c0962bf75d65b37a}{lex\+\_\+name}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$rs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ac3ffecfa516fc00413acc69ceef99d27}{lex\+\_\+time}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, int64\+\_\+t $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a6e0a34cc958218cace2b0c0c613e9014}{parse\+\_\+immediate}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a129c49033b98112914d1bb3f3fc7e37a}{parse\+\_\+preprogrammed}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_aa6034333576feaf130158078544866c2}{parse\+\_\+optarg}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, char o, struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a5527f2911ebd5786c035fef2dc597457}{parse\+\_\+options}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a2fe231d578bd6a21ebe24be6f96661c4}{parse\+\_\+timestamp}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__timestamp}{sbg\+\_\+timestamp}} $\ast$rts, int64\+\_\+t $\ast$rrel)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a685b649f65eeb20987f4c7b18d63e588}{parse\+\_\+fade}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__fade}{sbg\+\_\+fade}} $\ast$fr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a7f5c2ed190cf1a6869fec469e6386a92}{parse\+\_\+time\+\_\+sequence}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} inblock)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a81cfb34e8e66d5288c89faac4720256a}{parse\+\_\+wave\+\_\+def}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wavenum)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a4fec493dec7906987b97094bd3e496db}{parse\+\_\+block\+\_\+def}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__definition}{sbg\+\_\+script\+\_\+definition}} $\ast$def)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a2b4695d88208a990bdc6c58f5303ffc1}{parse\+\_\+volume}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$vol)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_afc1a710ded61be95259a9b3c36236bfb}{parse\+\_\+synth\+\_\+channel\+\_\+sine}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$synth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a4bce195b77ca1d4e42589ff342cc5224}{parse\+\_\+synth\+\_\+channel\+\_\+pink}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$synth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a3229b727f445212e380397b644f2606e}{parse\+\_\+synth\+\_\+channel\+\_\+bell}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$synth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ab0c5062073ba27daf416553c4c77fd2a}{parse\+\_\+synth\+\_\+channel\+\_\+mix}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$synth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ae3eead76af33058130dba4083a133dc4}{parse\+\_\+synth\+\_\+channel\+\_\+spin}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$synth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ab212fd284c80a78442d9ff7ede3a9402}{parse\+\_\+synth\+\_\+channel}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a0b9a6442dbfa21f4fb2205c47ee23341}{parse\+\_\+synth\+\_\+def}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p, struct \mbox{\hyperlink{structsbg__script__definition}{sbg\+\_\+script\+\_\+definition}} $\ast$def)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ad55ea6b77d5ad4029f2549c48e564c6b}{parse\+\_\+named\+\_\+def}} (struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$p)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{sbgdec_8c_a07d33d96baad0b733c1aa7eb05ecacf1}{free\+\_\+script}} (struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_acf504faae5176f024624bce2ba02d97f}{parse\+\_\+script}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, char $\ast$script, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} script\+\_\+len, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$rscript)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a80c7b2944f97280337e04a8834c7c212}{read\+\_\+whole\+\_\+file}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$io, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+size, char $\ast$$\ast$rbuf)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{sbgdec_8c_ab728548fec6cb1397d1c773096bae6b3}{expand\+\_\+timestamps}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ada9dcedeba8c98376f1f481c9cee12f1}{expand\+\_\+tseq}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$nb\+\_\+ev\+\_\+max, int64\+\_\+t \mbox{\hyperlink{regdef_8h_a30084bbf7aceeb26e3e6c2dbc88cfa33}{t0}}, struct \mbox{\hyperlink{structsbg__script__tseq}{sbg\+\_\+script\+\_\+tseq}} $\ast$tseq)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_ae325e37c935c5b7967bf6acfabefe2bd}{expand\+\_\+script}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a9dca11c596b95de508d95e4ddb36674c}{add\+\_\+interval}} (struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter, enum \mbox{\hyperlink{ffwavesynth_8c_a564ddf22b2ca447c068bb716ce3f2a1c}{ws\+\_\+interval\+\_\+type}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}, uint32\+\_\+t \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, int64\+\_\+t ts1, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} f1, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vf__xfade_8c_aec4f9f3ed71210ae9a0dcab7fd889e7c}{a1}}, int64\+\_\+t ts2, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} f2, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vf__xfade_8c_abc59a775e755506a7c8d100170694ae5}{a2}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_acb428360b61634efe122e255ac44e104}{add\+\_\+bell}} (struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, int64\+\_\+t ts1, int64\+\_\+t ts2, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a9e898a026324ef24fe6a7457c6d4b2e8}{generate\+\_\+interval}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter, int64\+\_\+t ts1, int64\+\_\+t ts2, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$\mbox{\hyperlink{regdef_8h_a09dff3d9a89874939fa7cc9d056b114c}{s1}}, struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$\mbox{\hyperlink{regdef_8h_a3ec77fc652b1787d9ace19f0f8fb6072}{s2}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} transition)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_af898431b367085aef284c78d71f7caaa}{generate\+\_\+plateau}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter, struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$ev1)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a3a5a0ea16dcf9db0add47530c9d52011}{generate\+\_\+transition}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter, struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$ev1, struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$ev2)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a7c94f4229b3eb1610f9650334b6bd86c}{generate\+\_\+intervals}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$log, struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\+\_\+rate}}, struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a2de0d7592acdb0abb3d3d4aef41e9672}{encode\+\_\+intervals}} (struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_codec_parameters}{A\+V\+Codec\+Parameters}} $\ast$par, struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$inter)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a8f32920ce77b320771a3a6a7ba243fa5}{sbg\+\_\+read\+\_\+probe}} (const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$p)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a15ce9adae29cbc2032f3dd903ded78ab}{sbg\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$avf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_aa57c7a10b6f3bf100118c7cef2ee87bf}{sbg\+\_\+read\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$avf, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$packet)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c}{sbg\+\_\+read\+\_\+seek2}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$avf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t min\+\_\+ts, int64\+\_\+t ts, int64\+\_\+t max\+\_\+ts, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sbgdec_8c_a91b58bb80dcc4a47a806f428b5751caf}{sbg\+\_\+read\+\_\+seek}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$avf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t ts, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{sbgdec_8c_ad66ba10f031dcc0171c9cc3c76c7ee87}{sbg\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{sbgdec_8c_adb27960379bfb8c2d48bb94614433e1c}{sbg\+\_\+demuxer\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{sbgdec_8c_a79152c44f2d49dbbd2a9550d564bef34}{ff\+\_\+sbg\+\_\+demuxer}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{sbgdec_8c_ac5e11bf8474c03a7829fe0b93f2fff0a}\label{sbgdec_8c_ac5e11bf8474c03a7829fe0b93f2fff0a}} 
+\index{sbgdec.c@{sbgdec.c}!ADD\_EDATA32@{ADD\_EDATA32}}
+\index{ADD\_EDATA32@{ADD\_EDATA32}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{ADD\_EDATA32}{ADD\_EDATA32}}
+{\footnotesize\ttfamily \#define A\+D\+D\+\_\+\+E\+D\+A\+T\+A32(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{tomi_2intreadwrite_8h_ab107309657f5a88a288f1ed4a664738a}{A\+V\+\_\+\+W\+L32}}(edata, (v)); edata += 4; \} while(0)}
+
+\mbox{\Hypertarget{sbgdec_8c_a3e56e62953cafb45c5a675e6071e7645}\label{sbgdec_8c_a3e56e62953cafb45c5a675e6071e7645}} 
+\index{sbgdec.c@{sbgdec.c}!ADD\_EDATA64@{ADD\_EDATA64}}
+\index{ADD\_EDATA64@{ADD\_EDATA64}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{ADD\_EDATA64}{ADD\_EDATA64}}
+{\footnotesize\ttfamily \#define A\+D\+D\+\_\+\+E\+D\+A\+T\+A64(\begin{DoxyParamCaption}\item[{}]{v }\end{DoxyParamCaption})~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}} \{ \mbox{\hyperlink{intreadwrite_8h_afe2b605008927769720b2289ed4dad63}{A\+V\+\_\+\+W\+L64}}(edata, (v)); edata += 8; \} while(0)}
+
+\mbox{\Hypertarget{sbgdec_8c_a509a01c55cbe47386fe24602b7c7fda1}\label{sbgdec_8c_a509a01c55cbe47386fe24602b7c7fda1}} 
+\index{sbgdec.c@{sbgdec.c}!DAY@{DAY}}
+\index{DAY@{DAY}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{DAY}{DAY}}
+{\footnotesize\ttfamily \#define D\+AY~(24 $\ast$ 60 $\ast$ 60)}
+
+
+
+Definition at line 33 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_ac6cd6c6ebbc6397d2d43eb674d3e49c7}\label{sbgdec_8c_ac6cd6c6ebbc6397d2d43eb674d3e49c7}} 
+\index{sbgdec.c@{sbgdec.c}!DAY\_TS@{DAY\_TS}}
+\index{DAY\_TS@{DAY\_TS}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{DAY\_TS}{DAY\_TS}}
+{\footnotesize\ttfamily \#define D\+A\+Y\+\_\+\+TS~((int64\+\_\+t)\mbox{\hyperlink{sbgdec_8c_a509a01c55cbe47386fe24602b7c7fda1}{D\+AY}} $\ast$ \mbox{\hyperlink{group__lavu__time_gaa11ed202b70e1f52bac809811a910e2a}{A\+V\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE}})}
+
+
+
+Definition at line 34 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_ac1cba5f1339aa94291d0b6f8ae9d4610}\label{sbgdec_8c_ac1cba5f1339aa94291d0b6f8ae9d4610}} 
+\index{sbgdec.c@{sbgdec.c}!FORWARD\_ERROR@{FORWARD\_ERROR}}
+\index{FORWARD\_ERROR@{FORWARD\_ERROR}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{FORWARD\_ERROR}{FORWARD\_ERROR}}
+{\footnotesize\ttfamily \#define F\+O\+R\+W\+A\+R\+D\+\_\+\+E\+R\+R\+OR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{        int errcode = \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}; \(\backslash\)}
+\DoxyCodeLine{        if (errcode <= 0) \(\backslash\)}
+\DoxyCodeLine{            return errcode ? errcode : \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}}; \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+Definition at line 315 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_a84f12624b20985f3b76dca793e50fc79}\label{sbgdec_8c_a84f12624b20985f3b76dca793e50fc79}} 
+\index{sbgdec.c@{sbgdec.c}!SBG\_SCALE@{SBG\_SCALE}}
+\index{SBG\_SCALE@{SBG\_SCALE}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{SBG\_SCALE}{SBG\_SCALE}}
+{\footnotesize\ttfamily \#define S\+B\+G\+\_\+\+S\+C\+A\+LE~(1 $<$$<$ 16)}
+
+
+
+Definition at line 32 of file sbgdec.\+c.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{sbgdec_8c_a59d11fa977616a044c1f607951467219}\label{sbgdec_8c_a59d11fa977616a044c1f607951467219}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_fade\_type@{sbg\_fade\_type}}
+\index{sbg\_fade\_type@{sbg\_fade\_type}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_fade\_type}{sbg\_fade\_type}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{sbgdec_8c_a59d11fa977616a044c1f607951467219}{sbg\+\_\+fade\+\_\+type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_FADE\_SILENCE@{SBG\_FADE\_SILENCE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_FADE\_SILENCE@{SBG\_FADE\_SILENCE}}}\mbox{\Hypertarget{sbgdec_8c_a59d11fa977616a044c1f607951467219a3c859edfcbfd18e5c7b1a3e76adaea68}\label{sbgdec_8c_a59d11fa977616a044c1f607951467219a3c859edfcbfd18e5c7b1a3e76adaea68}} 
+S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+S\+I\+L\+E\+N\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_FADE\_SAME@{SBG\_FADE\_SAME}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_FADE\_SAME@{SBG\_FADE\_SAME}}}\mbox{\Hypertarget{sbgdec_8c_a59d11fa977616a044c1f607951467219aca10a05371c1f455f41ee6b09a077f0c}\label{sbgdec_8c_a59d11fa977616a044c1f607951467219aca10a05371c1f455f41ee6b09a077f0c}} 
+S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+S\+A\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_FADE\_ADAPT@{SBG\_FADE\_ADAPT}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_FADE\_ADAPT@{SBG\_FADE\_ADAPT}}}\mbox{\Hypertarget{sbgdec_8c_a59d11fa977616a044c1f607951467219a29312a32198d9c81d7725fca43a8ad4b}\label{sbgdec_8c_a59d11fa977616a044c1f607951467219a29312a32198d9c81d7725fca43a8ad4b}} 
+S\+B\+G\+\_\+\+F\+A\+D\+E\+\_\+\+A\+D\+A\+PT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 48 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fad}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fad}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_synth\_type@{sbg\_synth\_type}}
+\index{sbg\_synth\_type@{sbg\_synth\_type}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_synth\_type}{sbg\_synth\_type}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fad}{sbg\+\_\+synth\+\_\+type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_NONE@{SBG\_TYPE\_NONE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_NONE@{SBG\_TYPE\_NONE}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadaa4bf60c41cbb8201690359a2e7536d7d}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadaa4bf60c41cbb8201690359a2e7536d7d}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_SINE@{SBG\_TYPE\_SINE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_SINE@{SBG\_TYPE\_SINE}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadab45992ea9ce1c5508d38a9ff74478a94}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fadab45992ea9ce1c5508d38a9ff74478a94}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+I\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_NOISE@{SBG\_TYPE\_NOISE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_NOISE@{SBG\_TYPE\_NOISE}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada45c99a06cbecbf51517732ada377a876}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada45c99a06cbecbf51517732ada377a876}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+I\+SE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_BELL@{SBG\_TYPE\_BELL}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_BELL@{SBG\_TYPE\_BELL}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0f3bd4b75518ff784e39ed2fab828a52}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0f3bd4b75518ff784e39ed2fab828a52}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+B\+E\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_MIX@{SBG\_TYPE\_MIX}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_MIX@{SBG\_TYPE\_MIX}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0b23313918d5ce1bcb4199ac59a86883}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada0b23313918d5ce1bcb4199ac59a86883}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+IX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SBG\_TYPE\_SPIN@{SBG\_TYPE\_SPIN}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!SBG\_TYPE\_SPIN@{SBG\_TYPE\_SPIN}}}\mbox{\Hypertarget{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada43e82066b4ffc8c99e81ed47d50c5e19}\label{sbgdec_8c_a3bc25d91c157cc4ec07a5c9498752fada43e82066b4ffc8c99e81ed47d50c5e19}} 
+S\+B\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+P\+IN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 58 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1c}\label{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1c}} 
+\index{sbgdec.c@{sbgdec.c}!ws\_interval\_type@{ws\_interval\_type}}
+\index{ws\_interval\_type@{ws\_interval\_type}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{ws\_interval\_type}{ws\_interval\_type}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{ffwavesynth_8c_a564ddf22b2ca447c068bb716ce3f2a1c}{ws\+\_\+interval\+\_\+type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WS\_SINE@{WS\_SINE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!WS\_SINE@{WS\_SINE}}}\mbox{\Hypertarget{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}\label{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}} 
+W\+S\+\_\+\+S\+I\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WS\_NOISE@{WS\_NOISE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!WS\_NOISE@{WS\_NOISE}}}\mbox{\Hypertarget{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}\label{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}} 
+W\+S\+\_\+\+N\+O\+I\+SE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WS\_SINE@{WS\_SINE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!WS\_SINE@{WS\_SINE}}}\mbox{\Hypertarget{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}\label{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca8c22a5a9fab19c61f403cab2be6beeb4}} 
+W\+S\+\_\+\+S\+I\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WS\_NOISE@{WS\_NOISE}!sbgdec.c@{sbgdec.c}}\index{sbgdec.c@{sbgdec.c}!WS\_NOISE@{WS\_NOISE}}}\mbox{\Hypertarget{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}\label{sbgdec_8c_a564ddf22b2ca447c068bb716ce3f2a1ca67a41fd1e0bcc52b192b8a8a24d05ec2}} 
+W\+S\+\_\+\+N\+O\+I\+SE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 138 of file sbgdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{sbgdec_8c_acb428360b61634efe122e255ac44e104}\label{sbgdec_8c_acb428360b61634efe122e255ac44e104}} 
+\index{sbgdec.c@{sbgdec.c}!add\_bell@{add\_bell}}
+\index{add\_bell@{add\_bell}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_bell()}{add\_bell()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} add\+\_\+bell (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{int64\+\_\+t}]{ts1,  }\item[{int64\+\_\+t}]{ts2,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{f,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1045 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_acb428360b61634efe122e255ac44e104_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_acb428360b61634efe122e255ac44e104_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a9dca11c596b95de508d95e4ddb36674c}\label{sbgdec_8c_a9dca11c596b95de508d95e4ddb36674c}} 
+\index{sbgdec.c@{sbgdec.c}!add\_interval@{add\_interval}}
+\index{add\_interval@{add\_interval}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_interval()}{add\_interval()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} add\+\_\+interval (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter,  }\item[{enum \mbox{\hyperlink{ffwavesynth_8c_a564ddf22b2ca447c068bb716ce3f2a1c}{ws\+\_\+interval\+\_\+type}}}]{type,  }\item[{uint32\+\_\+t}]{channels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref,  }\item[{int64\+\_\+t}]{ts1,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{f1,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{a1,  }\item[{int64\+\_\+t}]{ts2,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{f2,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{a2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1011 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{sbgdec_8c_a9dca11c596b95de508d95e4ddb36674c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a9dca11c596b95de508d95e4ddb36674c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a963bf458146c82dd211f939a4b86d115}\label{sbgdec_8c_a963bf458146c82dd211f939a4b86d115}} 
+\index{sbgdec.c@{sbgdec.c}!alloc\_array\_elem@{alloc\_array\_elem}}
+\index{alloc\_array\_elem@{alloc\_array\_elem}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_array\_elem()}{alloc\_array\_elem()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$ alloc\+\_\+array\+\_\+elem (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$}]{array,  }\item[{size\+\_\+t}]{elsize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{max\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 158 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a963bf458146c82dd211f939a4b86d115_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a2de0d7592acdb0abb3d3d4aef41e9672}\label{sbgdec_8c_a2de0d7592acdb0abb3d3d4aef41e9672}} 
+\index{sbgdec.c@{sbgdec.c}!encode\_intervals@{encode\_intervals}}
+\index{encode\_intervals@{encode\_intervals}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{encode\_intervals()}{encode\_intervals()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+intervals (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_codec_parameters}{A\+V\+Codec\+Parameters}} $\ast$}]{par,  }\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1332 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a2de0d7592acdb0abb3d3d4aef41e9672_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{sbgdec_8c_a2de0d7592acdb0abb3d3d4aef41e9672_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ae325e37c935c5b7967bf6acfabefe2bd}\label{sbgdec_8c_ae325e37c935c5b7967bf6acfabefe2bd}} 
+\index{sbgdec.c@{sbgdec.c}!expand\_script@{expand\_script}}
+\index{expand\_script@{expand\_script}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{expand\_script()}{expand\_script()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} expand\+\_\+script (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 992 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ae325e37c935c5b7967bf6acfabefe2bd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{sbgdec_8c_ae325e37c935c5b7967bf6acfabefe2bd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ab728548fec6cb1397d1c773096bae6b3}\label{sbgdec_8c_ab728548fec6cb1397d1c773096bae6b3}} 
+\index{sbgdec.c@{sbgdec.c}!expand\_timestamps@{expand\_timestamps}}
+\index{expand\_timestamps@{expand\_timestamps}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{expand\_timestamps()}{expand\_timestamps()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} expand\+\_\+timestamps (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 892 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab728548fec6cb1397d1c773096bae6b3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab728548fec6cb1397d1c773096bae6b3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ada9dcedeba8c98376f1f481c9cee12f1}\label{sbgdec_8c_ada9dcedeba8c98376f1f481c9cee12f1}} 
+\index{sbgdec.c@{sbgdec.c}!expand\_tseq@{expand\_tseq}}
+\index{expand\_tseq@{expand\_tseq}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{expand\_tseq()}{expand\_tseq()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} expand\+\_\+tseq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{nb\+\_\+ev\+\_\+max,  }\item[{int64\+\_\+t}]{t0,  }\item[{struct \mbox{\hyperlink{structsbg__script__tseq}{sbg\+\_\+script\+\_\+tseq}} $\ast$}]{tseq }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 946 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=278pt]{sbgdec_8c_ada9dcedeba8c98376f1f481c9cee12f1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ada9dcedeba8c98376f1f481c9cee12f1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a07d33d96baad0b733c1aa7eb05ecacf1}\label{sbgdec_8c_a07d33d96baad0b733c1aa7eb05ecacf1}} 
+\index{sbgdec.c@{sbgdec.c}!free\_script@{free\_script}}
+\index{free\_script@{free\_script}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{free\_script()}{free\_script()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+script (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 787 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a07d33d96baad0b733c1aa7eb05ecacf1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a9e898a026324ef24fe6a7457c6d4b2e8}\label{sbgdec_8c_a9e898a026324ef24fe6a7457c6d4b2e8}} 
+\index{sbgdec.c@{sbgdec.c}!generate\_interval@{generate\_interval}}
+\index{generate\_interval@{generate\_interval}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{generate\_interval()}{generate\_interval()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} generate\+\_\+interval (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter,  }\item[{int64\+\_\+t}]{ts1,  }\item[{int64\+\_\+t}]{ts2,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{s1,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{s2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{transition }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1073 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a9e898a026324ef24fe6a7457c6d4b2e8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a9e898a026324ef24fe6a7457c6d4b2e8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a7c94f4229b3eb1610f9650334b6bd86c}\label{sbgdec_8c_a7c94f4229b3eb1610f9650334b6bd86c}} 
+\index{sbgdec.c@{sbgdec.c}!generate\_intervals@{generate\_intervals}}
+\index{generate\_intervals@{generate\_intervals}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{generate\_intervals()}{generate\_intervals()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} generate\+\_\+intervals (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sample\+\_\+rate,  }\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1267 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a7c94f4229b3eb1610f9650334b6bd86c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=302pt]{sbgdec_8c_a7c94f4229b3eb1610f9650334b6bd86c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_af898431b367085aef284c78d71f7caaa}\label{sbgdec_8c_af898431b367085aef284c78d71f7caaa}} 
+\index{sbgdec.c@{sbgdec.c}!generate\_plateau@{generate\_plateau}}
+\index{generate\_plateau@{generate\_plateau}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{generate\_plateau()}{generate\_plateau()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} generate\+\_\+plateau (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter,  }\item[{struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$}]{ev1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1152 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_af898431b367085aef284c78d71f7caaa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_af898431b367085aef284c78d71f7caaa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a3a5a0ea16dcf9db0add47530c9d52011}\label{sbgdec_8c_a3a5a0ea16dcf9db0add47530c9d52011}} 
+\index{sbgdec.c@{sbgdec.c}!generate\_transition@{generate\_transition}}
+\index{generate\_transition@{generate\_transition}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{generate\_transition()}{generate\_transition()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} generate\+\_\+transition (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structws__intervals}{ws\+\_\+intervals}} $\ast$}]{inter,  }\item[{struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$}]{ev1,  }\item[{struct \mbox{\hyperlink{structsbg__script__event}{sbg\+\_\+script\+\_\+event}} $\ast$}]{ev2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1181 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a3a5a0ea16dcf9db0add47530c9d52011_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a3a5a0ea16dcf9db0add47530c9d52011_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ae2d4df043f33de8b99bc1eb83ca15d31}\label{sbgdec_8c_ae2d4df043f33de8b99bc1eb83ca15d31}} 
+\index{sbgdec.c@{sbgdec.c}!is\_space@{is\_space}}
+\index{is\_space@{is\_space}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{is\_space()}{is\_space()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+space (\begin{DoxyParamCaption}\item[{char}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 204 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ae2d4df043f33de8b99bc1eb83ca15d31_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a4a606a083a58bd8b79b9f860d55b656f}\label{sbgdec_8c_a4a606a083a58bd8b79b9f860d55b656f}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_char@{lex\_char}}
+\index{lex\_char@{lex\_char}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_char()}{lex\_char()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+char (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{char}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 230 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a4a606a083a58bd8b79b9f860d55b656f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_aba0db28d06df57963ba28bef29196c5e}\label{sbgdec_8c_aba0db28d06df57963ba28bef29196c5e}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_double@{lex\_double}}
+\index{lex\_double@{lex\_double}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_double()}{lex\_double()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+double (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{double $\ast$}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 238 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aba0db28d06df57963ba28bef29196c5e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aba0db28d06df57963ba28bef29196c5e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a95e5864fd6caaded3f10d82fdfca6287}\label{sbgdec_8c_a95e5864fd6caaded3f10d82fdfca6287}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_fixed@{lex\_fixed}}
+\index{lex\_fixed@{lex\_fixed}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_fixed()}{lex\_fixed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+fixed (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{const char $\ast$}]{t,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{l }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 254 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a95e5864fd6caaded3f10d82fdfca6287_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a6f4646f5c3b5b3216e306da6b05cc345}\label{sbgdec_8c_a6f4646f5c3b5b3216e306da6b05cc345}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_line\_end@{lex\_line\_end}}
+\index{lex\_line\_end@{lex\_line\_end}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_line\_end()}{lex\_line\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+line\+\_\+end (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 262 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=340pt]{sbgdec_8c_a6f4646f5c3b5b3216e306da6b05cc345_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a6f4646f5c3b5b3216e306da6b05cc345_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a24d9b8ef82389778c0962bf75d65b37a}\label{sbgdec_8c_a24d9b8ef82389778c0962bf75d65b37a}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_name@{lex\_name}}
+\index{lex\_name@{lex\_name}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_name()}{lex\_name()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+name (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$}]{rs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 294 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a24d9b8ef82389778c0962bf75d65b37a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a24d9b8ef82389778c0962bf75d65b37a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_aa1221de5332f3093f628eb9ebe5d2e8b}\label{sbgdec_8c_aa1221de5332f3093f628eb9ebe5d2e8b}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_space@{lex\_space}}
+\index{lex\_space@{lex\_space}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_space()}{lex\_space()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+space (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 221 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=233pt]{sbgdec_8c_aa1221de5332f3093f628eb9ebe5d2e8b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aa1221de5332f3093f628eb9ebe5d2e8b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ac3ffecfa516fc00413acc69ceef99d27}\label{sbgdec_8c_ac3ffecfa516fc00413acc69ceef99d27}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_time@{lex\_time}}
+\index{lex\_time@{lex\_time}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_time()}{lex\_time()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+time (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{int64\+\_\+t $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 308 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ac3ffecfa516fc00413acc69ceef99d27_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ac3ffecfa516fc00413acc69ceef99d27_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a33ec4f8b813f1542bf1ba7941bc8d01a}\label{sbgdec_8c_a33ec4f8b813f1542bf1ba7941bc8d01a}} 
+\index{sbgdec.c@{sbgdec.c}!lex\_wsword@{lex\_wsword}}
+\index{lex\_wsword@{lex\_wsword}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{lex\_wsword()}{lex\_wsword()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lex\+\_\+wsword (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$}]{rs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 280 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a33ec4f8b813f1542bf1ba7941bc8d01a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a33ec4f8b813f1542bf1ba7941bc8d01a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a4fec493dec7906987b97094bd3e496db}\label{sbgdec_8c_a4fec493dec7906987b97094bd3e496db}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_block\_def@{parse\_block\_def}}
+\index{parse\_block\_def@{parse\_block\_def}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_block\_def()}{parse\_block\_def()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+block\+\_\+def (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__definition}{sbg\+\_\+script\+\_\+definition}} $\ast$}]{def }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 579 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a4fec493dec7906987b97094bd3e496db_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a4fec493dec7906987b97094bd3e496db_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a685b649f65eeb20987f4c7b18d63e588}\label{sbgdec_8c_a685b649f65eeb20987f4c7b18d63e588}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_fade@{parse\_fade}}
+\index{parse\_fade@{parse\_fade}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_fade()}{parse\_fade()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+fade (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__fade}{sbg\+\_\+fade}} $\ast$}]{fr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 492 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=233pt]{sbgdec_8c_a685b649f65eeb20987f4c7b18d63e588_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a685b649f65eeb20987f4c7b18d63e588_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a6e0a34cc958218cace2b0c0c613e9014}\label{sbgdec_8c_a6e0a34cc958218cace2b0c0c613e9014}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_immediate@{parse\_immediate}}
+\index{parse\_immediate@{parse\_immediate}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_immediate()}{parse\_immediate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+immediate (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 322 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a6e0a34cc958218cace2b0c0c613e9014_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ad55ea6b77d5ad4029f2549c48e564c6b}\label{sbgdec_8c_ad55ea6b77d5ad4029f2549c48e564c6b}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_named\_def@{parse\_named\_def}}
+\index{parse\_named\_def@{parse\_named\_def}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_named\_def()}{parse\_named\_def()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+named\+\_\+def (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 760 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ad55ea6b77d5ad4029f2549c48e564c6b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ad55ea6b77d5ad4029f2549c48e564c6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_aa6034333576feaf130158078544866c2}\label{sbgdec_8c_aa6034333576feaf130158078544866c2}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_optarg@{parse\_optarg}}
+\index{parse\_optarg@{parse\_optarg}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_optarg()}{parse\_optarg()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+optarg (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{char}]{o,  }\item[{struct \mbox{\hyperlink{structsbg__string}{sbg\+\_\+string}} $\ast$}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 336 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aa6034333576feaf130158078544866c2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aa6034333576feaf130158078544866c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a5527f2911ebd5786c035fef2dc597457}\label{sbgdec_8c_a5527f2911ebd5786c035fef2dc597457}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_options@{parse\_options}}
+\index{parse\_options@{parse\_options}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_options()}{parse\_options()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+options (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 346 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a5527f2911ebd5786c035fef2dc597457_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a5527f2911ebd5786c035fef2dc597457_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a129c49033b98112914d1bb3f3fc7e37a}\label{sbgdec_8c_a129c49033b98112914d1bb3f3fc7e37a}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_preprogrammed@{parse\_preprogrammed}}
+\index{parse\_preprogrammed@{parse\_preprogrammed}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_preprogrammed()}{parse\_preprogrammed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+preprogrammed (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 329 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a129c49033b98112914d1bb3f3fc7e37a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_acf504faae5176f024624bce2ba02d97f}\label{sbgdec_8c_acf504faae5176f024624bce2ba02d97f}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_script@{parse\_script}}
+\index{parse\_script@{parse\_script}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_script()}{parse\_script()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+script (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{char $\ast$}]{script,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{script\+\_\+len,  }\item[{struct \mbox{\hyperlink{structsbg__script}{sbg\+\_\+script}} $\ast$}]{rscript }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 797 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_acf504faae5176f024624bce2ba02d97f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{sbgdec_8c_acf504faae5176f024624bce2ba02d97f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ab212fd284c80a78442d9ff7ede3a9402}\label{sbgdec_8c_ab212fd284c80a78442d9ff7ede3a9402}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel@{parse\_synth\_channel}}
+\index{parse\_synth\_channel@{parse\_synth\_channel}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel()}{parse\_synth\_channel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 710 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab212fd284c80a78442d9ff7ede3a9402_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab212fd284c80a78442d9ff7ede3a9402_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a3229b727f445212e380397b644f2606e}\label{sbgdec_8c_a3229b727f445212e380397b644f2606e}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel\_bell@{parse\_synth\_channel\_bell}}
+\index{parse\_synth\_channel\_bell@{parse\_synth\_channel\_bell}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel\_bell()}{parse\_synth\_channel\_bell()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel\+\_\+bell (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{synth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 655 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a3229b727f445212e380397b644f2606e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a3229b727f445212e380397b644f2606e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ab0c5062073ba27daf416553c4c77fd2a}\label{sbgdec_8c_ab0c5062073ba27daf416553c4c77fd2a}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel\_mix@{parse\_synth\_channel\_mix}}
+\index{parse\_synth\_channel\_mix@{parse\_synth\_channel\_mix}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel\_mix()}{parse\_synth\_channel\_mix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel\+\_\+mix (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{synth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 674 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab0c5062073ba27daf416553c4c77fd2a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ab0c5062073ba27daf416553c4c77fd2a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a4bce195b77ca1d4e42589ff342cc5224}\label{sbgdec_8c_a4bce195b77ca1d4e42589ff342cc5224}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel\_pink@{parse\_synth\_channel\_pink}}
+\index{parse\_synth\_channel\_pink@{parse\_synth\_channel\_pink}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel\_pink()}{parse\_synth\_channel\_pink()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel\+\_\+pink (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{synth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 642 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a4bce195b77ca1d4e42589ff342cc5224_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a4bce195b77ca1d4e42589ff342cc5224_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_afc1a710ded61be95259a9b3c36236bfb}\label{sbgdec_8c_afc1a710ded61be95259a9b3c36236bfb}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel\_sine@{parse\_synth\_channel\_sine}}
+\index{parse\_synth\_channel\_sine@{parse\_synth\_channel\_sine}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel\_sine()}{parse\_synth\_channel\_sine()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel\+\_\+sine (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{synth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 621 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_afc1a710ded61be95259a9b3c36236bfb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_afc1a710ded61be95259a9b3c36236bfb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_ae3eead76af33058130dba4083a133dc4}\label{sbgdec_8c_ae3eead76af33058130dba4083a133dc4}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_channel\_spin@{parse\_synth\_channel\_spin}}
+\index{parse\_synth\_channel\_spin@{parse\_synth\_channel\_spin}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_channel\_spin()}{parse\_synth\_channel\_spin()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+channel\+\_\+spin (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__synth}{sbg\+\_\+script\+\_\+synth}} $\ast$}]{synth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 687 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ae3eead76af33058130dba4083a133dc4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_ae3eead76af33058130dba4083a133dc4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a0b9a6442dbfa21f4fb2205c47ee23341}\label{sbgdec_8c_a0b9a6442dbfa21f4fb2205c47ee23341}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_synth\_def@{parse\_synth\_def}}
+\index{parse\_synth\_def@{parse\_synth\_def}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_synth\_def()}{parse\_synth\_def()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+synth\+\_\+def (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__script__definition}{sbg\+\_\+script\+\_\+definition}} $\ast$}]{def }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 736 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a0b9a6442dbfa21f4fb2205c47ee23341_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a0b9a6442dbfa21f4fb2205c47ee23341_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a7f5c2ed190cf1a6869fec469e6386a92}\label{sbgdec_8c_a7f5c2ed190cf1a6869fec469e6386a92}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_time\_sequence@{parse\_time\_sequence}}
+\index{parse\_time\_sequence@{parse\_time\_sequence}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_time\_sequence()}{parse\_time\_sequence()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+time\+\_\+sequence (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{inblock }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 516 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a7f5c2ed190cf1a6869fec469e6386a92_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a7f5c2ed190cf1a6869fec469e6386a92_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a2fe231d578bd6a21ebe24be6f96661c4}\label{sbgdec_8c_a2fe231d578bd6a21ebe24be6f96661c4}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_timestamp@{parse\_timestamp}}
+\index{parse\_timestamp@{parse\_timestamp}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_timestamp()}{parse\_timestamp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+timestamp (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{struct \mbox{\hyperlink{structsbg__timestamp}{sbg\+\_\+timestamp}} $\ast$}]{rts,  }\item[{int64\+\_\+t $\ast$}]{rrel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 459 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a2fe231d578bd6a21ebe24be6f96661c4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a2fe231d578bd6a21ebe24be6f96661c4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a2b4695d88208a990bdc6c58f5303ffc1}\label{sbgdec_8c_a2b4695d88208a990bdc6c58f5303ffc1}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_volume@{parse\_volume}}
+\index{parse\_volume@{parse\_volume}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_volume()}{parse\_volume()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+volume (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{vol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 608 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a2b4695d88208a990bdc6c58f5303ffc1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a2b4695d88208a990bdc6c58f5303ffc1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a81cfb34e8e66d5288c89faac4720256a}\label{sbgdec_8c_a81cfb34e8e66d5288c89faac4720256a}} 
+\index{sbgdec.c@{sbgdec.c}!parse\_wave\_def@{parse\_wave\_def}}
+\index{parse\_wave\_def@{parse\_wave\_def}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_wave\_def()}{parse\_wave\_def()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+wave\+\_\+def (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsbg__parser}{sbg\+\_\+parser}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{wavenum }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 572 of file sbgdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a81cfb34e8e66d5288c89faac4720256a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a80c7b2944f97280337e04a8834c7c212}\label{sbgdec_8c_a80c7b2944f97280337e04a8834c7c212}} 
+\index{sbgdec.c@{sbgdec.c}!read\_whole\_file@{read\_whole\_file}}
+\index{read\_whole\_file@{read\_whole\_file}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_whole\_file()}{read\_whole\_file()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+whole\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{io,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+size,  }\item[{char $\ast$$\ast$}]{rbuf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 859 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a80c7b2944f97280337e04a8834c7c212_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=290pt]{sbgdec_8c_a80c7b2944f97280337e04a8834c7c212_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a15ce9adae29cbc2032f3dd903ded78ab}\label{sbgdec_8c_a15ce9adae29cbc2032f3dd903ded78ab}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_read\_header@{sbg\_read\_header}}
+\index{sbg\_read\_header@{sbg\_read\_header}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_read\_header()}{sbg\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sbg\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{avf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1387 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a15ce9adae29cbc2032f3dd903ded78ab_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_aa57c7a10b6f3bf100118c7cef2ee87bf}\label{sbgdec_8c_aa57c7a10b6f3bf100118c7cef2ee87bf}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_read\_packet@{sbg\_read\_packet}}
+\index{sbg\_read\_packet@{sbg\_read\_packet}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_read\_packet()}{sbg\_read\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sbg\+\_\+read\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{avf,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1456 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_aa57c7a10b6f3bf100118c7cef2ee87bf_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a8f32920ce77b320771a3a6a7ba243fa5}\label{sbgdec_8c_a8f32920ce77b320771a3a6a7ba243fa5}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_read\_probe@{sbg\_read\_probe}}
+\index{sbg\_read\_probe@{sbg\_read\_probe}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_read\_probe()}{sbg\_read\_probe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sbg\+\_\+read\+\_\+probe (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1375 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a8f32920ce77b320771a3a6a7ba243fa5_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a91b58bb80dcc4a47a806f428b5751caf}\label{sbgdec_8c_a91b58bb80dcc4a47a806f428b5751caf}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_read\_seek@{sbg\_read\_seek}}
+\index{sbg\_read\_seek@{sbg\_read\_seek}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_read\_seek()}{sbg\_read\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sbg\+\_\+read\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{avf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{ts,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1488 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a91b58bb80dcc4a47a806f428b5751caf_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c}\label{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_read\_seek2@{sbg\_read\_seek2}}
+\index{sbg\_read\_seek2@{sbg\_read\_seek2}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_read\_seek2()}{sbg\_read\_seek2()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sbg\+\_\+read\+\_\+seek2 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{avf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{min\+\_\+ts,  }\item[{int64\+\_\+t}]{ts,  }\item[{int64\+\_\+t}]{max\+\_\+ts,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1477 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a6e0a8cfef7ebe2333ad52214621acbda}\label{sbgdec_8c_a6e0a8cfef7ebe2333ad52214621acbda}} 
+\index{sbgdec.c@{sbgdec.c}!scale\_double@{scale\_double}}
+\index{scale\_double@{scale\_double}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{scale\_double()}{scale\_double()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} scale\+\_\+double (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{log,  }\item[{double}]{d,  }\item[{double}]{m,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 209 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{sbgdec_8c_a6e0a8cfef7ebe2333ad52214621acbda_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a6e0a8cfef7ebe2333ad52214621acbda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{sbgdec_8c_a61bf1bd9e4033281712a353d39837b8a}\label{sbgdec_8c_a61bf1bd9e4033281712a353d39837b8a}} 
+\index{sbgdec.c@{sbgdec.c}!str\_to\_time@{str\_to\_time}}
+\index{str\_to\_time@{str\_to\_time}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{str\_to\_time()}{str\_to\_time()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} str\+\_\+to\+\_\+time (\begin{DoxyParamCaption}\item[{const char $\ast$}]{str,  }\item[{int64\+\_\+t $\ast$}]{rtime }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 178 of file sbgdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a61bf1bd9e4033281712a353d39837b8a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{sbgdec_8c_a61bf1bd9e4033281712a353d39837b8a_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{sbgdec_8c_a79152c44f2d49dbbd2a9550d564bef34}\label{sbgdec_8c_a79152c44f2d49dbbd2a9550d564bef34}} 
+\index{sbgdec.c@{sbgdec.c}!ff\_sbg\_demuxer@{ff\_sbg\_demuxer}}
+\index{ff\_sbg\_demuxer@{ff\_sbg\_demuxer}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_sbg\_demuxer}{ff\_sbg\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+sbg\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}sbg"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}SBaGen binaural beats script"{}}),}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\textcolor{keyword}{struct }\mbox{\hyperlink{structsbg__demuxer}{sbg\_demuxer}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavformat_2jvdec_8c_a4517a6dcebdb863ba6840921970a41ac}{read\_probe}}     = \mbox{\hyperlink{sbgdec_8c_a8f32920ce77b320771a3a6a7ba243fa5}{sbg\_read\_probe}},}
+\DoxyCodeLine{    .read\_header    = \mbox{\hyperlink{sbgdec_8c_a15ce9adae29cbc2032f3dd903ded78ab}{sbg\_read\_header}},}
+\DoxyCodeLine{    .read\_packet    = \mbox{\hyperlink{sbgdec_8c_aa57c7a10b6f3bf100118c7cef2ee87bf}{sbg\_read\_packet}},}
+\DoxyCodeLine{    .read\_seek      = \mbox{\hyperlink{sbgdec_8c_a91b58bb80dcc4a47a806f428b5751caf}{sbg\_read\_seek}},}
+\DoxyCodeLine{    .read\_seek2     = \mbox{\hyperlink{sbgdec_8c_a7c36385233c74ce2f64170879bbc785c}{sbg\_read\_seek2}},}
+\DoxyCodeLine{    .extensions     = \textcolor{stringliteral}{"{}sbg"{}},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{sbgdec_8c_adb27960379bfb8c2d48bb94614433e1c}{sbg\_demuxer\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1514 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_adb27960379bfb8c2d48bb94614433e1c}\label{sbgdec_8c_adb27960379bfb8c2d48bb94614433e1c}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_demuxer\_class@{sbg\_demuxer\_class}}
+\index{sbg\_demuxer\_class@{sbg\_demuxer\_class}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_demuxer\_class}{sbg\_demuxer\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} sbg\+\_\+demuxer\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}sbg\_demuxer"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{sbgdec_8c_ad66ba10f031dcc0171c9cc3c76c7ee87}{sbg\_options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1507 of file sbgdec.\+c.
+
+\mbox{\Hypertarget{sbgdec_8c_ad66ba10f031dcc0171c9cc3c76c7ee87}\label{sbgdec_8c_ad66ba10f031dcc0171c9cc3c76c7ee87}} 
+\index{sbgdec.c@{sbgdec.c}!sbg\_options@{sbg\_options}}
+\index{sbg\_options@{sbg\_options}!sbgdec.c@{sbgdec.c}}
+\doxysubsubsection{\texorpdfstring{sbg\_options}{sbg\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} sbg\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}sample\_rate"{}}, \textcolor{stringliteral}{"{}"{}}, offsetof(\textcolor{keyword}{struct} \mbox{\hyperlink{structsbg__demuxer}{sbg\_demuxer}}, \mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\_rate}}),}
+\DoxyCodeLine{      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 0 \}, 0, INT\_MAX,}
+\DoxyCodeLine{      \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{AV\_OPT\_FLAG\_DECODING\_PARAM}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}frame\_size"{}}, \textcolor{stringliteral}{"{}"{}}, offsetof(\textcolor{keyword}{struct} \mbox{\hyperlink{structsbg__demuxer}{sbg\_demuxer}}, \mbox{\hyperlink{mxfenc_8c_ad662aa56c1696f09c0ac6b97abafac6d}{frame\_size}}),}
+\DoxyCodeLine{      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 0 \}, 0, INT\_MAX,}
+\DoxyCodeLine{      \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{AV\_OPT\_FLAG\_DECODING\_PARAM}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}max\_file\_size"{}}, \textcolor{stringliteral}{"{}"{}}, offsetof(\textcolor{keyword}{struct} \mbox{\hyperlink{structsbg__demuxer}{sbg\_demuxer}}, \mbox{\hyperlink{structsbg__demuxer_ab47590b66f5bffe1557197083dfb69c7}{max\_file\_size}}),}
+\DoxyCodeLine{      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 5000000 \}, 0, INT\_MAX,}
+\DoxyCodeLine{      \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{AV\_OPT\_FLAG\_DECODING\_PARAM}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1494 of file sbgdec.\+c.
+

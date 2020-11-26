@@ -1,0 +1,849 @@
+\hypertarget{wavpack_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/wavpack.c File Reference}
+\label{wavpack_8c}\index{E:/github/ffmpeg/libavcodec/wavpack.c@{E:/github/ffmpeg/libavcodec/wavpack.c}}
+{\ttfamily \#include \char`\"{}libavutil/buffer.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}unary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wavpack.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dsd.\+h\char`\"{}}\newline
+Include dependency graph for wavpack.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_d_s_dfilters}{D\+S\+Dfilters}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_ab9ef831966fb2c5f522c19e809354830}{B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}}
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a820e4b77e606cfb6b3c48df50622f22f}{D\+S\+D\+\_\+\+B\+Y\+T\+E\+\_\+\+R\+E\+A\+DY}}(low,  high)~(!(((low) $^\wedge$ (high)) \& 0xff000000))
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a073e7f88bfbd25c236a666a0b13e95b7}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+TS}}~8
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_ae040ac9f08eec95bc6214454b2346dd2}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+NS}}~(1$<$$<$\mbox{\hyperlink{wavpack_8c_a073e7f88bfbd25c236a666a0b13e95b7}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_adb4465d5ac82a2bbb12dd8f9b1e332d7}{P\+T\+A\+B\+L\+E\+\_\+\+M\+A\+SK}}~(\mbox{\hyperlink{wavpack_8c_ae040ac9f08eec95bc6214454b2346dd2}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+NS}}-\/1)
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a1965eaca47dbf3f87acdafc2208f04eb}{UP}}~0x010000fe
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a4193cd1c8c2e6ebd0e056fa2364a663f}{D\+O\+WN}}~0x00010000
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a9d211c41bcae2aa62028a3645c63cf8a}{D\+E\+C\+AY}}~8
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a9c7b069fee3c8184e14a7de8e5da2dc6}{P\+R\+E\+C\+I\+S\+I\+ON}}~20
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_acb664cd5d02845c529b28524233f1ce5}{V\+A\+L\+U\+E\+\_\+\+O\+NE}}~(1 $<$$<$ \mbox{\hyperlink{vf__idet_8c_a9c7b069fee3c8184e14a7de8e5da2dc6}{P\+R\+E\+C\+I\+S\+I\+ON}})
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a324436d012a613102c6156196dd1c50c}{P\+R\+E\+C\+I\+S\+I\+O\+N\+\_\+\+U\+SE}}~12
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a4936ae913541b5f1736d16ed4344d860}{R\+A\+T\+E\+\_\+S}}~20
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a2ecdfc42446b3552a978834be45d4a7c}{M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+TS}}~5
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_ab15995c55cbf4ef2bcd11259f4e052de}{M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+NS}}~(1 $<$$<$ \mbox{\hyperlink{wavpack_8c_a2ecdfc42446b3552a978834be45d4a7c}{M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a89f14834bddf4e96e66980f2a0359668}{M\+A\+X\+\_\+\+B\+I\+N\+\_\+\+B\+Y\+T\+ES}}~1280
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a13cd0e1d7493eef7aebc17b0f2beba02}{W\+V\+\_\+\+M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+\_\+\+D\+E\+C\+O\+D\+E\+RS}}~14
+\item 
+\#define \mbox{\hyperlink{wavpack_8c_a9504ef7fd521ed42fe26da63b4456307}{L\+E\+V\+E\+L\+\_\+\+D\+E\+C\+AY}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + 0x80) $>$$>$ 8)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} \mbox{\hyperlink{wavpack_8c_ad52f350a101190580b4460606a38c208}{Wavpack\+Frame\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} \mbox{\hyperlink{wavpack_8c_a8e9cde7f01c3e00005b7c002d13a4037}{Wavpack\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{wavpack_8c_a22e5da42c3350892b86104c516865de2}{Modulation}} \{ \mbox{\hyperlink{wavpack_8c_a22e5da42c3350892b86104c516865de2adc555a955cfda06df626a57f92010f89}{M\+O\+D\+U\+L\+A\+T\+I\+O\+N\+\_\+\+P\+CM}}, 
+\mbox{\hyperlink{wavpack_8c_a22e5da42c3350892b86104c516865de2aedddd5ca27f33a55c42e6065000b37ef}{M\+O\+D\+U\+L\+A\+T\+I\+O\+N\+\_\+\+D\+SD}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} unsigned \mbox{\hyperlink{wavpack_8c_a9bfc4b7f7c18ab9078b736738469f3d5}{get\+\_\+tail}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a41e2db0324d8fa92c2040f1ff7a9b4a7}{update\+\_\+error\+\_\+limit}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a5d04770dca08fc78ec1e5c706a907ffa}{wv\+\_\+get\+\_\+value}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$last)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a68fde2538861f9c7954114779c6f3ca5}{wv\+\_\+get\+\_\+value\+\_\+integer}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, uint32\+\_\+t $\ast$crc, unsigned \mbox{\hyperlink{md5_8c_a921871e3b55f625784496c89fd0b5ee8}{S}})
+\item 
+static float \mbox{\hyperlink{wavpack_8c_a04ab4d4b837dc3d29d83a810f56c9890}{wv\+\_\+get\+\_\+value\+\_\+float}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, uint32\+\_\+t $\ast$crc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{md5_8c_a921871e3b55f625784496c89fd0b5ee8}{S}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_afb43e6d5a679fade21e39c476b20cfda}{wv\+\_\+check\+\_\+crc}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, uint32\+\_\+t crc, uint32\+\_\+t crc\+\_\+extra\+\_\+bits)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wavpack_8c_ab1666a40a54bbde766743f420d231cbf}{init\+\_\+ptable}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{avsscanf_8c_aae0de2108a7eb5b59d9e17d95ef1c1e0}{table}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rate\+\_\+i, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rate\+\_\+s)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a40160106ccdc45bf8b51ccb81112d249}{wv\+\_\+unpack\+\_\+dsd\+\_\+high}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+left, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+right)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a004677db4883ea126f0cf8fe9fa00356}{wv\+\_\+unpack\+\_\+dsd\+\_\+fast}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+left, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+right)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a0b23372b725faedb411c0eb094773633}{wv\+\_\+unpack\+\_\+dsd\+\_\+copy}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+left, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+right)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a5bce977c21edf5a56d91a14393f690c7}{wv\+\_\+unpack\+\_\+stereo}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$dst\+\_\+l, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$dst\+\_\+r, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a247510977eca23f34a1b9b9c1fce9eb0}{wv\+\_\+unpack\+\_\+mono}} (\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$dst, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a8a26783aa12943c76e874936adba9645}{wv\+\_\+alloc\+\_\+frame\+\_\+context}} (\mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a47f8782b39c88e43b586396240c276cf}{wv\+\_\+dsd\+\_\+reset}} (\mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_ae37ce0fe6a4948e9be98caf5c0f3984f}{wavpack\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a200348c636c54adb630d18d9b9fffeef}{wavpack\+\_\+decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a05a9759175867e508539b7c7f8d7103c}{wavpack\+\_\+decode\+\_\+block}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+no, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wavpack_8c_a0d6d24a6493f06f23e93f2e7ffcb3797}{wavpack\+\_\+decode\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a6e913cbcfc36cf4461e1b1d4d8db83c1}{dsd\+\_\+channel}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$frmptr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} threadnr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wavpack_8c_a6e0dd31d34d4b4e89f9a8b3d4bcc907e}{wavpack\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{wavpack_8c_a7a8e73c4d4ae0a91467c7936a33363fb}{ff\+\_\+wavpack\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Wav\+Pack lossless audio decoder 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{wavpack_8c_ab9ef831966fb2c5f522c19e809354830}\label{wavpack_8c_ab9ef831966fb2c5f522c19e809354830}} 
+\index{wavpack.c@{wavpack.c}!BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}}
+\index{BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{BITSTREAM\_READER\_LE}{BITSTREAM\_READER\_LE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}
+
+
+
+Definition at line 26 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a9d211c41bcae2aa62028a3645c63cf8a}\label{wavpack_8c_a9d211c41bcae2aa62028a3645c63cf8a}} 
+\index{wavpack.c@{wavpack.c}!DECAY@{DECAY}}
+\index{DECAY@{DECAY}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{DECAY}{DECAY}}
+{\footnotesize\ttfamily \#define D\+E\+C\+AY~8}
+
+
+
+Definition at line 49 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a4193cd1c8c2e6ebd0e056fa2364a663f}\label{wavpack_8c_a4193cd1c8c2e6ebd0e056fa2364a663f}} 
+\index{wavpack.c@{wavpack.c}!DOWN@{DOWN}}
+\index{DOWN@{DOWN}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{DOWN}{DOWN}}
+{\footnotesize\ttfamily \#define D\+O\+WN~0x00010000}
+
+
+
+Definition at line 48 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a820e4b77e606cfb6b3c48df50622f22f}\label{wavpack_8c_a820e4b77e606cfb6b3c48df50622f22f}} 
+\index{wavpack.c@{wavpack.c}!DSD\_BYTE\_READY@{DSD\_BYTE\_READY}}
+\index{DSD\_BYTE\_READY@{DSD\_BYTE\_READY}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{DSD\_BYTE\_READY}{DSD\_BYTE\_READY}}
+{\footnotesize\ttfamily \#define D\+S\+D\+\_\+\+B\+Y\+T\+E\+\_\+\+R\+E\+A\+DY(\begin{DoxyParamCaption}\item[{}]{low,  }\item[{}]{high }\end{DoxyParamCaption})~(!(((low) $^\wedge$ (high)) \& 0xff000000))}
+
+
+
+Definition at line 41 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a9504ef7fd521ed42fe26da63b4456307}\label{wavpack_8c_a9504ef7fd521ed42fe26da63b4456307}} 
+\index{wavpack.c@{wavpack.c}!LEVEL\_DECAY@{LEVEL\_DECAY}}
+\index{LEVEL\_DECAY@{LEVEL\_DECAY}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{LEVEL\_DECAY}{LEVEL\_DECAY}}
+{\footnotesize\ttfamily \#define L\+E\+V\+E\+L\+\_\+\+D\+E\+C\+AY(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + 0x80) $>$$>$ 8)}
+
+
+
+Definition at line 119 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a89f14834bddf4e96e66980f2a0359668}\label{wavpack_8c_a89f14834bddf4e96e66980f2a0359668}} 
+\index{wavpack.c@{wavpack.c}!MAX\_BIN\_BYTES@{MAX\_BIN\_BYTES}}
+\index{MAX\_BIN\_BYTES@{MAX\_BIN\_BYTES}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BIN\_BYTES}{MAX\_BIN\_BYTES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+I\+N\+\_\+\+B\+Y\+T\+ES~1280}
+
+
+
+Definition at line 59 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_ab15995c55cbf4ef2bcd11259f4e052de}\label{wavpack_8c_ab15995c55cbf4ef2bcd11259f4e052de}} 
+\index{wavpack.c@{wavpack.c}!MAX\_HISTORY\_BINS@{MAX\_HISTORY\_BINS}}
+\index{MAX\_HISTORY\_BINS@{MAX\_HISTORY\_BINS}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_HISTORY\_BINS}{MAX\_HISTORY\_BINS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+NS~(1 $<$$<$ \mbox{\hyperlink{wavpack_8c_a2ecdfc42446b3552a978834be45d4a7c}{M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 58 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a2ecdfc42446b3552a978834be45d4a7c}\label{wavpack_8c_a2ecdfc42446b3552a978834be45d4a7c}} 
+\index{wavpack.c@{wavpack.c}!MAX\_HISTORY\_BITS@{MAX\_HISTORY\_BITS}}
+\index{MAX\_HISTORY\_BITS@{MAX\_HISTORY\_BITS}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_HISTORY\_BITS}{MAX\_HISTORY\_BITS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+B\+I\+TS~5}
+
+
+
+Definition at line 57 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a9c7b069fee3c8184e14a7de8e5da2dc6}\label{wavpack_8c_a9c7b069fee3c8184e14a7de8e5da2dc6}} 
+\index{wavpack.c@{wavpack.c}!PRECISION@{PRECISION}}
+\index{PRECISION@{PRECISION}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{PRECISION}{PRECISION}}
+{\footnotesize\ttfamily \#define P\+R\+E\+C\+I\+S\+I\+ON~20}
+
+
+
+Definition at line 51 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a324436d012a613102c6156196dd1c50c}\label{wavpack_8c_a324436d012a613102c6156196dd1c50c}} 
+\index{wavpack.c@{wavpack.c}!PRECISION\_USE@{PRECISION\_USE}}
+\index{PRECISION\_USE@{PRECISION\_USE}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{PRECISION\_USE}{PRECISION\_USE}}
+{\footnotesize\ttfamily \#define P\+R\+E\+C\+I\+S\+I\+O\+N\+\_\+\+U\+SE~12}
+
+
+
+Definition at line 53 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_ae040ac9f08eec95bc6214454b2346dd2}\label{wavpack_8c_ae040ac9f08eec95bc6214454b2346dd2}} 
+\index{wavpack.c@{wavpack.c}!PTABLE\_BINS@{PTABLE\_BINS}}
+\index{PTABLE\_BINS@{PTABLE\_BINS}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{PTABLE\_BINS}{PTABLE\_BINS}}
+{\footnotesize\ttfamily \#define P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+NS~(1$<$$<$\mbox{\hyperlink{wavpack_8c_a073e7f88bfbd25c236a666a0b13e95b7}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 44 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a073e7f88bfbd25c236a666a0b13e95b7}\label{wavpack_8c_a073e7f88bfbd25c236a666a0b13e95b7}} 
+\index{wavpack.c@{wavpack.c}!PTABLE\_BITS@{PTABLE\_BITS}}
+\index{PTABLE\_BITS@{PTABLE\_BITS}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{PTABLE\_BITS}{PTABLE\_BITS}}
+{\footnotesize\ttfamily \#define P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+TS~8}
+
+
+
+Definition at line 43 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_adb4465d5ac82a2bbb12dd8f9b1e332d7}\label{wavpack_8c_adb4465d5ac82a2bbb12dd8f9b1e332d7}} 
+\index{wavpack.c@{wavpack.c}!PTABLE\_MASK@{PTABLE\_MASK}}
+\index{PTABLE\_MASK@{PTABLE\_MASK}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{PTABLE\_MASK}{PTABLE\_MASK}}
+{\footnotesize\ttfamily \#define P\+T\+A\+B\+L\+E\+\_\+\+M\+A\+SK~(\mbox{\hyperlink{wavpack_8c_ae040ac9f08eec95bc6214454b2346dd2}{P\+T\+A\+B\+L\+E\+\_\+\+B\+I\+NS}}-\/1)}
+
+
+
+Definition at line 45 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a4936ae913541b5f1736d16ed4344d860}\label{wavpack_8c_a4936ae913541b5f1736d16ed4344d860}} 
+\index{wavpack.c@{wavpack.c}!RATE\_S@{RATE\_S}}
+\index{RATE\_S@{RATE\_S}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{RATE\_S}{RATE\_S}}
+{\footnotesize\ttfamily \#define R\+A\+T\+E\+\_\+S~20}
+
+
+
+Definition at line 55 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a1965eaca47dbf3f87acdafc2208f04eb}\label{wavpack_8c_a1965eaca47dbf3f87acdafc2208f04eb}} 
+\index{wavpack.c@{wavpack.c}!UP@{UP}}
+\index{UP@{UP}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{UP}{UP}}
+{\footnotesize\ttfamily \#define UP~0x010000fe}
+
+
+
+Definition at line 47 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_acb664cd5d02845c529b28524233f1ce5}\label{wavpack_8c_acb664cd5d02845c529b28524233f1ce5}} 
+\index{wavpack.c@{wavpack.c}!VALUE\_ONE@{VALUE\_ONE}}
+\index{VALUE\_ONE@{VALUE\_ONE}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{VALUE\_ONE}{VALUE\_ONE}}
+{\footnotesize\ttfamily \#define V\+A\+L\+U\+E\+\_\+\+O\+NE~(1 $<$$<$ \mbox{\hyperlink{vf__idet_8c_a9c7b069fee3c8184e14a7de8e5da2dc6}{P\+R\+E\+C\+I\+S\+I\+ON}})}
+
+
+
+Definition at line 52 of file wavpack.\+c.
+
+\mbox{\Hypertarget{wavpack_8c_a13cd0e1d7493eef7aebc17b0f2beba02}\label{wavpack_8c_a13cd0e1d7493eef7aebc17b0f2beba02}} 
+\index{wavpack.c@{wavpack.c}!WV\_MAX\_FRAME\_DECODERS@{WV\_MAX\_FRAME\_DECODERS}}
+\index{WV\_MAX\_FRAME\_DECODERS@{WV\_MAX\_FRAME\_DECODERS}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{WV\_MAX\_FRAME\_DECODERS}{WV\_MAX\_FRAME\_DECODERS}}
+{\footnotesize\ttfamily \#define W\+V\+\_\+\+M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+\_\+\+D\+E\+C\+O\+D\+E\+RS~14}
+
+
+
+Definition at line 98 of file wavpack.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{wavpack_8c_a8e9cde7f01c3e00005b7c002d13a4037}\label{wavpack_8c_a8e9cde7f01c3e00005b7c002d13a4037}} 
+\index{wavpack.c@{wavpack.c}!WavpackContext@{WavpackContext}}
+\index{WavpackContext@{WavpackContext}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{WavpackContext}{WavpackContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} \mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}}}
+
+\mbox{\Hypertarget{wavpack_8c_ad52f350a101190580b4460606a38c208}\label{wavpack_8c_ad52f350a101190580b4460606a38c208}} 
+\index{wavpack.c@{wavpack.c}!WavpackFrameContext@{WavpackFrameContext}}
+\index{WavpackFrameContext@{WavpackFrameContext}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{WavpackFrameContext}{WavpackFrameContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} \mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{wavpack_8c_a22e5da42c3350892b86104c516865de2}\label{wavpack_8c_a22e5da42c3350892b86104c516865de2}} 
+\index{wavpack.c@{wavpack.c}!Modulation@{Modulation}}
+\index{Modulation@{Modulation}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{Modulation}{Modulation}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{wavpack_8c_a22e5da42c3350892b86104c516865de2}{Modulation}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODULATION\_PCM@{MODULATION\_PCM}!wavpack.c@{wavpack.c}}\index{wavpack.c@{wavpack.c}!MODULATION\_PCM@{MODULATION\_PCM}}}\mbox{\Hypertarget{wavpack_8c_a22e5da42c3350892b86104c516865de2adc555a955cfda06df626a57f92010f89}\label{wavpack_8c_a22e5da42c3350892b86104c516865de2adc555a955cfda06df626a57f92010f89}} 
+M\+O\+D\+U\+L\+A\+T\+I\+O\+N\+\_\+\+P\+CM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODULATION\_DSD@{MODULATION\_DSD}!wavpack.c@{wavpack.c}}\index{wavpack.c@{wavpack.c}!MODULATION\_DSD@{MODULATION\_DSD}}}\mbox{\Hypertarget{wavpack_8c_a22e5da42c3350892b86104c516865de2aedddd5ca27f33a55c42e6065000b37ef}\label{wavpack_8c_a22e5da42c3350892b86104c516865de2aedddd5ca27f33a55c42e6065000b37ef}} 
+M\+O\+D\+U\+L\+A\+T\+I\+O\+N\+\_\+\+D\+SD&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 61 of file wavpack.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{wavpack_8c_a6e913cbcfc36cf4461e1b1d4d8db83c1}\label{wavpack_8c_a6e913cbcfc36cf4461e1b1d4d8db83c1}} 
+\index{wavpack.c@{wavpack.c}!dsd\_channel@{dsd\_channel}}
+\index{dsd\_channel@{dsd\_channel}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{dsd\_channel()}{dsd\_channel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dsd\+\_\+channel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{frmptr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{threadnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1615 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{wavpack_8c_a6e913cbcfc36cf4461e1b1d4d8db83c1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{wavpack_8c_a6e913cbcfc36cf4461e1b1d4d8db83c1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a9bfc4b7f7c18ab9078b736738469f3d5}\label{wavpack_8c_a9bfc4b7f7c18ab9078b736738469f3d5}} 
+\index{wavpack.c@{wavpack.c}!get\_tail@{get\_tail}}
+\index{get\_tail@{get\_tail}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{get\_tail()}{get\_tail()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} unsigned get\+\_\+tail (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 121 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=307pt]{wavpack_8c_a9bfc4b7f7c18ab9078b736738469f3d5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a9bfc4b7f7c18ab9078b736738469f3d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_ab1666a40a54bbde766743f420d231cbf}\label{wavpack_8c_ab1666a40a54bbde766743f420d231cbf}} 
+\index{wavpack.c@{wavpack.c}!init\_ptable@{init\_ptable}}
+\index{init\_ptable@{init\_ptable}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{init\_ptable()}{init\_ptable()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+ptable (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{table,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{rate\+\_\+i,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{rate\+\_\+s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 416 of file wavpack.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_ab1666a40a54bbde766743f420d231cbf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a41e2db0324d8fa92c2040f1ff7a9b4a7}\label{wavpack_8c_a41e2db0324d8fa92c2040f1ff7a9b4a7}} 
+\index{wavpack.c@{wavpack.c}!update\_error\_limit@{update\_error\_limit}}
+\index{update\_error\_limit@{update\_error\_limit}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{update\_error\_limit()}{update\_error\_limit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+error\+\_\+limit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 135 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{wavpack_8c_a41e2db0324d8fa92c2040f1ff7a9b4a7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a41e2db0324d8fa92c2040f1ff7a9b4a7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a05a9759175867e508539b7c7f8d7103c}\label{wavpack_8c_a05a9759175867e508539b7c7f8d7103c}} 
+\index{wavpack.c@{wavpack.c}!wavpack\_decode\_block@{wavpack\_decode\_block}}
+\index{wavpack\_decode\_block@{wavpack\_decode\_block}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wavpack\_decode\_block()}{wavpack\_decode\_block()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wavpack\+\_\+decode\+\_\+block (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{block\+\_\+no,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1079 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a05a9759175867e508539b7c7f8d7103c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a05a9759175867e508539b7c7f8d7103c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a200348c636c54adb630d18d9b9fffeef}\label{wavpack_8c_a200348c636c54adb630d18d9b9fffeef}} 
+\index{wavpack.c@{wavpack.c}!wavpack\_decode\_end@{wavpack\_decode\_end}}
+\index{wavpack\_decode\_end@{wavpack\_decode\_end}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wavpack\_decode\_end()}{wavpack\_decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wavpack\+\_\+decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1060 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a200348c636c54adb630d18d9b9fffeef_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a0d6d24a6493f06f23e93f2e7ffcb3797}\label{wavpack_8c_a0d6d24a6493f06f23e93f2e7ffcb3797}} 
+\index{wavpack.c@{wavpack.c}!wavpack\_decode\_flush@{wavpack\_decode\_flush}}
+\index{wavpack\_decode\_flush@{wavpack\_decode\_flush}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wavpack\_decode\_flush()}{wavpack\_decode\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wavpack\+\_\+decode\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1608 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a0d6d24a6493f06f23e93f2e7ffcb3797_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a6e0dd31d34d4b4e89f9a8b3d4bcc907e}\label{wavpack_8c_a6e0dd31d34d4b4e89f9a8b3d4bcc907e}} 
+\index{wavpack.c@{wavpack.c}!wavpack\_decode\_frame@{wavpack\_decode\_frame}}
+\index{wavpack\_decode\_frame@{wavpack\_decode\_frame}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wavpack\_decode\_frame()}{wavpack\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wavpack\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1627 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a6e0dd31d34d4b4e89f9a8b3d4bcc907e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_ae37ce0fe6a4948e9be98caf5c0f3984f}\label{wavpack_8c_ae37ce0fe6a4948e9be98caf5c0f3984f}} 
+\index{wavpack.c@{wavpack.c}!wavpack\_decode\_init@{wavpack\_decode\_init}}
+\index{wavpack\_decode\_init@{wavpack\_decode\_init}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wavpack\_decode\_init()}{wavpack\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wavpack\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1041 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_ae37ce0fe6a4948e9be98caf5c0f3984f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a8a26783aa12943c76e874936adba9645}\label{wavpack_8c_a8a26783aa12943c76e874936adba9645}} 
+\index{wavpack.c@{wavpack.c}!wv\_alloc\_frame\_context@{wv\_alloc\_frame\_context}}
+\index{wv\_alloc\_frame\_context@{wv\_alloc\_frame\_context}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_alloc\_frame\_context()}{wv\_alloc\_frame\_context()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+alloc\+\_\+frame\+\_\+context (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 971 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=300pt]{wavpack_8c_a8a26783aa12943c76e874936adba9645_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a8a26783aa12943c76e874936adba9645_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_afb43e6d5a679fade21e39c476b20cfda}\label{wavpack_8c_afb43e6d5a679fade21e39c476b20cfda}} 
+\index{wavpack.c@{wavpack.c}!wv\_check\_crc@{wv\_check\_crc}}
+\index{wv\_check\_crc@{wv\_check\_crc}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_check\_crc()}{wv\_check\_crc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+check\+\_\+crc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{uint32\+\_\+t}]{crc,  }\item[{uint32\+\_\+t}]{crc\+\_\+extra\+\_\+bits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 401 of file wavpack.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_afb43e6d5a679fade21e39c476b20cfda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a47f8782b39c88e43b586396240c276cf}\label{wavpack_8c_a47f8782b39c88e43b586396240c276cf}} 
+\index{wavpack.c@{wavpack.c}!wv\_dsd\_reset@{wv\_dsd\_reset}}
+\index{wv\_dsd\_reset@{wv\_dsd\_reset}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_dsd\_reset()}{wv\_dsd\_reset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+dsd\+\_\+reset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_context}{Wavpack\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 985 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a47f8782b39c88e43b586396240c276cf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a47f8782b39c88e43b586396240c276cf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a5d04770dca08fc78ec1e5c706a907ffa}\label{wavpack_8c_a5d04770dca08fc78ec1e5c706a907ffa}} 
+\index{wavpack.c@{wavpack.c}!wv\_get\_value@{wv\_get\_value}}
+\index{wv\_get\_value@{wv\_get\_value}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_get\_value()}{wv\_get\_value()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+get\+\_\+value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{last }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 173 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a5d04770dca08fc78ec1e5c706a907ffa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a5d04770dca08fc78ec1e5c706a907ffa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a04ab4d4b837dc3d29d83a810f56c9890}\label{wavpack_8c_a04ab4d4b837dc3d29d83a810f56c9890}} 
+\index{wavpack.c@{wavpack.c}!wv\_get\_value\_float@{wv\_get\_value\_float}}
+\index{wv\_get\_value\_float@{wv\_get\_value\_float}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_get\_value\_float()}{wv\_get\_value\_float()}}
+{\footnotesize\ttfamily static float wv\+\_\+get\+\_\+value\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{uint32\+\_\+t $\ast$}]{crc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{S }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 327 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a04ab4d4b837dc3d29d83a810f56c9890_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a04ab4d4b837dc3d29d83a810f56c9890_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a68fde2538861f9c7954114779c6f3ca5}\label{wavpack_8c_a68fde2538861f9c7954114779c6f3ca5}} 
+\index{wavpack.c@{wavpack.c}!wv\_get\_value\_integer@{wv\_get\_value\_integer}}
+\index{wv\_get\_value\_integer@{wv\_get\_value\_integer}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_get\_value\_integer()}{wv\_get\_value\_integer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+get\+\_\+value\+\_\+integer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{uint32\+\_\+t $\ast$}]{crc,  }\item[{unsigned}]{S }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 303 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a68fde2538861f9c7954114779c6f3ca5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a68fde2538861f9c7954114779c6f3ca5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a0b23372b725faedb411c0eb094773633}\label{wavpack_8c_a0b23372b725faedb411c0eb094773633}} 
+\index{wavpack.c@{wavpack.c}!wv\_unpack\_dsd\_copy@{wv\_unpack\_dsd\_copy}}
+\index{wv\_unpack\_dsd\_copy@{wv\_unpack\_dsd\_copy}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_unpack\_dsd\_copy()}{wv\_unpack\_dsd\_copy()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+unpack\+\_\+dsd\+\_\+copy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+left,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+right }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 741 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a0b23372b725faedb411c0eb094773633_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a0b23372b725faedb411c0eb094773633_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a004677db4883ea126f0cf8fe9fa00356}\label{wavpack_8c_a004677db4883ea126f0cf8fe9fa00356}} 
+\index{wavpack.c@{wavpack.c}!wv\_unpack\_dsd\_fast@{wv\_unpack\_dsd\_fast}}
+\index{wv\_unpack\_dsd\_fast@{wv\_unpack\_dsd\_fast}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_unpack\_dsd\_fast()}{wv\_unpack\_dsd\_fast()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+unpack\+\_\+dsd\+\_\+fast (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+left,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+right }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 580 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a004677db4883ea126f0cf8fe9fa00356_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a004677db4883ea126f0cf8fe9fa00356_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a40160106ccdc45bf8b51ccb81112d249}\label{wavpack_8c_a40160106ccdc45bf8b51ccb81112d249}} 
+\index{wavpack.c@{wavpack.c}!wv\_unpack\_dsd\_high@{wv\_unpack\_dsd\_high}}
+\index{wv\_unpack\_dsd\_high@{wv\_unpack\_dsd\_high}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_unpack\_dsd\_high()}{wv\_unpack\_dsd\_high()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+unpack\+\_\+dsd\+\_\+high (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+left,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+right }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 441 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a40160106ccdc45bf8b51ccb81112d249_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a40160106ccdc45bf8b51ccb81112d249_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a247510977eca23f34a1b9b9c1fce9eb0}\label{wavpack_8c_a247510977eca23f34a1b9b9c1fce9eb0}} 
+\index{wavpack.c@{wavpack.c}!wv\_unpack\_mono@{wv\_unpack\_mono}}
+\index{wv\_unpack\_mono@{wv\_unpack\_mono}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_unpack\_mono()}{wv\_unpack\_mono()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+unpack\+\_\+mono (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{dst,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 904 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a247510977eca23f34a1b9b9c1fce9eb0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a247510977eca23f34a1b9b9c1fce9eb0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wavpack_8c_a5bce977c21edf5a56d91a14393f690c7}\label{wavpack_8c_a5bce977c21edf5a56d91a14393f690c7}} 
+\index{wavpack.c@{wavpack.c}!wv\_unpack\_stereo@{wv\_unpack\_stereo}}
+\index{wv\_unpack\_stereo@{wv\_unpack\_stereo}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{wv\_unpack\_stereo()}{wv\_unpack\_stereo()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} wv\+\_\+unpack\+\_\+stereo (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wavpack_frame_context}{Wavpack\+Frame\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{dst\+\_\+l,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{dst\+\_\+r,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 773 of file wavpack.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a5bce977c21edf5a56d91a14393f690c7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wavpack_8c_a5bce977c21edf5a56d91a14393f690c7_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{wavpack_8c_a7a8e73c4d4ae0a91467c7936a33363fb}\label{wavpack_8c_a7a8e73c4d4ae0a91467c7936a33363fb}} 
+\index{wavpack.c@{wavpack.c}!ff\_wavpack\_decoder@{ff\_wavpack\_decoder}}
+\index{ff\_wavpack\_decoder@{ff\_wavpack\_decoder}!wavpack.c@{wavpack.c}}
+\doxysubsubsection{\texorpdfstring{ff\_wavpack\_decoder}{ff\_wavpack\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+wavpack\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}wavpack"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}WavPack"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceae6f1c1bbb4e389366f56cfb8cc77d240}{AV\_CODEC\_ID\_WAVPACK}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{wavpack_8c_a8e9cde7f01c3e00005b7c002d13a4037}{WavpackContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{wavpack_8c_ae37ce0fe6a4948e9be98caf5c0f3984f}{wavpack\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{wavpack_8c_a200348c636c54adb630d18d9b9fffeef}{wavpack\_decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{wavpack_8c_a6e0dd31d34d4b4e89f9a8b3d4bcc907e}{wavpack\_decode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{wavpack_8c_a0d6d24a6493f06f23e93f2e7ffcb3797}{wavpack\_decode\_flush}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{multithreading_8txt_a4e871baf97bc0c256543f0fde05c8307}{update\_thread\_context}} = \mbox{\hyperlink{libavutil_2internal_8h_ab9aca4492668a79bc015f43ad944021e}{ONLY\_IF\_THREADS\_ENABLED}}(\mbox{\hyperlink{multithreading_8txt_a4e871baf97bc0c256543f0fde05c8307}{update\_thread\_context}}),}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}} |}
+\DoxyCodeLine{                      \mbox{\hyperlink{group__lavc__core_ga7c4f386d1d6df0214eb35f2be1c82779}{AV\_CODEC\_CAP\_SLICE\_THREADS}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_a133d9f0e29862e9f1726beafc530e052}{FF\_CODEC\_CAP\_ALLOCATE\_PROGRESS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1702 of file wavpack.\+c.
+

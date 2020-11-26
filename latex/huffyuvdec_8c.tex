@@ -1,0 +1,807 @@
+\hypertarget{huffyuvdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/huffyuvdec.c File Reference}
+\label{huffyuvdec_8c}\index{E:/github/ffmpeg/libavcodec/huffyuvdec.c@{E:/github/ffmpeg/libavcodec/huffyuvdec.c}}
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}huffyuv.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}huffyuvdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lossless\+\_\+videodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+Include dependency graph for huffyuvdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_aacb464290bb27b2794d11b8cbbd066db}{U\+N\+C\+H\+E\+C\+K\+E\+D\+\_\+\+B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+ER}}~1
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_a657dbe67cdf25c709e15c63f30e04ab1}{classic\+\_\+shift\+\_\+luma\+\_\+table\+\_\+size}}~42
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_ab404bccbe2b3478660a92d118814abc9}{classic\+\_\+shift\+\_\+chroma\+\_\+table\+\_\+size}}~59
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_a42c3d95cc0785690c7dad44946ff0d79}{V\+L\+C\+\_\+\+I\+N\+T\+E\+RN}}(dst,  \mbox{\hyperlink{avsscanf_8c_aae0de2108a7eb5b59d9e17d95ef1c1e0}{table}},  gb,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  max\+\_\+depth)
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_a188db44c41674c069e5ea8917b6ee67a}{G\+E\+T\+\_\+\+V\+L\+C\+\_\+\+D\+U\+AL}}(dst0,  dst1,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  gb,  dtable,  table1,  table2,  \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  max\+\_\+depth,  \mbox{\hyperlink{postprocess__altivec__template_8c_a52267107dd1016c80abd3e27e445e437}{OP}})
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_a46bd59012b100c46b812e6ba58e822d6}{O\+P8bits}}(dst0,  dst1,  \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}})~dst0 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}$>$$>$8; dst1 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_a6c1e77a397c39878aa0e1e60403f7d7d}{R\+E\+A\+D\+\_\+2\+P\+IX}}(dst0,  dst1,  plane1)
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_acc5efa943369909fc4dd1b1d38d8ca03}{R\+E\+A\+D\+\_\+2\+P\+I\+X\+\_\+\+P\+L\+A\+NE}}(dst0,  dst1,  plane,  \mbox{\hyperlink{postprocess__altivec__template_8c_a52267107dd1016c80abd3e27e445e437}{OP}})
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_af8fe5411f8ad7e0ace748b5032ca456a}{O\+P14bits}}(dst0,  dst1,  \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}})~dst0 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}$>$$>$8; dst1 = \mbox{\hyperlink{mathops_8h_a35a015201762cabff1d0dafe70b86855}{sign\+\_\+extend}}(\mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}, 8)
+\item 
+\#define \mbox{\hyperlink{huffyuvdec_8c_abbc64a00b4629b0e8e5953af1ef7a2dc}{R\+E\+A\+D\+\_\+2\+P\+I\+X\+\_\+\+P\+L\+A\+N\+E16}}(dst0,  dst1,  plane)
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a26e7b72c343ed45866cfa9aefe5193f7}{read\+\_\+len\+\_\+table}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_abf8ca36701936b4da6d1a08d02e1a449}{generate\+\_\+joint\+\_\+tables}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_aa8cb6399c9780ecb17d405aa90168f51}{read\+\_\+huffman\+\_\+tables}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a9049a15c2bbcfc465623569737661beb}{read\+\_\+old\+\_\+huffman\+\_\+tables}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_a16859591e39d80bc30db181bad0e9895}{decode\+\_\+422\+\_\+bitstream}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_a394a1e47006017caa08862de47a531e2}{decode\+\_\+plane\+\_\+bitstream}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_af130f41375e4c25b28827171de700baa}{decode\+\_\+gray\+\_\+bitstream}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_aeaf30bf5c4eef1f4160ae79d1a9f5e31}{decode\+\_\+bgr\+\_\+1}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2takdec_8c_a70e583ac213bac65988ac3af1106ee9f}{decorrelate}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__geq_8c_a62da772255bc551e680d5f4ed47cfeba}{alpha}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_a985f45bbf1d690db8386311a46d73051}{decode\+\_\+bgr\+\_\+bitstream}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_ac456de86c47f8b142bda1c50ea58b53b}{draw\+\_\+slice}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a9489b97f0846ed0d8e8906ac0238e318}{left\+\_\+prediction}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{yuv2rgb_8c_af4737dfbbc138ccc0868064f253cbcc8}{acc}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_a57a6e13214e1088bcca5c6e3aa9f5e68}{add\+\_\+bytes}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{huffyuvdec_8c_ae9d6cd9970266df4e8dd5afbf1681183}{add\+\_\+median\+\_\+prediction}} (\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{vf__paletteuse_8c_af3df6bdf48751b51386bd31c3568f2fd}{diff}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{snow_8txt_a7c18a837a38b8c96472a1d0abe1711d1}{left}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$left\+\_\+top)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_a8b81b5c90c008f3075d7a47a0ed7337b}{decode\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+offset, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} table\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{huffyuvdec_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const unsigned char \mbox{\hyperlink{huffyuvdec_8c_a8f4fdbcf53ebd9fe015f78ef4aa7c0cb}{classic\+\_\+shift\+\_\+luma}} \mbox{[}\mbox{\hyperlink{huffyuvdec_8c_a657dbe67cdf25c709e15c63f30e04ab1}{classic\+\_\+shift\+\_\+luma\+\_\+table\+\_\+size}}+\mbox{\hyperlink{tableprint__vlc_8h_a8f5b632a03ce83ac8e025894b1fc307a}{A\+V\+\_\+\+I\+N\+P\+U\+T\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+static const unsigned char \mbox{\hyperlink{huffyuvdec_8c_ae7a32aa1d9acaf68c595a65739760156}{classic\+\_\+shift\+\_\+chroma}} \mbox{[}\mbox{\hyperlink{huffyuvdec_8c_ab404bccbe2b3478660a92d118814abc9}{classic\+\_\+shift\+\_\+chroma\+\_\+table\+\_\+size}}+\mbox{\hyperlink{tableprint__vlc_8h_a8f5b632a03ce83ac8e025894b1fc307a}{A\+V\+\_\+\+I\+N\+P\+U\+T\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+static const unsigned char \mbox{\hyperlink{huffyuvdec_8c_a04f0082e0ecb2016ec68afd1343591c7}{classic\+\_\+add\+\_\+luma}} \mbox{[}256\mbox{]}
+\item 
+static const unsigned char \mbox{\hyperlink{huffyuvdec_8c_a5f2885cf75296e045bba6e3b1b9e92b1}{classic\+\_\+add\+\_\+chroma}} \mbox{[}256\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{huffyuvdec_8c_a1502141857860a00a8428a9fab168d10}{ff\+\_\+huffyuv\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+huffyuv decoder 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{huffyuvdec_8c_ab404bccbe2b3478660a92d118814abc9}\label{huffyuvdec_8c_ab404bccbe2b3478660a92d118814abc9}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_shift\_chroma\_table\_size@{classic\_shift\_chroma\_table\_size}}
+\index{classic\_shift\_chroma\_table\_size@{classic\_shift\_chroma\_table\_size}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_shift\_chroma\_table\_size}{classic\_shift\_chroma\_table\_size}}
+{\footnotesize\ttfamily \#define classic\+\_\+shift\+\_\+chroma\+\_\+table\+\_\+size~59}
+
+
+
+Definition at line 52 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a657dbe67cdf25c709e15c63f30e04ab1}\label{huffyuvdec_8c_a657dbe67cdf25c709e15c63f30e04ab1}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_shift\_luma\_table\_size@{classic\_shift\_luma\_table\_size}}
+\index{classic\_shift\_luma\_table\_size@{classic\_shift\_luma\_table\_size}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_shift\_luma\_table\_size}{classic\_shift\_luma\_table\_size}}
+{\footnotesize\ttfamily \#define classic\+\_\+shift\+\_\+luma\+\_\+table\+\_\+size~42}
+
+
+
+Definition at line 44 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a188db44c41674c069e5ea8917b6ee67a}\label{huffyuvdec_8c_a188db44c41674c069e5ea8917b6ee67a}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!GET\_VLC\_DUAL@{GET\_VLC\_DUAL}}
+\index{GET\_VLC\_DUAL@{GET\_VLC\_DUAL}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{GET\_VLC\_DUAL}{GET\_VLC\_DUAL}}
+{\footnotesize\ttfamily \#define G\+E\+T\+\_\+\+V\+L\+C\+\_\+\+D\+U\+AL(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{gb,  }\item[{}]{dtable,  }\item[{}]{table1,  }\item[{}]{table2,  }\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  }\item[{}]{max\+\_\+depth,  }\item[{}]{\mbox{\hyperlink{postprocess__altivec__template_8c_a52267107dd1016c80abd3e27e445e437}{OP}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                            \(\backslash\)}
+\DoxyCodeLine{        unsigned \textcolor{keywordtype}{int} \mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}} = \mbox{\hyperlink{get__bits_8h_a4e11e2c007540a289872ed149593167e}{SHOW\_UBITS}}(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}});            \(\backslash\)}
+\DoxyCodeLine{        int          \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}}, n = dtable[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][1];                    \mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{                                                                    \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{        if}} (n<=0) \{                                                 \(\backslash\)}
+\DoxyCodeLine{            int nb\_bits;                                            \(\backslash\)}
+\DoxyCodeLine{            VLC\_INTERN(dst0, table1, gb, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}}, max\_depth);    \mbox{\hyperlink{get__bits_8h_a757e9fd1245a692628b2bb0c699be27c}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{get__bits_8h_a757e9fd1245a692628b2bb0c699be27c}{                                                                    \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{get__bits_8h_a757e9fd1245a692628b2bb0c699be27c}{            UPDATE\_CACHE}}(\mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, gb);                                   \(\backslash\)}
+\DoxyCodeLine{            index = \mbox{\hyperlink{get__bits_8h_a4e11e2c007540a289872ed149593167e}{SHOW\_UBITS}}(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}});                     \(\backslash\)}
+\DoxyCodeLine{            VLC\_INTERN(dst1, table2, gb, \mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}}, max\_depth);    \(\backslash\)}
+\DoxyCodeLine{        \} \textcolor{keywordflow}{else} \{                                                    \(\backslash\)}
+\DoxyCodeLine{            code = dtable[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][0];                                \(\backslash\)}
+\DoxyCodeLine{            OP(dst0, dst1, \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}});                                   \(\backslash\)}
+\DoxyCodeLine{            LAST\_SKIP\_BITS(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, n);                            \(\backslash\)}
+\DoxyCodeLine{        \}                                                           \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+Definition at line 599 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_af8fe5411f8ad7e0ace748b5032ca456a}\label{huffyuvdec_8c_af8fe5411f8ad7e0ace748b5032ca456a}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!OP14bits@{OP14bits}}
+\index{OP14bits@{OP14bits}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{OP14bits}{OP14bits}}
+{\footnotesize\ttfamily \#define O\+P14bits(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{\mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}} }\end{DoxyParamCaption})~dst0 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}$>$$>$8; dst1 = \mbox{\hyperlink{mathops_8h_a35a015201762cabff1d0dafe70b86855}{sign\+\_\+extend}}(\mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}, 8)}
+
+
+
+Definition at line 660 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a46bd59012b100c46b812e6ba58e822d6}\label{huffyuvdec_8c_a46bd59012b100c46b812e6ba58e822d6}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!OP8bits@{OP8bits}}
+\index{OP8bits@{OP8bits}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{OP8bits}{OP8bits}}
+{\footnotesize\ttfamily \#define O\+P8bits(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{\mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}} }\end{DoxyParamCaption})~dst0 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}$>$$>$8; dst1 = \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}}
+
+
+
+Definition at line 619 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a6c1e77a397c39878aa0e1e60403f7d7d}\label{huffyuvdec_8c_a6c1e77a397c39878aa0e1e60403f7d7d}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!READ\_2PIX@{READ\_2PIX}}
+\index{READ\_2PIX@{READ\_2PIX}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{READ\_2PIX}{READ\_2PIX}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D\+\_\+2\+P\+IX(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{plane1 }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{get__bits_8h_a757e9fd1245a692628b2bb0c699be27c}{UPDATE\_CACHE}}(\mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, \&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb);                                           \(\backslash\)}
+\DoxyCodeLine{    GET\_VLC\_DUAL(dst0, dst1, \mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, \&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[4+plane1].table,        \(\backslash\)}
+\DoxyCodeLine{                 \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[0].table, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[plane1].table, \mbox{\hyperlink{cfhd_8h_ab98a3b34a58ba62b543b5576499efbb1}{VLC\_BITS}}, 3, \mbox{\hyperlink{huffyuvdec_8c_a46bd59012b100c46b812e6ba58e822d6}{OP8bits}})}
+
+\end{DoxyCode}
+
+
+Definition at line 621 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_acc5efa943369909fc4dd1b1d38d8ca03}\label{huffyuvdec_8c_acc5efa943369909fc4dd1b1d38d8ca03}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!READ\_2PIX\_PLANE@{READ\_2PIX\_PLANE}}
+\index{READ\_2PIX\_PLANE@{READ\_2PIX\_PLANE}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{READ\_2PIX\_PLANE}{READ\_2PIX\_PLANE}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D\+\_\+2\+P\+I\+X\+\_\+\+P\+L\+A\+NE(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{plane,  }\item[{}]{\mbox{\hyperlink{postprocess__altivec__template_8c_a52267107dd1016c80abd3e27e445e437}{OP}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{get__bits_8h_a757e9fd1245a692628b2bb0c699be27c}{UPDATE\_CACHE}}(\mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, \&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb); \(\backslash\)}
+\DoxyCodeLine{    GET\_VLC\_DUAL(dst0, dst1, \mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, \&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[4+plane].table, \(\backslash\)}
+\DoxyCodeLine{                 \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[plane].table, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[plane].table, \mbox{\hyperlink{cfhd_8h_ab98a3b34a58ba62b543b5576499efbb1}{VLC\_BITS}}, 3, \mbox{\hyperlink{hpeldsp__alpha_8c_ae38bba770a70c5bc0d0c07f68c6e72ad}{OP}})}
+
+\end{DoxyCode}
+
+
+Definition at line 655 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_abbc64a00b4629b0e8e5953af1ef7a2dc}\label{huffyuvdec_8c_abbc64a00b4629b0e8e5953af1ef7a2dc}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!READ\_2PIX\_PLANE16@{READ\_2PIX\_PLANE16}}
+\index{READ\_2PIX\_PLANE16@{READ\_2PIX\_PLANE16}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{READ\_2PIX\_PLANE16}{READ\_2PIX\_PLANE16}}
+{\footnotesize\ttfamily \#define R\+E\+A\+D\+\_\+2\+P\+I\+X\+\_\+\+P\+L\+A\+N\+E16(\begin{DoxyParamCaption}\item[{}]{dst0,  }\item[{}]{dst1,  }\item[{}]{plane }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{\(\backslash\)}
+\DoxyCodeLine{    dst0 = \mbox{\hyperlink{get__bits_8h_a3ba3e032e40fae0f98ba46a0f5201195}{get\_vlc2}}(\&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[plane].table, \mbox{\hyperlink{cfhd_8h_ab98a3b34a58ba62b543b5576499efbb1}{VLC\_BITS}}, 3)<<2;\(\backslash\)}
+\DoxyCodeLine{    dst0 += \mbox{\hyperlink{get__bits_8h_abd82eee339b2471e5d9b4bfecfdc6b5f}{get\_bits}}(\&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, 2);\(\backslash\)}
+\DoxyCodeLine{    dst1 = \mbox{\hyperlink{get__bits_8h_a3ba3e032e40fae0f98ba46a0f5201195}{get\_vlc2}}(\&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>vlc[plane].table, \mbox{\hyperlink{cfhd_8h_ab98a3b34a58ba62b543b5576499efbb1}{VLC\_BITS}}, 3)<<2;\(\backslash\)}
+\DoxyCodeLine{    dst1 += \mbox{\hyperlink{get__bits_8h_abd82eee339b2471e5d9b4bfecfdc6b5f}{get\_bits}}(\&\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>gb, 2);\(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 664 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_aacb464290bb27b2794d11b8cbbd066db}\label{huffyuvdec_8c_aacb464290bb27b2794d11b8cbbd066db}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!UNCHECKED\_BITSTREAM\_READER@{UNCHECKED\_BITSTREAM\_READER}}
+\index{UNCHECKED\_BITSTREAM\_READER@{UNCHECKED\_BITSTREAM\_READER}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{UNCHECKED\_BITSTREAM\_READER}{UNCHECKED\_BITSTREAM\_READER}}
+{\footnotesize\ttfamily \#define U\+N\+C\+H\+E\+C\+K\+E\+D\+\_\+\+B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+ER~1}
+
+
+
+Definition at line 33 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a42c3d95cc0785690c7dad44946ff0d79}\label{huffyuvdec_8c_a42c3d95cc0785690c7dad44946ff0d79}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!VLC\_INTERN@{VLC\_INTERN}}
+\index{VLC\_INTERN@{VLC\_INTERN}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{VLC\_INTERN}{VLC\_INTERN}}
+{\footnotesize\ttfamily \#define V\+L\+C\+\_\+\+I\+N\+T\+E\+RN(\begin{DoxyParamCaption}\item[{}]{dst,  }\item[{}]{\mbox{\hyperlink{avsscanf_8c_aae0de2108a7eb5b59d9e17d95ef1c1e0}{table}},  }\item[{}]{gb,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  }\item[{}]{max\+\_\+depth }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}} = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][0];                                 \(\backslash\)}
+\DoxyCodeLine{    n    = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][1];                                 \(\backslash\)}
+\DoxyCodeLine{    if (max\_depth > 1 \&\& n < 0) \{                           \(\backslash\)}
+\DoxyCodeLine{        LAST\_SKIP\_BITS(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}});                     \(\backslash\)}
+\DoxyCodeLine{        UPDATE\_CACHE(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb);                             \(\backslash\)}
+\DoxyCodeLine{                                                            \(\backslash\)}
+\DoxyCodeLine{        nb\_bits = -\/n;                                       \(\backslash\)}
+\DoxyCodeLine{        index   = \mbox{\hyperlink{get__bits_8h_a4e11e2c007540a289872ed149593167e}{SHOW\_UBITS}}(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, nb\_bits) + \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}};     \(\backslash\)}
+\DoxyCodeLine{        code    = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][0];                          \(\backslash\)}
+\DoxyCodeLine{        n       = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][1];                          \(\backslash\)}
+\DoxyCodeLine{        if (max\_depth > 2 \&\& n < 0) \{                       \(\backslash\)}
+\DoxyCodeLine{            LAST\_SKIP\_BITS(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, nb\_bits);              \(\backslash\)}
+\DoxyCodeLine{            UPDATE\_CACHE(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb);                         \(\backslash\)}
+\DoxyCodeLine{                                                            \(\backslash\)}
+\DoxyCodeLine{            nb\_bits = -\/n;                                   \(\backslash\)}
+\DoxyCodeLine{            index   = \mbox{\hyperlink{get__bits_8h_a4e11e2c007540a289872ed149593167e}{SHOW\_UBITS}}(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, nb\_bits) + \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}}; \(\backslash\)}
+\DoxyCodeLine{            code    = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][0];                      \(\backslash\)}
+\DoxyCodeLine{            n       = \mbox{\hyperlink{prosumer_8c_a8f9d32e424405551734404b133418a22}{table}}[\mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}][1];                      \(\backslash\)}
+\DoxyCodeLine{        \}                                                   \(\backslash\)}
+\DoxyCodeLine{    \}                                                       \(\backslash\)}
+\DoxyCodeLine{    dst = \mbox{\hyperlink{filter__design_8txt_a30adc75414e0a59ca94aad7a56e17e42}{code}};                                             \(\backslash\)}
+\DoxyCodeLine{    LAST\_SKIP\_BITS(\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}, gb, n)}
+
+\end{DoxyCode}
+Subset of G\+E\+T\+\_\+\+V\+LC for use in hand-\/roller \mbox{\hyperlink{struct_v_l_c}{V\+LC}} code 
+
+Definition at line 574 of file huffyuvdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{huffyuvdec_8c_a57a6e13214e1088bcca5c6e3aa9f5e68}\label{huffyuvdec_8c_a57a6e13214e1088bcca5c6e3aa9f5e68}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!add\_bytes@{add\_bytes}}
+\index{add\_bytes@{add\_bytes}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_bytes()}{add\_bytes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+bytes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 859 of file huffyuvdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a57a6e13214e1088bcca5c6e3aa9f5e68_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_ae9d6cd9970266df4e8dd5afbf1681183}\label{huffyuvdec_8c_ae9d6cd9970266df4e8dd5afbf1681183}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!add\_median\_prediction@{add\_median\_prediction}}
+\index{add\_median\_prediction@{add\_median\_prediction}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{add\_median\_prediction()}{add\_median\_prediction()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+median\+\_\+prediction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{diff,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{left,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{left\+\_\+top }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 868 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{huffyuvdec_8c_ae9d6cd9970266df4e8dd5afbf1681183_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_ae9d6cd9970266df4e8dd5afbf1681183_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a16859591e39d80bc30db181bad0e9895}\label{huffyuvdec_8c_a16859591e39d80bc30db181bad0e9895}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_422\_bitstream@{decode\_422\_bitstream}}
+\index{decode\_422\_bitstream@{decode\_422\_bitstream}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_422\_bitstream()}{decode\_422\_bitstream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+422\+\_\+bitstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 626 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a16859591e39d80bc30db181bad0e9895_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a16859591e39d80bc30db181bad0e9895_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_aeaf30bf5c4eef1f4160ae79d1a9f5e31}\label{huffyuvdec_8c_aeaf30bf5c4eef1f4160ae79d1a9f5e31}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_bgr\_1@{decode\_bgr\_1}}
+\index{decode\_bgr\_1@{decode\_bgr\_1}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_bgr\_1()}{decode\_bgr\_1()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+bgr\+\_\+1 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{decorrelate,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{alpha }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 749 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{huffyuvdec_8c_aeaf30bf5c4eef1f4160ae79d1a9f5e31_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_aeaf30bf5c4eef1f4160ae79d1a9f5e31_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a985f45bbf1d690db8386311a46d73051}\label{huffyuvdec_8c_a985f45bbf1d690db8386311a46d73051}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_bgr\_bitstream@{decode\_bgr\_bitstream}}
+\index{decode\_bgr\_bitstream@{decode\_bgr\_bitstream}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_bgr\_bitstream()}{decode\_bgr\_bitstream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+bgr\+\_\+bitstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 807 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a985f45bbf1d690db8386311a46d73051_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a985f45bbf1d690db8386311a46d73051_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}\label{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 277 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_abddc1015c488c3fdb1b0ce8c0350c8da}\label{huffyuvdec_8c_abddc1015c488c3fdb1b0ce8c0350c8da}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1188 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_abddc1015c488c3fdb1b0ce8c0350c8da_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_af130f41375e4c25b28827171de700baa}\label{huffyuvdec_8c_af130f41375e4c25b28827171de700baa}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_gray\_bitstream@{decode\_gray\_bitstream}}
+\index{decode\_gray\_bitstream@{decode\_gray\_bitstream}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_gray\_bitstream()}{decode\_gray\_bitstream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+gray\+\_\+bitstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 731 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_af130f41375e4c25b28827171de700baa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_af130f41375e4c25b28827171de700baa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{huffyuvdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 291 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a394a1e47006017caa08862de47a531e2}\label{huffyuvdec_8c_a394a1e47006017caa08862de47a531e2}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_plane\_bitstream@{decode\_plane\_bitstream}}
+\index{decode\_plane\_bitstream@{decode\_plane\_bitstream}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_plane\_bitstream()}{decode\_plane\_bitstream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+plane\+\_\+bitstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 670 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a394a1e47006017caa08862de47a531e2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a394a1e47006017caa08862de47a531e2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a8b81b5c90c008f3075d7a47a0ed7337b}\label{huffyuvdec_8c_a8b81b5c90c008f3075d7a47a0ed7337b}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!decode\_slice@{decode\_slice}}
+\index{decode\_slice@{decode\_slice}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_slice()}{decode\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+offset,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{table\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 877 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a8b81b5c90c008f3075d7a47a0ed7337b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=267pt]{huffyuvdec_8c_a8b81b5c90c008f3075d7a47a0ed7337b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_ac456de86c47f8b142bda1c50ea58b53b}\label{huffyuvdec_8c_ac456de86c47f8b142bda1c50ea58b53b}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!draw\_slice@{draw\_slice}}
+\index{draw\_slice@{draw\_slice}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{draw\_slice()}{draw\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} draw\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 822 of file huffyuvdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_ac456de86c47f8b142bda1c50ea58b53b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_abf8ca36701936b4da6d1a08d02e1a449}\label{huffyuvdec_8c_abf8ca36701936b4da6d1a08d02e1a449}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!generate\_joint\_tables@{generate\_joint\_tables}}
+\index{generate\_joint\_tables@{generate\_joint\_tables}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{generate\_joint\_tables()}{generate\_joint\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} generate\+\_\+joint\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 118 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_abf8ca36701936b4da6d1a08d02e1a449_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_abf8ca36701936b4da6d1a08d02e1a449_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a9489b97f0846ed0d8e8906ac0238e318}\label{huffyuvdec_8c_a9489b97f0846ed0d8e8906ac0238e318}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!left\_prediction@{left\_prediction}}
+\index{left\_prediction@{left\_prediction}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{left\_prediction()}{left\_prediction()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} left\+\_\+prediction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{acc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 850 of file huffyuvdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a9489b97f0846ed0d8e8906ac0238e318_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_aa8cb6399c9780ecb17d405aa90168f51}\label{huffyuvdec_8c_aa8cb6399c9780ecb17d405aa90168f51}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!read\_huffman\_tables@{read\_huffman\_tables}}
+\index{read\_huffman\_tables@{read\_huffman\_tables}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_huffman\_tables()}{read\_huffman\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+huffman\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 208 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_aa8cb6399c9780ecb17d405aa90168f51_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{huffyuvdec_8c_aa8cb6399c9780ecb17d405aa90168f51_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a26e7b72c343ed45866cfa9aefe5193f7}\label{huffyuvdec_8c_a26e7b72c343ed45866cfa9aefe5193f7}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!read\_len\_table@{read\_len\_table}}
+\index{read\_len\_table@{read\_len\_table}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_len\_table()}{read\_len\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+len\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 99 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a26e7b72c343ed45866cfa9aefe5193f7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a26e7b72c343ed45866cfa9aefe5193f7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{huffyuvdec_8c_a9049a15c2bbcfc465623569737661beb}\label{huffyuvdec_8c_a9049a15c2bbcfc465623569737661beb}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!read\_old\_huffman\_tables@{read\_old\_huffman\_tables}}
+\index{read\_old\_huffman\_tables@{read\_old\_huffman\_tables}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_old\_huffman\_tables()}{read\_old\_huffman\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+old\+\_\+huffman\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_yuv_context}{H\+Yuv\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 237 of file huffyuvdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{huffyuvdec_8c_a9049a15c2bbcfc465623569737661beb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{huffyuvdec_8c_a9049a15c2bbcfc465623569737661beb_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{huffyuvdec_8c_a5f2885cf75296e045bba6e3b1b9e92b1}\label{huffyuvdec_8c_a5f2885cf75296e045bba6e3b1b9e92b1}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_add\_chroma@{classic\_add\_chroma}}
+\index{classic\_add\_chroma@{classic\_add\_chroma}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_add\_chroma}{classic\_add\_chroma}}
+{\footnotesize\ttfamily const unsigned char classic\+\_\+add\+\_\+chroma\mbox{[}256\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{     3,    1,   2,   2,   2,   2,   3,   3,   7,   5,   7,   5,   8,   6,  11,   9,}
+\DoxyCodeLine{     7,   13,  11,  10,   9,   8,   7,   5,   9,   7,   6,   4,   7,   5,   8,   7,}
+\DoxyCodeLine{     11,   8,  13,  11,  19,  15,  22,  23,  20,  33,  32,  28,  27,  29,  51,  77,}
+\DoxyCodeLine{     43,  45,  76,  81,  46,  82,  75,  55,  56, 144,  58,  80,  60,  74, 147,  63,}
+\DoxyCodeLine{    143,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,}
+\DoxyCodeLine{     80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  27,  30,  21,  22,}
+\DoxyCodeLine{     17,  14,   5,   6, 100,  54,  47,  50,  51,  53, 106, 107, 108, 109, 110, 111,}
+\DoxyCodeLine{    112, 113, 114, 115,   4, 117, 118,  92,  94, 121, 122,   3, 124, 103,   2,   1,}
+\DoxyCodeLine{      0, 129, 130, 131, 120, 119, 126, 125, 136, 137, 138, 139, 140, 141, 142, 134,}
+\DoxyCodeLine{    135, 132, 133, 104,  64, 101,  62,  57, 102,  95,  93,  59,  61,  28,  97,  96,}
+\DoxyCodeLine{     52,  49,  48,  29,  32,  25,  24,  46,  23,  98,  45,  44,  43,  20,  42,  41,}
+\DoxyCodeLine{     19,  18,  99,  40,  15,  39,  38,  16,  13,  12,  11,  37,  10,   9,   8,  36,}
+\DoxyCodeLine{      7, 128, 127, 105, 123, 116,  35,  34,  33, 145,  31,  79,  42, 146,  78,  26,}
+\DoxyCodeLine{     83,  48,  49,  50,  44,  47,  26,  31,  30,  18,  17,  19,  21,  24,  25,  13,}
+\DoxyCodeLine{     14,  16,  17,  18,  20,  21,  12,  14,  15,   9,  10,   6,   9,   6,   5,   8,}
+\DoxyCodeLine{      6,  12,   8,  10,   7,   9,   6,   4,   6,   2,   2,   3,   3,   3,   3,   2,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 80 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a04f0082e0ecb2016ec68afd1343591c7}\label{huffyuvdec_8c_a04f0082e0ecb2016ec68afd1343591c7}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_add\_luma@{classic\_add\_luma}}
+\index{classic\_add\_luma@{classic\_add\_luma}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_add\_luma}{classic\_add\_luma}}
+{\footnotesize\ttfamily const unsigned char classic\+\_\+add\+\_\+luma\mbox{[}256\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{     3,  9,  5, 12, 10, 35, 32, 29, 27, 50, 48, 45, 44, 41, 39, 37,}
+\DoxyCodeLine{    73, 70, 68, 65, 64, 61, 58, 56, 53, 50, 49, 46, 44, 41, 38, 36,}
+\DoxyCodeLine{    68, 65, 63, 61, 58, 55, 53, 51, 48, 46, 45, 43, 41, 39, 38, 36,}
+\DoxyCodeLine{    35, 33, 32, 30, 29, 27, 26, 25, 48, 47, 46, 44, 43, 41, 40, 39,}
+\DoxyCodeLine{    37, 36, 35, 34, 32, 31, 30, 28, 27, 26, 24, 23, 22, 20, 19, 37,}
+\DoxyCodeLine{    35, 34, 33, 31, 30, 29, 27, 26, 24, 23, 21, 20, 18, 17, 15, 29,}
+\DoxyCodeLine{    27, 26, 24, 22, 21, 19, 17, 16, 14, 26, 25, 23, 21, 19, 18, 16,}
+\DoxyCodeLine{    15, 27, 25, 23, 21, 19, 17, 16, 14, 26, 25, 23, 21, 18, 17, 14,}
+\DoxyCodeLine{    12, 17, 19, 13,  4,  9,  2, 11,  1,  7,  8,  0, 16,  3, 14,  6,}
+\DoxyCodeLine{    12, 10,  5, 15, 18, 11, 10, 13, 15, 16, 19, 20, 22, 24, 27, 15,}
+\DoxyCodeLine{    18, 20, 22, 24, 26, 14, 17, 20, 22, 24, 27, 15, 18, 20, 23, 25,}
+\DoxyCodeLine{    28, 16, 19, 22, 25, 28, 32, 36, 21, 25, 29, 33, 38, 42, 45, 49,}
+\DoxyCodeLine{    28, 31, 34, 37, 40, 42, 44, 47, 49, 50, 52, 54, 56, 57, 59, 60,}
+\DoxyCodeLine{    62, 64, 66, 67, 69, 35, 37, 39, 40, 42, 43, 45, 47, 48, 51, 52,}
+\DoxyCodeLine{    54, 55, 57, 59, 60, 62, 63, 66, 67, 69, 71, 72, 38, 40, 42, 43,}
+\DoxyCodeLine{    46, 47, 49, 51, 26, 28, 30, 31, 33, 34, 18, 19, 11, 13,  7,  8,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 61 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_ae7a32aa1d9acaf68c595a65739760156}\label{huffyuvdec_8c_ae7a32aa1d9acaf68c595a65739760156}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_shift\_chroma@{classic\_shift\_chroma}}
+\index{classic\_shift\_chroma@{classic\_shift\_chroma}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_shift\_chroma}{classic\_shift\_chroma}}
+{\footnotesize\ttfamily const unsigned char classic\+\_\+shift\+\_\+chroma\mbox{[}\mbox{\hyperlink{huffyuvdec_8c_ab404bccbe2b3478660a92d118814abc9}{classic\+\_\+shift\+\_\+chroma\+\_\+table\+\_\+size}}+\mbox{\hyperlink{tableprint__vlc_8h_a8f5b632a03ce83ac8e025894b1fc307a}{A\+V\+\_\+\+I\+N\+P\+U\+T\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+S\+I\+ZE}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    66, 36,  37,  38, 39, 40,  41,  75,  76,  77, 110, 239, 144, 81, 82,  83,}
+\DoxyCodeLine{    84, 85, 118, 183, 56, 57,  88,  89,  56,  89, 154,  57,  58, 57, 26, 141,}
+\DoxyCodeLine{    57, 56,  58,  57, 58, 57, 184, 119, 214, 245, 116,  83,  82, 49, 80,  79,}
+\DoxyCodeLine{    78, 77,  44,  75, 41, 40,  39,  38,  37,  36,  34,  0,}
+\DoxyCodeLine{  0,0,0,0,0,0,0,0,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 53 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a8f4fdbcf53ebd9fe015f78ef4aa7c0cb}\label{huffyuvdec_8c_a8f4fdbcf53ebd9fe015f78ef4aa7c0cb}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!classic\_shift\_luma@{classic\_shift\_luma}}
+\index{classic\_shift\_luma@{classic\_shift\_luma}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{classic\_shift\_luma}{classic\_shift\_luma}}
+{\footnotesize\ttfamily const unsigned char classic\+\_\+shift\+\_\+luma\mbox{[}\mbox{\hyperlink{huffyuvdec_8c_a657dbe67cdf25c709e15c63f30e04ab1}{classic\+\_\+shift\+\_\+luma\+\_\+table\+\_\+size}}+\mbox{\hyperlink{tableprint__vlc_8h_a8f5b632a03ce83ac8e025894b1fc307a}{A\+V\+\_\+\+I\+N\+P\+U\+T\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+S\+I\+ZE}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    34, 36, 35, 69, 135, 232,   9, 16, 10, 24,  11,  23,  12,  16, 13, 10,}
+\DoxyCodeLine{    14,  8, 15,  8,  16,   8,  17, 20, 16, 10, 207, 206, 205, 236, 11,  8,}
+\DoxyCodeLine{    10, 21,  9, 23,   8,   8, 199, 70, 69, 68,   0,}
+\DoxyCodeLine{  0,0,0,0,0,0,0,0,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 45 of file huffyuvdec.\+c.
+
+\mbox{\Hypertarget{huffyuvdec_8c_a1502141857860a00a8428a9fab168d10}\label{huffyuvdec_8c_a1502141857860a00a8428a9fab168d10}} 
+\index{huffyuvdec.c@{huffyuvdec.c}!ff\_huffyuv\_decoder@{ff\_huffyuv\_decoder}}
+\index{ff\_huffyuv\_decoder@{ff\_huffyuv\_decoder}!huffyuvdec.c@{huffyuvdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_huffyuv\_decoder}{ff\_huffyuv\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+huffyuv\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name             = \textcolor{stringliteral}{"{}huffyuv"{}},}
+\DoxyCodeLine{    .long\_name        = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Huffyuv / HuffYUV"{}}),}
+\DoxyCodeLine{    .type             = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id               = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea2240162eb5e79d7e0b0e4678704276c6}{AV\_CODEC\_ID\_HUFFYUV}},}
+\DoxyCodeLine{    .priv\_data\_size   = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{huffyuv_8h_a94cb5406e68a4144bc64b8dfbf877ee9}{HYuvContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}             = \mbox{\hyperlink{huffyuvdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close            = \mbox{\hyperlink{huffyuvdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}           = \mbox{\hyperlink{huffyuvdec_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\_frame}},}
+\DoxyCodeLine{    .capabilities     = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_ga01fbdf31e076d8902d8f4118c0aea6ea}{AV\_CODEC\_CAP\_DRAW\_HORIZ\_BAND}} |}
+\DoxyCodeLine{                        \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1273 of file huffyuvdec.\+c.
+

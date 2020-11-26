@@ -1,0 +1,1216 @@
+\hypertarget{vf__paletteuse_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+paletteuse.c File Reference}
+\label{vf__paletteuse_8c}\index{E:/github/ffmpeg/libavfilter/vf\_paletteuse.c@{E:/github/ffmpeg/libavfilter/vf\_paletteuse.c}}
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/qsort.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}framesync.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+paletteuse.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}}
+\item 
+struct \mbox{\hyperlink{structcached__color}{cached\+\_\+color}}
+\item 
+struct \mbox{\hyperlink{structcache__node}{cache\+\_\+node}}
+\item 
+struct \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}}
+\item 
+struct \mbox{\hyperlink{structnearest__color}{nearest\+\_\+color}}
+\item 
+struct \mbox{\hyperlink{structstack__node}{stack\+\_\+node}}
+\item 
+struct \mbox{\hyperlink{structcolor}{color}}
+\item 
+struct \mbox{\hyperlink{structcolor__rect}{color\+\_\+rect}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}~5
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a8a6befd630ea1c2ab260266f7466540c}{C\+A\+C\+H\+E\+\_\+\+S\+I\+ZE}}~(1$<$$<$(3$\ast$\mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}))
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a5ace7c473fd1fc0e2f9c43ae6abb6520}{C\+O\+L\+O\+R\+M\+A\+P\+\_\+\+N\+E\+A\+R\+E\+ST}}(\mbox{\hyperlink{vf__find__rect_8c_af87d9de85f8aed850024a07b377fe315}{search}},  palette,  root,  target,  trans\+\_\+thresh)
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a502b06aa5ad25116c775d201326bad52}{I\+N\+D\+E\+NT}}~4
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a9116451f48a8f8e828dd8ffbdfa5648b}{D\+E\+C\+L\+A\+R\+E\+\_\+\+C\+M\+P\+\_\+\+F\+U\+NC}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}})
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a193fc0aacb0aa9bc22270cb650df9ec8}{D\+E\+F\+I\+N\+E\+\_\+\+S\+E\+T\+\_\+\+F\+R\+A\+ME}}(color\+\_\+search,  \mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}})
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_a5e544b33026f8bee9c79baf9fed4f098}{D\+E\+F\+I\+N\+E\+\_\+\+S\+E\+T\+\_\+\+F\+R\+A\+M\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+CH}}(color\+\_\+search,  color\+\_\+search\+\_\+macro)
+\item 
+\#define \mbox{\hyperlink{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+E\+N\+T\+R\+I\+ES}}(color\+\_\+search)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__paletteuse_8c_aa272d2ae908104d7f4d9e76eeb4e0954}{set\+\_\+frame\+\_\+func}}) (struct \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}})
+\item 
+typedef struct \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} \mbox{\hyperlink{vf__paletteuse_8c_a987b991d865e409e0bcaf726219a717d}{Palette\+Use\+Context}}
+\item 
+typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__paletteuse_8c_ae342d1a8ad4d2ea56462fc096983664e}{cmp\+\_\+func}}) (const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$)
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}{dithering\+\_\+mode}} \{ \newline
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a7a1348000a9ea68f8c44e411e0010dcd}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae457fc601bd44bc2c20114a399498969}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+B\+A\+Y\+ER}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ad0d65c69eb82223cb9ceab707e5ab4cc}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+H\+E\+C\+K\+B\+E\+RT}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a6496403e733a9bf449c9be313130d381}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+F\+L\+O\+Y\+D\+\_\+\+S\+T\+E\+I\+N\+B\+E\+RG}}, 
+\newline
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a837baeb2aedee61c5106d0c5447c0840}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+S\+I\+E\+R\+R\+A2}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}{D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+S\+I\+E\+R\+R\+A2\+\_\+4A}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}{N\+B\+\_\+\+D\+I\+T\+H\+E\+R\+I\+NG}}
+ \}
+\item 
+enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}} \{ \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}{C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+N\+N\+S\+\_\+\+I\+T\+E\+R\+A\+T\+I\+VE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a24aeb4b7be57ef36ece2c324203b2d39}{C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+N\+N\+S\+\_\+\+R\+E\+C\+U\+R\+S\+I\+VE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a19e8d7f26c2c0d0ba5d17514cfd39795}{C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+B\+R\+U\+T\+E\+F\+O\+R\+CE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}{N\+B\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\+\_\+mode}} \{ \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93ac4ab7bbb96b17e6ff6b4228b8a5c5083}{D\+I\+F\+F\+\_\+\+M\+O\+D\+E\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93a1bb7dfb9d6aeef82a91664490125b34f}{D\+I\+F\+F\+\_\+\+M\+O\+D\+E\+\_\+\+R\+E\+C\+T\+A\+N\+G\+LE}}, 
+\mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93aa2c9cc7c59b7991c1d380218114273e0}{N\+B\+\_\+\+D\+I\+F\+F\+\_\+\+M\+O\+DE}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__paletteuse_8c_a10abe8ab99cbeb65f34fac7508cb3ec9}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (paletteuse)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a42c28601fc1eeda3dc4cbbe71e6ddbd6}{load\+\_\+apply\+\_\+palette}} (\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$\mbox{\hyperlink{cbs__vp9_8c_af257cad12c4d046a131f33cf6cce2c48}{fs}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_ac51788a28e62832fd82b79a7c2fe8701}{dither\+\_\+color}} (uint32\+\_\+t px, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} er, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} eg, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} eb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} scale, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2swresample_8c_a78dd9f7c9440136f1bd89fab33ad2fb2}{shift}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_af3df6bdf48751b51386bd31c3568f2fd}{diff}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{murmur3_8c_a4d68f4a1f764d8b45413b33127c24ca8}{c1}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{murmur3_8c_a3b64fdbd8e90e5f4782ca75d197e9e5c}{c2}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b}{colormap\+\_\+nearest\+\_\+bruteforce}} (const uint32\+\_\+t $\ast$palette, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$argb, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_a225aebfc6f722cda40dc90febf2e1069}{colormap\+\_\+nearest\+\_\+node}} (const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$\mbox{\hyperlink{vf__procamp__vaapi_8c_a4d9a6e9b48c37a25942fc2ddd9de5a3e}{map}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} node\+\_\+pos, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$target, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh, struct \mbox{\hyperlink{structnearest__color}{nearest\+\_\+color}} $\ast$nearest)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__paletteuse_8c_ae8f05851008bbb3fac26383bc6e9a8cb}{colormap\+\_\+nearest\+\_\+recursive}} (const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$node, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{structrgb}{rgb}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__paletteuse_8c_a29059e321d7469d37cac520e5e4ef858}{colormap\+\_\+nearest\+\_\+iterative}} (const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$root, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$target, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_ad5ae3c242563c483bce3b7bb97775bbc}{color\+\_\+get}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, uint32\+\_\+t \mbox{\hyperlink{structcolor}{color}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}} search\+\_\+method)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a140d94b962a0614636e69089efb03b7e}{get\+\_\+dst\+\_\+color\+\_\+err}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, uint32\+\_\+t \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$er, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$eg, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$eb, const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}} search\+\_\+method)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a4d6ad32f2664df856f21b136415b2054}{set\+\_\+frame}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, enum \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}{dithering\+\_\+mode}} dither, const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}} search\+\_\+method)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_aef3e66d9a5d08d552212a113537a019c}{disp\+\_\+node}} (A\+V\+B\+Print $\ast$buf, const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$\mbox{\hyperlink{vf__procamp__vaapi_8c_a4d9a6e9b48c37a25942fc2ddd9de5a3e}{map}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parent\+\_\+id, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} node\+\_\+id, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} depth)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a39bd7e73bb78102dc11d1d5bf57c4ceb}{disp\+\_\+tree}} (const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$node, const char $\ast$fname)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac}{debug\+\_\+accuracy}} (const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$node, const uint32\+\_\+t $\ast$palette, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh, const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}} search\+\_\+method)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a6d30544ca2427666bd74ed4f9366a392}{get\+\_\+next\+\_\+color}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$color\+\_\+used, const uint32\+\_\+t $\ast$palette, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$component, const struct \mbox{\hyperlink{structcolor__rect}{color\+\_\+rect}} $\ast$box)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_af4d74aa9ce97104c46fa3563884a1e7d}{colormap\+\_\+insert}} (struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$\mbox{\hyperlink{vf__procamp__vaapi_8c_a4d9a6e9b48c37a25942fc2ddd9de5a3e}{map}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$color\+\_\+used, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$nb\+\_\+used, const uint32\+\_\+t $\ast$palette, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} trans\+\_\+thresh, const struct \mbox{\hyperlink{structcolor__rect}{color\+\_\+rect}} $\ast$box)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a40d44e48aef6cff99bb635a08ac5a7db}{cmp\+\_\+pal\+\_\+entry}} (const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_a43a06de4cc172a22ecb4b3b676b857f2}{load\+\_\+colormap}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_acf1b24a48cde4c4e38a2c30479f73515}{debug\+\_\+mean\+\_\+error}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$in1, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$in2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} frame\+\_\+count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_a1d1784eddb72791927d99c57ef423032}{set\+\_\+processing\+\_\+window}} (enum \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\+\_\+mode}} \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\+\_\+mode}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$prv\+\_\+src, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$cur\+\_\+src, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$prv\+\_\+dst, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$cur\+\_\+dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$xp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$yp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$wp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$hp)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a90477a87c4f0dfd6091d801d384f2e5f}{apply\+\_\+palette}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$$\ast$outf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a5c36a114fc75b0a2bc0fdeaa7c87ca97}{config\+\_\+input\+\_\+palette}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_ac4d611d1c12a54312abd338564063569}{load\+\_\+palette}} (\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$palette\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_a2b696bcf73fc19750cf83ef82337aa2e}{dither\+\_\+value}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} p)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__paletteuse_8c_a63981dc38682643e3e71e530c54330a9}{paletteuse\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{vf__paletteuse_8c_ae342d1a8ad4d2ea56462fc096983664e}{cmp\+\_\+func}} \mbox{\hyperlink{vf__paletteuse_8c_a517bda6593cb80aa446954ed75295433}{cmp\+\_\+funcs}} \mbox{[}$\,$\mbox{]} = \{cmp\+\_\+a, cmp\+\_\+r, cmp\+\_\+g, cmp\+\_\+b\}
+\item 
+static const \mbox{\hyperlink{vf__paletteuse_8c_aa272d2ae908104d7f4d9e76eeb4e0954}{set\+\_\+frame\+\_\+func}} \mbox{\hyperlink{vf__paletteuse_8c_a79faf4aedac8f50c5e2a9a4ae09b2228}{set\+\_\+frame\+\_\+lut}} \mbox{[}\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}{N\+B\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+ES}}\mbox{]}\mbox{[}\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}{N\+B\+\_\+\+D\+I\+T\+H\+E\+R\+I\+NG}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__paletteuse_8c_a84e3bf7f9de848f57581297fe7636441}{paletteuse\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__paletteuse_8c_a11d1b1bb3d2e5aad952781eab6bd74a8}{paletteuse\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__paletteuse_8c_a04eb5bf8ea0f1c052dcf1dfef94fe63e}{ff\+\_\+vf\+\_\+paletteuse}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Use a palette to downsample an input video stream. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__paletteuse_8c_a8a6befd630ea1c2ab260266f7466540c}\label{vf__paletteuse_8c_a8a6befd630ea1c2ab260266f7466540c}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!CACHE\_SIZE@{CACHE\_SIZE}}
+\index{CACHE\_SIZE@{CACHE\_SIZE}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{CACHE\_SIZE}{CACHE\_SIZE}}
+{\footnotesize\ttfamily \#define C\+A\+C\+H\+E\+\_\+\+S\+I\+ZE~(1$<$$<$(3$\ast$\mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}))}
+
+
+
+Definition at line 66 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a5ace7c473fd1fc0e2f9c43ae6abb6520}\label{vf__paletteuse_8c_a5ace7c473fd1fc0e2f9c43ae6abb6520}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!COLORMAP\_NEAREST@{COLORMAP\_NEAREST}}
+\index{COLORMAP\_NEAREST@{COLORMAP\_NEAREST}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{COLORMAP\_NEAREST}{COLORMAP\_NEAREST}}
+{\footnotesize\ttfamily \#define C\+O\+L\+O\+R\+M\+A\+P\+\_\+\+N\+E\+A\+R\+E\+ST(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vf__find__rect_8c_af87d9de85f8aed850024a07b377fe315}{search}},  }\item[{}]{palette,  }\item[{}]{root,  }\item[{}]{target,  }\item[{}]{trans\+\_\+thresh }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__find__rect_8c_af87d9de85f8aed850024a07b377fe315}{search}} == \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}{COLOR\_SEARCH\_NNS\_ITERATIVE}} ? \mbox{\hyperlink{vf__paletteuse_8c_a29059e321d7469d37cac520e5e4ef858}{colormap\_nearest\_iterative}}(root, target, trans\_thresh) :      \(\backslash\)}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__find__rect_8c_af87d9de85f8aed850024a07b377fe315}{search}} == \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a24aeb4b7be57ef36ece2c324203b2d39}{COLOR\_SEARCH\_NNS\_RECURSIVE}} ? \mbox{\hyperlink{vf__paletteuse_8c_ae8f05851008bbb3fac26383bc6e9a8cb}{colormap\_nearest\_recursive}}(root, target, trans\_thresh) :      \(\backslash\)}
+\DoxyCodeLine{                                           \mbox{\hyperlink{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b}{colormap\_nearest\_bruteforce}}(palette, target, trans\_thresh)}
+
+\end{DoxyCode}
+
+
+Definition at line 324 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a9116451f48a8f8e828dd8ffbdfa5648b}\label{vf__paletteuse_8c_a9116451f48a8f8e828dd8ffbdfa5648b}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DECLARE\_CMP\_FUNC@{DECLARE\_CMP\_FUNC}}
+\index{DECLARE\_CMP\_FUNC@{DECLARE\_CMP\_FUNC}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{DECLARE\_CMP\_FUNC}{DECLARE\_CMP\_FUNC}}
+{\footnotesize\ttfamily \#define D\+E\+C\+L\+A\+R\+E\+\_\+\+C\+M\+P\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keywordtype}{int} cmp\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}(\textcolor{keyword}{const} \textcolor{keywordtype}{void} *pa, \textcolor{keyword}{const} \textcolor{keywordtype}{void} *pb)   \(\backslash\)}
+\DoxyCodeLine{\{                                                       \(\backslash\)}
+\DoxyCodeLine{    const \textcolor{keyword}{struct }\mbox{\hyperlink{structcolor}{color}} *\mbox{\hyperlink{undefined_8txt_ad99f336d4c117c453fef82993434eb4d}{a}} = pa;                         \(\backslash\)}
+\DoxyCodeLine{    const \textcolor{keyword}{struct }\mbox{\hyperlink{structcolor}{color}} *\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}} = pb;                         \(\backslash\)}
+\DoxyCodeLine{    return   (\mbox{\hyperlink{undefined_8txt_ad99f336d4c117c453fef82993434eb4d}{a}}-\/>value >> (8 * (3 -\/ (\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}))) \& 0xff)     \(\backslash\)}
+\DoxyCodeLine{           -\/ (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>value >> (8 * (3 -\/ (\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}))) \& 0xff);    \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 594 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a193fc0aacb0aa9bc22270cb650df9ec8}\label{vf__paletteuse_8c_a193fc0aacb0aa9bc22270cb650df9ec8}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DEFINE\_SET\_FRAME@{DEFINE\_SET\_FRAME}}
+\index{DEFINE\_SET\_FRAME@{DEFINE\_SET\_FRAME}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_SET\_FRAME}{DEFINE\_SET\_FRAME}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+S\+E\+T\+\_\+\+F\+R\+A\+ME(\begin{DoxyParamCaption}\item[{}]{color\+\_\+search,  }\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keywordtype}{int} set\_frame\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}(\mbox{\hyperlink{struct_palette_use_context}{PaletteUseContext}} *\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}, \mbox{\hyperlink{struct_a_v_frame}{AVFrame}} *\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}, \mbox{\hyperlink{struct_a_v_frame}{AVFrame}} *\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}},    \(\backslash\)}
+\DoxyCodeLine{                            \textcolor{keywordtype}{int} x\_start, \textcolor{keywordtype}{int} y\_start, \textcolor{keywordtype}{int} \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \textcolor{keywordtype}{int} \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}})             \(\backslash\)}
+\DoxyCodeLine{\{                                                                               \(\backslash\)}
+\DoxyCodeLine{    return \mbox{\hyperlink{vf__paletteuse_8c_a4d6ad32f2664df856f21b136415b2054}{set\_frame}}(\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}, \mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}, \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, x\_start, y\_start, \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}, \mbox{\hyperlink{writing__filters_8txt_a09f9d0cee65cb17a34e6e6d313c44b76}{value}}, color\_search);  \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1030 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a5e544b33026f8bee9c79baf9fed4f098}\label{vf__paletteuse_8c_a5e544b33026f8bee9c79baf9fed4f098}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DEFINE\_SET\_FRAME\_COLOR\_SEARCH@{DEFINE\_SET\_FRAME\_COLOR\_SEARCH}}
+\index{DEFINE\_SET\_FRAME\_COLOR\_SEARCH@{DEFINE\_SET\_FRAME\_COLOR\_SEARCH}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_SET\_FRAME\_COLOR\_SEARCH}{DEFINE\_SET\_FRAME\_COLOR\_SEARCH}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+S\+E\+T\+\_\+\+F\+R\+A\+M\+E\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+CH(\begin{DoxyParamCaption}\item[{}]{color\+\_\+search,  }\item[{}]{color\+\_\+search\+\_\+macro }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__paletteuse_8c_a193fc0aacb0aa9bc22270cb650df9ec8}{DEFINE\_SET\_FRAME}}(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#none,            \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a7a1348000a9ea68f8c44e411e0010dcd}{DITHERING\_NONE}})              \(\backslash\)}
+\DoxyCodeLine{    DEFINE\_SET\_FRAME(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#bayer,           \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae457fc601bd44bc2c20114a399498969}{DITHERING\_BAYER}})             \(\backslash\)}
+\DoxyCodeLine{    DEFINE\_SET\_FRAME(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#heckbert,        \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ad0d65c69eb82223cb9ceab707e5ab4cc}{DITHERING\_HECKBERT}})          \(\backslash\)}
+\DoxyCodeLine{    DEFINE\_SET\_FRAME(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#floyd\_steinberg, \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a6496403e733a9bf449c9be313130d381}{DITHERING\_FLOYD\_STEINBERG}})   \(\backslash\)}
+\DoxyCodeLine{    DEFINE\_SET\_FRAME(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#sierra2,         \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a837baeb2aedee61c5106d0c5447c0840}{DITHERING\_SIERRA2}})           \(\backslash\)}
+\DoxyCodeLine{    DEFINE\_SET\_FRAME(color\_search\_macro, color\_search\#\#\mbox{\hyperlink{af__mcompand_8c_ae4dfd7b0d66121016d6466d2ff10e8ba}{\_}}\#\#sierra2\_4a,      \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}{DITHERING\_SIERRA2\_4A}})        \(\backslash\)}
+
+\end{DoxyCode}
+
+
+Definition at line 1037 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}\label{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_ENTRIES@{DITHERING\_ENTRIES}}
+\index{DITHERING\_ENTRIES@{DITHERING\_ENTRIES}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{DITHERING\_ENTRIES}{DITHERING\_ENTRIES}}
+{\footnotesize\ttfamily \#define D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+E\+N\+T\+R\+I\+ES(\begin{DoxyParamCaption}\item[{}]{color\+\_\+search }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{       \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_none,            \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_bayer,           \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_heckbert,        \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_floyd\_steinberg, \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_sierra2,         \(\backslash\)}
+\DoxyCodeLine{    set\_frame\_\#\#color\_search\#\#\_sierra2\_4a,      \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1049 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 110 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a502b06aa5ad25116c775d201326bad52}\label{vf__paletteuse_8c_a502b06aa5ad25116c775d201326bad52}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!INDENT@{INDENT}}
+\index{INDENT@{INDENT}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{INDENT}{INDENT}}
+{\footnotesize\ttfamily \#define I\+N\+D\+E\+NT~4}
+
+
+
+Definition at line 496 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}\label{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!NBITS@{NBITS}}
+\index{NBITS@{NBITS}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{NBITS}{NBITS}}
+{\footnotesize\ttfamily \#define N\+B\+I\+TS~5}
+
+
+
+Definition at line 65 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}}, x)}
+
+
+
+Definition at line 109 of file vf\+\_\+paletteuse.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__paletteuse_8c_ae342d1a8ad4d2ea56462fc096983664e}\label{vf__paletteuse_8c_ae342d1a8ad4d2ea56462fc096983664e}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!cmp\_func@{cmp\_func}}
+\index{cmp\_func@{cmp\_func}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{cmp\_func}{cmp\_func}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ cmp\+\_\+func) (const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$)}
+
+
+
+Definition at line 592 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a987b991d865e409e0bcaf726219a717d}\label{vf__paletteuse_8c_a987b991d865e409e0bcaf726219a717d}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!PaletteUseContext@{PaletteUseContext}}
+\index{PaletteUseContext@{PaletteUseContext}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{PaletteUseContext}{PaletteUseContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}}}
+
+\mbox{\Hypertarget{vf__paletteuse_8c_aa272d2ae908104d7f4d9e76eeb4e0954}\label{vf__paletteuse_8c_aa272d2ae908104d7f4d9e76eeb4e0954}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!set\_frame\_func@{set\_frame\_func}}
+\index{set\_frame\_func@{set\_frame\_func}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{set\_frame\_func}{set\_frame\_func}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ set\+\_\+frame\+\_\+func) (struct \mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y\+\_\+start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}})}
+
+
+
+Definition at line 80 of file vf\+\_\+paletteuse.\+c.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}\label{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!color\_search\_method@{color\_search\_method}}
+\index{color\_search\_method@{color\_search\_method}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{color\_search\_method}{color\_search\_method}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_SEARCH\_NNS\_ITERATIVE@{COLOR\_SEARCH\_NNS\_ITERATIVE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!COLOR\_SEARCH\_NNS\_ITERATIVE@{COLOR\_SEARCH\_NNS\_ITERATIVE}}}\mbox{\Hypertarget{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}\label{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}} 
+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+N\+N\+S\+\_\+\+I\+T\+E\+R\+A\+T\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_SEARCH\_NNS\_RECURSIVE@{COLOR\_SEARCH\_NNS\_RECURSIVE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!COLOR\_SEARCH\_NNS\_RECURSIVE@{COLOR\_SEARCH\_NNS\_RECURSIVE}}}\mbox{\Hypertarget{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a24aeb4b7be57ef36ece2c324203b2d39}\label{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a24aeb4b7be57ef36ece2c324203b2d39}} 
+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+N\+N\+S\+\_\+\+R\+E\+C\+U\+R\+S\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_SEARCH\_BRUTEFORCE@{COLOR\_SEARCH\_BRUTEFORCE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!COLOR\_SEARCH\_BRUTEFORCE@{COLOR\_SEARCH\_BRUTEFORCE}}}\mbox{\Hypertarget{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a19e8d7f26c2c0d0ba5d17514cfd39795}\label{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a19e8d7f26c2c0d0ba5d17514cfd39795}} 
+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+\_\+\+B\+R\+U\+T\+E\+F\+O\+R\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_COLOR\_SEARCHES@{NB\_COLOR\_SEARCHES}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!NB\_COLOR\_SEARCHES@{NB\_COLOR\_SEARCHES}}}\mbox{\Hypertarget{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}\label{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}} 
+N\+B\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 45 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}\label{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!diff\_mode@{diff\_mode}}
+\index{diff\_mode@{diff\_mode}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{diff\_mode}{diff\_mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\+\_\+mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DIFF\_MODE\_NONE@{DIFF\_MODE\_NONE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DIFF\_MODE\_NONE@{DIFF\_MODE\_NONE}}}\mbox{\Hypertarget{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93ac4ab7bbb96b17e6ff6b4228b8a5c5083}\label{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93ac4ab7bbb96b17e6ff6b4228b8a5c5083}} 
+D\+I\+F\+F\+\_\+\+M\+O\+D\+E\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DIFF\_MODE\_RECTANGLE@{DIFF\_MODE\_RECTANGLE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DIFF\_MODE\_RECTANGLE@{DIFF\_MODE\_RECTANGLE}}}\mbox{\Hypertarget{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93a1bb7dfb9d6aeef82a91664490125b34f}\label{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93a1bb7dfb9d6aeef82a91664490125b34f}} 
+D\+I\+F\+F\+\_\+\+M\+O\+D\+E\+\_\+\+R\+E\+C\+T\+A\+N\+G\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_DIFF\_MODE@{NB\_DIFF\_MODE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!NB\_DIFF\_MODE@{NB\_DIFF\_MODE}}}\mbox{\Hypertarget{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93aa2c9cc7c59b7991c1d380218114273e0}\label{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93aa2c9cc7c59b7991c1d380218114273e0}} 
+N\+B\+\_\+\+D\+I\+F\+F\+\_\+\+M\+O\+DE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 52 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!dithering\_mode@{dithering\_mode}}
+\index{dithering\_mode@{dithering\_mode}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{dithering\_mode}{dithering\_mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}{dithering\+\_\+mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_NONE@{DITHERING\_NONE}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_NONE@{DITHERING\_NONE}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a7a1348000a9ea68f8c44e411e0010dcd}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a7a1348000a9ea68f8c44e411e0010dcd}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_BAYER@{DITHERING\_BAYER}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_BAYER@{DITHERING\_BAYER}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae457fc601bd44bc2c20114a399498969}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae457fc601bd44bc2c20114a399498969}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+B\+A\+Y\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_HECKBERT@{DITHERING\_HECKBERT}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_HECKBERT@{DITHERING\_HECKBERT}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ad0d65c69eb82223cb9ceab707e5ab4cc}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ad0d65c69eb82223cb9ceab707e5ab4cc}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+H\+E\+C\+K\+B\+E\+RT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_FLOYD\_STEINBERG@{DITHERING\_FLOYD\_STEINBERG}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_FLOYD\_STEINBERG@{DITHERING\_FLOYD\_STEINBERG}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a6496403e733a9bf449c9be313130d381}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a6496403e733a9bf449c9be313130d381}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+F\+L\+O\+Y\+D\+\_\+\+S\+T\+E\+I\+N\+B\+E\+RG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_SIERRA2@{DITHERING\_SIERRA2}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_SIERRA2@{DITHERING\_SIERRA2}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a837baeb2aedee61c5106d0c5447c0840}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a837baeb2aedee61c5106d0c5447c0840}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+S\+I\+E\+R\+R\+A2&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DITHERING\_SIERRA2\_4A@{DITHERING\_SIERRA2\_4A}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!DITHERING\_SIERRA2\_4A@{DITHERING\_SIERRA2\_4A}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}} 
+D\+I\+T\+H\+E\+R\+I\+N\+G\+\_\+\+S\+I\+E\+R\+R\+A2\+\_\+4A&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_DITHERING@{NB\_DITHERING}!vf\_paletteuse.c@{vf\_paletteuse.c}}\index{vf\_paletteuse.c@{vf\_paletteuse.c}!NB\_DITHERING@{NB\_DITHERING}}}\mbox{\Hypertarget{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}\label{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}} 
+N\+B\+\_\+\+D\+I\+T\+H\+E\+R\+I\+NG&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 35 of file vf\+\_\+paletteuse.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac}\label{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!activate@{activate}}
+\index{activate@{activate}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1097 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a90477a87c4f0dfd6091d801d384f2e5f}\label{vf__paletteuse_8c_a90477a87c4f0dfd6091d801d384f2e5f}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!apply\_palette@{apply\_palette}}
+\index{apply\_palette@{apply\_palette}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{apply\_palette()}{apply\_palette()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+palette (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$$\ast$}]{outf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 891 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a90477a87c4f0dfd6091d801d384f2e5f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a90477a87c4f0dfd6091d801d384f2e5f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a10abe8ab99cbeb65f34fac7508cb3ec9}\label{vf__paletteuse_8c_a10abe8ab99cbeb65f34fac7508cb3ec9}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{paletteuse}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a40d44e48aef6cff99bb635a08ac5a7db}\label{vf__paletteuse_8c_a40d44e48aef6cff99bb635a08ac5a7db}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!cmp\_pal\_entry@{cmp\_pal\_entry}}
+\index{cmp\_pal\_entry@{cmp\_pal\_entry}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{cmp\_pal\_entry()}{cmp\_pal\_entry()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cmp\+\_\+pal\+\_\+entry (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{a,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 719 of file vf\+\_\+paletteuse.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a40d44e48aef6cff99bb635a08ac5a7db_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ad5ae3c242563c483bce3b7bb97775bbc}\label{vf__paletteuse_8c_ad5ae3c242563c483bce3b7bb97775bbc}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!color\_get@{color\_get}}
+\index{color\_get@{color\_get}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{color\_get()}{color\_get()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} color\+\_\+get (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s,  }\item[{uint32\+\_\+t}]{color,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{a,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{r,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{g,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{b,  }\item[{const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}}}]{search\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Check if the requested color is in the cache already. If not, find it in the color tree and cache it. Note\+: a, r, g, and b are the components of color, but are passed as well to avoid recomputing them (they are generally computed by the caller for other uses). 
+
+Definition at line 335 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ad5ae3c242563c483bce3b7bb97775bbc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ad5ae3c242563c483bce3b7bb97775bbc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_af4d74aa9ce97104c46fa3563884a1e7d}\label{vf__paletteuse_8c_af4d74aa9ce97104c46fa3563884a1e7d}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!colormap\_insert@{colormap\_insert}}
+\index{colormap\_insert@{colormap\_insert}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{colormap\_insert()}{colormap\_insert()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} colormap\+\_\+insert (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{map,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{color\+\_\+used,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{nb\+\_\+used,  }\item[{const uint32\+\_\+t $\ast$}]{palette,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh,  }\item[{const struct \mbox{\hyperlink{structcolor__rect}{color\+\_\+rect}} $\ast$}]{box }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 673 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{vf__paletteuse_8c_af4d74aa9ce97104c46fa3563884a1e7d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_af4d74aa9ce97104c46fa3563884a1e7d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b}\label{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!colormap\_nearest\_bruteforce@{colormap\_nearest\_bruteforce}}
+\index{colormap\_nearest\_bruteforce@{colormap\_nearest\_bruteforce}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{colormap\_nearest\_bruteforce()}{colormap\_nearest\_bruteforce()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} colormap\+\_\+nearest\+\_\+bruteforce (\begin{DoxyParamCaption}\item[{const uint32\+\_\+t $\ast$}]{palette,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{argb,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 179 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a123c8d17e8da84f0ec4366a7e992189b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a29059e321d7469d37cac520e5e4ef858}\label{vf__paletteuse_8c_a29059e321d7469d37cac520e5e4ef858}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!colormap\_nearest\_iterative@{colormap\_nearest\_iterative}}
+\index{colormap\_nearest\_iterative@{colormap\_nearest\_iterative}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{colormap\_nearest\_iterative()}{colormap\_nearest\_iterative()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} colormap\+\_\+nearest\+\_\+iterative (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{root,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{target,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 252 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a29059e321d7469d37cac520e5e4ef858_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a225aebfc6f722cda40dc90febf2e1069}\label{vf__paletteuse_8c_a225aebfc6f722cda40dc90febf2e1069}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!colormap\_nearest\_node@{colormap\_nearest\_node}}
+\index{colormap\_nearest\_node@{colormap\_nearest\_node}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{colormap\_nearest\_node()}{colormap\_nearest\_node()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} colormap\+\_\+nearest\+\_\+node (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{map,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{node\+\_\+pos,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{target,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh,  }\item[{struct \mbox{\hyperlink{structnearest__color}{nearest\+\_\+color}} $\ast$}]{nearest }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 209 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=265pt]{vf__paletteuse_8c_a225aebfc6f722cda40dc90febf2e1069_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a225aebfc6f722cda40dc90febf2e1069_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ae8f05851008bbb3fac26383bc6e9a8cb}\label{vf__paletteuse_8c_ae8f05851008bbb3fac26383bc6e9a8cb}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!colormap\_nearest\_recursive@{colormap\_nearest\_recursive}}
+\index{colormap\_nearest\_recursive@{colormap\_nearest\_recursive}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{colormap\_nearest\_recursive()}{colormap\_nearest\_recursive()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} colormap\+\_\+nearest\+\_\+recursive (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{node,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{rgb,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 240 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ae8f05851008bbb3fac26383bc6e9a8cb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a5c36a114fc75b0a2bc0fdeaa7c87ca97}\label{vf__paletteuse_8c_a5c36a114fc75b0a2bc0fdeaa7c87ca97}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!config\_input\_palette@{config\_input\_palette}}
+\index{config\_input\_palette@{config\_input\_palette}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{config\_input\_palette()}{config\_input\_palette()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input\+\_\+palette (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 955 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{vf__paletteuse_8c_a5c36a114fc75b0a2bc0fdeaa7c87ca97_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__paletteuse_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 933 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac}\label{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!debug\_accuracy@{debug\_accuracy}}
+\index{debug\_accuracy@{debug\_accuracy}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{debug\_accuracy()}{debug\_accuracy()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} debug\+\_\+accuracy (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{node,  }\item[{const uint32\+\_\+t $\ast$}]{palette,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh,  }\item[{const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}}}]{search\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 551 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_acf1b24a48cde4c4e38a2c30479f73515}\label{vf__paletteuse_8c_acf1b24a48cde4c4e38a2c30479f73515}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!debug\_mean\_error@{debug\_mean\_error}}
+\index{debug\_mean\_error@{debug\_mean\_error}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{debug\_mean\_error()}{debug\_mean\_error()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} debug\+\_\+mean\+\_\+error (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in1,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{frame\+\_\+count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 772 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=242pt]{vf__paletteuse_8c_acf1b24a48cde4c4e38a2c30479f73515_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_acf1b24a48cde4c4e38a2c30479f73515_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_af3df6bdf48751b51386bd31c3568f2fd}\label{vf__paletteuse_8c_af3df6bdf48751b51386bd31c3568f2fd}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!diff@{diff}}
+\index{diff@{diff}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{diff()}{diff()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} diff (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{c1,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{c2,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 163 of file vf\+\_\+paletteuse.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_af3df6bdf48751b51386bd31c3568f2fd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_aef3e66d9a5d08d552212a113537a019c}\label{vf__paletteuse_8c_aef3e66d9a5d08d552212a113537a019c}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!disp\_node@{disp\_node}}
+\index{disp\_node@{disp\_node}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{disp\_node()}{disp\_node()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} disp\+\_\+node (\begin{DoxyParamCaption}\item[{A\+V\+B\+Print $\ast$}]{buf,  }\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{map,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{parent\+\_\+id,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{node\+\_\+id,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{depth }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 497 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_aef3e66d9a5d08d552212a113537a019c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_aef3e66d9a5d08d552212a113537a019c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a39bd7e73bb78102dc11d1d5bf57c4ceb}\label{vf__paletteuse_8c_a39bd7e73bb78102dc11d1d5bf57c4ceb}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!disp\_tree@{disp\_tree}}
+\index{disp\_tree@{disp\_tree}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{disp\_tree()}{disp\_tree()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} disp\+\_\+tree (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structcolor__node}{color\+\_\+node}} $\ast$}]{node,  }\item[{const char $\ast$}]{fname }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 526 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a39bd7e73bb78102dc11d1d5bf57c4ceb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a39bd7e73bb78102dc11d1d5bf57c4ceb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ac51788a28e62832fd82b79a7c2fe8701}\label{vf__paletteuse_8c_ac51788a28e62832fd82b79a7c2fe8701}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!dither\_color@{dither\_color}}
+\index{dither\_color@{dither\_color}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{dither\_color()}{dither\_color()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dither\+\_\+color (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{px,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{er,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{eg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{eb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{scale,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{shift }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 155 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=218pt]{vf__paletteuse_8c_ac51788a28e62832fd82b79a7c2fe8701_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=242pt]{vf__paletteuse_8c_ac51788a28e62832fd82b79a7c2fe8701_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a2b696bcf73fc19750cf83ef82337aa2e}\label{vf__paletteuse_8c_a2b696bcf73fc19750cf83ef82337aa2e}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!dither\_value@{dither\_value}}
+\index{dither\_value@{dither\_value}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{dither\_value()}{dither\_value()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dither\+\_\+value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1064 of file vf\+\_\+paletteuse.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=213pt]{vf__paletteuse_8c_a2b696bcf73fc19750cf83ef82337aa2e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a140d94b962a0614636e69089efb03b7e}\label{vf__paletteuse_8c_a140d94b962a0614636e69089efb03b7e}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!get\_dst\_color\_err@{get\_dst\_color\_err}}
+\index{get\_dst\_color\_err@{get\_dst\_color\_err}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{get\_dst\_color\_err()}{get\_dst\_color\_err()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+dst\+\_\+color\+\_\+err (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s,  }\item[{uint32\+\_\+t}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{er,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{eg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{eb,  }\item[{const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}}}]{search\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 369 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a140d94b962a0614636e69089efb03b7e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=267pt]{vf__paletteuse_8c_a140d94b962a0614636e69089efb03b7e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a6d30544ca2427666bd74ed4f9366a392}\label{vf__paletteuse_8c_a6d30544ca2427666bd74ed4f9366a392}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!get\_next\_color@{get\_next\_color}}
+\index{get\_next\_color@{get\_next\_color}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{get\_next\_color()}{get\_next\_color()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+next\+\_\+color (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{color\+\_\+used,  }\item[{const uint32\+\_\+t $\ast$}]{palette,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{trans\+\_\+thresh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{component,  }\item[{const struct \mbox{\hyperlink{structcolor__rect}{color\+\_\+rect}} $\ast$}]{box }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 610 of file vf\+\_\+paletteuse.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a6d30544ca2427666bd74ed4f9366a392_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!init@{init}}
+\index{init@{init}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1072 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a42c28601fc1eeda3dc4cbbe71e6ddbd6}\label{vf__paletteuse_8c_a42c28601fc1eeda3dc4cbbe71e6ddbd6}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!load\_apply\_palette@{load\_apply\_palette}}
+\index{load\_apply\_palette@{load\_apply\_palette}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{load\_apply\_palette()}{load\_apply\_palette()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} load\+\_\+apply\+\_\+palette (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$}]{fs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1004 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a42c28601fc1eeda3dc4cbbe71e6ddbd6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{vf__paletteuse_8c_a42c28601fc1eeda3dc4cbbe71e6ddbd6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a43a06de4cc172a22ecb4b3b676b857f2}\label{vf__paletteuse_8c_a43a06de4cc172a22ecb4b3b676b857f2}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!load\_colormap@{load\_colormap}}
+\index{load\_colormap@{load\_colormap}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{load\_colormap()}{load\_colormap()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} load\+\_\+colormap (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 726 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a43a06de4cc172a22ecb4b3b676b857f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a43a06de4cc172a22ecb4b3b676b857f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_ac4d611d1c12a54312abd338564063569}\label{vf__paletteuse_8c_ac4d611d1c12a54312abd338564063569}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!load\_palette@{load\_palette}}
+\index{load\_palette@{load\_palette}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{load\_palette()}{load\_palette()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} load\+\_\+palette (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{palette\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 970 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ac4d611d1c12a54312abd338564063569_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_ac4d611d1c12a54312abd338564063569_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 139 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a4d6ad32f2664df856f21b136415b2054}\label{vf__paletteuse_8c_a4d6ad32f2664df856f21b136415b2054}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!set\_frame@{set\_frame}}
+\index{set\_frame@{set\_frame}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{set\_frame()}{set\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} set\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_palette_use_context}{Palette\+Use\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x\+\_\+start,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y\+\_\+start,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{enum \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6}{dithering\+\_\+mode}}}]{dither,  }\item[{const enum \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\+\_\+search\+\_\+method}}}]{search\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 388 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a4d6ad32f2664df856f21b136415b2054_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_a1d1784eddb72791927d99c57ef423032}\label{vf__paletteuse_8c_a1d1784eddb72791927d99c57ef423032}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!set\_processing\_window@{set\_processing\_window}}
+\index{set\_processing\_window@{set\_processing\_window}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{set\_processing\_window()}{set\_processing\_window()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+processing\+\_\+window (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\+\_\+mode}}}]{diff\+\_\+mode,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{prv\+\_\+src,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{cur\+\_\+src,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{prv\+\_\+dst,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{cur\+\_\+dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{xp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{yp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{wp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{hp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 802 of file vf\+\_\+paletteuse.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_a1d1784eddb72791927d99c57ef423032_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1103 of file vf\+\_\+paletteuse.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__paletteuse_8c_a517bda6593cb80aa446954ed75295433}\label{vf__paletteuse_8c_a517bda6593cb80aa446954ed75295433}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!cmp\_funcs@{cmp\_funcs}}
+\index{cmp\_funcs@{cmp\_funcs}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{cmp\_funcs}{cmp\_funcs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{vf__paletteuse_8c_ae342d1a8ad4d2ea56462fc096983664e}{cmp\+\_\+func}} cmp\+\_\+funcs\mbox{[}$\,$\mbox{]} = \{cmp\+\_\+a, cmp\+\_\+r, cmp\+\_\+g, cmp\+\_\+b\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 608 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a04eb5bf8ea0f1c052dcf1dfef94fe63e}\label{vf__paletteuse_8c_a04eb5bf8ea0f1c052dcf1dfef94fe63e}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!ff\_vf\_paletteuse@{ff\_vf\_paletteuse}}
+\index{ff\_vf\_paletteuse@{ff\_vf\_paletteuse}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_paletteuse}{ff\_vf\_paletteuse}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+paletteuse}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}paletteuse"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Use a palette to downsample an input video stream."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__paletteuse_8c_a987b991d865e409e0bcaf726219a717d}{PaletteUseContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__paletteuse_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{vf__paletteuse_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__paletteuse_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac}{activate}}      = \mbox{\hyperlink{vf__paletteuse_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__paletteuse_8c_a84e3bf7f9de848f57581297fe7636441}{paletteuse\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__paletteuse_8c_a11d1b1bb3d2e5aad952781eab6bd74a8}{paletteuse\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&paletteuse\_class,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1136 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a84e3bf7f9de848f57581297fe7636441}\label{vf__paletteuse_8c_a84e3bf7f9de848f57581297fe7636441}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!paletteuse\_inputs@{paletteuse\_inputs}}
+\index{paletteuse\_inputs@{paletteuse\_inputs}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{paletteuse\_inputs}{paletteuse\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} paletteuse\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name           = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},\{}
+\DoxyCodeLine{        .name           = \textcolor{stringliteral}{"{}palette"{}},}
+\DoxyCodeLine{        .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props   = \mbox{\hyperlink{vf__paletteuse_8c_a5c36a114fc75b0a2bc0fdeaa7c87ca97}{config\_input\_palette}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1115 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a63981dc38682643e3e71e530c54330a9}\label{vf__paletteuse_8c_a63981dc38682643e3e71e530c54330a9}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!paletteuse\_options@{paletteuse\_options}}
+\index{paletteuse\_options@{paletteuse\_options}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{paletteuse\_options}{paletteuse\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} paletteuse\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}dither"{}}, \textcolor{stringliteral}{"{}select dithering mode"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(dither), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}{DITHERING\_SIERRA2\_4A}}\}, 0, \mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}{NB\_DITHERING}}-\/1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}bayer"{}},           \textcolor{stringliteral}{"{}ordered 8x8 bayer dithering (deterministic)"{}},                            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae457fc601bd44bc2c20114a399498969}{DITHERING\_BAYER}}\},           INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}heckbert"{}},        \textcolor{stringliteral}{"{}dithering as defined by Paul Heckbert in 1982 (simple error diffusion)"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ad0d65c69eb82223cb9ceab707e5ab4cc}{DITHERING\_HECKBERT}}\},        INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}floyd\_steinberg"{}}, \textcolor{stringliteral}{"{}Floyd and Steingberg dithering (error diffusion)"{}},                       0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a6496403e733a9bf449c9be313130d381}{DITHERING\_FLOYD\_STEINBERG}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}sierra2"{}},         \textcolor{stringliteral}{"{}Frankie Sierra dithering v2 (error diffusion)"{}},                          0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a837baeb2aedee61c5106d0c5447c0840}{DITHERING\_SIERRA2}}\},         INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}sierra2\_4a"{}},      \textcolor{stringliteral}{"{}Frankie Sierra dithering v2 \(\backslash\)"{}Lite\(\backslash\)"{} (error diffusion)"{}},                 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6a8b8874b6c3cf41c3a72a42ff0ec1ca9d}{DITHERING\_SIERRA2\_4A}}\},      INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}dithering\_mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bayer\_scale"{}}, \textcolor{stringliteral}{"{}set scale for bayer dithering"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(bayer\_scale), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=2\}, 0, 5, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}diff\_mode"{}},   \textcolor{stringliteral}{"{}set frame difference mode"{}},     \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93}{diff\_mode}}),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93ac4ab7bbb96b17e6ff6b4228b8a5c5083}{DIFF\_MODE\_NONE}}\}, 0, \mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93aa2c9cc7c59b7991c1d380218114273e0}{NB\_DIFF\_MODE}}-\/1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}diff\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}rectangle"{}}, \textcolor{stringliteral}{"{}process smallest different rectangle"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_a27f718e46e2194b1b59f97cab001aa93a1bb7dfb9d6aeef82a91664490125b34f}{DIFF\_MODE\_RECTANGLE}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}diff\_mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}new"{}}, \textcolor{stringliteral}{"{}take new palette for each output frame"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\textcolor{keyword}{new}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64=0\}, 0, 1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}alpha\_threshold"{}}, \textcolor{stringliteral}{"{}set the alpha threshold for transparency"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(trans\_thresh), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=128\}, 0, 255, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{    }
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}debug\_kdtree"{}}, \textcolor{stringliteral}{"{}save Graphviz graph of the kdtree in specified file"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(dot\_filename), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str=\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}, 0, 0, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}color\_search"{}}, \textcolor{stringliteral}{"{}set reverse colormap color search method"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213}{color\_search\_method}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}{COLOR\_SEARCH\_NNS\_ITERATIVE}}\}, 0, \mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}{NB\_COLOR\_SEARCHES}}-\/1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}search"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}nns\_iterative"{}}, \textcolor{stringliteral}{"{}iterative search"{}},             0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a9cbd79afecc6a270ff286e92a04ce89d}{COLOR\_SEARCH\_NNS\_ITERATIVE}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}search"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}nns\_recursive"{}}, \textcolor{stringliteral}{"{}recursive search"{}},             0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a24aeb4b7be57ef36ece2c324203b2d39}{COLOR\_SEARCH\_NNS\_RECURSIVE}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}search"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}bruteforce"{}},    \textcolor{stringliteral}{"{}brute-\/force into the palette"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a19e8d7f26c2c0d0ba5d17514cfd39795}{COLOR\_SEARCH\_BRUTEFORCE}}\},    INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}search"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}mean\_err"{}}, \textcolor{stringliteral}{"{}compute and print mean error"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(calc\_mean\_err), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64=0\}, 0, 1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}debug\_accuracy"{}}, \textcolor{stringliteral}{"{}test color search accuracy"{}}, \mbox{\hyperlink{vf__paletteuse_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{vf__paletteuse_8c_a2538a58d45ba30fc9c0a7ba5ea1bd4ac}{debug\_accuracy}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64=0\}, 0, 1, \mbox{\hyperlink{vf__paletteuse_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 111 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a11d1b1bb3d2e5aad952781eab6bd74a8}\label{vf__paletteuse_8c_a11d1b1bb3d2e5aad952781eab6bd74a8}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!paletteuse\_outputs@{paletteuse\_outputs}}
+\index{paletteuse\_outputs@{paletteuse\_outputs}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{paletteuse\_outputs}{paletteuse\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} paletteuse\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{vf__paletteuse_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1127 of file vf\+\_\+paletteuse.\+c.
+
+\mbox{\Hypertarget{vf__paletteuse_8c_a79faf4aedac8f50c5e2a9a4ae09b2228}\label{vf__paletteuse_8c_a79faf4aedac8f50c5e2a9a4ae09b2228}} 
+\index{vf\_paletteuse.c@{vf\_paletteuse.c}!set\_frame\_lut@{set\_frame\_lut}}
+\index{set\_frame\_lut@{set\_frame\_lut}!vf\_paletteuse.c@{vf\_paletteuse.c}}
+\doxysubsubsection{\texorpdfstring{set\_frame\_lut}{set\_frame\_lut}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{vf__paletteuse_8c_aa272d2ae908104d7f4d9e76eeb4e0954}{set\+\_\+frame\+\_\+func}} set\+\_\+frame\+\_\+lut\mbox{[}\mbox{\hyperlink{vf__paletteuse_8c_ade749e680cc3978440f136c250aa8213a956cb3aa0cc9fb7587bb996f492d091f}{N\+B\+\_\+\+C\+O\+L\+O\+R\+\_\+\+S\+E\+A\+R\+C\+H\+ES}}\mbox{]}\mbox{[}\mbox{\hyperlink{vf__paletteuse_8c_a40d6d2e8829b195bad74baf8989bcaf6ae4094dec3de89d16c55b4dd1fe6f09bc}{N\+B\+\_\+\+D\+I\+T\+H\+E\+R\+I\+NG}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}{DITHERING\_ENTRIES}}(nns\_iterative),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}{DITHERING\_ENTRIES}}(nns\_recursive),}
+\DoxyCodeLine{    \mbox{\hyperlink{vf__paletteuse_8c_ab1fea5d7524a83054f7447e5b7746e72}{DITHERING\_ENTRIES}}(bruteforce),}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1058 of file vf\+\_\+paletteuse.\+c.
+

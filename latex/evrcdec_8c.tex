@@ -1,0 +1,822 @@
+\hypertarget{evrcdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/evrcdec.c File Reference}
+\label{evrcdec_8c}\index{E:/github/ffmpeg/libavcodec/evrcdec.c@{E:/github/ffmpeg/libavcodec/evrcdec.c}}
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}evrcdata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+vectors.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lsp.\+h\char`\"{}}\newline
+Include dependency graph for evrcdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_e_v_r_c_a_frame}{E\+V\+R\+C\+A\+Frame}}
+\item 
+struct \mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_pf_coeff}{Pf\+Coeff}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_a16ec557c2029da39aa56ed07030e0deb}{M\+I\+N\+\_\+\+L\+S\+P\+\_\+\+S\+EP}}~(0.\+05 / (2.\+0 $\ast$ \mbox{\hyperlink{mathematics_8h_ae71449b1cc6e6250b91f539153a7a0d3}{M\+\_\+\+PI}}))
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_ad3b51637a39a4ff75bd979b917cb89ef}{M\+I\+N\+\_\+\+D\+E\+L\+AY}}~20
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_a16027d8acc5301e440cefa086eb9db2a}{M\+A\+X\+\_\+\+D\+E\+L\+AY}}~120
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_a7f73ea6a1a350fc92606f4217e77cddf}{N\+B\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES}}~3
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_ae9063ede6baa98f1567bad18316c6f9a}{S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}}~54
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_a3731640f1207d9e47ad13ec12a1f5335}{F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER}}~10
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_aaa5dcaa92040ca69afa4f62c11c0f81e}{A\+C\+B\+\_\+\+S\+I\+ZE}}~128
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{evrcdec_8c_aa70747e23d9ebf312299930cf6b3c20d}{AD}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_v_r_c_a_frame}{E\+V\+R\+C\+A\+Frame}} \mbox{\hyperlink{evrcdec_8c_a068550adf6fc3695ce5d4d114e2f309d}{E\+V\+R\+C\+A\+Frame}}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} \mbox{\hyperlink{evrcdec_8c_af728c0c831825492b4a915d07d40cbfd}{E\+V\+R\+C\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}} \{ \newline
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbbaf7b5e19f38c1766a0d4779ff0cc2c702}{R\+A\+T\+E\+\_\+\+E\+R\+RS}} = -\/1, 
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba5115cf8ca0264d0532228e59b8665dff}{S\+I\+L\+E\+N\+CE}}, 
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba98b00f7413228157a62b769e8ba91bf4}{R\+A\+T\+E\+\_\+\+Q\+U\+A\+NT}}, 
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba76a854346f3cd92191bc9ef43d5763b9}{R\+A\+T\+E\+\_\+\+Q\+U\+A\+R\+T\+ER}}, 
+\newline
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba1176aa839455e384a7e69312019d4d5d}{R\+A\+T\+E\+\_\+\+H\+A\+LF}}, 
+\mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba405ee677a1491e18981d101704204ce0}{R\+A\+T\+E\+\_\+\+F\+U\+LL}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a7554fb5bb91679e33f75dd1ad1723ae6}{unpack\+\_\+frame}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e)
+\item 
+static \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}} \mbox{\hyperlink{evrcdec_8c_a4dfd5208adead9d8ca1c02f9c5b8ea1f}{buf\+\_\+size2bitrate}} (const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}} \mbox{\hyperlink{evrcdec_8c_a11006ba4e2ace1fab4ff4daa9a9d659a}{determine\+\_\+bitrate}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$buf\+\_\+size, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$buf)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a51b07ecd6ed4e9abb366c8ca531e590a}{warn\+\_\+insufficient\+\_\+frame\+\_\+quality}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const char $\ast$\mbox{\hyperlink{structmessage}{message}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{evrcdec_8c_af13d9a681495574d3e5b9a9159441342}{evrc\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{evrcdec_8c_a98184b2350a8c979fe69f4134035243e}{decode\+\_\+lspf}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_aa8b0845a2beaec85d5cfe3c821a4a4cc}{interpolate\+\_\+lsp}} (float $\ast$ilsp, const float $\ast$lsp, const float $\ast$prev, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_abab903fb331c17956e186b25a95fc8dc}{interpolate\+\_\+delay}} (float $\ast$dst, float current, float prev, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a5b3541c11db6be18e72964186e271542}{decode\+\_\+predictor\+\_\+coeffs}} (const float $\ast$ilspf, float $\ast$ilpc)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_aeb71652c717d37de0a619af128e2e9e6}{bl\+\_\+intrp}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e, float $\ast$ex, float delay)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a5027affbedc5169d2a224d30f8870e2a}{acb\+\_\+excitation}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e, float $\ast$excitation, float gain, const float delay\mbox{[}3\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a7eb552751852548180553e370560dfa0}{decode\+\_\+8\+\_\+pulses\+\_\+35bits}} (const uint16\+\_\+t $\ast$fixed\+\_\+index, float $\ast$cod)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_ad48ca3471b6f7e84afc4a4879a905443}{decode\+\_\+3\+\_\+pulses\+\_\+10bits}} (uint16\+\_\+t fixed\+\_\+index, float $\ast$cod)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_ae0710e34f6be53725f670e9e6808a25a}{fcb\+\_\+excitation}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e, const uint16\+\_\+t $\ast$\mbox{\hyperlink{cfhdenc_8c_a10b2ef2302ea7c1ef22b811f9d07678a}{codebook}}, float $\ast$excitation, float pitch\+\_\+gain, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pitch\+\_\+lag, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a14cf7e931e065444f0c5b891b8069c83}{synthesis\+\_\+filter}} (const float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const float $\ast$filter\+\_\+coeffs, float $\ast$memory, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buffer\+\_\+length, float $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a9c1f5c8d05af3aa94d4d20d7518adc54}{bandwidth\+\_\+expansion}} (float $\ast$\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}, const float $\ast$inbuf, float gamma)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a9d3c71bdf23275126537075ebc9d575e}{residual\+\_\+filter}} (float $\ast$\mbox{\hyperlink{filter__design_8txt_ad29e68e2acddc1f10f601345de7bf4aa}{output}}, const float $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}}, const float $\ast$coef, float $\ast$memory, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a}{postfilter}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e, float $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const float $\ast$\mbox{\hyperlink{vf__owdenoise_8c_a35c8a1e85abdf2de13b1be2fe51f293b}{coeff}}, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} idx, const struct \mbox{\hyperlink{struct_pf_coeff}{Pf\+Coeff}} $\ast$pfc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{evrcdec_8c_a3a4e9fa41e063173917e829e49e7f1d5}{frame\+\_\+erasure}} (\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$e, float $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{evrcdec_8c_a74409360d02d70cc1101b9df065edee3}{evrc\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const struct \mbox{\hyperlink{struct_pf_coeff}{Pf\+Coeff}} \mbox{\hyperlink{evrcdec_8c_acdeb119d80865c218f569aa7e3861f44}{postfilter\+\_\+coeffs}} \mbox{[}5\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{evrcdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{evrcdec_8c_ae2dbb9ce50ddf9e2025030ebb483e6b2}{evrcdec\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{evrcdec_8c_a098b6f91c3305d9c73a5f6019fee22da}{ff\+\_\+evrc\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Enhanced Variable Rate Codec, Service \mbox{\hyperlink{struct_option}{Option}} 3 decoder \begin{DoxyAuthor}{Author}
+Paul B Mahol 
+\end{DoxyAuthor}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{evrcdec_8c_aaa5dcaa92040ca69afa4f62c11c0f81e}\label{evrcdec_8c_aaa5dcaa92040ca69afa4f62c11c0f81e}} 
+\index{evrcdec.c@{evrcdec.c}!ACB\_SIZE@{ACB\_SIZE}}
+\index{ACB\_SIZE@{ACB\_SIZE}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{ACB\_SIZE}{ACB\_SIZE}}
+{\footnotesize\ttfamily \#define A\+C\+B\+\_\+\+S\+I\+ZE~128}
+
+
+
+Definition at line 43 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_aa70747e23d9ebf312299930cf6b3c20d}\label{evrcdec_8c_aa70747e23d9ebf312299930cf6b3c20d}} 
+\index{evrcdec.c@{evrcdec.c}!AD@{AD}}
+\index{AD@{AD}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{AD}{AD}}
+{\footnotesize\ttfamily \#define AD~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 917 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a3731640f1207d9e47ad13ec12a1f5335}\label{evrcdec_8c_a3731640f1207d9e47ad13ec12a1f5335}} 
+\index{evrcdec.c@{evrcdec.c}!FILTER\_ORDER@{FILTER\_ORDER}}
+\index{FILTER\_ORDER@{FILTER\_ORDER}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{FILTER\_ORDER}{FILTER\_ORDER}}
+{\footnotesize\ttfamily \#define F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER~10}
+
+
+
+Definition at line 42 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a16027d8acc5301e440cefa086eb9db2a}\label{evrcdec_8c_a16027d8acc5301e440cefa086eb9db2a}} 
+\index{evrcdec.c@{evrcdec.c}!MAX\_DELAY@{MAX\_DELAY}}
+\index{MAX\_DELAY@{MAX\_DELAY}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_DELAY}{MAX\_DELAY}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+D\+E\+L\+AY~120}
+
+
+
+Definition at line 39 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_ad3b51637a39a4ff75bd979b917cb89ef}\label{evrcdec_8c_ad3b51637a39a4ff75bd979b917cb89ef}} 
+\index{evrcdec.c@{evrcdec.c}!MIN\_DELAY@{MIN\_DELAY}}
+\index{MIN\_DELAY@{MIN\_DELAY}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_DELAY}{MIN\_DELAY}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+D\+E\+L\+AY~20}
+
+
+
+Definition at line 38 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a16ec557c2029da39aa56ed07030e0deb}\label{evrcdec_8c_a16ec557c2029da39aa56ed07030e0deb}} 
+\index{evrcdec.c@{evrcdec.c}!MIN\_LSP\_SEP@{MIN\_LSP\_SEP}}
+\index{MIN\_LSP\_SEP@{MIN\_LSP\_SEP}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_LSP\_SEP}{MIN\_LSP\_SEP}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+L\+S\+P\+\_\+\+S\+EP~(0.\+05 / (2.\+0 $\ast$ \mbox{\hyperlink{mathematics_8h_ae71449b1cc6e6250b91f539153a7a0d3}{M\+\_\+\+PI}}))}
+
+
+
+Definition at line 37 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a7f73ea6a1a350fc92606f4217e77cddf}\label{evrcdec_8c_a7f73ea6a1a350fc92606f4217e77cddf}} 
+\index{evrcdec.c@{evrcdec.c}!NB\_SUBFRAMES@{NB\_SUBFRAMES}}
+\index{NB\_SUBFRAMES@{NB\_SUBFRAMES}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{NB\_SUBFRAMES}{NB\_SUBFRAMES}}
+{\footnotesize\ttfamily \#define N\+B\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES~3}
+
+
+
+Definition at line 40 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{evrcdec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{evrcdec.c@{evrcdec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}}, x)}
+
+
+
+Definition at line 916 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_ae9063ede6baa98f1567bad18316c6f9a}\label{evrcdec_8c_ae9063ede6baa98f1567bad18316c6f9a}} 
+\index{evrcdec.c@{evrcdec.c}!SUBFRAME\_SIZE@{SUBFRAME\_SIZE}}
+\index{SUBFRAME\_SIZE@{SUBFRAME\_SIZE}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{SUBFRAME\_SIZE}{SUBFRAME\_SIZE}}
+{\footnotesize\ttfamily \#define S\+U\+B\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE~54}
+
+
+
+Definition at line 41 of file evrcdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{evrcdec_8c_a068550adf6fc3695ce5d4d114e2f309d}\label{evrcdec_8c_a068550adf6fc3695ce5d4d114e2f309d}} 
+\index{evrcdec.c@{evrcdec.c}!EVRCAFrame@{EVRCAFrame}}
+\index{EVRCAFrame@{EVRCAFrame}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{EVRCAFrame}{EVRCAFrame}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_v_r_c_a_frame}{E\+V\+R\+C\+A\+Frame}} \mbox{\hyperlink{struct_e_v_r_c_a_frame}{E\+V\+R\+C\+A\+Frame}}}
+
+E\+V\+R\+C-\/A unpacked data frame \mbox{\Hypertarget{evrcdec_8c_af728c0c831825492b4a915d07d40cbfd}\label{evrcdec_8c_af728c0c831825492b4a915d07d40cbfd}} 
+\index{evrcdec.c@{evrcdec.c}!EVRCContext@{EVRCContext}}
+\index{EVRCContext@{EVRCContext}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{EVRCContext}{EVRCContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} \mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}} 
+\index{evrcdec.c@{evrcdec.c}!evrc\_packet\_rate@{evrc\_packet\_rate}}
+\index{evrc\_packet\_rate@{evrc\_packet\_rate}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{evrc\_packet\_rate}{evrc\_packet\_rate}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RATE\_ERRS@{RATE\_ERRS}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!RATE\_ERRS@{RATE\_ERRS}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbbaf7b5e19f38c1766a0d4779ff0cc2c702}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbbaf7b5e19f38c1766a0d4779ff0cc2c702}} 
+R\+A\+T\+E\+\_\+\+E\+R\+RS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SILENCE@{SILENCE}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!SILENCE@{SILENCE}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba5115cf8ca0264d0532228e59b8665dff}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba5115cf8ca0264d0532228e59b8665dff}} 
+S\+I\+L\+E\+N\+CE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RATE\_QUANT@{RATE\_QUANT}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!RATE\_QUANT@{RATE\_QUANT}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba98b00f7413228157a62b769e8ba91bf4}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba98b00f7413228157a62b769e8ba91bf4}} 
+R\+A\+T\+E\+\_\+\+Q\+U\+A\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RATE\_QUARTER@{RATE\_QUARTER}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!RATE\_QUARTER@{RATE\_QUARTER}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba76a854346f3cd92191bc9ef43d5763b9}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba76a854346f3cd92191bc9ef43d5763b9}} 
+R\+A\+T\+E\+\_\+\+Q\+U\+A\+R\+T\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RATE\_HALF@{RATE\_HALF}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!RATE\_HALF@{RATE\_HALF}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba1176aa839455e384a7e69312019d4d5d}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba1176aa839455e384a7e69312019d4d5d}} 
+R\+A\+T\+E\+\_\+\+H\+A\+LF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RATE\_FULL@{RATE\_FULL}!evrcdec.c@{evrcdec.c}}\index{evrcdec.c@{evrcdec.c}!RATE\_FULL@{RATE\_FULL}}}\mbox{\Hypertarget{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba405ee677a1491e18981d101704204ce0}\label{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbba405ee677a1491e18981d101704204ce0}} 
+R\+A\+T\+E\+\_\+\+F\+U\+LL&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 45 of file evrcdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{evrcdec_8c_a5027affbedc5169d2a224d30f8870e2a}\label{evrcdec_8c_a5027affbedc5169d2a224d30f8870e2a}} 
+\index{evrcdec.c@{evrcdec.c}!acb\_excitation@{acb\_excitation}}
+\index{acb\_excitation@{acb\_excitation}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{acb\_excitation()}{acb\_excitation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} acb\+\_\+excitation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e,  }\item[{float $\ast$}]{excitation,  }\item[{float}]{gain,  }\item[{const float}]{delay\mbox{[}3\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 404 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=244pt]{evrcdec_8c_a5027affbedc5169d2a224d30f8870e2a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a5027affbedc5169d2a224d30f8870e2a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a9c1f5c8d05af3aa94d4d20d7518adc54}\label{evrcdec_8c_a9c1f5c8d05af3aa94d4d20d7518adc54}} 
+\index{evrcdec.c@{evrcdec.c}!bandwidth\_expansion@{bandwidth\_expansion}}
+\index{bandwidth\_expansion@{bandwidth\_expansion}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{bandwidth\_expansion()}{bandwidth\_expansion()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bandwidth\+\_\+expansion (\begin{DoxyParamCaption}\item[{float $\ast$}]{coeff,  }\item[{const float $\ast$}]{inbuf,  }\item[{float}]{gamma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 520 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a9c1f5c8d05af3aa94d4d20d7518adc54_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_aeb71652c717d37de0a619af128e2e9e6}\label{evrcdec_8c_aeb71652c717d37de0a619af128e2e9e6}} 
+\index{evrcdec.c@{evrcdec.c}!bl\_intrp@{bl\_intrp}}
+\index{bl\_intrp@{bl\_intrp}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{bl\_intrp()}{bl\_intrp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bl\+\_\+intrp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e,  }\item[{float $\ast$}]{ex,  }\item[{float}]{delay }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 376 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_aeb71652c717d37de0a619af128e2e9e6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a4dfd5208adead9d8ca1c02f9c5b8ea1f}\label{evrcdec_8c_a4dfd5208adead9d8ca1c02f9c5b8ea1f}} 
+\index{evrcdec.c@{evrcdec.c}!buf\_size2bitrate@{buf\_size2bitrate}}
+\index{buf\_size2bitrate@{buf\_size2bitrate}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{buf\_size2bitrate()}{buf\_size2bitrate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}} buf\+\_\+size2bitrate (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 165 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a4dfd5208adead9d8ca1c02f9c5b8ea1f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_ad48ca3471b6f7e84afc4a4879a905443}\label{evrcdec_8c_ad48ca3471b6f7e84afc4a4879a905443}} 
+\index{evrcdec.c@{evrcdec.c}!decode\_3\_pulses\_10bits@{decode\_3\_pulses\_10bits}}
+\index{decode\_3\_pulses\_10bits@{decode\_3\_pulses\_10bits}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_3\_pulses\_10bits()}{decode\_3\_pulses\_10bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+3\+\_\+pulses\+\_\+10bits (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{fixed\+\_\+index,  }\item[{float $\ast$}]{cod }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 456 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_ad48ca3471b6f7e84afc4a4879a905443_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a7eb552751852548180553e370560dfa0}\label{evrcdec_8c_a7eb552751852548180553e370560dfa0}} 
+\index{evrcdec.c@{evrcdec.c}!decode\_8\_pulses\_35bits@{decode\_8\_pulses\_35bits}}
+\index{decode\_8\_pulses\_35bits@{decode\_8\_pulses\_35bits}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_8\_pulses\_35bits()}{decode\_8\_pulses\_35bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+8\+\_\+pulses\+\_\+35bits (\begin{DoxyParamCaption}\item[{const uint16\+\_\+t $\ast$}]{fixed\+\_\+index,  }\item[{float $\ast$}]{cod }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 431 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a7eb552751852548180553e370560dfa0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a98184b2350a8c979fe69f4134035243e}\label{evrcdec_8c_a98184b2350a8c979fe69f4134035243e}} 
+\index{evrcdec.c@{evrcdec.c}!decode\_lspf@{decode\_lspf}}
+\index{decode\_lspf@{decode\_lspf}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_lspf()}{decode\_lspf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+lspf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the 10 vector quantized line spectral pair frequencies from the L\+SP transmission codes of any bitrate and check for badly received packets.
+
+
+\begin{DoxyParams}{Parameters}
+{\em e} & the context\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, -\/1 if the packet is badly received
+\end{DoxyReturn}
+T\+I\+A/\+I\+S-\/127 5.\+2.\+1, 5.\+7.\+1 
+
+Definition at line 282 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{evrcdec_8c_a98184b2350a8c979fe69f4134035243e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a5b3541c11db6be18e72964186e271542}\label{evrcdec_8c_a5b3541c11db6be18e72964186e271542}} 
+\index{evrcdec.c@{evrcdec.c}!decode\_predictor\_coeffs@{decode\_predictor\_coeffs}}
+\index{decode\_predictor\_coeffs@{decode\_predictor\_coeffs}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_predictor\_coeffs()}{decode\_predictor\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+predictor\+\_\+coeffs (\begin{DoxyParamCaption}\item[{const float $\ast$}]{ilspf,  }\item[{float $\ast$}]{ilpc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 346 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a5b3541c11db6be18e72964186e271542_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a5b3541c11db6be18e72964186e271542_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a11006ba4e2ace1fab4ff4daa9a9d659a}\label{evrcdec_8c_a11006ba4e2ace1fab4ff4daa9a9d659a}} 
+\index{evrcdec.c@{evrcdec.c}!determine\_bitrate@{determine\_bitrate}}
+\index{determine\_bitrate@{determine\_bitrate}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{determine\_bitrate()}{determine\_bitrate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{evrcdec_8c_a553515fa511361ced356ebefe2f4ffbb}{evrc\+\_\+packet\+\_\+rate}} determine\+\_\+bitrate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{buf\+\_\+size,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determine the bitrate from the frame size and/or the first byte of the frame.
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & the AV codec context \\
+\hline
+{\em buf\+\_\+size} & length of the buffer \\
+\hline
+{\em buf} & the bufffer\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the bitrate on success, R\+A\+T\+E\+\_\+\+E\+R\+RS if the bitrate cannot be satisfactorily determined 
+\end{DoxyReturn}
+
+
+Definition at line 188 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{evrcdec_8c_a11006ba4e2ace1fab4ff4daa9a9d659a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{evrcdec_8c_a11006ba4e2ace1fab4ff4daa9a9d659a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a74409360d02d70cc1101b9df065edee3}\label{evrcdec_8c_a74409360d02d70cc1101b9df065edee3}} 
+\index{evrcdec.c@{evrcdec.c}!evrc\_decode\_frame@{evrc\_decode\_frame}}
+\index{evrc\_decode\_frame@{evrc\_decode\_frame}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{evrc\_decode\_frame()}{evrc\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} evrc\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 742 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a74409360d02d70cc1101b9df065edee3_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_af13d9a681495574d3e5b9a9159441342}\label{evrcdec_8c_af13d9a681495574d3e5b9a9159441342}} 
+\index{evrcdec.c@{evrcdec.c}!evrc\_decode\_init@{evrc\_decode\_init}}
+\index{evrc\_decode\_init@{evrc\_decode\_init}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{evrc\_decode\_init()}{evrc\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} evrc\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Initialize the speech codec according to the specification.
+
+T\+I\+A/\+I\+S-\/127 5.\+2 
+
+Definition at line 231 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=234pt]{evrcdec_8c_af13d9a681495574d3e5b9a9159441342_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_ae0710e34f6be53725f670e9e6808a25a}\label{evrcdec_8c_ae0710e34f6be53725f670e9e6808a25a}} 
+\index{evrcdec.c@{evrcdec.c}!fcb\_excitation@{fcb\_excitation}}
+\index{fcb\_excitation@{fcb\_excitation}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{fcb\_excitation()}{fcb\_excitation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fcb\+\_\+excitation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e,  }\item[{const uint16\+\_\+t $\ast$}]{codebook,  }\item[{float $\ast$}]{excitation,  }\item[{float}]{pitch\+\_\+gain,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pitch\+\_\+lag,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 476 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{evrcdec_8c_ae0710e34f6be53725f670e9e6808a25a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{evrcdec_8c_ae0710e34f6be53725f670e9e6808a25a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a3a4e9fa41e063173917e829e49e7f1d5}\label{evrcdec_8c_a3a4e9fa41e063173917e829e49e7f1d5}} 
+\index{evrcdec.c@{evrcdec.c}!frame\_erasure@{frame\_erasure}}
+\index{frame\_erasure@{frame\_erasure}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{frame\_erasure()}{frame\_erasure()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} frame\+\_\+erasure (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e,  }\item[{float $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 652 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a3a4e9fa41e063173917e829e49e7f1d5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{evrcdec_8c_a3a4e9fa41e063173917e829e49e7f1d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_abab903fb331c17956e186b25a95fc8dc}\label{evrcdec_8c_abab903fb331c17956e186b25a95fc8dc}} 
+\index{evrcdec.c@{evrcdec.c}!interpolate\_delay@{interpolate\_delay}}
+\index{interpolate\_delay@{interpolate\_delay}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_delay()}{interpolate\_delay()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interpolate\+\_\+delay (\begin{DoxyParamCaption}\item[{float $\ast$}]{dst,  }\item[{float}]{current,  }\item[{float}]{prev,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 329 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_abab903fb331c17956e186b25a95fc8dc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_aa8b0845a2beaec85d5cfe3c821a4a4cc}\label{evrcdec_8c_aa8b0845a2beaec85d5cfe3c821a4a4cc}} 
+\index{evrcdec.c@{evrcdec.c}!interpolate\_lsp@{interpolate\_lsp}}
+\index{interpolate\_lsp@{interpolate\_lsp}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_lsp()}{interpolate\_lsp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interpolate\+\_\+lsp (\begin{DoxyParamCaption}\item[{float $\ast$}]{ilsp,  }\item[{const float $\ast$}]{lsp,  }\item[{const float $\ast$}]{prev,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 315 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=318pt]{evrcdec_8c_aa8b0845a2beaec85d5cfe3c821a4a4cc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_aa8b0845a2beaec85d5cfe3c821a4a4cc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a}\label{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a}} 
+\index{evrcdec.c@{evrcdec.c}!postfilter@{postfilter}}
+\index{postfilter@{postfilter}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{postfilter()}{postfilter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} postfilter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e,  }\item[{float $\ast$}]{in,  }\item[{const float $\ast$}]{coeff,  }\item[{float $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{idx,  }\item[{const struct \mbox{\hyperlink{struct_pf_coeff}{Pf\+Coeff}} $\ast$}]{pfc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 571 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a9d3c71bdf23275126537075ebc9d575e}\label{evrcdec_8c_a9d3c71bdf23275126537075ebc9d575e}} 
+\index{evrcdec.c@{evrcdec.c}!residual\_filter@{residual\_filter}}
+\index{residual\_filter@{residual\_filter}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{residual\_filter()}{residual\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} residual\+\_\+filter (\begin{DoxyParamCaption}\item[{float $\ast$}]{output,  }\item[{const float $\ast$}]{input,  }\item[{const float $\ast$}]{coef,  }\item[{float $\ast$}]{memory,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 531 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a9d3c71bdf23275126537075ebc9d575e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a14cf7e931e065444f0c5b891b8069c83}\label{evrcdec_8c_a14cf7e931e065444f0c5b891b8069c83}} 
+\index{evrcdec.c@{evrcdec.c}!synthesis\_filter@{synthesis\_filter}}
+\index{synthesis\_filter@{synthesis\_filter}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{synthesis\_filter()}{synthesis\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} synthesis\+\_\+filter (\begin{DoxyParamCaption}\item[{const float $\ast$}]{in,  }\item[{const float $\ast$}]{filter\+\_\+coeffs,  }\item[{float $\ast$}]{memory,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buffer\+\_\+length,  }\item[{float $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Synthesis of the decoder output signal.
+
+param\mbox{[}in\mbox{]} in input signal param\mbox{[}in\mbox{]} filter\+\_\+coeffs L\+PC coefficients param\mbox{[}in/out\mbox{]} memory synthesis filter memory param buffer\+\_\+length amount of data to process param\mbox{[}out\mbox{]} samples output samples
+
+T\+I\+A/\+I\+S-\/127 5.\+2.\+3.\+15, 5.\+7.\+3.\+4 
+
+Definition at line 504 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{evrcdec_8c_a14cf7e931e065444f0c5b891b8069c83_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a7554fb5bb91679e33f75dd1ad1723ae6}\label{evrcdec_8c_a7554fb5bb91679e33f75dd1ad1723ae6}} 
+\index{evrcdec.c@{evrcdec.c}!unpack\_frame@{unpack\_frame}}
+\index{unpack\_frame@{unpack\_frame}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{unpack\_frame()}{unpack\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} unpack\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_v_r_c_context}{E\+V\+R\+C\+Context}} $\ast$}]{e }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\hyperlink{struct_frame}{Frame}} unpacking for R\+A\+T\+E\+\_\+\+F\+U\+LL, R\+A\+T\+E\+\_\+\+H\+A\+LF and R\+A\+T\+E\+\_\+\+Q\+U\+A\+NT
+
+
+\begin{DoxyParams}{Parameters}
+{\em e} & the context\\
+\hline
+\end{DoxyParams}
+T\+I\+A/\+I\+S-\/127 \mbox{\hyperlink{struct_table}{Table}} 4.\+21-\/1 
+
+Definition at line 108 of file evrcdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=326pt]{evrcdec_8c_a7554fb5bb91679e33f75dd1ad1723ae6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{evrcdec_8c_a7554fb5bb91679e33f75dd1ad1723ae6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{evrcdec_8c_a51b07ecd6ed4e9abb366c8ca531e590a}\label{evrcdec_8c_a51b07ecd6ed4e9abb366c8ca531e590a}} 
+\index{evrcdec.c@{evrcdec.c}!warn\_insufficient\_frame\_quality@{warn\_insufficient\_frame\_quality}}
+\index{warn\_insufficient\_frame\_quality@{warn\_insufficient\_frame\_quality}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{warn\_insufficient\_frame\_quality()}{warn\_insufficient\_frame\_quality()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} warn\+\_\+insufficient\+\_\+frame\+\_\+quality (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const char $\ast$}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 219 of file evrcdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{evrcdec_8c_a51b07ecd6ed4e9abb366c8ca531e590a_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{evrcdec_8c_ae2dbb9ce50ddf9e2025030ebb483e6b2}\label{evrcdec_8c_ae2dbb9ce50ddf9e2025030ebb483e6b2}} 
+\index{evrcdec.c@{evrcdec.c}!evrcdec\_class@{evrcdec\_class}}
+\index{evrcdec\_class@{evrcdec\_class}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{evrcdec\_class}{evrcdec\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} evrcdec\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}evrc"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{evrcdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 924 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a098b6f91c3305d9c73a5f6019fee22da}\label{evrcdec_8c_a098b6f91c3305d9c73a5f6019fee22da}} 
+\index{evrcdec.c@{evrcdec.c}!ff\_evrc\_decoder@{ff\_evrc\_decoder}}
+\index{ff\_evrc\_decoder@{ff\_evrc\_decoder}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_evrc\_decoder}{ff\_evrc\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+evrc\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}evrc"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}EVRC (Enhanced Variable Rate Codec)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea49aaafd1aea907d4d90ec18246b7cfc1}{AV\_CODEC\_ID\_EVRC}},}
+\DoxyCodeLine{    .init           = \mbox{\hyperlink{evrcdec_8c_af13d9a681495574d3e5b9a9159441342}{evrc\_decode\_init}},}
+\DoxyCodeLine{    .decode         = \mbox{\hyperlink{evrcdec_8c_a74409360d02d70cc1101b9df065edee3}{evrc\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{evrcdec_8c_af728c0c831825492b4a915d07d40cbfd}{EVRCContext}}),}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{evrcdec_8c_ae2dbb9ce50ddf9e2025030ebb483e6b2}{evrcdec\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 931 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{evrcdec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{evrcdec.c@{evrcdec.c}!options@{options}}
+\index{options@{options}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}postfilter"{}}, \textcolor{stringliteral}{"{}enable postfilter"{}}, \mbox{\hyperlink{evrcdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{evrcdec_8c_af811e0dbe73eda54a1ec2c2819f8f55a}{postfilter}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 1\}, 0, 1, \mbox{\hyperlink{evrcdec_8c_aa70747e23d9ebf312299930cf6b3c20d}{AD}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 919 of file evrcdec.\+c.
+
+\mbox{\Hypertarget{evrcdec_8c_acdeb119d80865c218f569aa7e3861f44}\label{evrcdec_8c_acdeb119d80865c218f569aa7e3861f44}} 
+\index{evrcdec.c@{evrcdec.c}!postfilter\_coeffs@{postfilter\_coeffs}}
+\index{postfilter\_coeffs@{postfilter\_coeffs}!evrcdec.c@{evrcdec.c}}
+\doxysubsubsection{\texorpdfstring{postfilter\_coeffs}{postfilter\_coeffs}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_pf_coeff}{Pf\+Coeff}} postfilter\+\_\+coeffs\mbox{[}5\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ 0.0 , 0.0 , 0.0 , 0.0  \},}
+\DoxyCodeLine{    \{ 0.0 , 0.0 , 0.57, 0.57 \},}
+\DoxyCodeLine{    \{ 0.0 , 0.0 , 0.0 , 0.0  \},}
+\DoxyCodeLine{    \{ 0.35, 0.50, 0.50, 0.75 \},}
+\DoxyCodeLine{    \{ 0.20, 0.50, 0.57, 0.75 \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}

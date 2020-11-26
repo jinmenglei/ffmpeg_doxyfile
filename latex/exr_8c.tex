@@ -1,0 +1,1240 @@
+\hypertarget{exr_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/exr.c File Reference}
+\label{exr_8c}\index{E:/github/ffmpeg/libavcodec/exr.c@{E:/github/ffmpeg/libavcodec/exr.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include $<$zlib.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intfloat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/color\+\_\+utils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}exrdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+Include dependency graph for exr.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_e_x_r_channel}{E\+X\+R\+Channel}}
+\item 
+struct \mbox{\hyperlink{struct_e_x_r_tile_attribute}{E\+X\+R\+Tile\+Attribute}}
+\item 
+struct \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{exr_8c_ab14e0da6d5a06788e22cca3356767656}{H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+I\+N\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+X\+P\+\_\+\+A\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+P\+\_\+\+E\+XP}}~0x38000000
+\item 
+\#define \mbox{\hyperlink{exr_8c_a15f65ce613c7ae329abaf64fd6060c0c}{H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+X\+P\+\_\+\+A\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+P\+\_\+\+E\+XP}}~0x47800000
+\item 
+\#define \mbox{\hyperlink{exr_8c_a11d9de668dfbdd6d35d8d4df2461651e}{F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+XP}}~(0x\+FF $<$$<$ 23)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a08a3d0a52b67baa156e9b68efa07390b}{H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+XP}}~(0x1F $<$$<$ 10)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a364ff34060e0d887b651961fd2fc09b6}{U\+S\+H\+O\+R\+T\+\_\+\+R\+A\+N\+GE}}~(1 $<$$<$ 16)
+\item 
+\#define \mbox{\hyperlink{exr_8c_aa5efd9de5f0408f54365716967adbb87}{B\+I\+T\+M\+A\+P\+\_\+\+S\+I\+ZE}}~(1 $<$$<$ 13)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a0b0a34683fa18eabbc72621f9c4e4775}{H\+U\+F\+\_\+\+E\+N\+C\+B\+I\+TS}}~16
+\item 
+\#define \mbox{\hyperlink{exr_8c_a79425c1dfd17589c5989ea04357b6c88}{H\+U\+F\+\_\+\+D\+E\+C\+B\+I\+TS}}~14
+\item 
+\#define \mbox{\hyperlink{exr_8c_a73683428288a53afca33bb0599fb27f4}{H\+U\+F\+\_\+\+E\+N\+C\+S\+I\+ZE}}~((1 $<$$<$ \mbox{\hyperlink{exr_8c_a0b0a34683fa18eabbc72621f9c4e4775}{H\+U\+F\+\_\+\+E\+N\+C\+B\+I\+TS}}) + 1)
+\item 
+\#define \mbox{\hyperlink{exr_8c_ab6f286a53a0b453f91c9142f4b5b4fe8}{H\+U\+F\+\_\+\+D\+E\+C\+S\+I\+ZE}}~(1 $<$$<$ \mbox{\hyperlink{exr_8c_a79425c1dfd17589c5989ea04357b6c88}{H\+U\+F\+\_\+\+D\+E\+C\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{exr_8c_a83415165fcdbf5c5b66460543eefc6a8}{H\+U\+F\+\_\+\+D\+E\+C\+M\+A\+SK}}~(\mbox{\hyperlink{exr_8c_ab6f286a53a0b453f91c9142f4b5b4fe8}{H\+U\+F\+\_\+\+D\+E\+C\+S\+I\+ZE}} -\/ 1)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a6324f709b49fb4c1523b82244c04353e}{S\+H\+O\+R\+T\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}}~59
+\item 
+\#define \mbox{\hyperlink{exr_8c_a43458caa5dab4d3d8727b918c1360072}{L\+O\+N\+G\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}}~63
+\item 
+\#define \mbox{\hyperlink{exr_8c_ab8ef4eab3f30b12a57b3770d81ca1ce7}{S\+H\+O\+R\+T\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN}}~(2 + \mbox{\hyperlink{exr_8c_a43458caa5dab4d3d8727b918c1360072}{L\+O\+N\+G\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}} -\/ \mbox{\hyperlink{exr_8c_a6324f709b49fb4c1523b82244c04353e}{S\+H\+O\+R\+T\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}})
+\item 
+\#define \mbox{\hyperlink{exr_8c_a1ade5eef815c08aa7a7e1fb703bd3a0a}{L\+O\+N\+G\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN}}~(255 + \mbox{\hyperlink{exr_8c_ab8ef4eab3f30b12a57b3770d81ca1ce7}{S\+H\+O\+R\+T\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN}})
+\item 
+\#define \mbox{\hyperlink{exr_8c_ad2afdd1e4e43fb7195841de66d5533a9}{get\+\_\+char}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  lc,  gb)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a13f25b33bc13bf1b04364c15bafe1af6}{get\+\_\+code}}(po,  rlc,  \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  lc,  gb,  \mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}},  oe,  outb)
+\item 
+\#define \mbox{\hyperlink{exr_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}~16
+\item 
+\#define \mbox{\hyperlink{exr_8c_ae0afe80a3333b2cd5595284123c5db80}{A\+\_\+\+O\+F\+F\+S\+ET}}~(1 $<$$<$ (\mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}} -\/ 1))
+\item 
+\#define \mbox{\hyperlink{exr_8c_a3a86ed6d27a44e368c7e5bb4fda2ad87}{M\+O\+D\+\_\+\+M\+A\+SK}}~((1 $<$$<$ \mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}) -\/ 1)
+\item 
+\#define \mbox{\hyperlink{exr_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{exr_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_x_r_channel}{E\+X\+R\+Channel}} \mbox{\hyperlink{exr_8c_abc9de778f58297a03cb66a6e9cfc946b}{E\+X\+R\+Channel}}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_x_r_tile_attribute}{E\+X\+R\+Tile\+Attribute}} \mbox{\hyperlink{exr_8c_a25e24e2f8fbfbaad11cc6f59e0d8a783}{E\+X\+R\+Tile\+Attribute}}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} \mbox{\hyperlink{exr_8c_ad36ec4241a314b36567b3cba60411aa5}{E\+X\+R\+Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} \mbox{\hyperlink{exr_8c_a6ea419c4cca52d73d5d6812240ecbe5a}{E\+X\+R\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} \mbox{\hyperlink{exr_8c_a8d3ee58553eeabbe736e678387a9932c}{Huf\+Dec}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97f}{Exr\+Compr}} \{ \newline
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fafbda1066f2216a1ab43bd5b05d69cc5a}{E\+X\+R\+\_\+\+R\+AW}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fabaa78d9ebef038108e34fd2de29dbc4e}{E\+X\+R\+\_\+\+R\+LE}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97faf56102c95e10acac37f393f8f455bcfc}{E\+X\+R\+\_\+\+Z\+I\+P1}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fa67c925a6090d6fd4f85c12ea6a4d7129}{E\+X\+R\+\_\+\+Z\+I\+P16}}, 
+\newline
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fa965c11c8eb36ff843f6993812507cba0}{E\+X\+R\+\_\+\+P\+IZ}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97faf17217d102cbbbfb3b8c601119c21f94}{E\+X\+R\+\_\+\+P\+X\+R24}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fae1f84d8b997681a8748f6f82b5d61985}{E\+X\+R\+\_\+\+B44}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fa5138ba052e49eedb40203baca7efa57a}{E\+X\+R\+\_\+\+B44A}}, 
+\newline
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fa1929bc752349a314b21f566002b508e8}{E\+X\+R\+\_\+\+D\+WA}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97faa5df8e37afff636391e3f1c8b2dc31ca}{E\+X\+R\+\_\+\+D\+WB}}, 
+\mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97fa49305f8b7ea8b9f5a8449076a82d0916}{E\+X\+R\+\_\+\+U\+N\+KN}}
+ \}
+\item 
+enum \mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334}{Exr\+Pixel\+Type}} \{ \mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334a3275383b110d8f9ea6011c72d5aee829}{E\+X\+R\+\_\+\+U\+I\+NT}}, 
+\mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334a42642be0f8c46e103b0efedcbe7ec410}{E\+X\+R\+\_\+\+H\+A\+LF}}, 
+\mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae37b6a8e5fde0bc484fcffcfcb4049dc}{E\+X\+R\+\_\+\+F\+L\+O\+AT}}, 
+\mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae32fe31c5173017a959562f699f40f39}{E\+X\+R\+\_\+\+U\+N\+K\+N\+O\+WN}}
+ \}
+\item 
+enum \mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002}{Exr\+Tile\+Level\+Mode}} \{ \mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002aa4b3cc3bba602854b110d448f22ced1b}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+O\+NE}}, 
+\mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002abbf53073aaaa647e3bda73edcf001086}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+M\+I\+P\+M\+AP}}, 
+\mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002afcfb71861880dd1866af635e7fcab5cd}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+R\+I\+P\+M\+AP}}, 
+\mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002a6b7afbf46504407ad0440c2ed15bf7d6}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+U\+N\+K\+N\+O\+WN}}
+ \}
+\item 
+enum \mbox{\hyperlink{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68}{Exr\+Tile\+Level\+Round}} \{ \mbox{\hyperlink{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68ac42087e6a05fa6da3925728611a1fa9f}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+UP}}, 
+\mbox{\hyperlink{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68a944a7329dd2e36b8a39c43e239dde108}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+D\+O\+WN}}, 
+\mbox{\hyperlink{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68afb128e151fd0d4e3001e0db6371cc6fc}{E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+U\+N\+K\+N\+O\+WN}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static union \mbox{\hyperlink{unionav__intfloat32}{av\+\_\+intfloat32}} \mbox{\hyperlink{exr_8c_a741917aece70916d7e272469424c5301}{exr\+\_\+half2float}} (uint16\+\_\+t hf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a8a27d02a21d5794c629c62b00aec58a8}{zip\+\_\+uncompress}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compressed\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} uncompressed\+\_\+size, \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_ae03e2a21b06c2631be48dea6856b885b}{rle\+\_\+uncompress}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compressed\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} uncompressed\+\_\+size, \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static uint16\+\_\+t \mbox{\hyperlink{exr_8c_a3c48b200b3df9d07fc717d7e5fb414ef}{reverse\+\_\+lut}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$bitmap, uint16\+\_\+t $\ast$lut)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_a9e7088abb2238f360139a868831136cd}{apply\+\_\+lut}} (const uint16\+\_\+t $\ast$lut, uint16\+\_\+t $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dsize)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_a1ad0a8200dd0e92aa673ed54ef27ce80}{huf\+\_\+canonical\+\_\+code\+\_\+table}} (uint64\+\_\+t $\ast$hcode)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a7985d3484115327d8dc7aa40bc7a1511}{huf\+\_\+unpack\+\_\+enc\+\_\+table}} (\mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$gb, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} iM, uint64\+\_\+t $\ast$hcode)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a1498ca5dbad5bd5e75f23747efec6baf}{huf\+\_\+build\+\_\+dec\+\_\+table}} (const uint64\+\_\+t $\ast$hcode, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} iM, \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} $\ast$hdecod)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_ad3d7d33971ac214749c897353847cf76}{huf\+\_\+decode}} (const uint64\+\_\+t $\ast$hcode, const \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} $\ast$hdecod, \mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nbits, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rlc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} no, uint16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a4944a6600571aec0a67052a36c05b9fe}{huf\+\_\+uncompress}} (\mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$gb, uint16\+\_\+t $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dst\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_af6662067d7b11759f19c4e14cbb865fe}{wdec14}} (uint16\+\_\+t l, uint16\+\_\+t \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, uint16\+\_\+t $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, uint16\+\_\+t $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_a2ee7b645831c22d2d802fdd75fb85592}{wdec16}} (uint16\+\_\+t l, uint16\+\_\+t \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, uint16\+\_\+t $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, uint16\+\_\+t $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_adf97fb8076a0c1138c7773adc35e0170}{wav\+\_\+decode}} (uint16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ox, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ny, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} oy, uint16\+\_\+t mx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a8607a543fa9f5981f7c0d95365e95df6}{piz\+\_\+uncompress}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ssize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dsize, \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_afd6ca91b00e65a6d88369cd8a224db75}{pxr24\+\_\+uncompress}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compressed\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} uncompressed\+\_\+size, \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_a83a6b888ef61743f77b70770c809b483}{unpack\+\_\+14}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\mbox{[}14\mbox{]}, uint16\+\_\+t \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\mbox{[}16\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{exr_8c_aa6b134133c50537794f8c55df01e2206}{unpack\+\_\+3}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\mbox{[}3\mbox{]}, uint16\+\_\+t \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\mbox{[}16\mbox{]})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a7e5b842d32785bb1959a80d2c10bd6e7}{b44\+\_\+uncompress}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compressed\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} uncompressed\+\_\+size, \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_af8859f6d63a86043ca871572705ee233}{decode\+\_\+block}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$tdata, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} threadnr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_ae4af03074cc2e0db82a0f292ce725a82}{check\+\_\+header\+\_\+variable}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$value\+\_\+name, const char $\ast$value\+\_\+type, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} minimum\+\_\+length)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a682b3900bdc50711227b5cc152e0bc4a}{decode\+\_\+header}} (\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{exr_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{exr_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{exr_8c_a67c3e0887f876fcca6ec369e689d04bb}{exr\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{exr_8c_a3be0c478ce5e969f88f3df44fde60829}{ff\+\_\+exr\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Open\+E\+XR decoder \begin{DoxyAuthor}{Author}
+Jimmy Christensen
+\end{DoxyAuthor}
+For more information on the Open\+E\+XR format, visit\+: \href{http://openexr.com/}{\texttt{ http\+://openexr.\+com/}}
+
+\mbox{\hyperlink{exr_8c_a741917aece70916d7e272469424c5301}{exr\+\_\+half2float()}} is credited to Aaftab Munshi, Dan Ginsburg, Dave Shreiner. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{exr_8c_ae0afe80a3333b2cd5595284123c5db80}\label{exr_8c_ae0afe80a3333b2cd5595284123c5db80}} 
+\index{exr.c@{exr.c}!A\_OFFSET@{A\_OFFSET}}
+\index{A\_OFFSET@{A\_OFFSET}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{A\_OFFSET}{A\_OFFSET}}
+{\footnotesize\ttfamily \#define A\+\_\+\+O\+F\+F\+S\+ET~(1 $<$$<$ (\mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}} -\/ 1))}
+
+
+
+Definition at line 598 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_aa5efd9de5f0408f54365716967adbb87}\label{exr_8c_aa5efd9de5f0408f54365716967adbb87}} 
+\index{exr.c@{exr.c}!BITMAP\_SIZE@{BITMAP\_SIZE}}
+\index{BITMAP\_SIZE@{BITMAP\_SIZE}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{BITMAP\_SIZE}{BITMAP\_SIZE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+M\+A\+P\+\_\+\+S\+I\+ZE~(1 $<$$<$ 13)}
+
+
+
+Definition at line 292 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a11d9de668dfbdd6d35d8d4df2461651e}\label{exr_8c_a11d9de668dfbdd6d35d8d4df2461651e}} 
+\index{exr.c@{exr.c}!FLOAT\_MAX\_BIASED\_EXP@{FLOAT\_MAX\_BIASED\_EXP}}
+\index{FLOAT\_MAX\_BIASED\_EXP@{FLOAT\_MAX\_BIASED\_EXP}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{FLOAT\_MAX\_BIASED\_EXP}{FLOAT\_MAX\_BIASED\_EXP}}
+{\footnotesize\ttfamily \#define F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+XP~(0x\+FF $<$$<$ 23)}
+
+
+
+Definition at line 173 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_ad2afdd1e4e43fb7195841de66d5533a9}\label{exr_8c_ad2afdd1e4e43fb7195841de66d5533a9}} 
+\index{exr.c@{exr.c}!get\_char@{get\_char}}
+\index{get\_char@{get\_char}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{get\_char}{get\_char}}
+{\footnotesize\ttfamily \#define get\+\_\+char(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{lc,  }\item[{}]{gb }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\{                                                                             \(\backslash\)}
+\DoxyCodeLine{        c   = (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} << 8) | bytestream2\_get\_byte(gb);                            \(\backslash\)}
+\DoxyCodeLine{        lc += 8;                                                              \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 435 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a13f25b33bc13bf1b04364c15bafe1af6}\label{exr_8c_a13f25b33bc13bf1b04364c15bafe1af6}} 
+\index{exr.c@{exr.c}!get\_code@{get\_code}}
+\index{get\_code@{get\_code}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{get\_code}{get\_code}}
+{\footnotesize\ttfamily \#define get\+\_\+code(\begin{DoxyParamCaption}\item[{}]{po,  }\item[{}]{rlc,  }\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{lc,  }\item[{}]{gb,  }\item[{}]{\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}},  }\item[{}]{oe,  }\item[{}]{outb }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\{                                                                             \(\backslash\)}
+\DoxyCodeLine{        if (po == rlc) \{                                                      \(\backslash\)}
+\DoxyCodeLine{            if (lc < 8)                                                       \(\backslash\)}
+\DoxyCodeLine{                get\_char(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}, lc, gb);                                          \(\backslash\)}
+\DoxyCodeLine{            lc -\/= 8;                                                          \(\backslash\)}
+\DoxyCodeLine{                                                                              \(\backslash\)}
+\DoxyCodeLine{            cs = \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} >> lc;                                                     \mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{                                                                              \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{            if}} (\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}} + cs > oe || \mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}} == outb)                                 \(\backslash\)}
+\DoxyCodeLine{                return \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                                   \(\backslash\)}
+\DoxyCodeLine{                                                                              \(\backslash\)}
+\DoxyCodeLine{            s = \mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}[-\/1];                                                      \(\backslash\)}
+\DoxyCodeLine{                                                                              \(\backslash\)}
+\DoxyCodeLine{            while (cs-\/-\/ > 0)                                                  \(\backslash\)}
+\DoxyCodeLine{                *\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}++ = \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}};                                                   \(\backslash\)}
+\DoxyCodeLine{        \} \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}} < oe) \{                                                \(\backslash\)}
+\DoxyCodeLine{            *\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}++ = po;                                                      \(\backslash\)}
+\DoxyCodeLine{        \} \textcolor{keywordflow}{else} \{                                                              \(\backslash\)}
+\DoxyCodeLine{            return \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                                       \(\backslash\)}
+\DoxyCodeLine{        \}                                                                     \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 441 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a08a3d0a52b67baa156e9b68efa07390b}\label{exr_8c_a08a3d0a52b67baa156e9b68efa07390b}} 
+\index{exr.c@{exr.c}!HALF\_FLOAT\_MAX\_BIASED\_EXP@{HALF\_FLOAT\_MAX\_BIASED\_EXP}}
+\index{HALF\_FLOAT\_MAX\_BIASED\_EXP@{HALF\_FLOAT\_MAX\_BIASED\_EXP}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HALF\_FLOAT\_MAX\_BIASED\_EXP}{HALF\_FLOAT\_MAX\_BIASED\_EXP}}
+{\footnotesize\ttfamily \#define H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+XP~(0x1F $<$$<$ 10)}
+
+
+
+Definition at line 175 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a15f65ce613c7ae329abaf64fd6060c0c}\label{exr_8c_a15f65ce613c7ae329abaf64fd6060c0c}} 
+\index{exr.c@{exr.c}!HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP@{HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}}
+\index{HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP@{HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}{HALF\_FLOAT\_MAX\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}}
+{\footnotesize\ttfamily \#define H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+A\+X\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+X\+P\+\_\+\+A\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+P\+\_\+\+E\+XP~0x47800000}
+
+
+
+Definition at line 170 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_ab14e0da6d5a06788e22cca3356767656}\label{exr_8c_ab14e0da6d5a06788e22cca3356767656}} 
+\index{exr.c@{exr.c}!HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP@{HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}}
+\index{HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP@{HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}{HALF\_FLOAT\_MIN\_BIASED\_EXP\_AS\_SINGLE\_FP\_EXP}}
+{\footnotesize\ttfamily \#define H\+A\+L\+F\+\_\+\+F\+L\+O\+A\+T\+\_\+\+M\+I\+N\+\_\+\+B\+I\+A\+S\+E\+D\+\_\+\+E\+X\+P\+\_\+\+A\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+P\+\_\+\+E\+XP~0x38000000}
+
+
+
+Definition at line 166 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a79425c1dfd17589c5989ea04357b6c88}\label{exr_8c_a79425c1dfd17589c5989ea04357b6c88}} 
+\index{exr.c@{exr.c}!HUF\_DECBITS@{HUF\_DECBITS}}
+\index{HUF\_DECBITS@{HUF\_DECBITS}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HUF\_DECBITS}{HUF\_DECBITS}}
+{\footnotesize\ttfamily \#define H\+U\+F\+\_\+\+D\+E\+C\+B\+I\+TS~14}
+
+
+
+Definition at line 318 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a83415165fcdbf5c5b66460543eefc6a8}\label{exr_8c_a83415165fcdbf5c5b66460543eefc6a8}} 
+\index{exr.c@{exr.c}!HUF\_DECMASK@{HUF\_DECMASK}}
+\index{HUF\_DECMASK@{HUF\_DECMASK}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HUF\_DECMASK}{HUF\_DECMASK}}
+{\footnotesize\ttfamily \#define H\+U\+F\+\_\+\+D\+E\+C\+M\+A\+SK~(\mbox{\hyperlink{exr_8c_ab6f286a53a0b453f91c9142f4b5b4fe8}{H\+U\+F\+\_\+\+D\+E\+C\+S\+I\+ZE}} -\/ 1)}
+
+
+
+Definition at line 322 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_ab6f286a53a0b453f91c9142f4b5b4fe8}\label{exr_8c_ab6f286a53a0b453f91c9142f4b5b4fe8}} 
+\index{exr.c@{exr.c}!HUF\_DECSIZE@{HUF\_DECSIZE}}
+\index{HUF\_DECSIZE@{HUF\_DECSIZE}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HUF\_DECSIZE}{HUF\_DECSIZE}}
+{\footnotesize\ttfamily \#define H\+U\+F\+\_\+\+D\+E\+C\+S\+I\+ZE~(1 $<$$<$ \mbox{\hyperlink{exr_8c_a79425c1dfd17589c5989ea04357b6c88}{H\+U\+F\+\_\+\+D\+E\+C\+B\+I\+TS}})}
+
+
+
+Definition at line 321 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a0b0a34683fa18eabbc72621f9c4e4775}\label{exr_8c_a0b0a34683fa18eabbc72621f9c4e4775}} 
+\index{exr.c@{exr.c}!HUF\_ENCBITS@{HUF\_ENCBITS}}
+\index{HUF\_ENCBITS@{HUF\_ENCBITS}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HUF\_ENCBITS}{HUF\_ENCBITS}}
+{\footnotesize\ttfamily \#define H\+U\+F\+\_\+\+E\+N\+C\+B\+I\+TS~16}
+
+
+
+Definition at line 317 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a73683428288a53afca33bb0599fb27f4}\label{exr_8c_a73683428288a53afca33bb0599fb27f4}} 
+\index{exr.c@{exr.c}!HUF\_ENCSIZE@{HUF\_ENCSIZE}}
+\index{HUF\_ENCSIZE@{HUF\_ENCSIZE}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HUF\_ENCSIZE}{HUF\_ENCSIZE}}
+{\footnotesize\ttfamily \#define H\+U\+F\+\_\+\+E\+N\+C\+S\+I\+ZE~((1 $<$$<$ \mbox{\hyperlink{exr_8c_a0b0a34683fa18eabbc72621f9c4e4775}{H\+U\+F\+\_\+\+E\+N\+C\+B\+I\+TS}}) + 1)}
+
+
+
+Definition at line 320 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a43458caa5dab4d3d8727b918c1360072}\label{exr_8c_a43458caa5dab4d3d8727b918c1360072}} 
+\index{exr.c@{exr.c}!LONG\_ZEROCODE\_RUN@{LONG\_ZEROCODE\_RUN}}
+\index{LONG\_ZEROCODE\_RUN@{LONG\_ZEROCODE\_RUN}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{LONG\_ZEROCODE\_RUN}{LONG\_ZEROCODE\_RUN}}
+{\footnotesize\ttfamily \#define L\+O\+N\+G\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN~63}
+
+
+
+Definition at line 354 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a1ade5eef815c08aa7a7e1fb703bd3a0a}\label{exr_8c_a1ade5eef815c08aa7a7e1fb703bd3a0a}} 
+\index{exr.c@{exr.c}!LONGEST\_LONG\_RUN@{LONGEST\_LONG\_RUN}}
+\index{LONGEST\_LONG\_RUN@{LONGEST\_LONG\_RUN}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{LONGEST\_LONG\_RUN}{LONGEST\_LONG\_RUN}}
+{\footnotesize\ttfamily \#define L\+O\+N\+G\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN~(255 + \mbox{\hyperlink{exr_8c_ab8ef4eab3f30b12a57b3770d81ca1ce7}{S\+H\+O\+R\+T\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN}})}
+
+
+
+Definition at line 356 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a3a86ed6d27a44e368c7e5bb4fda2ad87}\label{exr_8c_a3a86ed6d27a44e368c7e5bb4fda2ad87}} 
+\index{exr.c@{exr.c}!MOD\_MASK@{MOD\_MASK}}
+\index{MOD\_MASK@{MOD\_MASK}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{MOD\_MASK}{MOD\_MASK}}
+{\footnotesize\ttfamily \#define M\+O\+D\+\_\+\+M\+A\+SK~((1 $<$$<$ \mbox{\hyperlink{vf__paletteuse_8c_a671db1197d35e1db5d5bf18f1af5ed3f}{N\+B\+I\+TS}}) -\/ 1)}
+
+
+
+Definition at line 599 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a671db1197d35e1db5d5bf18f1af5ed3f}\label{exr_8c_a671db1197d35e1db5d5bf18f1af5ed3f}} 
+\index{exr.c@{exr.c}!NBITS@{NBITS}}
+\index{NBITS@{NBITS}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{NBITS}{NBITS}}
+{\footnotesize\ttfamily \#define N\+B\+I\+TS~16}
+
+
+
+Definition at line 597 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{exr_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{exr.c@{exr.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}}, x)}
+
+
+
+Definition at line 1927 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a6324f709b49fb4c1523b82244c04353e}\label{exr_8c_a6324f709b49fb4c1523b82244c04353e}} 
+\index{exr.c@{exr.c}!SHORT\_ZEROCODE\_RUN@{SHORT\_ZEROCODE\_RUN}}
+\index{SHORT\_ZEROCODE\_RUN@{SHORT\_ZEROCODE\_RUN}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{SHORT\_ZEROCODE\_RUN}{SHORT\_ZEROCODE\_RUN}}
+{\footnotesize\ttfamily \#define S\+H\+O\+R\+T\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN~59}
+
+
+
+Definition at line 353 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_ab8ef4eab3f30b12a57b3770d81ca1ce7}\label{exr_8c_ab8ef4eab3f30b12a57b3770d81ca1ce7}} 
+\index{exr.c@{exr.c}!SHORTEST\_LONG\_RUN@{SHORTEST\_LONG\_RUN}}
+\index{SHORTEST\_LONG\_RUN@{SHORTEST\_LONG\_RUN}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{SHORTEST\_LONG\_RUN}{SHORTEST\_LONG\_RUN}}
+{\footnotesize\ttfamily \#define S\+H\+O\+R\+T\+E\+S\+T\+\_\+\+L\+O\+N\+G\+\_\+\+R\+UN~(2 + \mbox{\hyperlink{exr_8c_a43458caa5dab4d3d8727b918c1360072}{L\+O\+N\+G\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}} -\/ \mbox{\hyperlink{exr_8c_a6324f709b49fb4c1523b82244c04353e}{S\+H\+O\+R\+T\+\_\+\+Z\+E\+R\+O\+C\+O\+D\+E\+\_\+\+R\+UN}})}
+
+
+
+Definition at line 355 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a364ff34060e0d887b651961fd2fc09b6}\label{exr_8c_a364ff34060e0d887b651961fd2fc09b6}} 
+\index{exr.c@{exr.c}!USHORT\_RANGE@{USHORT\_RANGE}}
+\index{USHORT\_RANGE@{USHORT\_RANGE}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{USHORT\_RANGE}{USHORT\_RANGE}}
+{\footnotesize\ttfamily \#define U\+S\+H\+O\+R\+T\+\_\+\+R\+A\+N\+GE~(1 $<$$<$ 16)}
+
+
+
+Definition at line 291 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_aa786055ad8b70c06fcd3fb7c848bc390}\label{exr_8c_aa786055ad8b70c06fcd3fb7c848bc390}} 
+\index{exr.c@{exr.c}!VD@{VD}}
+\index{VD@{VD}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{VD}{VD}}
+{\footnotesize\ttfamily \#define VD~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1928 of file exr.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{exr_8c_abc9de778f58297a03cb66a6e9cfc946b}\label{exr_8c_abc9de778f58297a03cb66a6e9cfc946b}} 
+\index{exr.c@{exr.c}!EXRChannel@{EXRChannel}}
+\index{EXRChannel@{EXRChannel}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{EXRChannel}{EXRChannel}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_x_r_channel}{E\+X\+R\+Channel}} \mbox{\hyperlink{struct_e_x_r_channel}{E\+X\+R\+Channel}}}
+
+\mbox{\Hypertarget{exr_8c_a6ea419c4cca52d73d5d6812240ecbe5a}\label{exr_8c_a6ea419c4cca52d73d5d6812240ecbe5a}} 
+\index{exr.c@{exr.c}!EXRContext@{EXRContext}}
+\index{EXRContext@{EXRContext}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{EXRContext}{EXRContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} \mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}}}
+
+\mbox{\Hypertarget{exr_8c_ad36ec4241a314b36567b3cba60411aa5}\label{exr_8c_ad36ec4241a314b36567b3cba60411aa5}} 
+\index{exr.c@{exr.c}!EXRThreadData@{EXRThreadData}}
+\index{EXRThreadData@{EXRThreadData}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{EXRThreadData}{EXRThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} \mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}}}
+
+\mbox{\Hypertarget{exr_8c_a25e24e2f8fbfbaad11cc6f59e0d8a783}\label{exr_8c_a25e24e2f8fbfbaad11cc6f59e0d8a783}} 
+\index{exr.c@{exr.c}!EXRTileAttribute@{EXRTileAttribute}}
+\index{EXRTileAttribute@{EXRTileAttribute}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{EXRTileAttribute}{EXRTileAttribute}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_e_x_r_tile_attribute}{E\+X\+R\+Tile\+Attribute}} \mbox{\hyperlink{struct_e_x_r_tile_attribute}{E\+X\+R\+Tile\+Attribute}}}
+
+\mbox{\Hypertarget{exr_8c_a8d3ee58553eeabbe736e678387a9932c}\label{exr_8c_a8d3ee58553eeabbe736e678387a9932c}} 
+\index{exr.c@{exr.c}!HufDec@{HufDec}}
+\index{HufDec@{HufDec}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{HufDec}{HufDec}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97f}\label{exr_8c_a042083a5e32dcd809133461b1170b97f}} 
+\index{exr.c@{exr.c}!ExrCompr@{ExrCompr}}
+\index{ExrCompr@{ExrCompr}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{ExrCompr}{ExrCompr}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{exr_8c_a042083a5e32dcd809133461b1170b97f}{Exr\+Compr}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_RAW@{EXR\_RAW}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_RAW@{EXR\_RAW}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fafbda1066f2216a1ab43bd5b05d69cc5a}\label{exr_8c_a042083a5e32dcd809133461b1170b97fafbda1066f2216a1ab43bd5b05d69cc5a}} 
+E\+X\+R\+\_\+\+R\+AW&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_RLE@{EXR\_RLE}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_RLE@{EXR\_RLE}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fabaa78d9ebef038108e34fd2de29dbc4e}\label{exr_8c_a042083a5e32dcd809133461b1170b97fabaa78d9ebef038108e34fd2de29dbc4e}} 
+E\+X\+R\+\_\+\+R\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_ZIP1@{EXR\_ZIP1}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_ZIP1@{EXR\_ZIP1}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97faf56102c95e10acac37f393f8f455bcfc}\label{exr_8c_a042083a5e32dcd809133461b1170b97faf56102c95e10acac37f393f8f455bcfc}} 
+E\+X\+R\+\_\+\+Z\+I\+P1&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_ZIP16@{EXR\_ZIP16}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_ZIP16@{EXR\_ZIP16}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fa67c925a6090d6fd4f85c12ea6a4d7129}\label{exr_8c_a042083a5e32dcd809133461b1170b97fa67c925a6090d6fd4f85c12ea6a4d7129}} 
+E\+X\+R\+\_\+\+Z\+I\+P16&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_PIZ@{EXR\_PIZ}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_PIZ@{EXR\_PIZ}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fa965c11c8eb36ff843f6993812507cba0}\label{exr_8c_a042083a5e32dcd809133461b1170b97fa965c11c8eb36ff843f6993812507cba0}} 
+E\+X\+R\+\_\+\+P\+IZ&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_PXR24@{EXR\_PXR24}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_PXR24@{EXR\_PXR24}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97faf17217d102cbbbfb3b8c601119c21f94}\label{exr_8c_a042083a5e32dcd809133461b1170b97faf17217d102cbbbfb3b8c601119c21f94}} 
+E\+X\+R\+\_\+\+P\+X\+R24&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_B44@{EXR\_B44}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_B44@{EXR\_B44}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fae1f84d8b997681a8748f6f82b5d61985}\label{exr_8c_a042083a5e32dcd809133461b1170b97fae1f84d8b997681a8748f6f82b5d61985}} 
+E\+X\+R\+\_\+\+B44&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_B44A@{EXR\_B44A}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_B44A@{EXR\_B44A}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fa5138ba052e49eedb40203baca7efa57a}\label{exr_8c_a042083a5e32dcd809133461b1170b97fa5138ba052e49eedb40203baca7efa57a}} 
+E\+X\+R\+\_\+\+B44A&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_DWA@{EXR\_DWA}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_DWA@{EXR\_DWA}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fa1929bc752349a314b21f566002b508e8}\label{exr_8c_a042083a5e32dcd809133461b1170b97fa1929bc752349a314b21f566002b508e8}} 
+E\+X\+R\+\_\+\+D\+WA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_DWB@{EXR\_DWB}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_DWB@{EXR\_DWB}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97faa5df8e37afff636391e3f1c8b2dc31ca}\label{exr_8c_a042083a5e32dcd809133461b1170b97faa5df8e37afff636391e3f1c8b2dc31ca}} 
+E\+X\+R\+\_\+\+D\+WB&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_UNKN@{EXR\_UNKN}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_UNKN@{EXR\_UNKN}}}\mbox{\Hypertarget{exr_8c_a042083a5e32dcd809133461b1170b97fa49305f8b7ea8b9f5a8449076a82d0916}\label{exr_8c_a042083a5e32dcd809133461b1170b97fa49305f8b7ea8b9f5a8449076a82d0916}} 
+E\+X\+R\+\_\+\+U\+N\+KN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 60 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a9d5dbc74615060a8a09565041f1a5334}\label{exr_8c_a9d5dbc74615060a8a09565041f1a5334}} 
+\index{exr.c@{exr.c}!ExrPixelType@{ExrPixelType}}
+\index{ExrPixelType@{ExrPixelType}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{ExrPixelType}{ExrPixelType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{exr_8c_a9d5dbc74615060a8a09565041f1a5334}{Exr\+Pixel\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_UINT@{EXR\_UINT}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_UINT@{EXR\_UINT}}}\mbox{\Hypertarget{exr_8c_a9d5dbc74615060a8a09565041f1a5334a3275383b110d8f9ea6011c72d5aee829}\label{exr_8c_a9d5dbc74615060a8a09565041f1a5334a3275383b110d8f9ea6011c72d5aee829}} 
+E\+X\+R\+\_\+\+U\+I\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_HALF@{EXR\_HALF}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_HALF@{EXR\_HALF}}}\mbox{\Hypertarget{exr_8c_a9d5dbc74615060a8a09565041f1a5334a42642be0f8c46e103b0efedcbe7ec410}\label{exr_8c_a9d5dbc74615060a8a09565041f1a5334a42642be0f8c46e103b0efedcbe7ec410}} 
+E\+X\+R\+\_\+\+H\+A\+LF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_FLOAT@{EXR\_FLOAT}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_FLOAT@{EXR\_FLOAT}}}\mbox{\Hypertarget{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae37b6a8e5fde0bc484fcffcfcb4049dc}\label{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae37b6a8e5fde0bc484fcffcfcb4049dc}} 
+E\+X\+R\+\_\+\+F\+L\+O\+AT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_UNKNOWN@{EXR\_UNKNOWN}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_UNKNOWN@{EXR\_UNKNOWN}}}\mbox{\Hypertarget{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae32fe31c5173017a959562f699f40f39}\label{exr_8c_a9d5dbc74615060a8a09565041f1a5334ae32fe31c5173017a959562f699f40f39}} 
+E\+X\+R\+\_\+\+U\+N\+K\+N\+O\+WN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 74 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a239958d2bdb7a2576ac96ec6625a9002}\label{exr_8c_a239958d2bdb7a2576ac96ec6625a9002}} 
+\index{exr.c@{exr.c}!ExrTileLevelMode@{ExrTileLevelMode}}
+\index{ExrTileLevelMode@{ExrTileLevelMode}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{ExrTileLevelMode}{ExrTileLevelMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{exr_8c_a239958d2bdb7a2576ac96ec6625a9002}{Exr\+Tile\+Level\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_LEVEL\_ONE@{EXR\_TILE\_LEVEL\_ONE}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_LEVEL\_ONE@{EXR\_TILE\_LEVEL\_ONE}}}\mbox{\Hypertarget{exr_8c_a239958d2bdb7a2576ac96ec6625a9002aa4b3cc3bba602854b110d448f22ced1b}\label{exr_8c_a239958d2bdb7a2576ac96ec6625a9002aa4b3cc3bba602854b110d448f22ced1b}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_LEVEL\_MIPMAP@{EXR\_TILE\_LEVEL\_MIPMAP}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_LEVEL\_MIPMAP@{EXR\_TILE\_LEVEL\_MIPMAP}}}\mbox{\Hypertarget{exr_8c_a239958d2bdb7a2576ac96ec6625a9002abbf53073aaaa647e3bda73edcf001086}\label{exr_8c_a239958d2bdb7a2576ac96ec6625a9002abbf53073aaaa647e3bda73edcf001086}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+M\+I\+P\+M\+AP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_LEVEL\_RIPMAP@{EXR\_TILE\_LEVEL\_RIPMAP}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_LEVEL\_RIPMAP@{EXR\_TILE\_LEVEL\_RIPMAP}}}\mbox{\Hypertarget{exr_8c_a239958d2bdb7a2576ac96ec6625a9002afcfb71861880dd1866af635e7fcab5cd}\label{exr_8c_a239958d2bdb7a2576ac96ec6625a9002afcfb71861880dd1866af635e7fcab5cd}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+R\+I\+P\+M\+AP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_LEVEL\_UNKNOWN@{EXR\_TILE\_LEVEL\_UNKNOWN}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_LEVEL\_UNKNOWN@{EXR\_TILE\_LEVEL\_UNKNOWN}}}\mbox{\Hypertarget{exr_8c_a239958d2bdb7a2576ac96ec6625a9002a6b7afbf46504407ad0440c2ed15bf7d6}\label{exr_8c_a239958d2bdb7a2576ac96ec6625a9002a6b7afbf46504407ad0440c2ed15bf7d6}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+L\+E\+V\+E\+L\+\_\+\+U\+N\+K\+N\+O\+WN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 81 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68}\label{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68}} 
+\index{exr.c@{exr.c}!ExrTileLevelRound@{ExrTileLevelRound}}
+\index{ExrTileLevelRound@{ExrTileLevelRound}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{ExrTileLevelRound}{ExrTileLevelRound}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68}{Exr\+Tile\+Level\+Round}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_ROUND\_UP@{EXR\_TILE\_ROUND\_UP}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_ROUND\_UP@{EXR\_TILE\_ROUND\_UP}}}\mbox{\Hypertarget{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68ac42087e6a05fa6da3925728611a1fa9f}\label{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68ac42087e6a05fa6da3925728611a1fa9f}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+UP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_ROUND\_DOWN@{EXR\_TILE\_ROUND\_DOWN}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_ROUND\_DOWN@{EXR\_TILE\_ROUND\_DOWN}}}\mbox{\Hypertarget{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68a944a7329dd2e36b8a39c43e239dde108}\label{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68a944a7329dd2e36b8a39c43e239dde108}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+D\+O\+WN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EXR\_TILE\_ROUND\_UNKNOWN@{EXR\_TILE\_ROUND\_UNKNOWN}!exr.c@{exr.c}}\index{exr.c@{exr.c}!EXR\_TILE\_ROUND\_UNKNOWN@{EXR\_TILE\_ROUND\_UNKNOWN}}}\mbox{\Hypertarget{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68afb128e151fd0d4e3001e0db6371cc6fc}\label{exr_8c_a8e79502b189e21c6e7b77ec1dd751b68afb128e151fd0d4e3001e0db6371cc6fc}} 
+E\+X\+R\+\_\+\+T\+I\+L\+E\+\_\+\+R\+O\+U\+N\+D\+\_\+\+U\+N\+K\+N\+O\+WN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 88 of file exr.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{exr_8c_a9e7088abb2238f360139a868831136cd}\label{exr_8c_a9e7088abb2238f360139a868831136cd}} 
+\index{exr.c@{exr.c}!apply\_lut@{apply\_lut}}
+\index{apply\_lut@{apply\_lut}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{apply\_lut()}{apply\_lut()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} apply\+\_\+lut (\begin{DoxyParamCaption}\item[{const uint16\+\_\+t $\ast$}]{lut,  }\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dsize }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 309 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a9e7088abb2238f360139a868831136cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a7e5b842d32785bb1959a80d2c10bd6e7}\label{exr_8c_a7e5b842d32785bb1959a80d2c10bd6e7}} 
+\index{exr.c@{exr.c}!b44\_uncompress@{b44\_uncompress}}
+\index{b44\_uncompress@{b44\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{b44\_uncompress()}{b44\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} b44\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{compressed\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{uncompressed\+\_\+size,  }\item[{\mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 910 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=342pt]{exr_8c_a7e5b842d32785bb1959a80d2c10bd6e7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a7e5b842d32785bb1959a80d2c10bd6e7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_ae4af03074cc2e0db82a0f292ce725a82}\label{exr_8c_ae4af03074cc2e0db82a0f292ce725a82}} 
+\index{exr.c@{exr.c}!check\_header\_variable@{check\_header\_variable}}
+\index{check\_header\_variable@{check\_header\_variable}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{check\_header\_variable()}{check\_header\_variable()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check\+\_\+header\+\_\+variable (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{value\+\_\+name,  }\item[{const char $\ast$}]{value\+\_\+type,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{minimum\+\_\+length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Check if the variable name corresponds to its data type.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & the \mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} \\
+\hline
+{\em value\+\_\+name} & name of the variable to check \\
+\hline
+{\em value\+\_\+type} & type of the variable to check \\
+\hline
+{\em minimum\+\_\+length} & minimum length of the variable data\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+bytes to read containing variable data -\/1 if variable is not found 0 if buffer ended prematurely 
+\end{DoxyReturn}
+
+
+Definition at line 1281 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_ae4af03074cc2e0db82a0f292ce725a82_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_ae4af03074cc2e0db82a0f292ce725a82_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_af8859f6d63a86043ca871572705ee233}\label{exr_8c_af8859f6d63a86043ca871572705ee233}} 
+\index{exr.c@{exr.c}!decode\_block@{decode\_block}}
+\index{decode\_block@{decode\_block}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{decode\_block()}{decode\_block()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+block (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{tdata,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{threadnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 987 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_af8859f6d63a86043ca871572705ee233_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{exr_8c_af8859f6d63a86043ca871572705ee233_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a84e2e3c224f78dc08a5587b23c72d34b}\label{exr_8c_a84e2e3c224f78dc08a5587b23c72d34b}} 
+\index{exr.c@{exr.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1909 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_abddc1015c488c3fdb1b0ce8c0350c8da}\label{exr_8c_abddc1015c488c3fdb1b0ce8c0350c8da}} 
+\index{exr.c@{exr.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1688 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{exr_8c_abddc1015c488c3fdb1b0ce8c0350c8da_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a682b3900bdc50711227b5cc152e0bc4a}\label{exr_8c_a682b3900bdc50711227b5cc152e0bc4a}} 
+\index{exr.c@{exr.c}!decode\_header@{decode\_header}}
+\index{decode\_header@{decode\_header}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{decode\_header()}{decode\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1310 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a682b3900bdc50711227b5cc152e0bc4a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{exr_8c_a682b3900bdc50711227b5cc152e0bc4a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{exr_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{exr.c@{exr.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1859 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a741917aece70916d7e272469424c5301}\label{exr_8c_a741917aece70916d7e272469424c5301}} 
+\index{exr.c@{exr.c}!exr\_half2float@{exr\_half2float}}
+\index{exr\_half2float@{exr\_half2float}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{exr\_half2float()}{exr\_half2float()}}
+{\footnotesize\ttfamily static union \mbox{\hyperlink{unionav__intfloat32}{av\+\_\+intfloat32}} exr\+\_\+half2float (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{hf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Convert a half float as a uint16\+\_\+t into a full float.
+
+
+\begin{DoxyParams}{Parameters}
+{\em hf} & half float as uint16\+\_\+t\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+float value 
+\end{DoxyReturn}
+
+
+Definition at line 1 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a741917aece70916d7e272469424c5301_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a1498ca5dbad5bd5e75f23747efec6baf}\label{exr_8c_a1498ca5dbad5bd5e75f23747efec6baf}} 
+\index{exr.c@{exr.c}!huf\_build\_dec\_table@{huf\_build\_dec\_table}}
+\index{huf\_build\_dec\_table@{huf\_build\_dec\_table}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{huf\_build\_dec\_table()}{huf\_build\_dec\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huf\+\_\+build\+\_\+dec\+\_\+table (\begin{DoxyParamCaption}\item[{const uint64\+\_\+t $\ast$}]{hcode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{im,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{iM,  }\item[{\mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} $\ast$}]{hdecod }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 398 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{exr_8c_a1498ca5dbad5bd5e75f23747efec6baf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a1498ca5dbad5bd5e75f23747efec6baf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a1ad0a8200dd0e92aa673ed54ef27ce80}\label{exr_8c_a1ad0a8200dd0e92aa673ed54ef27ce80}} 
+\index{exr.c@{exr.c}!huf\_canonical\_code\_table@{huf\_canonical\_code\_table}}
+\index{huf\_canonical\_code\_table@{huf\_canonical\_code\_table}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{huf\_canonical\_code\_table()}{huf\_canonical\_code\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} huf\+\_\+canonical\+\_\+code\+\_\+table (\begin{DoxyParamCaption}\item[{uint64\+\_\+t $\ast$}]{hcode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 330 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a1ad0a8200dd0e92aa673ed54ef27ce80_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_ad3d7d33971ac214749c897353847cf76}\label{exr_8c_ad3d7d33971ac214749c897353847cf76}} 
+\index{exr.c@{exr.c}!huf\_decode@{huf\_decode}}
+\index{huf\_decode@{huf\_decode}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{huf\_decode()}{huf\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huf\+\_\+decode (\begin{DoxyParamCaption}\item[{const uint64\+\_\+t $\ast$}]{hcode,  }\item[{const \mbox{\hyperlink{struct_huf_dec}{Huf\+Dec}} $\ast$}]{hdecod,  }\item[{\mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nbits,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{rlc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{no,  }\item[{uint16\+\_\+t $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 464 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{exr_8c_ad3d7d33971ac214749c897353847cf76_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_ad3d7d33971ac214749c897353847cf76_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a4944a6600571aec0a67052a36c05b9fe}\label{exr_8c_a4944a6600571aec0a67052a36c05b9fe}} 
+\index{exr.c@{exr.c}!huf\_uncompress@{huf\_uncompress}}
+\index{huf\_uncompress@{huf\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{huf\_uncompress()}{huf\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huf\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$}]{gb,  }\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dst\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 533 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a4944a6600571aec0a67052a36c05b9fe_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a4944a6600571aec0a67052a36c05b9fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a7985d3484115327d8dc7aa40bc7a1511}\label{exr_8c_a7985d3484115327d8dc7aa40bc7a1511}} 
+\index{exr.c@{exr.c}!huf\_unpack\_enc\_table@{huf\_unpack\_enc\_table}}
+\index{huf\_unpack\_enc\_table@{huf\_unpack\_enc\_table}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{huf\_unpack\_enc\_table()}{huf\_unpack\_enc\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} huf\+\_\+unpack\+\_\+enc\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_byte_context}{Get\+Byte\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{im,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{iM,  }\item[{uint64\+\_\+t $\ast$}]{hcode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 358 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a7985d3484115327d8dc7aa40bc7a1511_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a7985d3484115327d8dc7aa40bc7a1511_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a8607a543fa9f5981f7c0d95365e95df6}\label{exr_8c_a8607a543fa9f5981f7c0d95365e95df6}} 
+\index{exr.c@{exr.c}!piz\_uncompress@{piz\_uncompress}}
+\index{piz\_uncompress@{piz\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{piz\_uncompress()}{piz\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} piz\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ssize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dsize,  }\item[{\mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 690 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a8607a543fa9f5981f7c0d95365e95df6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a8607a543fa9f5981f7c0d95365e95df6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_afd6ca91b00e65a6d88369cd8a224db75}\label{exr_8c_afd6ca91b00e65a6d88369cd8a224db75}} 
+\index{exr.c@{exr.c}!pxr24\_uncompress@{pxr24\_uncompress}}
+\index{pxr24\_uncompress@{pxr24\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{pxr24\_uncompress()}{pxr24\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pxr24\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{compressed\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{uncompressed\+\_\+size,  }\item[{\mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 775 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=244pt]{exr_8c_afd6ca91b00e65a6d88369cd8a224db75_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_afd6ca91b00e65a6d88369cd8a224db75_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a3c48b200b3df9d07fc717d7e5fb414ef}\label{exr_8c_a3c48b200b3df9d07fc717d7e5fb414ef}} 
+\index{exr.c@{exr.c}!reverse\_lut@{reverse\_lut}}
+\index{reverse\_lut@{reverse\_lut}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{reverse\_lut()}{reverse\_lut()}}
+{\footnotesize\ttfamily static uint16\+\_\+t reverse\+\_\+lut (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{bitmap,  }\item[{uint16\+\_\+t $\ast$}]{lut }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 294 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a3c48b200b3df9d07fc717d7e5fb414ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_ae03e2a21b06c2631be48dea6856b885b}\label{exr_8c_ae03e2a21b06c2631be48dea6856b885b}} 
+\index{exr.c@{exr.c}!rle\_uncompress@{rle\_uncompress}}
+\index{rle\_uncompress@{rle\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{rle\_uncompress()}{rle\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rle\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{compressed\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{uncompressed\+\_\+size,  }\item[{\mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 244 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_ae03e2a21b06c2631be48dea6856b885b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a83a6b888ef61743f77b70770c809b483}\label{exr_8c_a83a6b888ef61743f77b70770c809b483}} 
+\index{exr.c@{exr.c}!unpack\_14@{unpack\_14}}
+\index{unpack\_14@{unpack\_14}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{unpack\_14()}{unpack\_14()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} unpack\+\_\+14 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{b\mbox{[}14\mbox{]},  }\item[{uint16\+\_\+t}]{s\mbox{[}16\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 859 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=215pt]{exr_8c_a83a6b888ef61743f77b70770c809b483_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a83a6b888ef61743f77b70770c809b483_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_aa6b134133c50537794f8c55df01e2206}\label{exr_8c_aa6b134133c50537794f8c55df01e2206}} 
+\index{exr.c@{exr.c}!unpack\_3@{unpack\_3}}
+\index{unpack\_3@{unpack\_3}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{unpack\_3()}{unpack\_3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} unpack\+\_\+3 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{b\mbox{[}3\mbox{]},  }\item[{uint16\+\_\+t}]{s\mbox{[}16\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 894 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_aa6b134133c50537794f8c55df01e2206_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_adf97fb8076a0c1138c7773adc35e0170}\label{exr_8c_adf97fb8076a0c1138c7773adc35e0170}} 
+\index{exr.c@{exr.c}!wav\_decode@{wav\_decode}}
+\index{wav\_decode@{wav\_decode}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{wav\_decode()}{wav\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wav\+\_\+decode (\begin{DoxyParamCaption}\item[{uint16\+\_\+t $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ox,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ny,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{oy,  }\item[{uint16\+\_\+t}]{mx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 611 of file exr.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=235pt]{exr_8c_adf97fb8076a0c1138c7773adc35e0170_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_adf97fb8076a0c1138c7773adc35e0170_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_af6662067d7b11759f19c4e14cbb865fe}\label{exr_8c_af6662067d7b11759f19c4e14cbb865fe}} 
+\index{exr.c@{exr.c}!wdec14@{wdec14}}
+\index{wdec14@{wdec14}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{wdec14()}{wdec14()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wdec14 (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{l,  }\item[{uint16\+\_\+t}]{h,  }\item[{uint16\+\_\+t $\ast$}]{a,  }\item[{uint16\+\_\+t $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 584 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_af6662067d7b11759f19c4e14cbb865fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a2ee7b645831c22d2d802fdd75fb85592}\label{exr_8c_a2ee7b645831c22d2d802fdd75fb85592}} 
+\index{exr.c@{exr.c}!wdec16@{wdec16}}
+\index{wdec16@{wdec16}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{wdec16()}{wdec16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} wdec16 (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{l,  }\item[{uint16\+\_\+t}]{h,  }\item[{uint16\+\_\+t $\ast$}]{a,  }\item[{uint16\+\_\+t $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 601 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a2ee7b645831c22d2d802fdd75fb85592_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{exr_8c_a8a27d02a21d5794c629c62b00aec58a8}\label{exr_8c_a8a27d02a21d5794c629c62b00aec58a8}} 
+\index{exr.c@{exr.c}!zip\_uncompress@{zip\_uncompress}}
+\index{zip\_uncompress@{zip\_uncompress}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{zip\_uncompress()}{zip\_uncompress()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} zip\+\_\+uncompress (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_e_x_r_context}{E\+X\+R\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{compressed\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{uncompressed\+\_\+size,  }\item[{\mbox{\hyperlink{struct_e_x_r_thread_data}{E\+X\+R\+Thread\+Data}} $\ast$}]{td }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 227 of file exr.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{exr_8c_a8a27d02a21d5794c629c62b00aec58a8_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{exr_8c_a67c3e0887f876fcca6ec369e689d04bb}\label{exr_8c_a67c3e0887f876fcca6ec369e689d04bb}} 
+\index{exr.c@{exr.c}!exr\_class@{exr\_class}}
+\index{exr\_class@{exr\_class}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{exr\_class}{exr\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} exr\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}EXR"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{exr_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1974 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a3be0c478ce5e969f88f3df44fde60829}\label{exr_8c_a3be0c478ce5e969f88f3df44fde60829}} 
+\index{exr.c@{exr.c}!ff\_exr\_decoder@{ff\_exr\_decoder}}
+\index{ff\_exr\_decoder@{ff\_exr\_decoder}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{ff\_exr\_decoder}{ff\_exr\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+exr\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name             = \textcolor{stringliteral}{"{}exr"{}},}
+\DoxyCodeLine{    .long\_name        = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}OpenEXR image"{}}),}
+\DoxyCodeLine{    .type             = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id               = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceabc76b0cc02be5952124697b98ef2c4df}{AV\_CODEC\_ID\_EXR}},}
+\DoxyCodeLine{    .priv\_data\_size   = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{exr_8c_a6ea419c4cca52d73d5d6812240ecbe5a}{EXRContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}             = \mbox{\hyperlink{exr_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close            = \mbox{\hyperlink{exr_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}           = \mbox{\hyperlink{exr_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\_frame}},}
+\DoxyCodeLine{    .capabilities     = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}} |}
+\DoxyCodeLine{                        \mbox{\hyperlink{group__lavc__core_ga7c4f386d1d6df0214eb35f2be1c82779}{AV\_CODEC\_CAP\_SLICE\_THREADS}},}
+\DoxyCodeLine{    .priv\_class       = \&\mbox{\hyperlink{exr_8c_a67c3e0887f876fcca6ec369e689d04bb}{exr\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1981 of file exr.\+c.
+
+\mbox{\Hypertarget{exr_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{exr_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{exr.c@{exr.c}!options@{options}}
+\index{options@{options}!exr.c@{exr.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1929 of file exr.\+c.
+

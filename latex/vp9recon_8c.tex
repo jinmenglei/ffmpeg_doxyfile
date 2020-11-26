@@ -1,0 +1,589 @@
+\hypertarget{vp9recon_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/vp9recon.c File Reference}
+\label{vp9recon_8c}\index{E:/github/ffmpeg/libavcodec/vp9recon.c@{E:/github/ffmpeg/libavcodec/vp9recon.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}videodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vp9data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vp9dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vp9\+\_\+mc\+\_\+template.\+c\char`\"{}}\newline
+Include dependency graph for vp9recon.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a72e3b3c6c4d98578f83c9c9f35513a00}{memset\+\_\+bpp}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  i1,  v,  i2,  num)
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_af08db62c2d7a8e4ceeb83c773308ae69}{memset\+\_\+val}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  num)
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a5a43b3d5baf537f3c44194069ca105c3}{assign\+\_\+bpp}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  i1,  v,  i2)
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a24392b4a815e24b6bab713b3b9e9ce6d}{assign\+\_\+val}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}},  v)
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}{mc\+\_\+luma\+\_\+dir}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  \mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  dst,  dst\+\_\+ls,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  src\+\_\+ls,  tref,  row,  col,  \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  px,  py,  pw,  ph,  bw,  bh,  \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}{mc\+\_\+chroma\+\_\+dir}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  \mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  dstu,  dstv,  dst\+\_\+ls,  srcu,  srcu\+\_\+ls,  srcv,  srcv\+\_\+ls,  tref,  row,  col,  \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  px,  py,  pw,  ph,  bw,  bh,  \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}{S\+C\+A\+L\+ED}}~0
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}{FN}}(x)~x\#\#\+\_\+8bpp
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}{B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL}}~1
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}{FN}}(x)~x\#\#\+\_\+16bpp
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}{B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL}}~2
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a82defdd282052c1fbe3c7c651337c8a0}{scale\+\_\+mv}}(n,  \mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}})~(((int64\+\_\+t)(n) $\ast$ scale\mbox{[}\mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}}\mbox{]}) $>$$>$ 14)
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}{mc\+\_\+luma\+\_\+dir}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  \mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  dst,  dst\+\_\+ls,  \mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  src\+\_\+ls,  tref,  row,  col,  \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  px,  py,  pw,  ph,  bw,  bh,  \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}{mc\+\_\+chroma\+\_\+dir}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  \mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  dstu,  dstv,  dst\+\_\+ls,  srcu,  srcu\+\_\+ls,  srcv,  srcv\+\_\+ls,  tref,  row,  col,  \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  px,  py,  pw,  ph,  bw,  bh,  \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}{S\+C\+A\+L\+ED}}~1
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}{FN}}(x)~x\#\#\+\_\+scaled\+\_\+8bpp
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}{B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL}}~1
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}{FN}}(x)~x\#\#\+\_\+scaled\+\_\+16bpp
+\item 
+\#define \mbox{\hyperlink{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}{B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL}}~2
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vp9recon_8c_a83333287e38e08d97005202ab3b3aa6b}{check\+\_\+intra\+\_\+mode}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+edge, ptrdiff\+\_\+t stride\+\_\+edge, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+inner, ptrdiff\+\_\+t stride\+\_\+inner, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$l, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} col, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} row, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, enum \mbox{\hyperlink{vp9_8h_afb98eb066ec19071c75e37a8bbccaedf}{Txfm\+Mode}} tx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ss\+\_\+h, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ss\+\_\+v, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_a88ac3d0f6edb21d279472e0bdd3e05ba}{intra\+\_\+recon}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, ptrdiff\+\_\+t y\+\_\+off, ptrdiff\+\_\+t uv\+\_\+off, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_ad8f98e656fd4835a409634a825e55f7e}{ff\+\_\+vp9\+\_\+intra\+\_\+recon\+\_\+8bpp}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, ptrdiff\+\_\+t y\+\_\+off, ptrdiff\+\_\+t uv\+\_\+off)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_a20f5f77fb726cbb300d1b272ebbff180}{ff\+\_\+vp9\+\_\+intra\+\_\+recon\+\_\+16bpp}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, ptrdiff\+\_\+t y\+\_\+off, ptrdiff\+\_\+t uv\+\_\+off)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f}{mc\+\_\+luma\+\_\+unscaled}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}})\mbox{[}2\mbox{]}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, ptrdiff\+\_\+t dst\+\_\+stride, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, ptrdiff\+\_\+t ref\+\_\+stride, \mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$ref\+\_\+frame, ptrdiff\+\_\+t y, ptrdiff\+\_\+t x, const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b}{mc\+\_\+chroma\+\_\+unscaled}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}})\mbox{[}2\mbox{]}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+u, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+v, ptrdiff\+\_\+t dst\+\_\+stride, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+u, ptrdiff\+\_\+t src\+\_\+stride\+\_\+u, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+v, ptrdiff\+\_\+t src\+\_\+stride\+\_\+v, \mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$ref\+\_\+frame, ptrdiff\+\_\+t y, ptrdiff\+\_\+t x, const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_ad7b5f7c87417694391b7dbf95d75419e}{mc\+\_\+luma\+\_\+scaled}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{vp9dsp_8h_a2612a5da1606c5b9f7bbb436896ad357}{vp9\+\_\+scaled\+\_\+mc\+\_\+func}} smc, \mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}})\mbox{[}2\mbox{]}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, ptrdiff\+\_\+t dst\+\_\+stride, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, ptrdiff\+\_\+t ref\+\_\+stride, \mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$ref\+\_\+frame, ptrdiff\+\_\+t y, ptrdiff\+\_\+t x, const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$in\+\_\+mv, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} px, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} py, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ph, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel, const uint16\+\_\+t $\ast$scale, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{rate__distortion_8txt_a0e018beb061c7ac6d1f9121683a6f2c2}{step}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_ac7fa0b6fd3d5a8ab2b444fc791c083cb}{mc\+\_\+chroma\+\_\+scaled}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{vp9dsp_8h_a2612a5da1606c5b9f7bbb436896ad357}{vp9\+\_\+scaled\+\_\+mc\+\_\+func}} smc, \mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}})\mbox{[}2\mbox{]}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+u, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+v, ptrdiff\+\_\+t dst\+\_\+stride, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+u, ptrdiff\+\_\+t src\+\_\+stride\+\_\+u, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+v, ptrdiff\+\_\+t src\+\_\+stride\+\_\+v, \mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$ref\+\_\+frame, ptrdiff\+\_\+t y, ptrdiff\+\_\+t x, const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$in\+\_\+mv, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} px, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} py, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ph, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bw, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel, const uint16\+\_\+t $\ast$scale, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{rate__distortion_8txt_a0e018beb061c7ac6d1f9121683a6f2c2}{step}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_ac67e91f855f52512acc0e992b6573ef7}{inter\+\_\+recon}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytesperpixel)
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_a86482d59dc033262600e96a5c6550943}{ff\+\_\+vp9\+\_\+inter\+\_\+recon\+\_\+8bpp}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vp9recon_8c_a7c5b792b624ef0c757b2d6bb2b09fe3b}{ff\+\_\+vp9\+\_\+inter\+\_\+recon\+\_\+16bpp}} (\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vp9recon_8c_a5a43b3d5baf537f3c44194069ca105c3}\label{vp9recon_8c_a5a43b3d5baf537f3c44194069ca105c3}} 
+\index{vp9recon.c@{vp9recon.c}!assign\_bpp@{assign\_bpp}}
+\index{assign\_bpp@{assign\_bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{assign\_bpp}{assign\_bpp}}
+{\footnotesize\ttfamily \#define assign\+\_\+bpp(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{i1,  }\item[{}]{v,  }\item[{}]{i2 }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (bytesperpixel == 1) \{ \(\backslash\)}
+\DoxyCodeLine{        (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[(i1)] = (v)[(i2)]; \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \{ \(\backslash\)}
+\DoxyCodeLine{        AV\_COPY16(\&(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[(i1) * 2], \&(v)[(i2) * 2]); \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vp9recon_8c_a24392b4a815e24b6bab713b3b9e9ce6d}\label{vp9recon_8c_a24392b4a815e24b6bab713b3b9e9ce6d}} 
+\index{vp9recon.c@{vp9recon.c}!assign\_val@{assign\_val}}
+\index{assign\_val@{assign\_val}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{assign\_val}{assign\_val}}
+{\footnotesize\ttfamily \#define assign\+\_\+val(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}},  }\item[{}]{v }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (bytesperpixel == 1) \{ \(\backslash\)}
+\DoxyCodeLine{        (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[(\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})] = (v); \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \{ \(\backslash\)}
+\DoxyCodeLine{        AV\_WN16A(\&(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[(\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}) * 2], (v)); \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}\label{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}} 
+\index{vp9recon.c@{vp9recon.c}!BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}}
+\index{BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{BYTES\_PER\_PIXEL}{BYTES\_PER\_PIXEL}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily \#define B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL~1}
+
+
+
+Definition at line 561 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}\label{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}} 
+\index{vp9recon.c@{vp9recon.c}!BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}}
+\index{BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{BYTES\_PER\_PIXEL}{BYTES\_PER\_PIXEL}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily \#define B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL~2}
+
+
+
+Definition at line 561 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}\label{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}} 
+\index{vp9recon.c@{vp9recon.c}!BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}}
+\index{BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{BYTES\_PER\_PIXEL}{BYTES\_PER\_PIXEL}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily \#define B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL~1}
+
+
+
+Definition at line 561 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}\label{vp9recon_8c_ae138b2e443649ca9546c99e80957faac}} 
+\index{vp9recon.c@{vp9recon.c}!BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}}
+\index{BYTES\_PER\_PIXEL@{BYTES\_PER\_PIXEL}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{BYTES\_PER\_PIXEL}{BYTES\_PER\_PIXEL}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily \#define B\+Y\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+P\+I\+X\+EL~2}
+
+
+
+Definition at line 561 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}\label{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}} 
+\index{vp9recon.c@{vp9recon.c}!FN@{FN}}
+\index{FN@{FN}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{FN}{FN}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily \#define FN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~x\#\#\+\_\+8bpp}
+
+
+
+Definition at line 560 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}\label{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}} 
+\index{vp9recon.c@{vp9recon.c}!FN@{FN}}
+\index{FN@{FN}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{FN}{FN}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily \#define FN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~x\#\#\+\_\+16bpp}
+
+
+
+Definition at line 560 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}\label{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}} 
+\index{vp9recon.c@{vp9recon.c}!FN@{FN}}
+\index{FN@{FN}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{FN}{FN}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily \#define FN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~x\#\#\+\_\+scaled\+\_\+8bpp}
+
+
+
+Definition at line 560 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}\label{vp9recon_8c_a9f8663858f8eb03e9f1f706edfa519a4}} 
+\index{vp9recon.c@{vp9recon.c}!FN@{FN}}
+\index{FN@{FN}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{FN}{FN}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily \#define FN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~x\#\#\+\_\+scaled\+\_\+16bpp}
+
+
+
+Definition at line 560 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}\label{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_chroma\_dir@{mc\_chroma\_dir}}
+\index{mc\_chroma\_dir@{mc\_chroma\_dir}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_chroma\_dir}{mc\_chroma\_dir}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \#define mc\+\_\+chroma\+\_\+dir(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  }\item[{}]{\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  }\item[{}]{dstu,  }\item[{}]{dstv,  }\item[{}]{dst\+\_\+ls,  }\item[{}]{srcu,  }\item[{}]{srcu\+\_\+ls,  }\item[{}]{srcv,  }\item[{}]{srcv\+\_\+ls,  }\item[{}]{tref,  }\item[{}]{row,  }\item[{}]{col,  }\item[{}]{\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  }\item[{}]{px,  }\item[{}]{py,  }\item[{}]{pw,  }\item[{}]{ph,  }\item[{}]{bw,  }\item[{}]{bh,  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b}{mc\_chroma\_unscaled}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.mc, dstu, dstv, dst\_ls, srcu, srcu\_ls, srcv, srcv\_ls, tref, \(\backslash\)}
+\DoxyCodeLine{                       row, col, \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, bw, bh, \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}, bytesperpixel)}
+
+\end{DoxyCode}
+
+
+Definition at line 549 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}\label{vp9recon_8c_a9bb967a30d74490858eee6d48435d7cd}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_chroma\_dir@{mc\_chroma\_dir}}
+\index{mc\_chroma\_dir@{mc\_chroma\_dir}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_chroma\_dir}{mc\_chroma\_dir}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \#define mc\+\_\+chroma\+\_\+dir(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  }\item[{}]{\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  }\item[{}]{dstu,  }\item[{}]{dstv,  }\item[{}]{dst\+\_\+ls,  }\item[{}]{srcu,  }\item[{}]{srcu\+\_\+ls,  }\item[{}]{srcv,  }\item[{}]{srcv\+\_\+ls,  }\item[{}]{tref,  }\item[{}]{row,  }\item[{}]{col,  }\item[{}]{\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  }\item[{}]{px,  }\item[{}]{py,  }\item[{}]{pw,  }\item[{}]{ph,  }\item[{}]{bw,  }\item[{}]{bh,  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vp9recon_8c_ac7fa0b6fd3d5a8ab2b444fc791c083cb}{mc\_chroma\_scaled}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.s\#\#\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.mc, dstu, dstv, dst\_ls, srcu, srcu\_ls, srcv, srcv\_ls, tref, \(\backslash\)}
+\DoxyCodeLine{                     row, col, \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, px, py, pw, ph, bw, bh, \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}, bytesperpixel, \(\backslash\)}
+\DoxyCodeLine{                     \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>mvscale[\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>ref[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}]], \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>mvstep[\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>ref[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}]])}
+
+\end{DoxyCode}
+
+
+Definition at line 549 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}\label{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_luma\_dir@{mc\_luma\_dir}}
+\index{mc\_luma\_dir@{mc\_luma\_dir}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_luma\_dir}{mc\_luma\_dir}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \#define mc\+\_\+luma\+\_\+dir(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  }\item[{}]{\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  }\item[{}]{dst,  }\item[{}]{dst\+\_\+ls,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{src\+\_\+ls,  }\item[{}]{tref,  }\item[{}]{row,  }\item[{}]{col,  }\item[{}]{\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  }\item[{}]{px,  }\item[{}]{py,  }\item[{}]{pw,  }\item[{}]{ph,  }\item[{}]{bw,  }\item[{}]{bh,  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f}{mc\_luma\_unscaled}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.mc, dst, dst\_ls, \mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, src\_ls, tref, row, col, \(\backslash\)}
+\DoxyCodeLine{                     \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, bw, bh, \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}, bytesperpixel)}
+
+\end{DoxyCode}
+
+
+Definition at line 544 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}\label{vp9recon_8c_aace99de9e6f806bbc2232a7930365da5}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_luma\_dir@{mc\_luma\_dir}}
+\index{mc\_luma\_dir@{mc\_luma\_dir}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_luma\_dir}{mc\_luma\_dir}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \#define mc\+\_\+luma\+\_\+dir(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}},  }\item[{}]{\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}},  }\item[{}]{dst,  }\item[{}]{dst\+\_\+ls,  }\item[{}]{\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}},  }\item[{}]{src\+\_\+ls,  }\item[{}]{tref,  }\item[{}]{row,  }\item[{}]{col,  }\item[{}]{\mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}},  }\item[{}]{px,  }\item[{}]{py,  }\item[{}]{pw,  }\item[{}]{ph,  }\item[{}]{bw,  }\item[{}]{bh,  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}},  }\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}},  }\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \mbox{\hyperlink{vp9recon_8c_ad7b5f7c87417694391b7dbf95d75419e}{mc\_luma\_scaled}}(\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.s\#\#\mbox{\hyperlink{vf__colormatrix_8c_a1d186814fab3cde25d43ffbfe151487f}{mc}}, \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>dsp.mc, dst, dst\_ls, \mbox{\hyperlink{tests_2checkasm_2vp8dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, src\_ls, tref, row, col, \(\backslash\)}
+\DoxyCodeLine{                   \mbox{\hyperlink{libavcodec_24xm_8c_a19c59215a57cc549287f6d8481937b12}{mv}}, px, py, pw, ph, bw, bh, \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{vp9dsp__template_8c_a5e36941b3d856737e81516acd45edc50}{h}}, bytesperpixel, \(\backslash\)}
+\DoxyCodeLine{                   \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>mvscale[\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>ref[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}]], \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>mvstep[\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>ref[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}]])}
+
+\end{DoxyCode}
+
+
+Definition at line 544 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a72e3b3c6c4d98578f83c9c9f35513a00}\label{vp9recon_8c_a72e3b3c6c4d98578f83c9c9f35513a00}} 
+\index{vp9recon.c@{vp9recon.c}!memset\_bpp@{memset\_bpp}}
+\index{memset\_bpp@{memset\_bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{memset\_bpp}{memset\_bpp}}
+{\footnotesize\ttfamily \#define memset\+\_\+bpp(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{i1,  }\item[{}]{v,  }\item[{}]{i2,  }\item[{}]{num }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (bytesperpixel == 1) \{ \(\backslash\)}
+\DoxyCodeLine{        memset(\&(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[(i1)], (v)[(i2)], (num)); \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \{ \(\backslash\)}
+\DoxyCodeLine{        int n, \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}} = \mbox{\hyperlink{intreadwrite_8h_a57f0352b91eafb6ee4fa7b4bee5422de}{AV\_RN16A}}(\&(v)[(i2) * 2]); \(\backslash\)}
+\DoxyCodeLine{        for (n = 0; n < (num); n++) \{ \(\backslash\)}
+\DoxyCodeLine{            AV\_WN16A(\&(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[((i1) + n) * 2], \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}); \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vp9recon_8c_af08db62c2d7a8e4ceeb83c773308ae69}\label{vp9recon_8c_af08db62c2d7a8e4ceeb83c773308ae69}} 
+\index{vp9recon.c@{vp9recon.c}!memset\_val@{memset\_val}}
+\index{memset\_val@{memset\_val}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{memset\_val}{memset\_val}}
+{\footnotesize\ttfamily \#define memset\+\_\+val(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}},  }\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  }\item[{}]{num }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{ \(\backslash\)}
+\DoxyCodeLine{    if (bytesperpixel == 1) \{ \(\backslash\)}
+\DoxyCodeLine{        memset((\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}), (\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}), (num)); \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \{ \(\backslash\)}
+\DoxyCodeLine{        int n; \(\backslash\)}
+\DoxyCodeLine{        for (n = 0; n < (num); n++) \{ \(\backslash\)}
+\DoxyCodeLine{            AV\_WN16A(\&(\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}})[n * 2], (\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})); \(\backslash\)}
+\DoxyCodeLine{        \} \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vp9recon_8c_a82defdd282052c1fbe3c7c651337c8a0}\label{vp9recon_8c_a82defdd282052c1fbe3c7c651337c8a0}} 
+\index{vp9recon.c@{vp9recon.c}!scale\_mv@{scale\_mv}}
+\index{scale\_mv@{scale\_mv}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{scale\_mv}{scale\_mv}}
+{\footnotesize\ttfamily \#define scale\+\_\+mv(\begin{DoxyParamCaption}\item[{}]{n,  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}} }\end{DoxyParamCaption})~(((int64\+\_\+t)(n) $\ast$ scale\mbox{[}\mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}}\mbox{]}) $>$$>$ 14)}
+
+\mbox{\Hypertarget{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}\label{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}} 
+\index{vp9recon.c@{vp9recon.c}!SCALED@{SCALED}}
+\index{SCALED@{SCALED}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{SCALED}{SCALED}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \#define S\+C\+A\+L\+ED~0}
+
+
+
+Definition at line 554 of file vp9recon.\+c.
+
+\mbox{\Hypertarget{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}\label{vp9recon_8c_a2f554f1091b13862bd2d32bdd3a00581}} 
+\index{vp9recon.c@{vp9recon.c}!SCALED@{SCALED}}
+\index{SCALED@{SCALED}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{SCALED}{SCALED}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \#define S\+C\+A\+L\+ED~1}
+
+
+
+Definition at line 554 of file vp9recon.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vp9recon_8c_a83333287e38e08d97005202ab3b3aa6b}\label{vp9recon_8c_a83333287e38e08d97005202ab3b3aa6b}} 
+\index{vp9recon.c@{vp9recon.c}!check\_intra\_mode@{check\_intra\_mode}}
+\index{check\_intra\_mode@{check\_intra\_mode}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{check\_intra\_mode()}{check\_intra\_mode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check\+\_\+intra\+\_\+mode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mode,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{a,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+edge,  }\item[{ptrdiff\+\_\+t}]{stride\+\_\+edge,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+inner,  }\item[{ptrdiff\+\_\+t}]{stride\+\_\+inner,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{l,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{col,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{row,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{enum \mbox{\hyperlink{vp9_8h_afb98eb066ec19071c75e37a8bbccaedf}{Txfm\+Mode}}}]{tx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ss\+\_\+h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ss\+\_\+v,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 32 of file vp9recon.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a83333287e38e08d97005202ab3b3aa6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_a7c5b792b624ef0c757b2d6bb2b09fe3b}\label{vp9recon_8c_a7c5b792b624ef0c757b2d6bb2b09fe3b}} 
+\index{vp9recon.c@{vp9recon.c}!ff\_vp9\_inter\_recon\_16bpp@{ff\_vp9\_inter\_recon\_16bpp}}
+\index{ff\_vp9\_inter\_recon\_16bpp@{ff\_vp9\_inter\_recon\_16bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vp9\_inter\_recon\_16bpp()}{ff\_vp9\_inter\_recon\_16bpp()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+vp9\+\_\+inter\+\_\+recon\+\_\+16bpp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td }\end{DoxyParamCaption})}
+
+
+
+Definition at line 651 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=275pt]{vp9recon_8c_a7c5b792b624ef0c757b2d6bb2b09fe3b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a7c5b792b624ef0c757b2d6bb2b09fe3b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_a86482d59dc033262600e96a5c6550943}\label{vp9recon_8c_a86482d59dc033262600e96a5c6550943}} 
+\index{vp9recon.c@{vp9recon.c}!ff\_vp9\_inter\_recon\_8bpp@{ff\_vp9\_inter\_recon\_8bpp}}
+\index{ff\_vp9\_inter\_recon\_8bpp@{ff\_vp9\_inter\_recon\_8bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vp9\_inter\_recon\_8bpp()}{ff\_vp9\_inter\_recon\_8bpp()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+vp9\+\_\+inter\+\_\+recon\+\_\+8bpp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td }\end{DoxyParamCaption})}
+
+
+
+Definition at line 646 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{vp9recon_8c_a86482d59dc033262600e96a5c6550943_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a86482d59dc033262600e96a5c6550943_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_a20f5f77fb726cbb300d1b272ebbff180}\label{vp9recon_8c_a20f5f77fb726cbb300d1b272ebbff180}} 
+\index{vp9recon.c@{vp9recon.c}!ff\_vp9\_intra\_recon\_16bpp@{ff\_vp9\_intra\_recon\_16bpp}}
+\index{ff\_vp9\_intra\_recon\_16bpp@{ff\_vp9\_intra\_recon\_16bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vp9\_intra\_recon\_16bpp()}{ff\_vp9\_intra\_recon\_16bpp()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+vp9\+\_\+intra\+\_\+recon\+\_\+16bpp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{ptrdiff\+\_\+t}]{y\+\_\+off,  }\item[{ptrdiff\+\_\+t}]{uv\+\_\+off }\end{DoxyParamCaption})}
+
+
+
+Definition at line 293 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a20f5f77fb726cbb300d1b272ebbff180_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a20f5f77fb726cbb300d1b272ebbff180_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_ad8f98e656fd4835a409634a825e55f7e}\label{vp9recon_8c_ad8f98e656fd4835a409634a825e55f7e}} 
+\index{vp9recon.c@{vp9recon.c}!ff\_vp9\_intra\_recon\_8bpp@{ff\_vp9\_intra\_recon\_8bpp}}
+\index{ff\_vp9\_intra\_recon\_8bpp@{ff\_vp9\_intra\_recon\_8bpp}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vp9\_intra\_recon\_8bpp()}{ff\_vp9\_intra\_recon\_8bpp()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+vp9\+\_\+intra\+\_\+recon\+\_\+8bpp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{ptrdiff\+\_\+t}]{y\+\_\+off,  }\item[{ptrdiff\+\_\+t}]{uv\+\_\+off }\end{DoxyParamCaption})}
+
+
+
+Definition at line 288 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_ad8f98e656fd4835a409634a825e55f7e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_ad8f98e656fd4835a409634a825e55f7e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_ac67e91f855f52512acc0e992b6573ef7}\label{vp9recon_8c_ac67e91f855f52512acc0e992b6573ef7}} 
+\index{vp9recon.c@{vp9recon.c}!inter\_recon@{inter\_recon}}
+\index{inter\_recon@{inter\_recon}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{inter\_recon()}{inter\_recon()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} inter\+\_\+recon (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 569 of file vp9recon.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_ac67e91f855f52512acc0e992b6573ef7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_a88ac3d0f6edb21d279472e0bdd3e05ba}\label{vp9recon_8c_a88ac3d0f6edb21d279472e0bdd3e05ba}} 
+\index{vp9recon.c@{vp9recon.c}!intra\_recon@{intra\_recon}}
+\index{intra\_recon@{intra\_recon}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{intra\_recon()}{intra\_recon()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} intra\+\_\+recon (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{ptrdiff\+\_\+t}]{y\+\_\+off,  }\item[{ptrdiff\+\_\+t}]{uv\+\_\+off,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 218 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{vp9recon_8c_a88ac3d0f6edb21d279472e0bdd3e05ba_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a88ac3d0f6edb21d279472e0bdd3e05ba_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_ac7fa0b6fd3d5a8ab2b444fc791c083cb}\label{vp9recon_8c_ac7fa0b6fd3d5a8ab2b444fc791c083cb}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_chroma\_scaled@{mc\_chroma\_scaled}}
+\index{mc\_chroma\_scaled@{mc\_chroma\_scaled}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_chroma\_scaled()}{mc\_chroma\_scaled()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mc\+\_\+chroma\+\_\+scaled (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a2612a5da1606c5b9f7bbb436896ad357}{vp9\+\_\+scaled\+\_\+mc\+\_\+func}}}]{smc,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$)}]{mc\mbox{[}2\mbox{]},  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+u,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+v,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+stride,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+u,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+stride\+\_\+u,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+v,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+stride\+\_\+v,  }\item[{\mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$}]{ref\+\_\+frame,  }\item[{ptrdiff\+\_\+t}]{y,  }\item[{ptrdiff\+\_\+t}]{x,  }\item[{const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$}]{in\+\_\+mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{px,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{py,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ph,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel,  }\item[{const uint16\+\_\+t $\ast$}]{scale,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 464 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_ac7fa0b6fd3d5a8ab2b444fc791c083cb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b}\label{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_chroma\_unscaled@{mc\_chroma\_unscaled}}
+\index{mc\_chroma\_unscaled@{mc\_chroma\_unscaled}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_chroma\_unscaled()}{mc\_chroma\_unscaled()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mc\+\_\+chroma\+\_\+unscaled (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$)}]{mc\mbox{[}2\mbox{]},  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+u,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+v,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+stride,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+u,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+stride\+\_\+u,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+v,  }\item[{ptrdiff\+\_\+t}]{src\+\_\+stride\+\_\+v,  }\item[{\mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$}]{ref\+\_\+frame,  }\item[{ptrdiff\+\_\+t}]{y,  }\item[{ptrdiff\+\_\+t}]{x,  }\item[{const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$}]{mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 334 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=329pt]{vp9recon_8c_a13ccc4c92e642d86f2dd36bfe271154b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_ad7b5f7c87417694391b7dbf95d75419e}\label{vp9recon_8c_ad7b5f7c87417694391b7dbf95d75419e}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_luma\_scaled@{mc\_luma\_scaled}}
+\index{mc\_luma\_scaled@{mc\_luma\_scaled}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_luma\_scaled()}{mc\_luma\_scaled()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mc\+\_\+luma\+\_\+scaled (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a2612a5da1606c5b9f7bbb436896ad357}{vp9\+\_\+scaled\+\_\+mc\+\_\+func}}}]{smc,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$)}]{mc\mbox{[}2\mbox{]},  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+stride,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{ptrdiff\+\_\+t}]{ref\+\_\+stride,  }\item[{\mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$}]{ref\+\_\+frame,  }\item[{ptrdiff\+\_\+t}]{y,  }\item[{ptrdiff\+\_\+t}]{x,  }\item[{const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$}]{in\+\_\+mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{px,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{py,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ph,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel,  }\item[{const uint16\+\_\+t $\ast$}]{scale,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 406 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vp9recon_8c_ad7b5f7c87417694391b7dbf95d75419e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f}\label{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f}} 
+\index{vp9recon.c@{vp9recon.c}!mc\_luma\_unscaled@{mc\_luma\_unscaled}}
+\index{mc\_luma\_unscaled@{mc\_luma\_unscaled}!vp9recon.c@{vp9recon.c}}
+\doxysubsubsection{\texorpdfstring{mc\_luma\_unscaled()}{mc\_luma\_unscaled()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mc\+\_\+luma\+\_\+unscaled (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_v_p9_tile_data}{V\+P9\+Tile\+Data}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{vp9dsp_8h_a3e27a69afc3248cba7574b82a8cdbd8f}{vp9\+\_\+mc\+\_\+func}}($\ast$)}]{mc\mbox{[}2\mbox{]},  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{ptrdiff\+\_\+t}]{dst\+\_\+stride,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{ptrdiff\+\_\+t}]{ref\+\_\+stride,  }\item[{\mbox{\hyperlink{struct_thread_frame}{Thread\+Frame}} $\ast$}]{ref\+\_\+frame,  }\item[{ptrdiff\+\_\+t}]{y,  }\item[{ptrdiff\+\_\+t}]{x,  }\item[{const \mbox{\hyperlink{struct_v_p56mv}{V\+P56mv}} $\ast$}]{mv,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bw,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytesperpixel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 298 of file vp9recon.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=341pt]{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=307pt]{vp9recon_8c_ac8db7e9d13e2b15fca85b0492c01904f_icgraph}
+\end{center}
+\end{figure}

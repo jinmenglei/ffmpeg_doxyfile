@@ -1,0 +1,1326 @@
+\hypertarget{libavcodec_2bink_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/bink.c File Reference}
+\label{libavcodec_2bink_8c}\index{E:/github/ffmpeg/libavcodec/bink.c@{E:/github/ffmpeg/libavcodec/bink.c}}
+{\ttfamily \#include \char`\"{}libavutil/attributes.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}binkdata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}binkdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}blockdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}hpeldsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+Include dependency graph for bink.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_tree}{Tree}}
+\item 
+struct \mbox{\hyperlink{struct_bundle}{Bundle}}
+\item 
+struct \mbox{\hyperlink{struct_bink_context}{Bink\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_ab9ef831966fb2c5f522c19e809354830}{B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_ad06d6893c96527d47fee3e5d0c1db653}{B\+I\+N\+K\+\_\+\+F\+L\+A\+G\+\_\+\+A\+L\+P\+HA}}~0x00100000
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_a22b55c9e5ea94f46da262d7744981472}{B\+I\+N\+K\+\_\+\+F\+L\+A\+G\+\_\+\+G\+R\+AY}}~0x00020000
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_ab44c9a7b64d0d206637b3cb364e2bd63}{G\+E\+T\+\_\+\+H\+U\+FF}}(gb,  tree)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_adf1310a86d3426ab2c80f36aa9bd32fd}{C\+H\+E\+C\+K\+\_\+\+R\+E\+A\+D\+\_\+\+V\+AL}}(gb,  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  t)
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_a37f9b6b2c3ea033741a1282a5a997402}{D\+C\+\_\+\+S\+T\+A\+R\+T\+\_\+\+B\+I\+TS}}~11
+\item 
+\#define \mbox{\hyperlink{libavcodec_2bink_8c_ac4cf4b2ab929bd23951a8676eeac086b}{C}}~(1LL$<$$<$30)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_tree}{Tree}} \mbox{\hyperlink{libavcodec_2bink_8c_af87eab399ce21797ec2c16a7aea61a36}{Tree}}
+\item 
+typedef struct \mbox{\hyperlink{struct_bundle}{Bundle}} \mbox{\hyperlink{libavcodec_2bink_8c_ab0dc2ebe9fec779e99283bd34210829b}{Bundle}}
+\item 
+typedef struct \mbox{\hyperlink{struct_bink_context}{Bink\+Context}} \mbox{\hyperlink{libavcodec_2bink_8c_ae9d5004aed1343ac8e7e02018c6ef04d}{Bink\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bff}{Old\+Sources}} \{ \newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffac2ce7f9ceb4c098d78214a2c7b13615b}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES}} = 0, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa4ab85df8dfbf397233fd5e2aa6079f04}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+C\+O\+L\+O\+RS}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa20d5feb483b7fc8fe42fd4b63a3a8ae8}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+P\+A\+T\+T\+E\+RN}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa97cbb9b64cc57e517feb9722bdc5542b}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+X\+\_\+\+O\+FF}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa71f07d76254ac61273b7bc0a425a7dae}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+Y\+\_\+\+O\+FF}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa188622de8397be3b9ca92c9147b3e5b7}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+\+DC}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa5c6f1d9db5f1ed394412aac51a7afeb8}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+DC}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa158f00eb3679da0a5924be0743d148fc}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+Q}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffaf1a88872a60ab44ceb372fb166526783}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+Q}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa8fadbd01225e9900990dcaffcc022030}{B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+C\+O\+E\+FS}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}{B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC}}
+ \}
+\item 
+enum \mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16}{Sources}} \{ \newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a9b2ad242a6043d500cb0cb7413d3b491}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES}} = 0, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a413c116df1344f41f621fc17d530d41a}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+S\+U\+B\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab4703c4b462e31dbc55c43b51d89587f}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+C\+O\+L\+O\+RS}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a7c8bcde66cf8ba0e6a12a6063ddb2c96}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+P\+A\+T\+T\+E\+RN}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16add6731d1c60895c6bafe4de46d53a6f5}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+X\+\_\+\+O\+FF}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aa9cf813a7371b231a2ed964d040f04de}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+Y\+\_\+\+O\+FF}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a41e4cdb8f30f34ae56b132701f1acbcc}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+\+DC}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a2362122beb36742bb7f4ddc42e12fb96}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+DC}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aab7f1cc87c8e7a8b5e0c1e500c927508}{B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+R\+UN}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab426851dbc42304b1743e33cfd4168fb}{B\+I\+N\+K\+\_\+\+N\+B\+\_\+\+S\+RC}}
+ \}
+\item 
+enum \mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900}{Block\+Types}} \{ \newline
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a0d0263ae17b04d2692746fbbb66fa075}{S\+K\+I\+P\+\_\+\+B\+L\+O\+CK}} = 0, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900afdd9017a67b75e02e4f0b7adf369437d}{S\+C\+A\+L\+E\+D\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa21922b7806ec0082650e41edd2238df}{M\+O\+T\+I\+O\+N\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aeed5e63bd95bcc16f69df18b0cf49271}{R\+U\+N\+\_\+\+B\+L\+O\+CK}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5b1b79fb7e36a6ac4c9979153e878528}{R\+E\+S\+I\+D\+U\+E\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a053f5f0732b989a98521847623c0221c}{I\+N\+T\+R\+A\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900abea53a0c04e961ee1f52ef77262d4e33}{F\+I\+L\+L\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa7d25aca2a16aacc2376ea2ab84316d1}{I\+N\+T\+E\+R\+\_\+\+B\+L\+O\+CK}}, 
+\newline
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900add7da4dd54417efa572eed2bf78b26a4}{P\+A\+T\+T\+E\+R\+N\+\_\+\+B\+L\+O\+CK}}, 
+\mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5400707e1c6fd1703140fe77516cec94}{R\+A\+W\+\_\+\+B\+L\+O\+CK}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_a7651541bc4f20d7c82e71175c644416c}{init\+\_\+lengths}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bw)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_abdd770a6e6abfa6952926c7d7bc96a77}{init\+\_\+bundles}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_a38b88f98479497dfa1b83265f3122dc9}{free\+\_\+bundles}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_aa591a7519920353385a85c9c2e1a5d1d}{merge}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a201d43056e1aa51d48555f293448db76}{read\+\_\+tree}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_tree}{Tree}} $\ast$tree)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a47ab236e4e21e62b17e187cdaf26d22c}{read\+\_\+bundle}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bundle\+\_\+num)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_aca54b675af66650f278377bb8e3bdb62}{read\+\_\+runs}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a9337d651c9c05e140a8567e91d8a589f}{read\+\_\+motion\+\_\+values}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a0f80b1a08eb4f583d5c4fbcb21abac49}{read\+\_\+block\+\_\+types}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a503d6f567541c3ddb7627bcb192ae0a4}{read\+\_\+patterns}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_ad05f26434cdc7f5feff6da5941def23d}{read\+\_\+colors}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a80166ab1b7d3ca6569f15d52836acc13}{read\+\_\+dcs}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start\+\_\+bits, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} has\+\_\+sign)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a5e448cee8e4cac7cfedad09ee600d537}{get\+\_\+value}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bundle)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_ad29dfbfaff37fdaa57845d638a0fbb01}{binkb\+\_\+init\+\_\+bundle}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bundle\+\_\+num)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_aca27e692b9c2b41502394938c848725c}{binkb\+\_\+init\+\_\+bundles}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a2340b1bcd98144f3f92932ff27f5b0ca}{binkb\+\_\+read\+\_\+bundle}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bundle\+\_\+num)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_aae1590b0da296f076db460f4e0e3eb6b}{binkb\+\_\+get\+\_\+value}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bundle\+\_\+num)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a55f0fa84e84311eeb4ca28b6aa8bca54}{read\+\_\+dct\+\_\+coeffs}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}\mbox{[}64\mbox{]}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$scan, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$coef\+\_\+count\+\_\+, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coef\+\_\+idx\mbox{[}64\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} q)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_a251fef975fc2b80ba5b3bf874b5dc56b}{unquantize\+\_\+dct\+\_\+coeffs}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}\mbox{[}64\mbox{]}, const uint32\+\_\+t \mbox{\hyperlink{libavcodec_2g726_8c_a543cd89a6890b4c9eca252bee9c9429f}{quant}}\mbox{[}64\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coef\+\_\+count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coef\+\_\+idx\mbox{[}64\mbox{]}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$scan)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_aac816446e6a3b8bd047a247c737823ce}{read\+\_\+residue}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, int16\+\_\+t \mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}\mbox{[}64\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} masks\+\_\+count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_abd4360cfb3d2f35d258b7dc4083e0be8}{put\+\_\+pixels8x8\+\_\+overlapped}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a0721eff5f6d562e791321193bb92c914}{binkb\+\_\+decode\+\_\+plane}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane\+\_\+idx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+key, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+chroma)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_ab76373b035a8295b2a9db442a51d4b97}{bink\+\_\+put\+\_\+pixels}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$prev, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+start, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ref\+\_\+end)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_aa1db55fbfc0fc49077ee3d6a0be6fa71}{bink\+\_\+decode\+\_\+plane}} (\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane\+\_\+idx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+chroma)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a21670444a1d0dbcdec6ab753a5f0ec87}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_a847dd157888ab4afe0d5110736aa18a1}{binkb\+\_\+calc\+\_\+quant}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2bink_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{struct_v_l_c}{V\+LC}} \mbox{\hyperlink{libavcodec_2bink_8c_ae17ad045280454b43ae474237a640a3f}{bink\+\_\+trees}} \mbox{[}16\mbox{]}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_aa5543774c74d9cde8f44fe7374ad3ddd}{binkb\+\_\+bundle\+\_\+sizes}} \mbox{[}\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}{B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC}}\mbox{]}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2bink_8c_a48eb84f667f7d80cd87b18066a8bd77f}{binkb\+\_\+bundle\+\_\+signed}} \mbox{[}\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}{B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC}}\mbox{]}
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{libavcodec_2bink_8c_a7b8631c7dc672200ba672c316b2d3071}{binkb\+\_\+intra\+\_\+quant}} \mbox{[}16\mbox{]}\mbox{[}64\mbox{]}
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{libavcodec_2bink_8c_aa48d34135f5bea5138f7f8fa9c9887ba}{binkb\+\_\+inter\+\_\+quant}} \mbox{[}16\mbox{]}\mbox{[}64\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{libavcodec_2bink_8c_a03e1692d946c8af8f9daf37039ee0097}{bink\+\_\+rlelens}} \mbox{[}4\mbox{]} = \{ 4, 8, 12, 32 \}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2bink_8c_ac8b0bc0b41196133b54c108d71e55808}{ff\+\_\+bink\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ad06d6893c96527d47fee3e5d0c1db653}\label{libavcodec_2bink_8c_ad06d6893c96527d47fee3e5d0c1db653}} 
+\index{bink.c@{bink.c}!BINK\_FLAG\_ALPHA@{BINK\_FLAG\_ALPHA}}
+\index{BINK\_FLAG\_ALPHA@{BINK\_FLAG\_ALPHA}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{BINK\_FLAG\_ALPHA}{BINK\_FLAG\_ALPHA}}
+{\footnotesize\ttfamily \#define B\+I\+N\+K\+\_\+\+F\+L\+A\+G\+\_\+\+A\+L\+P\+HA~0x00100000}
+
+
+
+Definition at line 37 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a22b55c9e5ea94f46da262d7744981472}\label{libavcodec_2bink_8c_a22b55c9e5ea94f46da262d7744981472}} 
+\index{bink.c@{bink.c}!BINK\_FLAG\_GRAY@{BINK\_FLAG\_GRAY}}
+\index{BINK\_FLAG\_GRAY@{BINK\_FLAG\_GRAY}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{BINK\_FLAG\_GRAY}{BINK\_FLAG\_GRAY}}
+{\footnotesize\ttfamily \#define B\+I\+N\+K\+\_\+\+F\+L\+A\+G\+\_\+\+G\+R\+AY~0x00020000}
+
+
+
+Definition at line 38 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ab9ef831966fb2c5f522c19e809354830}\label{libavcodec_2bink_8c_ab9ef831966fb2c5f522c19e809354830}} 
+\index{bink.c@{bink.c}!BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}}
+\index{BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{BITSTREAM\_READER\_LE}{BITSTREAM\_READER\_LE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}
+
+
+
+Definition at line 27 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ac4cf4b2ab929bd23951a8676eeac086b}\label{libavcodec_2bink_8c_ac4cf4b2ab929bd23951a8676eeac086b}} 
+\index{bink.c@{bink.c}!C@{C}}
+\index{C@{C}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{C}{C}}
+{\footnotesize\ttfamily \#define C~(1LL$<$$<$30)}
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_adf1310a86d3426ab2c80f36aa9bd32fd}\label{libavcodec_2bink_8c_adf1310a86d3426ab2c80f36aa9bd32fd}} 
+\index{bink.c@{bink.c}!CHECK\_READ\_VAL@{CHECK\_READ\_VAL}}
+\index{CHECK\_READ\_VAL@{CHECK\_READ\_VAL}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{CHECK\_READ\_VAL}{CHECK\_READ\_VAL}}
+{\footnotesize\ttfamily \#define C\+H\+E\+C\+K\+\_\+\+R\+E\+A\+D\+\_\+\+V\+AL(\begin{DoxyParamCaption}\item[{}]{gb,  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  }\item[{}]{t }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{if} (!\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>cur\_dec || (\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>cur\_dec > \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>cur\_ptr)) \(\backslash\)}
+\DoxyCodeLine{        return 0; \(\backslash\)}
+\DoxyCodeLine{    t = \mbox{\hyperlink{get__bits_8h_abd82eee339b2471e5d9b4bfecfdc6b5f}{get\_bits}}(gb, \mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}}-\/>len); \(\backslash\)}
+\DoxyCodeLine{    if (!t) \{ \(\backslash\)}
+\DoxyCodeLine{        b-\/>cur\_dec = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}; \(\backslash\)}
+\DoxyCodeLine{        return 0; \(\backslash\)}
+\DoxyCodeLine{    \} \(\backslash\)}
+
+\end{DoxyCode}
+common check before starting decoding bundle data
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em b} & bundle \\
+\hline
+{\em t} & variable where number of elements to decode will be stored \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 320 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a37f9b6b2c3ea033741a1282a5a997402}\label{libavcodec_2bink_8c_a37f9b6b2c3ea033741a1282a5a997402}} 
+\index{bink.c@{bink.c}!DC\_START\_BITS@{DC\_START\_BITS}}
+\index{DC\_START\_BITS@{DC\_START\_BITS}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{DC\_START\_BITS}{DC\_START\_BITS}}
+{\footnotesize\ttfamily \#define D\+C\+\_\+\+S\+T\+A\+R\+T\+\_\+\+B\+I\+TS~11}
+
+number of bits used to store first DC value in bundle 
+
+Definition at line 499 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ab44c9a7b64d0d206637b3cb364e2bd63}\label{libavcodec_2bink_8c_ab44c9a7b64d0d206637b3cb364e2bd63}} 
+\index{bink.c@{bink.c}!GET\_HUFF@{GET\_HUFF}}
+\index{GET\_HUFF@{GET\_HUFF}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{GET\_HUFF}{GET\_HUFF}}
+{\footnotesize\ttfamily \#define G\+E\+T\+\_\+\+H\+U\+FF(\begin{DoxyParamCaption}\item[{}]{gb,  }\item[{}]{tree }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{                                                 (tree).syms[\mbox{\hyperlink{get__bits_8h_a3ba3e032e40fae0f98ba46a0f5201195}{get\_vlc2}}(gb, \mbox{\hyperlink{libavcodec_2bink_8c_ae17ad045280454b43ae474237a640a3f}{bink\_trees}}[(tree).vlc\_num].\mbox{\hyperlink{struct_v_l_c_acaf94f3386396a95d3e7042c444a41f7}{table}},\(\backslash\)}
+\DoxyCodeLine{                                                 bink\_trees[(tree).vlc\_num].\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}}, 1)]}
+
+\end{DoxyCode}
+
+
+Definition at line 96 of file bink.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ae9d5004aed1343ac8e7e02018c6ef04d}\label{libavcodec_2bink_8c_ae9d5004aed1343ac8e7e02018c6ef04d}} 
+\index{bink.c@{bink.c}!BinkContext@{BinkContext}}
+\index{BinkContext@{BinkContext}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{BinkContext}{BinkContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_bink_context}{Bink\+Context}} \mbox{\hyperlink{struct_bink_context}{Bink\+Context}}}
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ab0dc2ebe9fec779e99283bd34210829b}\label{libavcodec_2bink_8c_ab0dc2ebe9fec779e99283bd34210829b}} 
+\index{bink.c@{bink.c}!Bundle@{Bundle}}
+\index{Bundle@{Bundle}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{Bundle}{Bundle}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_bundle}{Bundle}} \mbox{\hyperlink{struct_bundle}{Bundle}}}
+
+data structure used for decoding single Bink data type \mbox{\Hypertarget{libavcodec_2bink_8c_af87eab399ce21797ec2c16a7aea61a36}\label{libavcodec_2bink_8c_af87eab399ce21797ec2c16a7aea61a36}} 
+\index{bink.c@{bink.c}!Tree@{Tree}}
+\index{Tree@{Tree}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{Tree}{Tree}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_tree}{Tree}} \mbox{\hyperlink{struct_tree}{Tree}}}
+
+data needed to decode 4-\/bit Huffman-\/coded value 
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900}} 
+\index{bink.c@{bink.c}!BlockTypes@{BlockTypes}}
+\index{BlockTypes@{BlockTypes}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{BlockTypes}{BlockTypes}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900}{Block\+Types}}}
+
+Bink video block types \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SKIP\_BLOCK@{SKIP\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!SKIP\_BLOCK@{SKIP\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a0d0263ae17b04d2692746fbbb66fa075}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a0d0263ae17b04d2692746fbbb66fa075}} 
+S\+K\+I\+P\+\_\+\+B\+L\+O\+CK&skipped block \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SCALED\_BLOCK@{SCALED\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!SCALED\_BLOCK@{SCALED\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900afdd9017a67b75e02e4f0b7adf369437d}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900afdd9017a67b75e02e4f0b7adf369437d}} 
+S\+C\+A\+L\+E\+D\+\_\+\+B\+L\+O\+CK&block has size 16x16 \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MOTION\_BLOCK@{MOTION\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!MOTION\_BLOCK@{MOTION\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa21922b7806ec0082650e41edd2238df}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa21922b7806ec0082650e41edd2238df}} 
+M\+O\+T\+I\+O\+N\+\_\+\+B\+L\+O\+CK&block is copied from previous frame with some offset \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RUN\_BLOCK@{RUN\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!RUN\_BLOCK@{RUN\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aeed5e63bd95bcc16f69df18b0cf49271}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aeed5e63bd95bcc16f69df18b0cf49271}} 
+R\+U\+N\+\_\+\+B\+L\+O\+CK&block is composed from runs of colours with custom scan order \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RESIDUE\_BLOCK@{RESIDUE\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!RESIDUE\_BLOCK@{RESIDUE\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5b1b79fb7e36a6ac4c9979153e878528}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5b1b79fb7e36a6ac4c9979153e878528}} 
+R\+E\+S\+I\+D\+U\+E\+\_\+\+B\+L\+O\+CK&motion block with some difference added \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTRA\_BLOCK@{INTRA\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!INTRA\_BLOCK@{INTRA\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a053f5f0732b989a98521847623c0221c}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a053f5f0732b989a98521847623c0221c}} 
+I\+N\+T\+R\+A\+\_\+\+B\+L\+O\+CK&intra D\+CT block \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILL\_BLOCK@{FILL\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!FILL\_BLOCK@{FILL\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900abea53a0c04e961ee1f52ef77262d4e33}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900abea53a0c04e961ee1f52ef77262d4e33}} 
+F\+I\+L\+L\+\_\+\+B\+L\+O\+CK&block is filled with single colour \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTER\_BLOCK@{INTER\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!INTER\_BLOCK@{INTER\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa7d25aca2a16aacc2376ea2ab84316d1}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900aa7d25aca2a16aacc2376ea2ab84316d1}} 
+I\+N\+T\+E\+R\+\_\+\+B\+L\+O\+CK&motion block with D\+CT applied to the difference \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PATTERN\_BLOCK@{PATTERN\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!PATTERN\_BLOCK@{PATTERN\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900add7da4dd54417efa572eed2bf78b26a4}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900add7da4dd54417efa572eed2bf78b26a4}} 
+P\+A\+T\+T\+E\+R\+N\+\_\+\+B\+L\+O\+CK&block is filled with two colours following custom pattern \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RAW\_BLOCK@{RAW\_BLOCK}!bink.c@{bink.c}}\index{bink.c@{bink.c}!RAW\_BLOCK@{RAW\_BLOCK}}}\mbox{\Hypertarget{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5400707e1c6fd1703140fe77516cec94}\label{libavcodec_2bink_8c_ad7db37efcc0995d3a3b53c3f477e6900a5400707e1c6fd1703140fe77516cec94}} 
+R\+A\+W\+\_\+\+B\+L\+O\+CK&uncoded 8x8 block \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 133 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bff}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bff}} 
+\index{bink.c@{bink.c}!OldSources@{OldSources}}
+\index{OldSources@{OldSources}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{OldSources}{OldSources}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bff}{Old\+Sources}}}
+
+I\+Ds for different data types used in old version of Bink video codec \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_BLOCK\_TYPES@{BINKB\_SRC\_BLOCK\_TYPES}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_BLOCK\_TYPES@{BINKB\_SRC\_BLOCK\_TYPES}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffac2ce7f9ceb4c098d78214a2c7b13615b}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffac2ce7f9ceb4c098d78214a2c7b13615b}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES&8x8 block types \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_COLORS@{BINKB\_SRC\_COLORS}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_COLORS@{BINKB\_SRC\_COLORS}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa4ab85df8dfbf397233fd5e2aa6079f04}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa4ab85df8dfbf397233fd5e2aa6079f04}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+C\+O\+L\+O\+RS&pixel values used for different block types \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_PATTERN@{BINKB\_SRC\_PATTERN}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_PATTERN@{BINKB\_SRC\_PATTERN}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa20d5feb483b7fc8fe42fd4b63a3a8ae8}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa20d5feb483b7fc8fe42fd4b63a3a8ae8}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+P\+A\+T\+T\+E\+RN&8-\/bit values for 2-\/colour pattern fill \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_X\_OFF@{BINKB\_SRC\_X\_OFF}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_X\_OFF@{BINKB\_SRC\_X\_OFF}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa97cbb9b64cc57e517feb9722bdc5542b}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa97cbb9b64cc57e517feb9722bdc5542b}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+X\+\_\+\+O\+FF&X components of motion value. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_Y\_OFF@{BINKB\_SRC\_Y\_OFF}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_Y\_OFF@{BINKB\_SRC\_Y\_OFF}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa71f07d76254ac61273b7bc0a425a7dae}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa71f07d76254ac61273b7bc0a425a7dae}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+Y\+\_\+\+O\+FF&Y components of motion value. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_INTRA\_DC@{BINKB\_SRC\_INTRA\_DC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_INTRA\_DC@{BINKB\_SRC\_INTRA\_DC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa188622de8397be3b9ca92c9147b3e5b7}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa188622de8397be3b9ca92c9147b3e5b7}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+\+DC&DC values for intrablocks with D\+CT. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_INTER\_DC@{BINKB\_SRC\_INTER\_DC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_INTER\_DC@{BINKB\_SRC\_INTER\_DC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa5c6f1d9db5f1ed394412aac51a7afeb8}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa5c6f1d9db5f1ed394412aac51a7afeb8}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+DC&DC values for interblocks with D\+CT. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_INTRA\_Q@{BINKB\_SRC\_INTRA\_Q}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_INTRA\_Q@{BINKB\_SRC\_INTRA\_Q}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa158f00eb3679da0a5924be0743d148fc}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa158f00eb3679da0a5924be0743d148fc}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+Q&quantizer values for intrablocks with D\+CT \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_INTER\_Q@{BINKB\_SRC\_INTER\_Q}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_INTER\_Q@{BINKB\_SRC\_INTER\_Q}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffaf1a88872a60ab44ceb372fb166526783}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffaf1a88872a60ab44ceb372fb166526783}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+Q&quantizer values for interblocks with D\+CT \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_SRC\_INTER\_COEFS@{BINKB\_SRC\_INTER\_COEFS}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_SRC\_INTER\_COEFS@{BINKB\_SRC\_INTER\_COEFS}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa8fadbd01225e9900990dcaffcc022030}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa8fadbd01225e9900990dcaffcc022030}} 
+B\+I\+N\+K\+B\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+C\+O\+E\+FS&number of coefficients for residue blocks \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINKB\_NB\_SRC@{BINKB\_NB\_SRC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINKB\_NB\_SRC@{BINKB\_NB\_SRC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}\label{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}} 
+B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 45 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16}} 
+\index{bink.c@{bink.c}!Sources@{Sources}}
+\index{Sources@{Sources}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{Sources}{Sources}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16}{Sources}}}
+
+I\+Ds for different data types used in Bink video codec \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_BLOCK\_TYPES@{BINK\_SRC\_BLOCK\_TYPES}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_BLOCK\_TYPES@{BINK\_SRC\_BLOCK\_TYPES}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a9b2ad242a6043d500cb0cb7413d3b491}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a9b2ad242a6043d500cb0cb7413d3b491}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES&8x8 block types \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_SUB\_BLOCK\_TYPES@{BINK\_SRC\_SUB\_BLOCK\_TYPES}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_SUB\_BLOCK\_TYPES@{BINK\_SRC\_SUB\_BLOCK\_TYPES}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a413c116df1344f41f621fc17d530d41a}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a413c116df1344f41f621fc17d530d41a}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+S\+U\+B\+\_\+\+B\+L\+O\+C\+K\+\_\+\+T\+Y\+P\+ES&16x16 block types (a subset of 8x8 block types) \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_COLORS@{BINK\_SRC\_COLORS}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_COLORS@{BINK\_SRC\_COLORS}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab4703c4b462e31dbc55c43b51d89587f}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab4703c4b462e31dbc55c43b51d89587f}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+C\+O\+L\+O\+RS&pixel values used for different block types \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_PATTERN@{BINK\_SRC\_PATTERN}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_PATTERN@{BINK\_SRC\_PATTERN}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a7c8bcde66cf8ba0e6a12a6063ddb2c96}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a7c8bcde66cf8ba0e6a12a6063ddb2c96}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+P\+A\+T\+T\+E\+RN&8-\/bit values for 2-\/colour pattern fill \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_X\_OFF@{BINK\_SRC\_X\_OFF}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_X\_OFF@{BINK\_SRC\_X\_OFF}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16add6731d1c60895c6bafe4de46d53a6f5}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16add6731d1c60895c6bafe4de46d53a6f5}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+X\+\_\+\+O\+FF&X components of motion value. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_Y\_OFF@{BINK\_SRC\_Y\_OFF}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_Y\_OFF@{BINK\_SRC\_Y\_OFF}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aa9cf813a7371b231a2ed964d040f04de}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aa9cf813a7371b231a2ed964d040f04de}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+Y\+\_\+\+O\+FF&Y components of motion value. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_INTRA\_DC@{BINK\_SRC\_INTRA\_DC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_INTRA\_DC@{BINK\_SRC\_INTRA\_DC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a41e4cdb8f30f34ae56b132701f1acbcc}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a41e4cdb8f30f34ae56b132701f1acbcc}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+R\+A\+\_\+\+DC&DC values for intrablocks with D\+CT. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_INTER\_DC@{BINK\_SRC\_INTER\_DC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_INTER\_DC@{BINK\_SRC\_INTER\_DC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a2362122beb36742bb7f4ddc42e12fb96}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16a2362122beb36742bb7f4ddc42e12fb96}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+I\+N\+T\+E\+R\+\_\+\+DC&DC values for interblocks with D\+CT. \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_SRC\_RUN@{BINK\_SRC\_RUN}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_SRC\_RUN@{BINK\_SRC\_RUN}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aab7f1cc87c8e7a8b5e0c1e500c927508}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16aab7f1cc87c8e7a8b5e0c1e500c927508}} 
+B\+I\+N\+K\+\_\+\+S\+R\+C\+\_\+\+R\+UN&run lengths for special fill block \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BINK\_NB\_SRC@{BINK\_NB\_SRC}!bink.c@{bink.c}}\index{bink.c@{bink.c}!BINK\_NB\_SRC@{BINK\_NB\_SRC}}}\mbox{\Hypertarget{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab426851dbc42304b1743e33cfd4168fb}\label{libavcodec_2bink_8c_a4dd596ec01d5279a29972479e475fc16ab426851dbc42304b1743e33cfd4168fb}} 
+B\+I\+N\+K\+\_\+\+N\+B\+\_\+\+S\+RC&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 74 of file bink.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aa1db55fbfc0fc49077ee3d6a0be6fa71}\label{libavcodec_2bink_8c_aa1db55fbfc0fc49077ee3d6a0be6fa71}} 
+\index{bink.c@{bink.c}!bink\_decode\_plane@{bink\_decode\_plane}}
+\index{bink\_decode\_plane@{bink\_decode\_plane}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{bink\_decode\_plane()}{bink\_decode\_plane()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bink\+\_\+decode\+\_\+plane (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane\+\_\+idx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+chroma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1018 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aa1db55fbfc0fc49077ee3d6a0be6fa71_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{libavcodec_2bink_8c_aa1db55fbfc0fc49077ee3d6a0be6fa71_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ab76373b035a8295b2a9db442a51d4b97}\label{libavcodec_2bink_8c_ab76373b035a8295b2a9db442a51d4b97}} 
+\index{bink.c@{bink.c}!bink\_put\_pixels@{bink\_put\_pixels}}
+\index{bink\_put\_pixels@{bink\_put\_pixels}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{bink\_put\_pixels()}{bink\_put\_pixels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bink\+\_\+put\+\_\+pixels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{prev,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+start,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1000 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=257pt]{libavcodec_2bink_8c_ab76373b035a8295b2a9db442a51d4b97_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_ab76373b035a8295b2a9db442a51d4b97_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a847dd157888ab4afe0d5110736aa18a1}\label{libavcodec_2bink_8c_a847dd157888ab4afe0d5110736aa18a1}} 
+\index{bink.c@{bink.c}!binkb\_calc\_quant@{binkb\_calc\_quant}}
+\index{binkb\_calc\_quant@{binkb\_calc\_quant}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_calc\_quant()}{binkb\_calc\_quant()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} binkb\+\_\+calc\+\_\+quant (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Calculate quantization tables for version b 
+
+Definition at line 1314 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{libavcodec_2bink_8c_a847dd157888ab4afe0d5110736aa18a1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a0721eff5f6d562e791321193bb92c914}\label{libavcodec_2bink_8c_a0721eff5f6d562e791321193bb92c914}} 
+\index{bink.c@{bink.c}!binkb\_decode\_plane@{binkb\_decode\_plane}}
+\index{binkb\_decode\_plane@{binkb\_decode\_plane}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_decode\_plane()}{binkb\_decode\_plane()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} binkb\+\_\+decode\+\_\+plane (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane\+\_\+idx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+key,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+chroma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 850 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a0721eff5f6d562e791321193bb92c914_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{libavcodec_2bink_8c_a0721eff5f6d562e791321193bb92c914_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aae1590b0da296f076db460f4e0e3eb6b}\label{libavcodec_2bink_8c_aae1590b0da296f076db460f4e0e3eb6b}} 
+\index{bink.c@{bink.c}!binkb\_get\_value@{binkb\_get\_value}}
+\index{binkb\_get\_value@{binkb\_get\_value}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_get\_value()}{binkb\_get\_value()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} binkb\+\_\+get\+\_\+value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bundle\+\_\+num }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 616 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=231pt]{libavcodec_2bink_8c_aae1590b0da296f076db460f4e0e3eb6b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aae1590b0da296f076db460f4e0e3eb6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ad29dfbfaff37fdaa57845d638a0fbb01}\label{libavcodec_2bink_8c_ad29dfbfaff37fdaa57845d638a0fbb01}} 
+\index{bink.c@{bink.c}!binkb\_init\_bundle@{binkb\_init\_bundle}}
+\index{binkb\_init\_bundle@{binkb\_init\_bundle}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_init\_bundle()}{binkb\_init\_bundle()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} binkb\+\_\+init\+\_\+bundle (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bundle\+\_\+num }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 568 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_ad29dfbfaff37fdaa57845d638a0fbb01_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aca27e692b9c2b41502394938c848725c}\label{libavcodec_2bink_8c_aca27e692b9c2b41502394938c848725c}} 
+\index{bink.c@{bink.c}!binkb\_init\_bundles@{binkb\_init\_bundles}}
+\index{binkb\_init\_bundles@{binkb\_init\_bundles}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_init\_bundles()}{binkb\_init\_bundles()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} binkb\+\_\+init\+\_\+bundles (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 575 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=305pt]{libavcodec_2bink_8c_aca27e692b9c2b41502394938c848725c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aca27e692b9c2b41502394938c848725c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a2340b1bcd98144f3f92932ff27f5b0ca}\label{libavcodec_2bink_8c_a2340b1bcd98144f3f92932ff27f5b0ca}} 
+\index{bink.c@{bink.c}!binkb\_read\_bundle@{binkb\_read\_bundle}}
+\index{binkb\_read\_bundle@{binkb\_read\_bundle}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_read\_bundle()}{binkb\_read\_bundle()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} binkb\+\_\+read\+\_\+bundle (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bundle\+\_\+num }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 582 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a2340b1bcd98144f3f92932ff27f5b0ca_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a2340b1bcd98144f3f92932ff27f5b0ca_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a84e2e3c224f78dc08a5587b23c72d34b}\label{libavcodec_2bink_8c_a84e2e3c224f78dc08a5587b23c72d34b}} 
+\index{bink.c@{bink.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1400 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a84e2e3c224f78dc08a5587b23c72d34b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a21670444a1d0dbcdec6ab753a5f0ec87}\label{libavcodec_2bink_8c_a21670444a1d0dbcdec6ab753a5f0ec87}} 
+\index{bink.c@{bink.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1253 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavcodec_2bink_8c_a21670444a1d0dbcdec6ab753a5f0ec87_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{libavcodec_2bink_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{bink.c@{bink.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1343 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavcodec_2bink_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}\label{libavcodec_2bink_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}} 
+\index{bink.c@{bink.c}!flush@{flush}}
+\index{flush@{flush}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{flush()}{flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1410 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a38b88f98479497dfa1b83265f3122dc9}\label{libavcodec_2bink_8c_a38b88f98479497dfa1b83265f3122dc9}} 
+\index{bink.c@{bink.c}!free\_bundles@{free\_bundles}}
+\index{free\_bundles@{free\_bundles}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{free\_bundles()}{free\_bundles()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+bundles (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Free memory used by bundles.
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & decoder context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 205 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{libavcodec_2bink_8c_a38b88f98479497dfa1b83265f3122dc9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a5e448cee8e4cac7cfedad09ee600d537}\label{libavcodec_2bink_8c_a5e448cee8e4cac7cfedad09ee600d537}} 
+\index{bink.c@{bink.c}!get\_value@{get\_value}}
+\index{get\_value@{get\_value}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{get\_value()}{get\_value()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bundle }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Retrieve next value from bundle.
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & decoder context \\
+\hline
+{\em bundle} & bundle number \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 555 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a5e448cee8e4cac7cfedad09ee600d537_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_abdd770a6e6abfa6952926c7d7bc96a77}\label{libavcodec_2bink_8c_abdd770a6e6abfa6952926c7d7bc96a77}} 
+\index{bink.c@{bink.c}!init\_bundles@{init\_bundles}}
+\index{init\_bundles@{init\_bundles}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{init\_bundles()}{init\_bundles()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+bundles (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Allocate memory for bundles.
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & decoder context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 178 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_abdd770a6e6abfa6952926c7d7bc96a77_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=250pt]{libavcodec_2bink_8c_abdd770a6e6abfa6952926c7d7bc96a77_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a7651541bc4f20d7c82e71175c644416c}\label{libavcodec_2bink_8c_a7651541bc4f20d7c82e71175c644416c}} 
+\index{bink.c@{bink.c}!init\_lengths@{init\_lengths}}
+\index{init\_lengths@{init\_lengths}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{init\_lengths()}{init\_lengths()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+lengths (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bw }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Initialize length in all bundles.
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & decoder context \\
+\hline
+{\em width} & plane width \\
+\hline
+{\em bw} & plane width in 8x8 blocks \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 153 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a7651541bc4f20d7c82e71175c644416c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aa591a7519920353385a85c9c2e1a5d1d}\label{libavcodec_2bink_8c_aa591a7519920353385a85c9c2e1a5d1d}} 
+\index{bink.c@{bink.c}!merge@{merge}}
+\index{merge@{merge}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{merge()}{merge()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} merge (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Merge two consequent lists of equal size depending on bits read.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em dst} & buffer where merged list will be written to \\
+\hline
+{\em src} & pointer to the head of the first list (the second lists starts at src+size) \\
+\hline
+{\em size} & input lists size \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 218 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{libavcodec_2bink_8c_aa591a7519920353385a85c9c2e1a5d1d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aa591a7519920353385a85c9c2e1a5d1d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_abd4360cfb3d2f35d258b7dc4083e0be8}\label{libavcodec_2bink_8c_abd4360cfb3d2f35d258b7dc4083e0be8}} 
+\index{bink.c@{bink.c}!put\_pixels8x8\_overlapped@{put\_pixels8x8\_overlapped}}
+\index{put\_pixels8x8\_overlapped@{put\_pixels8x8\_overlapped}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{put\_pixels8x8\_overlapped()}{put\_pixels8x8\_overlapped()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+pixels8x8\+\_\+overlapped (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Copy 8x8 block from source to destination, where src and dst may be overlapped 
+
+Definition at line 840 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_abd4360cfb3d2f35d258b7dc4083e0be8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a0f80b1a08eb4f583d5c4fbcb21abac49}\label{libavcodec_2bink_8c_a0f80b1a08eb4f583d5c4fbcb21abac49}} 
+\index{bink.c@{bink.c}!read\_block\_types@{read\_block\_types}}
+\index{read\_block\_types@{read\_block\_types}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_block\_types()}{read\_block\_types()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+block\+\_\+types (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 389 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a0f80b1a08eb4f583d5c4fbcb21abac49_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a0f80b1a08eb4f583d5c4fbcb21abac49_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a47ab236e4e21e62b17e187cdaf26d22c}\label{libavcodec_2bink_8c_a47ab236e4e21e62b17e187cdaf26d22c}} 
+\index{bink.c@{bink.c}!read\_bundle@{read\_bundle}}
+\index{read\_bundle@{read\_bundle}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_bundle()}{read\_bundle()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+bundle (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bundle\+\_\+num }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Prepare bundle for decoding data.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em c} & decoder context \\
+\hline
+{\em bundle\+\_\+num} & number of the bundle to initialize \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 290 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a47ab236e4e21e62b17e187cdaf26d22c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a47ab236e4e21e62b17e187cdaf26d22c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_ad05f26434cdc7f5feff6da5941def23d}\label{libavcodec_2bink_8c_ad05f26434cdc7f5feff6da5941def23d}} 
+\index{bink.c@{bink.c}!read\_colors@{read\_colors}}
+\index{read\_colors@{read\_colors}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_colors()}{read\_colors()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+colors (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b,  }\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 456 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_ad05f26434cdc7f5feff6da5941def23d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_ad05f26434cdc7f5feff6da5941def23d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a80166ab1b7d3ca6569f15d52836acc13}\label{libavcodec_2bink_8c_a80166ab1b7d3ca6569f15d52836acc13}} 
+\index{bink.c@{bink.c}!read\_dcs@{read\_dcs}}
+\index{read\_dcs@{read\_dcs}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_dcs()}{read\_dcs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+dcs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start\+\_\+bits,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{has\+\_\+sign }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 501 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a80166ab1b7d3ca6569f15d52836acc13_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a80166ab1b7d3ca6569f15d52836acc13_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a55f0fa84e84311eeb4ca28b6aa8bca54}\label{libavcodec_2bink_8c_a55f0fa84e84311eeb4ca28b6aa8bca54}} 
+\index{bink.c@{bink.c}!read\_dct\_coeffs@{read\_dct\_coeffs}}
+\index{read\_dct\_coeffs@{read\_dct\_coeffs}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_dct\_coeffs()}{read\_dct\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+dct\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bink_context}{Bink\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{block\mbox{[}64\mbox{]},  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{scan,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{coef\+\_\+count\+\_\+,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{coef\+\_\+idx\mbox{[}64\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read 8x8 block of D\+CT coefficients.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em block} & place for storing coefficients \\
+\hline
+{\em scan} & scan order table \\
+\hline
+{\em quant\+\_\+matrices} & quantization matrices \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 for success, negative value in other cases 
+\end{DoxyReturn}
+
+
+Definition at line 639 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a55f0fa84e84311eeb4ca28b6aa8bca54_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a55f0fa84e84311eeb4ca28b6aa8bca54_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a9337d651c9c05e140a8567e91d8a589f}\label{libavcodec_2bink_8c_a9337d651c9c05e140a8567e91d8a589f}} 
+\index{bink.c@{bink.c}!read\_motion\_values@{read\_motion\_values}}
+\index{read\_motion\_values@{read\_motion\_values}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_motion\_values()}{read\_motion\_values()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+motion\+\_\+values (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 353 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a9337d651c9c05e140a8567e91d8a589f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a9337d651c9c05e140a8567e91d8a589f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a503d6f567541c3ddb7627bcb192ae0a4}\label{libavcodec_2bink_8c_a503d6f567541c3ddb7627bcb192ae0a4}} 
+\index{bink.c@{bink.c}!read\_patterns@{read\_patterns}}
+\index{read\_patterns@{read\_patterns}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_patterns()}{read\_patterns()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+patterns (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 434 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a503d6f567541c3ddb7627bcb192ae0a4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a503d6f567541c3ddb7627bcb192ae0a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aac816446e6a3b8bd047a247c737823ce}\label{libavcodec_2bink_8c_aac816446e6a3b8bd047a247c737823ce}} 
+\index{bink.c@{bink.c}!read\_residue@{read\_residue}}
+\index{read\_residue@{read\_residue}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_residue()}{read\_residue()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+residue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{int16\+\_\+t}]{block\mbox{[}64\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{masks\+\_\+count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read 8x8 block with residue after motion compensation.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em block} & place to store read data \\
+\hline
+{\em masks\+\_\+count} & number of masks to decode \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, negative value in other cases 
+\end{DoxyReturn}
+
+
+Definition at line 755 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=321pt]{libavcodec_2bink_8c_aac816446e6a3b8bd047a247c737823ce_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aac816446e6a3b8bd047a247c737823ce_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_aca54b675af66650f278377bb8e3bdb62}\label{libavcodec_2bink_8c_aca54b675af66650f278377bb8e3bdb62}} 
+\index{bink.c@{bink.c}!read\_runs@{read\_runs}}
+\index{read\_runs@{read\_runs}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_runs()}{read\_runs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+runs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_bundle}{Bundle}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 329 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aca54b675af66650f278377bb8e3bdb62_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_aca54b675af66650f278377bb8e3bdb62_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a201d43056e1aa51d48555f293448db76}\label{libavcodec_2bink_8c_a201d43056e1aa51d48555f293448db76}} 
+\index{bink.c@{bink.c}!read\_tree@{read\_tree}}
+\index{read\_tree@{read\_tree}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{read\_tree()}{read\_tree()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+tree (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_tree}{Tree}} $\ast$}]{tree }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read information about Huffman tree used to decode data.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & context for reading bits \\
+\hline
+{\em tree} & pointer for storing tree data \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 245 of file bink.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a201d43056e1aa51d48555f293448db76_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a201d43056e1aa51d48555f293448db76_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a251fef975fc2b80ba5b3bf874b5dc56b}\label{libavcodec_2bink_8c_a251fef975fc2b80ba5b3bf874b5dc56b}} 
+\index{bink.c@{bink.c}!unquantize\_dct\_coeffs@{unquantize\_dct\_coeffs}}
+\index{unquantize\_dct\_coeffs@{unquantize\_dct\_coeffs}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{unquantize\_dct\_coeffs()}{unquantize\_dct\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} unquantize\+\_\+dct\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{block\mbox{[}64\mbox{]},  }\item[{const uint32\+\_\+t}]{quant\mbox{[}64\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{coef\+\_\+count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{coef\+\_\+idx\mbox{[}64\mbox{]},  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{scan }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 735 of file bink.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2bink_8c_a251fef975fc2b80ba5b3bf874b5dc56b_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavcodec_2bink_8c_a03e1692d946c8af8f9daf37039ee0097}\label{libavcodec_2bink_8c_a03e1692d946c8af8f9daf37039ee0097}} 
+\index{bink.c@{bink.c}!bink\_rlelens@{bink\_rlelens}}
+\index{bink\_rlelens@{bink\_rlelens}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{bink\_rlelens}{bink\_rlelens}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} bink\+\_\+rlelens\mbox{[}4\mbox{]} = \{ 4, 8, 12, 32 \}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 387 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ae17ad045280454b43ae474237a640a3f}\label{libavcodec_2bink_8c_ae17ad045280454b43ae474237a640a3f}} 
+\index{bink.c@{bink.c}!bink\_trees@{bink\_trees}}
+\index{bink\_trees@{bink\_trees}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{bink\_trees}{bink\_trees}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_v_l_c}{V\+LC}} bink\+\_\+trees\mbox{[}16\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 40 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a48eb84f667f7d80cd87b18066a8bd77f}\label{libavcodec_2bink_8c_a48eb84f667f7d80cd87b18066a8bd77f}} 
+\index{bink.c@{bink.c}!binkb\_bundle\_signed@{binkb\_bundle\_signed}}
+\index{binkb\_bundle\_signed@{binkb\_bundle\_signed}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_bundle\_signed}{binkb\_bundle\_signed}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} binkb\+\_\+bundle\+\_\+signed\mbox{[}\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}{B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0, 0, 0, 1, 1, 0, 1, 0, 0, 0}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 64 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_aa5543774c74d9cde8f44fe7374ad3ddd}\label{libavcodec_2bink_8c_aa5543774c74d9cde8f44fe7374ad3ddd}} 
+\index{bink.c@{bink.c}!binkb\_bundle\_sizes@{binkb\_bundle\_sizes}}
+\index{binkb\_bundle\_sizes@{binkb\_bundle\_sizes}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_bundle\_sizes}{binkb\_bundle\_sizes}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} binkb\+\_\+bundle\+\_\+sizes\mbox{[}\mbox{\hyperlink{libavcodec_2bink_8c_a4de6ee0b2b6bf65e29cbba3c2f4a6bffa0c6aecf6e0fa0e7d483b0ddb5adef6ea}{B\+I\+N\+K\+B\+\_\+\+N\+B\+\_\+\+S\+RC}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    4, 8, 8, 5, 5, 11, 11, 4, 4, 7}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 60 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_aa48d34135f5bea5138f7f8fa9c9887ba}\label{libavcodec_2bink_8c_aa48d34135f5bea5138f7f8fa9c9887ba}} 
+\index{bink.c@{bink.c}!binkb\_inter\_quant@{binkb\_inter\_quant}}
+\index{binkb\_inter\_quant@{binkb\_inter\_quant}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_inter\_quant}{binkb\_inter\_quant}}
+{\footnotesize\ttfamily \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} binkb\+\_\+inter\+\_\+quant\mbox{[}16\mbox{]}\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 69 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_a7b8631c7dc672200ba672c316b2d3071}\label{libavcodec_2bink_8c_a7b8631c7dc672200ba672c316b2d3071}} 
+\index{bink.c@{bink.c}!binkb\_intra\_quant@{binkb\_intra\_quant}}
+\index{binkb\_intra\_quant@{binkb\_intra\_quant}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{binkb\_intra\_quant}{binkb\_intra\_quant}}
+{\footnotesize\ttfamily \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} binkb\+\_\+intra\+\_\+quant\mbox{[}16\mbox{]}\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 68 of file bink.\+c.
+
+\mbox{\Hypertarget{libavcodec_2bink_8c_ac8b0bc0b41196133b54c108d71e55808}\label{libavcodec_2bink_8c_ac8b0bc0b41196133b54c108d71e55808}} 
+\index{bink.c@{bink.c}!ff\_bink\_decoder@{ff\_bink\_decoder}}
+\index{ff\_bink\_decoder@{ff\_bink\_decoder}!bink.c@{bink.c}}
+\doxysubsubsection{\texorpdfstring{ff\_bink\_decoder}{ff\_bink\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+bink\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}binkvideo"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Bink video"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea73758a7f9fcc3fd1cb7533a39a0beb6c}{AV\_CODEC\_ID\_BINKVIDEO}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavcodec_2bink_8c_ae9d5004aed1343ac8e7e02018c6ef04d}{BinkContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2bink_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2bink_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2bink_8c_a21670444a1d0dbcdec6ab753a5f0ec87}{decode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavcodec_2bink_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{libavcodec_2bink_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1417 of file bink.\+c.
+

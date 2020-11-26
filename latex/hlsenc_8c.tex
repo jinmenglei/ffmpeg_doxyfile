@@ -1,0 +1,1730 @@
+\hypertarget{hlsenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/hlsenc.c File Reference}
+\label{hlsenc_8c}\index{E:/github/ffmpeg/libavformat/hlsenc.c@{E:/github/ffmpeg/libavformat/hlsenc.c}}
+{\ttfamily \#include \char`\"{}config.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/random\+\_\+seed.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/log.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}hlsplaylist.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}os\+\_\+support.\+h\char`\"{}}\newline
+Include dependency graph for hlsenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}}
+\item 
+struct \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}}
+\item 
+struct \mbox{\hyperlink{struct_closed_captions_stream}{Closed\+Captions\+Stream}}
+\item 
+struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_a4b0feb025bc871150dd979b04b527dfd}{K\+E\+Y\+S\+I\+ZE}}~16
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_afa0499dcb85922b683da3918f512adb6}{L\+I\+N\+E\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE}}~\mbox{\hyperlink{libavformat_2internal_8h_ab9c288a59a1c4d29847845c5d6ca455f}{M\+A\+X\+\_\+\+U\+R\+L\+\_\+\+S\+I\+ZE}}
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_aaeb2afeee531c6cdd2582be240a4bb5b}{H\+L\+S\+\_\+\+M\+I\+C\+R\+O\+S\+E\+C\+O\+N\+D\+\_\+\+U\+N\+IT}}~1000000
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_aeca034f67218340ecb2261a22c2f3dcd}{B\+U\+F\+S\+I\+ZE}}~(16 $\ast$ 1024)
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_ab4ba232c36b06c603607e8d8a234756c}{P\+O\+S\+T\+F\+I\+X\+\_\+\+P\+A\+T\+T\+E\+RN}}~\char`\"{}\+\_\+\%d\char`\"{}
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_af68c3a5ad6ffce6c97fff154856a823d}{S\+E\+P\+A\+R\+A\+T\+OR}}~\textquotesingle{}/\textquotesingle{}
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{hlsenc_8c_a07484107e6d9fdf38b53edf631d6511d}{E}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} \mbox{\hyperlink{hlsenc_8c_a9bbb406635eb844bc071bf5900d9b96e}{H\+L\+S\+Segment}}
+\item 
+typedef enum \mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}{H\+L\+S\+Flags}} \mbox{\hyperlink{hlsenc_8c_a22aebad3a10814f13fcc74ba3334dd88}{H\+L\+S\+Flags}}
+\item 
+typedef struct \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} \mbox{\hyperlink{hlsenc_8c_ae7157d9740cc884211f4f888339bcfa9}{Variant\+Stream}}
+\item 
+typedef struct \mbox{\hyperlink{struct_closed_captions_stream}{Closed\+Captions\+Stream}} \mbox{\hyperlink{hlsenc_8c_a40990924fbd3eba7e3c757c0e346a918}{Closed\+Captions\+Stream}}
+\item 
+typedef struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} \mbox{\hyperlink{hlsenc_8c_a70e97316f72d969c05afd297e3a5b3b4}{H\+L\+S\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523}{Start\+Sequence\+Source\+Type}} \{ \newline
+\mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523afb25c86dd372a5333bbb86f52d0cb8e2}{H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+U\+M\+B\+ER}} = 0, 
+\mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523add499d91e2da75563db171cedc4e2e50}{H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+S\+E\+C\+O\+N\+D\+S\+\_\+\+S\+I\+N\+C\+E\+\_\+\+E\+P\+O\+CH}} = 1, 
+\mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523aa233d647bb51eed982701e894ffaef2e}{H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+F\+O\+R\+M\+A\+T\+T\+E\+D\+\_\+\+D\+A\+T\+E\+T\+I\+ME}} = 2, 
+\mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523a362fd05472b281d3fc644cad7958477b}{H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+M\+I\+C\+R\+O\+S\+E\+C\+O\+N\+D\+S\+\_\+\+S\+I\+N\+C\+E\+\_\+\+E\+P\+O\+CH}} = 3, 
+\newline
+\mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523ae79fe7a41ee6d41981a441108f108b03}{H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+L\+A\+ST}}
+ \}
+\item 
+enum \mbox{\hyperlink{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5}{Codec\+Attribute\+Status}} \{ \mbox{\hyperlink{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a7eca1e0cf7abdc3bd0b72c46072b2223}{C\+O\+D\+E\+C\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+W\+R\+I\+T\+T\+EN}} = 0, 
+\mbox{\hyperlink{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a5ea542ab2cd78427b9f4df457ec6c718}{C\+O\+D\+E\+C\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+W\+I\+L\+L\+\_\+\+N\+O\+T\+\_\+\+B\+E\+\_\+\+W\+R\+I\+T\+T\+EN}}
+ \}
+\item 
+enum \mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}{H\+L\+S\+Flags}} \{ \newline
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca496ac7a8a88da8727ba78479eda010ce}{H\+L\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+I\+LE}} = (1 $<$$<$ 0), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca522154110a1d5d8ac6e91d1cb28ce186}{H\+L\+S\+\_\+\+D\+E\+L\+E\+T\+E\+\_\+\+S\+E\+G\+M\+E\+N\+TS}} = (1 $<$$<$ 1), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8364a22f9172e3bce10aad0136b2b1}{H\+L\+S\+\_\+\+R\+O\+U\+N\+D\+\_\+\+D\+U\+R\+A\+T\+I\+O\+NS}} = (1 $<$$<$ 2), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cac2a36c6faf83529a2a43a8e98754a0c1}{H\+L\+S\+\_\+\+D\+I\+S\+C\+O\+N\+T\+\_\+\+S\+T\+A\+RT}} = (1 $<$$<$ 3), 
+\newline
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca21687f68dedbe55c84ae86a80c5f0bac}{H\+L\+S\+\_\+\+O\+M\+I\+T\+\_\+\+E\+N\+D\+L\+I\+ST}} = (1 $<$$<$ 4), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8f12c5fda5ed84e04c9f0ef061a418}{H\+L\+S\+\_\+\+S\+P\+L\+I\+T\+\_\+\+B\+Y\+\_\+\+T\+I\+ME}} = (1 $<$$<$ 5), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca79f354f5c91f8003efa1d0d72617a6ec}{H\+L\+S\+\_\+\+A\+P\+P\+E\+N\+D\+\_\+\+L\+I\+ST}} = (1 $<$$<$ 6), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cab8b9dd4b77ffe42c91840c8e17fe38f9}{H\+L\+S\+\_\+\+P\+R\+O\+G\+R\+A\+M\+\_\+\+D\+A\+T\+E\+\_\+\+T\+I\+ME}} = (1 $<$$<$ 7), 
+\newline
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca9d1e1718ae5cc26152bff1cbb413bbf9}{H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+I\+N\+D\+EX}} = (1 $<$$<$ 8), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cadfd71af4b0d8e054360b6d55c26dd96d}{H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+D\+U\+R\+A\+T\+I\+ON}} = (1 $<$$<$ 9), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf0dd97c005769f59efb77a2db24ddcc0}{H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+S\+I\+ZE}} = (1 $<$$<$ 10), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca853e32d585ec9a3814a4ff712ca4c1fa}{H\+L\+S\+\_\+\+T\+E\+M\+P\+\_\+\+F\+I\+LE}} = (1 $<$$<$ 11), 
+\newline
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca402800581e5f0919f14666c4f4d7ead3}{H\+L\+S\+\_\+\+P\+E\+R\+I\+O\+D\+I\+C\+\_\+\+R\+E\+K\+EY}} = (1 $<$$<$ 12), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cacec3e3b3ea2f46990b0a6431afff7716}{H\+L\+S\+\_\+\+I\+N\+D\+E\+P\+E\+N\+D\+E\+N\+T\+\_\+\+S\+E\+G\+M\+E\+N\+TS}} = (1 $<$$<$ 13), 
+\mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf79e3e0d03179604515b5c847039f76b}{H\+L\+S\+\_\+\+I\+\_\+\+F\+R\+A\+M\+E\+S\+\_\+\+O\+N\+LY}} = (1 $<$$<$ 14)
+ \}
+\item 
+enum \mbox{\hyperlink{hlsenc_8c_a45f8c604b4008a278fe9bde5156489ee}{Segment\+Type}} \{ \newline
+\mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489eea9b1a645606c002f3936c0f8bed5511f3}{P\+A\+L\+E\+T\+T\+E\+\_\+\+S\+E\+G\+M\+E\+NT}} = 0x14, 
+\mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489eea1871b9906a84cc8a4bfe413ab355b17b}{O\+B\+J\+E\+C\+T\+\_\+\+S\+E\+G\+M\+E\+NT}} = 0x15, 
+\mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489eeae5d03f8a63613ad0ee994eb5dd71828b}{P\+R\+E\+S\+E\+N\+T\+A\+T\+I\+O\+N\+\_\+\+S\+E\+G\+M\+E\+NT}} = 0x16, 
+\mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489eeae61f382e724e1605e74df8a9d5289095}{W\+I\+N\+D\+O\+W\+\_\+\+S\+E\+G\+M\+E\+NT}} = 0x17, 
+\newline
+\mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489eeacf53b47a27e1beca9de64caf35dfa809}{D\+I\+S\+P\+L\+A\+Y\+\_\+\+S\+E\+G\+M\+E\+NT}} = 0x80, 
+\mbox{\hyperlink{dashenc_8c_a45f8c604b4008a278fe9bde5156489eea5c9e45fdb65106414b3f95684c56f996}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+A\+U\+TO}} = 0, 
+\mbox{\hyperlink{dashenc_8c_a45f8c604b4008a278fe9bde5156489eeaf31c1aca781fb3f1471e095a572c48be}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+P4}}, 
+\mbox{\hyperlink{dashenc_8c_a45f8c604b4008a278fe9bde5156489eeaef79474072adeacf31f14ba9641f8696}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+W\+E\+BM}}, 
+\newline
+\mbox{\hyperlink{dashenc_8c_a45f8c604b4008a278fe9bde5156489eeaffea95a2e528a9fbb0f9bf88e9658ae1}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+NB}}, 
+\mbox{\hyperlink{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae6c2940aa679f858fb230e5c63ce378a}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+P\+E\+G\+TS}}, 
+\mbox{\hyperlink{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea4d784f91385f192a21056f9dcabbc48d}{S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+F\+M\+P4}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_ab8fa50b15c8efc6541495b6f5a4d15e2}{hlsenc\+\_\+io\+\_\+open}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$pb, char $\ast$filename, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a813ed26a229d0afec3be9be648a6f313}{hlsenc\+\_\+io\+\_\+close}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$pb, char $\ast$filename)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_a1b08008074d94d102818ed4be0ddd4ee}{set\+\_\+http\+\_\+options}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}, \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_afdf1ad5ede4d0651d18fa1d9847cfeae}{write\+\_\+codec\+\_\+attr}} (\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a766d2c20450f1a32e9ff81517c3de12c}{replace\+\_\+str\+\_\+data\+\_\+in\+\_\+filename}} (char $\ast$$\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$filename, char placeholder, const char $\ast$datastring)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a7273af44d675de7893a9a4e083a8cac3}{replace\+\_\+int\+\_\+data\+\_\+in\+\_\+filename}} (char $\ast$$\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$filename, char placeholder, int64\+\_\+t number)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_abd93a54572245ad31d9b568ad8fb8383}{write\+\_\+styp}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a9cc9598ab95a92c7842fd8182cdcb67d}{flush\+\_\+dynbuf}} (\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$range\+\_\+length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_a7cc8fe768997580f440790887e8d70bd}{reflush\+\_\+dynbuf}} (\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$range\+\_\+length)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a5595beadf12127747d06be40b3ed73e1}{hls\+\_\+delete\+\_\+file}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$avf, const char $\ast$path, const char $\ast$proto)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_aee05a9c786625cd54a7fb3b993f97052}{hls\+\_\+delete\+\_\+old\+\_\+segments}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_ad86ed4751a515d2ec640f8b83ac5f6c4}{randomize}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a80c0f7db6aa9e8facb2c512f8984d0e6}{do\+\_\+encrypt}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_abde9f762e108ce444ab3589a6595ac7e}{hls\+\_\+encryption\+\_\+start}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_acd8a7f1a16827009c33a1e8c27210ead}{hls\+\_\+mux\+\_\+init}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$ \mbox{\hyperlink{hlsenc_8c_a41b33b59a6c00a63c90564070cc81d85}{find\+\_\+segment\+\_\+by\+\_\+filename}} (\mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$\mbox{\hyperlink{structsegment}{segment}}, const char $\ast$filename)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a18bd338e6b60de99aa514538e121646b}{sls\+\_\+flags\+\_\+filename\+\_\+process}} (struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs, \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$en, double \mbox{\hyperlink{tests_2movenc_8c_a1f342e4e3615abc9314684ce6b4819c0}{duration}}, int64\+\_\+t \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, int64\+\_\+t \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a03fd1aa03f7e0f8cc86c240f45a9834f}{sls\+\_\+flag\+\_\+check\+\_\+duration\+\_\+size\+\_\+index}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_af31c322c696a786e2fa94c6d95b99123}{sls\+\_\+flag\+\_\+check\+\_\+duration\+\_\+size}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_a82879137d4fa6d4f63802a7518e8d975}{sls\+\_\+flag\+\_\+file\+\_\+rename}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs, char $\ast$old\+\_\+filename)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a812738c0e01b76d7e25a701cd7f5ea3c}{sls\+\_\+flag\+\_\+use\+\_\+localtime\+\_\+filename}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$oc, \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a70ea560114877e74f6bf04ffa4428bfd}{hls\+\_\+append\+\_\+segment}} (struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$hls, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs, double \mbox{\hyperlink{tests_2movenc_8c_a1f342e4e3615abc9314684ce6b4819c0}{duration}}, int64\+\_\+t \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, int64\+\_\+t \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_aadd1d3e57ae85a1343cc201885a64385}{parse\+\_\+playlist}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$url, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_a6992ed6f9bb9d258a634456540fd10c4}{hls\+\_\+free\+\_\+segments}} (\mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a50afea65c1e600edffd5ba546a083daa}{hls\+\_\+rename\+\_\+temp\+\_\+file}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$oc)
+\item 
+static const char $\ast$ \mbox{\hyperlink{hlsenc_8c_af48814c872295cbfa3e11fc6da47e912}{get\+\_\+relative\+\_\+url}} (const char $\ast$master\+\_\+url, const char $\ast$media\+\_\+url)
+\item 
+static int64\+\_\+t \mbox{\hyperlink{hlsenc_8c_a0f3666554de328d4d26d6afc0ec34fb1}{get\+\_\+stream\+\_\+bit\+\_\+rate}} (\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$stream)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a2f584f83fd23f48bdd177ce8c2c8b451}{create\+\_\+master\+\_\+playlist}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$const input\+\_\+vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a3c16669413351969c86b1c8bb75de080}{hls\+\_\+window}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} last, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_ab7ff74586a6b1a740d34df40a976abda}{hls\+\_\+start}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static const char $\ast$ \mbox{\hyperlink{hlsenc_8c_aa20aed6b7cfd5885a26c1c52cda741ab}{get\+\_\+default\+\_\+pattern\+\_\+localtime\+\_\+fmt}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a677961ee01d493134b4b720b90430282}{append\+\_\+postfix}} (char $\ast$\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} name\+\_\+buf\+\_\+len, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a4aa35ab99a445c84f272eaa54190f3bb}{validate\+\_\+name}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+vs, const char $\ast$\mbox{\hyperlink{phase__template_8c_a2bba01bdbab204f0c8a88211aadf2d77}{fn}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a716ed262dd526d69fc8a36adc2c69eb8}{format\+\_\+name}} (const char $\ast$buf, char $\ast$$\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}, const char $\ast$varname)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a4d283161ad2d77170a816a8507ec71b8}{get\+\_\+nth\+\_\+codec\+\_\+stream\+\_\+index}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}} \mbox{\hyperlink{rtp_8c_a550d0fd0475cc25c2e1fec3e15acaffb}{codec\+\_\+type}}, int64\+\_\+t stream\+\_\+id)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a58b8c86ddd5e327a55bc6c11a358efc5}{parse\+\_\+variant\+\_\+stream\+\_\+mapstring}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_acdac9f0510698bc4c5a5bf2ce838cdd2}{parse\+\_\+cc\+\_\+stream\+\_\+mapstring}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a0ece4d108b7c1ff5323af2a784798356}{update\+\_\+variant\+\_\+stream\+\_\+info}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_af51fa3afecd4d7005c7a93773edc2da2}{update\+\_\+master\+\_\+pl\+\_\+info}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a6de66c3ee9901f5c31632211e9ea9b71}{hls\+\_\+write\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a82697e0b3f0daee033044cbc7b6c2848}{hls\+\_\+init\+\_\+file\+\_\+resend}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static int64\+\_\+t \mbox{\hyperlink{hlsenc_8c_a827eb31a87a32f5e93b9087ab6f5ba49}{append\+\_\+single\+\_\+file}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$vs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_acd66ba4efe1849d2aceef5ddf8a7af7d}{hls\+\_\+write\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hlsenc_8c_a8c6abdaaa8dfda10e991496cfc91501f}{hls\+\_\+deinit}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a84eb37d169051db335277f6efded2614}{hls\+\_\+write\+\_\+trailer}} (struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hlsenc_8c_a24da4c255a5e4cd4fad7b19d29a0303e}{hls\+\_\+init}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{hlsenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{hlsenc_8c_ad81856a38b90919614cb5a19aca1b94e}{hls\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_output_format}{A\+V\+Output\+Format}} \mbox{\hyperlink{hlsenc_8c_a46337fbe713e44a58106b5bea71091b0}{ff\+\_\+hls\+\_\+muxer}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{hlsenc_8c_aeca034f67218340ecb2261a22c2f3dcd}\label{hlsenc_8c_aeca034f67218340ecb2261a22c2f3dcd}} 
+\index{hlsenc.c@{hlsenc.c}!BUFSIZE@{BUFSIZE}}
+\index{BUFSIZE@{BUFSIZE}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{BUFSIZE}{BUFSIZE}}
+{\footnotesize\ttfamily \#define B\+U\+F\+S\+I\+ZE~(16 $\ast$ 1024)}
+
+
+
+Definition at line 73 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_a07484107e6d9fdf38b53edf631d6511d}\label{hlsenc_8c_a07484107e6d9fdf38b53edf631d6511d}} 
+\index{hlsenc.c@{hlsenc.c}!E@{E}}
+\index{E@{E}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{E}{E}}
+{\footnotesize\ttfamily \#define E~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 3051 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_aaeb2afeee531c6cdd2582be240a4bb5b}\label{hlsenc_8c_aaeb2afeee531c6cdd2582be240a4bb5b}} 
+\index{hlsenc.c@{hlsenc.c}!HLS\_MICROSECOND\_UNIT@{HLS\_MICROSECOND\_UNIT}}
+\index{HLS\_MICROSECOND\_UNIT@{HLS\_MICROSECOND\_UNIT}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{HLS\_MICROSECOND\_UNIT}{HLS\_MICROSECOND\_UNIT}}
+{\footnotesize\ttfamily \#define H\+L\+S\+\_\+\+M\+I\+C\+R\+O\+S\+E\+C\+O\+N\+D\+\_\+\+U\+N\+IT~1000000}
+
+
+
+Definition at line 72 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_a4b0feb025bc871150dd979b04b527dfd}\label{hlsenc_8c_a4b0feb025bc871150dd979b04b527dfd}} 
+\index{hlsenc.c@{hlsenc.c}!KEYSIZE@{KEYSIZE}}
+\index{KEYSIZE@{KEYSIZE}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{KEYSIZE}{KEYSIZE}}
+{\footnotesize\ttfamily \#define K\+E\+Y\+S\+I\+ZE~16}
+
+
+
+Definition at line 70 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_afa0499dcb85922b683da3918f512adb6}\label{hlsenc_8c_afa0499dcb85922b683da3918f512adb6}} 
+\index{hlsenc.c@{hlsenc.c}!LINE\_BUFFER\_SIZE@{LINE\_BUFFER\_SIZE}}
+\index{LINE\_BUFFER\_SIZE@{LINE\_BUFFER\_SIZE}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{LINE\_BUFFER\_SIZE}{LINE\_BUFFER\_SIZE}}
+{\footnotesize\ttfamily \#define L\+I\+N\+E\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE~\mbox{\hyperlink{libavformat_2internal_8h_ab9c288a59a1c4d29847845c5d6ca455f}{M\+A\+X\+\_\+\+U\+R\+L\+\_\+\+S\+I\+ZE}}}
+
+
+
+Definition at line 71 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{hlsenc_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{hlsenc.c@{hlsenc.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}, x)}
+
+
+
+Definition at line 3050 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_ab4ba232c36b06c603607e8d8a234756c}\label{hlsenc_8c_ab4ba232c36b06c603607e8d8a234756c}} 
+\index{hlsenc.c@{hlsenc.c}!POSTFIX\_PATTERN@{POSTFIX\_PATTERN}}
+\index{POSTFIX\_PATTERN@{POSTFIX\_PATTERN}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{POSTFIX\_PATTERN}{POSTFIX\_PATTERN}}
+{\footnotesize\ttfamily \#define P\+O\+S\+T\+F\+I\+X\+\_\+\+P\+A\+T\+T\+E\+RN~\char`\"{}\+\_\+\%d\char`\"{}}
+
+
+
+Definition at line 74 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_af68c3a5ad6ffce6c97fff154856a823d}\label{hlsenc_8c_af68c3a5ad6ffce6c97fff154856a823d}} 
+\index{hlsenc.c@{hlsenc.c}!SEPARATOR@{SEPARATOR}}
+\index{SEPARATOR@{SEPARATOR}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{SEPARATOR}{SEPARATOR}}
+{\footnotesize\ttfamily \#define S\+E\+P\+A\+R\+A\+T\+OR~\textquotesingle{}/\textquotesingle{}}
+
+
+
+Definition at line 542 of file hlsenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{hlsenc_8c_a40990924fbd3eba7e3c757c0e346a918}\label{hlsenc_8c_a40990924fbd3eba7e3c757c0e346a918}} 
+\index{hlsenc.c@{hlsenc.c}!ClosedCaptionsStream@{ClosedCaptionsStream}}
+\index{ClosedCaptionsStream@{ClosedCaptionsStream}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{ClosedCaptionsStream}{ClosedCaptionsStream}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_closed_captions_stream}{Closed\+Captions\+Stream}} \mbox{\hyperlink{struct_closed_captions_stream}{Closed\+Captions\+Stream}}}
+
+\mbox{\Hypertarget{hlsenc_8c_a70e97316f72d969c05afd297e3a5b3b4}\label{hlsenc_8c_a70e97316f72d969c05afd297e3a5b3b4}} 
+\index{hlsenc.c@{hlsenc.c}!HLSContext@{HLSContext}}
+\index{HLSContext@{HLSContext}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{HLSContext}{HLSContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}}
+
+\mbox{\Hypertarget{hlsenc_8c_a22aebad3a10814f13fcc74ba3334dd88}\label{hlsenc_8c_a22aebad3a10814f13fcc74ba3334dd88}} 
+\index{hlsenc.c@{hlsenc.c}!HLSFlags@{HLSFlags}}
+\index{HLSFlags@{HLSFlags}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{HLSFlags}{HLSFlags}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}{H\+L\+S\+Flags}} \mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}{H\+L\+S\+Flags}}}
+
+\mbox{\Hypertarget{hlsenc_8c_a9bbb406635eb844bc071bf5900d9b96e}\label{hlsenc_8c_a9bbb406635eb844bc071bf5900d9b96e}} 
+\index{hlsenc.c@{hlsenc.c}!HLSSegment@{HLSSegment}}
+\index{HLSSegment@{HLSSegment}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{HLSSegment}{HLSSegment}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}}}
+
+\mbox{\Hypertarget{hlsenc_8c_ae7157d9740cc884211f4f888339bcfa9}\label{hlsenc_8c_ae7157d9740cc884211f4f888339bcfa9}} 
+\index{hlsenc.c@{hlsenc.c}!VariantStream@{VariantStream}}
+\index{VariantStream@{VariantStream}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{VariantStream}{VariantStream}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} \mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5}\label{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5}} 
+\index{hlsenc.c@{hlsenc.c}!CodecAttributeStatus@{CodecAttributeStatus}}
+\index{CodecAttributeStatus@{CodecAttributeStatus}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{CodecAttributeStatus}{CodecAttributeStatus}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5}{Codec\+Attribute\+Status}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CODEC\_ATTRIBUTE\_WRITTEN@{CODEC\_ATTRIBUTE\_WRITTEN}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!CODEC\_ATTRIBUTE\_WRITTEN@{CODEC\_ATTRIBUTE\_WRITTEN}}}\mbox{\Hypertarget{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a7eca1e0cf7abdc3bd0b72c46072b2223}\label{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a7eca1e0cf7abdc3bd0b72c46072b2223}} 
+C\+O\+D\+E\+C\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+W\+R\+I\+T\+T\+EN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CODEC\_ATTRIBUTE\_WILL\_NOT\_BE\_WRITTEN@{CODEC\_ATTRIBUTE\_WILL\_NOT\_BE\_WRITTEN}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!CODEC\_ATTRIBUTE\_WILL\_NOT\_BE\_WRITTEN@{CODEC\_ATTRIBUTE\_WILL\_NOT\_BE\_WRITTEN}}}\mbox{\Hypertarget{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a5ea542ab2cd78427b9f4df457ec6c718}\label{hlsenc_8c_ae3390b01bdbb104f7531fcc594dbfee5a5ea542ab2cd78427b9f4df457ec6c718}} 
+C\+O\+D\+E\+C\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+W\+I\+L\+L\+\_\+\+N\+O\+T\+\_\+\+B\+E\+\_\+\+W\+R\+I\+T\+T\+EN&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 65 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}} 
+\index{hlsenc.c@{hlsenc.c}!HLSFlags@{HLSFlags}}
+\index{HLSFlags@{HLSFlags}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{HLSFlags}{HLSFlags}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996c}{H\+L\+S\+Flags}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_SINGLE\_FILE@{HLS\_SINGLE\_FILE}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_SINGLE\_FILE@{HLS\_SINGLE\_FILE}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca496ac7a8a88da8727ba78479eda010ce}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca496ac7a8a88da8727ba78479eda010ce}} 
+H\+L\+S\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+F\+I\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_DELETE\_SEGMENTS@{HLS\_DELETE\_SEGMENTS}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_DELETE\_SEGMENTS@{HLS\_DELETE\_SEGMENTS}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca522154110a1d5d8ac6e91d1cb28ce186}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca522154110a1d5d8ac6e91d1cb28ce186}} 
+H\+L\+S\+\_\+\+D\+E\+L\+E\+T\+E\+\_\+\+S\+E\+G\+M\+E\+N\+TS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_ROUND\_DURATIONS@{HLS\_ROUND\_DURATIONS}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_ROUND\_DURATIONS@{HLS\_ROUND\_DURATIONS}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8364a22f9172e3bce10aad0136b2b1}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8364a22f9172e3bce10aad0136b2b1}} 
+H\+L\+S\+\_\+\+R\+O\+U\+N\+D\+\_\+\+D\+U\+R\+A\+T\+I\+O\+NS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_DISCONT\_START@{HLS\_DISCONT\_START}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_DISCONT\_START@{HLS\_DISCONT\_START}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cac2a36c6faf83529a2a43a8e98754a0c1}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cac2a36c6faf83529a2a43a8e98754a0c1}} 
+H\+L\+S\+\_\+\+D\+I\+S\+C\+O\+N\+T\+\_\+\+S\+T\+A\+RT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_OMIT\_ENDLIST@{HLS\_OMIT\_ENDLIST}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_OMIT\_ENDLIST@{HLS\_OMIT\_ENDLIST}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca21687f68dedbe55c84ae86a80c5f0bac}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca21687f68dedbe55c84ae86a80c5f0bac}} 
+H\+L\+S\+\_\+\+O\+M\+I\+T\+\_\+\+E\+N\+D\+L\+I\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_SPLIT\_BY\_TIME@{HLS\_SPLIT\_BY\_TIME}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_SPLIT\_BY\_TIME@{HLS\_SPLIT\_BY\_TIME}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8f12c5fda5ed84e04c9f0ef061a418}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cabd8f12c5fda5ed84e04c9f0ef061a418}} 
+H\+L\+S\+\_\+\+S\+P\+L\+I\+T\+\_\+\+B\+Y\+\_\+\+T\+I\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_APPEND\_LIST@{HLS\_APPEND\_LIST}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_APPEND\_LIST@{HLS\_APPEND\_LIST}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca79f354f5c91f8003efa1d0d72617a6ec}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca79f354f5c91f8003efa1d0d72617a6ec}} 
+H\+L\+S\+\_\+\+A\+P\+P\+E\+N\+D\+\_\+\+L\+I\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_PROGRAM\_DATE\_TIME@{HLS\_PROGRAM\_DATE\_TIME}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_PROGRAM\_DATE\_TIME@{HLS\_PROGRAM\_DATE\_TIME}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cab8b9dd4b77ffe42c91840c8e17fe38f9}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cab8b9dd4b77ffe42c91840c8e17fe38f9}} 
+H\+L\+S\+\_\+\+P\+R\+O\+G\+R\+A\+M\+\_\+\+D\+A\+T\+E\+\_\+\+T\+I\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_SECOND\_LEVEL\_SEGMENT\_INDEX@{HLS\_SECOND\_LEVEL\_SEGMENT\_INDEX}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_SECOND\_LEVEL\_SEGMENT\_INDEX@{HLS\_SECOND\_LEVEL\_SEGMENT\_INDEX}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca9d1e1718ae5cc26152bff1cbb413bbf9}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca9d1e1718ae5cc26152bff1cbb413bbf9}} 
+H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+I\+N\+D\+EX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_SECOND\_LEVEL\_SEGMENT\_DURATION@{HLS\_SECOND\_LEVEL\_SEGMENT\_DURATION}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_SECOND\_LEVEL\_SEGMENT\_DURATION@{HLS\_SECOND\_LEVEL\_SEGMENT\_DURATION}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cadfd71af4b0d8e054360b6d55c26dd96d}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cadfd71af4b0d8e054360b6d55c26dd96d}} 
+H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+D\+U\+R\+A\+T\+I\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_SECOND\_LEVEL\_SEGMENT\_SIZE@{HLS\_SECOND\_LEVEL\_SEGMENT\_SIZE}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_SECOND\_LEVEL\_SEGMENT\_SIZE@{HLS\_SECOND\_LEVEL\_SEGMENT\_SIZE}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf0dd97c005769f59efb77a2db24ddcc0}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf0dd97c005769f59efb77a2db24ddcc0}} 
+H\+L\+S\+\_\+\+S\+E\+C\+O\+N\+D\+\_\+\+L\+E\+V\+E\+L\+\_\+\+S\+E\+G\+M\+E\+N\+T\+\_\+\+S\+I\+ZE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_TEMP\_FILE@{HLS\_TEMP\_FILE}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_TEMP\_FILE@{HLS\_TEMP\_FILE}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca853e32d585ec9a3814a4ff712ca4c1fa}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca853e32d585ec9a3814a4ff712ca4c1fa}} 
+H\+L\+S\+\_\+\+T\+E\+M\+P\+\_\+\+F\+I\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_PERIODIC\_REKEY@{HLS\_PERIODIC\_REKEY}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_PERIODIC\_REKEY@{HLS\_PERIODIC\_REKEY}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca402800581e5f0919f14666c4f4d7ead3}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996ca402800581e5f0919f14666c4f4d7ead3}} 
+H\+L\+S\+\_\+\+P\+E\+R\+I\+O\+D\+I\+C\+\_\+\+R\+E\+K\+EY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_INDEPENDENT\_SEGMENTS@{HLS\_INDEPENDENT\_SEGMENTS}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_INDEPENDENT\_SEGMENTS@{HLS\_INDEPENDENT\_SEGMENTS}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cacec3e3b3ea2f46990b0a6431afff7716}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996cacec3e3b3ea2f46990b0a6431afff7716}} 
+H\+L\+S\+\_\+\+I\+N\+D\+E\+P\+E\+N\+D\+E\+N\+T\+\_\+\+S\+E\+G\+M\+E\+N\+TS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_I\_FRAMES\_ONLY@{HLS\_I\_FRAMES\_ONLY}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_I\_FRAMES\_ONLY@{HLS\_I\_FRAMES\_ONLY}}}\mbox{\Hypertarget{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf79e3e0d03179604515b5c847039f76b}\label{hlsenc_8c_ae20d77cfae2f03c0261d7ebdb6e3996caf79e3e0d03179604515b5c847039f76b}} 
+H\+L\+S\+\_\+\+I\+\_\+\+F\+R\+A\+M\+E\+S\+\_\+\+O\+N\+LY&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 93 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489ee}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489ee}} 
+\index{hlsenc.c@{hlsenc.c}!SegmentType@{SegmentType}}
+\index{SegmentType@{SegmentType}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{SegmentType}{SegmentType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pgssubdec_8c_a45f8c604b4008a278fe9bde5156489ee}{Segment\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PALETTE\_SEGMENT@{PALETTE\_SEGMENT}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!PALETTE\_SEGMENT@{PALETTE\_SEGMENT}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea9b1a645606c002f3936c0f8bed5511f3}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea9b1a645606c002f3936c0f8bed5511f3}} 
+P\+A\+L\+E\+T\+T\+E\+\_\+\+S\+E\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{OBJECT\_SEGMENT@{OBJECT\_SEGMENT}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!OBJECT\_SEGMENT@{OBJECT\_SEGMENT}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea1871b9906a84cc8a4bfe413ab355b17b}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea1871b9906a84cc8a4bfe413ab355b17b}} 
+O\+B\+J\+E\+C\+T\+\_\+\+S\+E\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PRESENTATION\_SEGMENT@{PRESENTATION\_SEGMENT}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!PRESENTATION\_SEGMENT@{PRESENTATION\_SEGMENT}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae5d03f8a63613ad0ee994eb5dd71828b}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae5d03f8a63613ad0ee994eb5dd71828b}} 
+P\+R\+E\+S\+E\+N\+T\+A\+T\+I\+O\+N\+\_\+\+S\+E\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WINDOW\_SEGMENT@{WINDOW\_SEGMENT}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!WINDOW\_SEGMENT@{WINDOW\_SEGMENT}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae61f382e724e1605e74df8a9d5289095}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae61f382e724e1605e74df8a9d5289095}} 
+W\+I\+N\+D\+O\+W\+\_\+\+S\+E\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DISPLAY\_SEGMENT@{DISPLAY\_SEGMENT}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!DISPLAY\_SEGMENT@{DISPLAY\_SEGMENT}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeacf53b47a27e1beca9de64caf35dfa809}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeacf53b47a27e1beca9de64caf35dfa809}} 
+D\+I\+S\+P\+L\+A\+Y\+\_\+\+S\+E\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_AUTO@{SEGMENT\_TYPE\_AUTO}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_AUTO@{SEGMENT\_TYPE\_AUTO}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea5c9e45fdb65106414b3f95684c56f996}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea5c9e45fdb65106414b3f95684c56f996}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+A\+U\+TO&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_MP4@{SEGMENT\_TYPE\_MP4}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_MP4@{SEGMENT\_TYPE\_MP4}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaf31c1aca781fb3f1471e095a572c48be}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaf31c1aca781fb3f1471e095a572c48be}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+P4&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_WEBM@{SEGMENT\_TYPE\_WEBM}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_WEBM@{SEGMENT\_TYPE\_WEBM}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaef79474072adeacf31f14ba9641f8696}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaef79474072adeacf31f14ba9641f8696}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+W\+E\+BM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_NB@{SEGMENT\_TYPE\_NB}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_NB@{SEGMENT\_TYPE\_NB}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaffea95a2e528a9fbb0f9bf88e9658ae1}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeaffea95a2e528a9fbb0f9bf88e9658ae1}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+NB&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_MPEGTS@{SEGMENT\_TYPE\_MPEGTS}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_MPEGTS@{SEGMENT\_TYPE\_MPEGTS}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae6c2940aa679f858fb230e5c63ce378a}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eeae6c2940aa679f858fb230e5c63ce378a}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+P\+E\+G\+TS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEGMENT\_TYPE\_FMP4@{SEGMENT\_TYPE\_FMP4}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!SEGMENT\_TYPE\_FMP4@{SEGMENT\_TYPE\_FMP4}}}\mbox{\Hypertarget{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea4d784f91385f192a21056f9dcabbc48d}\label{hlsenc_8c_a45f8c604b4008a278fe9bde5156489eea4d784f91385f192a21056f9dcabbc48d}} 
+S\+E\+G\+M\+E\+N\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+F\+M\+P4&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 112 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523}} 
+\index{hlsenc.c@{hlsenc.c}!StartSequenceSourceType@{StartSequenceSourceType}}
+\index{StartSequenceSourceType@{StartSequenceSourceType}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{StartSequenceSourceType}{StartSequenceSourceType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{hlsenc_8c_a9be46ec26fc92e07c26610664c728523}{Start\+Sequence\+Source\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_START\_SEQUENCE\_AS\_START\_NUMBER@{HLS\_START\_SEQUENCE\_AS\_START\_NUMBER}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_START\_SEQUENCE\_AS\_START\_NUMBER@{HLS\_START\_SEQUENCE\_AS\_START\_NUMBER}}}\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523afb25c86dd372a5333bbb86f52d0cb8e2}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523afb25c86dd372a5333bbb86f52d0cb8e2}} 
+H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+U\+M\+B\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_START\_SEQUENCE\_AS\_SECONDS\_SINCE\_EPOCH@{HLS\_START\_SEQUENCE\_AS\_SECONDS\_SINCE\_EPOCH}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_START\_SEQUENCE\_AS\_SECONDS\_SINCE\_EPOCH@{HLS\_START\_SEQUENCE\_AS\_SECONDS\_SINCE\_EPOCH}}}\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523add499d91e2da75563db171cedc4e2e50}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523add499d91e2da75563db171cedc4e2e50}} 
+H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+S\+E\+C\+O\+N\+D\+S\+\_\+\+S\+I\+N\+C\+E\+\_\+\+E\+P\+O\+CH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_START\_SEQUENCE\_AS\_FORMATTED\_DATETIME@{HLS\_START\_SEQUENCE\_AS\_FORMATTED\_DATETIME}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_START\_SEQUENCE\_AS\_FORMATTED\_DATETIME@{HLS\_START\_SEQUENCE\_AS\_FORMATTED\_DATETIME}}}\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523aa233d647bb51eed982701e894ffaef2e}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523aa233d647bb51eed982701e894ffaef2e}} 
+H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+F\+O\+R\+M\+A\+T\+T\+E\+D\+\_\+\+D\+A\+T\+E\+T\+I\+ME&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_START\_SEQUENCE\_AS\_MICROSECONDS\_SINCE\_EPOCH@{HLS\_START\_SEQUENCE\_AS\_MICROSECONDS\_SINCE\_EPOCH}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_START\_SEQUENCE\_AS\_MICROSECONDS\_SINCE\_EPOCH@{HLS\_START\_SEQUENCE\_AS\_MICROSECONDS\_SINCE\_EPOCH}}}\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523a362fd05472b281d3fc644cad7958477b}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523a362fd05472b281d3fc644cad7958477b}} 
+H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+A\+S\+\_\+\+M\+I\+C\+R\+O\+S\+E\+C\+O\+N\+D\+S\+\_\+\+S\+I\+N\+C\+E\+\_\+\+E\+P\+O\+CH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HLS\_START\_SEQUENCE\_LAST@{HLS\_START\_SEQUENCE\_LAST}!hlsenc.c@{hlsenc.c}}\index{hlsenc.c@{hlsenc.c}!HLS\_START\_SEQUENCE\_LAST@{HLS\_START\_SEQUENCE\_LAST}}}\mbox{\Hypertarget{hlsenc_8c_a9be46ec26fc92e07c26610664c728523ae79fe7a41ee6d41981a441108f108b03}\label{hlsenc_8c_a9be46ec26fc92e07c26610664c728523ae79fe7a41ee6d41981a441108f108b03}} 
+H\+L\+S\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+L\+A\+ST&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 57 of file hlsenc.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{hlsenc_8c_a677961ee01d493134b4b720b90430282}\label{hlsenc_8c_a677961ee01d493134b4b720b90430282}} 
+\index{hlsenc.c@{hlsenc.c}!append\_postfix@{append\_postfix}}
+\index{append\_postfix@{append\_postfix}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{append\_postfix()}{append\_postfix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} append\+\_\+postfix (\begin{DoxyParamCaption}\item[{char $\ast$}]{name,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{name\+\_\+buf\+\_\+len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1843 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a677961ee01d493134b4b720b90430282_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=245pt]{hlsenc_8c_a677961ee01d493134b4b720b90430282_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a827eb31a87a32f5e93b9087ab6f5ba49}\label{hlsenc_8c_a827eb31a87a32f5e93b9087ab6f5ba49}} 
+\index{hlsenc.c@{hlsenc.c}!append\_single\_file@{append\_single\_file}}
+\index{append\_single\_file@{append\_single\_file}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{append\_single\_file()}{append\_single\_file()}}
+{\footnotesize\ttfamily static int64\+\_\+t append\+\_\+single\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2336 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a827eb31a87a32f5e93b9087ab6f5ba49_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{hlsenc_8c_a827eb31a87a32f5e93b9087ab6f5ba49_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a2f584f83fd23f48bdd177ce8c2c8b451}\label{hlsenc_8c_a2f584f83fd23f48bdd177ce8c2c8b451}} 
+\index{hlsenc.c@{hlsenc.c}!create\_master\_playlist@{create\_master\_playlist}}
+\index{create\_master\_playlist@{create\_master\_playlist}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{create\_master\_playlist()}{create\_master\_playlist()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} create\+\_\+master\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$const}]{input\+\_\+vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Traverse through the list of audio only rendition streams and find the rendition which has highest bitrate in the same audio group
+
+Definition at line 1329 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a2f584f83fd23f48bdd177ce8c2c8b451_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a2f584f83fd23f48bdd177ce8c2c8b451_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a80c0f7db6aa9e8facb2c512f8984d0e6}\label{hlsenc_8c_a80c0f7db6aa9e8facb2c512f8984d0e6}} 
+\index{hlsenc.c@{hlsenc.c}!do\_encrypt@{do\_encrypt}}
+\index{do\_encrypt@{do\_encrypt}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{do\_encrypt()}{do\_encrypt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} do\+\_\+encrypt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 690 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a80c0f7db6aa9e8facb2c512f8984d0e6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a80c0f7db6aa9e8facb2c512f8984d0e6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a41b33b59a6c00a63c90564070cc81d85}\label{hlsenc_8c_a41b33b59a6c00a63c90564070cc81d85}} 
+\index{hlsenc.c@{hlsenc.c}!find\_segment\_by\_filename@{find\_segment\_by\_filename}}
+\index{find\_segment\_by\_filename@{find\_segment\_by\_filename}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_segment\_by\_filename()}{find\_segment\_by\_filename()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}}$\ast$ find\+\_\+segment\+\_\+by\+\_\+filename (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$}]{segment,  }\item[{const char $\ast$}]{filename }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 937 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a41b33b59a6c00a63c90564070cc81d85_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a41b33b59a6c00a63c90564070cc81d85_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a9cc9598ab95a92c7842fd8182cdcb67d}\label{hlsenc_8c_a9cc9598ab95a92c7842fd8182cdcb67d}} 
+\index{hlsenc.c@{hlsenc.c}!flush\_dynbuf@{flush\_dynbuf}}
+\index{flush\_dynbuf@{flush\_dynbuf}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{flush\_dynbuf()}{flush\_dynbuf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} flush\+\_\+dynbuf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{range\+\_\+length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 512 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a9cc9598ab95a92c7842fd8182cdcb67d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{hlsenc_8c_a9cc9598ab95a92c7842fd8182cdcb67d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a716ed262dd526d69fc8a36adc2c69eb8}\label{hlsenc_8c_a716ed262dd526d69fc8a36adc2c69eb8}} 
+\index{hlsenc.c@{hlsenc.c}!format\_name@{format\_name}}
+\index{format\_name@{format\_name}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{format\_name()}{format\_name()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} format\+\_\+name (\begin{DoxyParamCaption}\item[{const char $\ast$}]{buf,  }\item[{char $\ast$$\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index,  }\item[{const char $\ast$}]{varname }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1896 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a716ed262dd526d69fc8a36adc2c69eb8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=236pt]{hlsenc_8c_a716ed262dd526d69fc8a36adc2c69eb8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_aa20aed6b7cfd5885a26c1c52cda741ab}\label{hlsenc_8c_aa20aed6b7cfd5885a26c1c52cda741ab}} 
+\index{hlsenc.c@{hlsenc.c}!get\_default\_pattern\_localtime\_fmt@{get\_default\_pattern\_localtime\_fmt}}
+\index{get\_default\_pattern\_localtime\_fmt@{get\_default\_pattern\_localtime\_fmt}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_default\_pattern\_localtime\_fmt()}{get\_default\_pattern\_localtime\_fmt()}}
+{\footnotesize\ttfamily static const char$\ast$ get\+\_\+default\+\_\+pattern\+\_\+localtime\+\_\+fmt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1827 of file hlsenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{hlsenc_8c_aa20aed6b7cfd5885a26c1c52cda741ab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a4d283161ad2d77170a816a8507ec71b8}\label{hlsenc_8c_a4d283161ad2d77170a816a8507ec71b8}} 
+\index{hlsenc.c@{hlsenc.c}!get\_nth\_codec\_stream\_index@{get\_nth\_codec\_stream\_index}}
+\index{get\_nth\_codec\_stream\_index@{get\_nth\_codec\_stream\_index}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_nth\_codec\_stream\_index()}{get\_nth\_codec\_stream\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+nth\+\_\+codec\+\_\+stream\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}}}]{codec\+\_\+type,  }\item[{int64\+\_\+t}]{stream\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1942 of file hlsenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a4d283161ad2d77170a816a8507ec71b8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_af48814c872295cbfa3e11fc6da47e912}\label{hlsenc_8c_af48814c872295cbfa3e11fc6da47e912}} 
+\index{hlsenc.c@{hlsenc.c}!get\_relative\_url@{get\_relative\_url}}
+\index{get\_relative\_url@{get\_relative\_url}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_relative\_url()}{get\_relative\_url()}}
+{\footnotesize\ttfamily static const char$\ast$ get\+\_\+relative\+\_\+url (\begin{DoxyParamCaption}\item[{const char $\ast$}]{master\+\_\+url,  }\item[{const char $\ast$}]{media\+\_\+url }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1293 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_af48814c872295cbfa3e11fc6da47e912_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_af48814c872295cbfa3e11fc6da47e912_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a0f3666554de328d4d26d6afc0ec34fb1}\label{hlsenc_8c_a0f3666554de328d4d26d6afc0ec34fb1}} 
+\index{hlsenc.c@{hlsenc.c}!get\_stream\_bit\_rate@{get\_stream\_bit\_rate}}
+\index{get\_stream\_bit\_rate@{get\_stream\_bit\_rate}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_stream\_bit\_rate()}{get\_stream\_bit\_rate()}}
+{\footnotesize\ttfamily static int64\+\_\+t get\+\_\+stream\+\_\+bit\+\_\+rate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{stream }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1313 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=346pt]{hlsenc_8c_a0f3666554de328d4d26d6afc0ec34fb1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a0f3666554de328d4d26d6afc0ec34fb1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a70ea560114877e74f6bf04ffa4428bfd}\label{hlsenc_8c_a70ea560114877e74f6bf04ffa4428bfd}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_append\_segment@{hls\_append\_segment}}
+\index{hls\_append\_segment@{hls\_append\_segment}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_append\_segment()}{hls\_append\_segment()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+append\+\_\+segment (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs,  }\item[{double}]{duration,  }\item[{int64\+\_\+t}]{pos,  }\item[{int64\+\_\+t}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1085 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a70ea560114877e74f6bf04ffa4428bfd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a70ea560114877e74f6bf04ffa4428bfd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a8c6abdaaa8dfda10e991496cfc91501f}\label{hlsenc_8c_a8c6abdaaa8dfda10e991496cfc91501f}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_deinit@{hls\_deinit}}
+\index{hls\_deinit@{hls\_deinit}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_deinit()}{hls\_deinit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hls\+\_\+deinit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2640 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a8c6abdaaa8dfda10e991496cfc91501f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a5595beadf12127747d06be40b3ed73e1}\label{hlsenc_8c_a5595beadf12127747d06be40b3ed73e1}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_delete\_file@{hls\_delete\_file}}
+\index{hls\_delete\_file@{hls\_delete\_file}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_delete\_file()}{hls\_delete\_file()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+delete\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{avf,  }\item[{const char $\ast$}]{path,  }\item[{const char $\ast$}]{proto }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 545 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a5595beadf12127747d06be40b3ed73e1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a5595beadf12127747d06be40b3ed73e1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_aee05a9c786625cd54a7fb3b993f97052}\label{hlsenc_8c_aee05a9c786625cd54a7fb3b993f97052}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_delete\_old\_segments@{hls\_delete\_old\_segments}}
+\index{hls\_delete\_old\_segments@{hls\_delete\_old\_segments}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_delete\_old\_segments()}{hls\_delete\_old\_segments()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+delete\+\_\+old\+\_\+segments (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 565 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_aee05a9c786625cd54a7fb3b993f97052_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_aee05a9c786625cd54a7fb3b993f97052_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_abde9f762e108ce444ab3589a6595ac7e}\label{hlsenc_8c_abde9f762e108ce444ab3589a6595ac7e}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_encryption\_start@{hls\_encryption\_start}}
+\index{hls\_encryption\_start@{hls\_encryption\_start}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_encryption\_start()}{hls\_encryption\_start()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+encryption\+\_\+start (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 764 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_abde9f762e108ce444ab3589a6595ac7e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_abde9f762e108ce444ab3589a6595ac7e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a6992ed6f9bb9d258a634456540fd10c4}\label{hlsenc_8c_a6992ed6f9bb9d258a634456540fd10c4}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_free\_segments@{hls\_free\_segments}}
+\index{hls\_free\_segments@{hls\_free\_segments}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_free\_segments()}{hls\_free\_segments()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hls\+\_\+free\+\_\+segments (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1267 of file hlsenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=272pt]{hlsenc_8c_a6992ed6f9bb9d258a634456540fd10c4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a24da4c255a5e4cd4fad7b19d29a0303e}\label{hlsenc_8c_a24da4c255a5e4cd4fad7b19d29a0303e}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_init@{hls\_init}}
+\index{hls\_init@{hls\_init}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_init()}{hls\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2812 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{hlsenc_8c_a24da4c255a5e4cd4fad7b19d29a0303e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a82697e0b3f0daee033044cbc7b6c2848}\label{hlsenc_8c_a82697e0b3f0daee033044cbc7b6c2848}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_init\_file\_resend@{hls\_init\_file\_resend}}
+\index{hls\_init\_file\_resend@{hls\_init\_file\_resend}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_init\_file\_resend()}{hls\_init\_file\_resend()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+init\+\_\+file\+\_\+resend (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2319 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a82697e0b3f0daee033044cbc7b6c2848_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{hlsenc_8c_a82697e0b3f0daee033044cbc7b6c2848_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_acd8a7f1a16827009c33a1e8c27210ead}\label{hlsenc_8c_acd8a7f1a16827009c33a1e8c27210ead}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_mux\_init@{hls\_mux\_init}}
+\index{hls\_mux\_init@{hls\_mux\_init}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_mux\_init()}{hls\_mux\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+mux\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 823 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_acd8a7f1a16827009c33a1e8c27210ead_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=234pt]{hlsenc_8c_acd8a7f1a16827009c33a1e8c27210ead_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a50afea65c1e600edffd5ba546a083daa}\label{hlsenc_8c_a50afea65c1e600edffd5ba546a083daa}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_rename\_temp\_file@{hls\_rename\_temp\_file}}
+\index{hls\_rename\_temp\_file@{hls\_rename\_temp\_file}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_rename\_temp\_file()}{hls\_rename\_temp\_file()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+rename\+\_\+temp\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{oc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1278 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a50afea65c1e600edffd5ba546a083daa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{hlsenc_8c_a50afea65c1e600edffd5ba546a083daa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_ab7ff74586a6b1a740d34df40a976abda}\label{hlsenc_8c_ab7ff74586a6b1a740d34df40a976abda}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_start@{hls\_start}}
+\index{hls\_start@{hls\_start}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_start()}{hls\_start()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+start (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1626 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{hlsenc_8c_ab7ff74586a6b1a740d34df40a976abda_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{hlsenc_8c_ab7ff74586a6b1a740d34df40a976abda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a3c16669413351969c86b1c8bb75de080}\label{hlsenc_8c_a3c16669413351969c86b1c8bb75de080}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_window@{hls\_window}}
+\index{hls\_window@{hls\_window}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_window()}{hls\_window()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+window (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{last,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1495 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a3c16669413351969c86b1c8bb75de080_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=271pt]{hlsenc_8c_a3c16669413351969c86b1c8bb75de080_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a6de66c3ee9901f5c31632211e9ea9b71}\label{hlsenc_8c_a6de66c3ee9901f5c31632211e9ea9b71}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_write\_header@{hls\_write\_header}}
+\index{hls\_write\_header@{hls\_write\_header}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_write\_header()}{hls\_write\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+write\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2260 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a6de66c3ee9901f5c31632211e9ea9b71_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_acd66ba4efe1849d2aceef5ddf8a7af7d}\label{hlsenc_8c_acd66ba4efe1849d2aceef5ddf8a7af7d}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_write\_packet@{hls\_write\_packet}}
+\index{hls\_write\_packet@{hls\_write\_packet}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_write\_packet()}{hls\_write\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+write\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2368 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_acd66ba4efe1849d2aceef5ddf8a7af7d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a84eb37d169051db335277f6efded2614}\label{hlsenc_8c_a84eb37d169051db335277f6efded2614}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_write\_trailer@{hls\_write\_trailer}}
+\index{hls\_write\_trailer@{hls\_write\_trailer}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_write\_trailer()}{hls\_write\_trailer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+write\+\_\+trailer (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2673 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a84eb37d169051db335277f6efded2614_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a813ed26a229d0afec3be9be648a6f313}\label{hlsenc_8c_a813ed26a229d0afec3be9be648a6f313}} 
+\index{hlsenc.c@{hlsenc.c}!hlsenc\_io\_close@{hlsenc\_io\_close}}
+\index{hlsenc\_io\_close@{hlsenc\_io\_close}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hlsenc\_io\_close()}{hlsenc\_io\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hlsenc\+\_\+io\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{pb,  }\item[{char $\ast$}]{filename }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 283 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a813ed26a229d0afec3be9be648a6f313_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a813ed26a229d0afec3be9be648a6f313_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_ab8fa50b15c8efc6541495b6f5a4d15e2}\label{hlsenc_8c_ab8fa50b15c8efc6541495b6f5a4d15e2}} 
+\index{hlsenc.c@{hlsenc.c}!hlsenc\_io\_open@{hlsenc\_io\_open}}
+\index{hlsenc\_io\_open@{hlsenc\_io\_open}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hlsenc\_io\_open()}{hlsenc\_io\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hlsenc\+\_\+io\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{pb,  }\item[{char $\ast$}]{filename,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 262 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_ab8fa50b15c8efc6541495b6f5a4d15e2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_ab8fa50b15c8efc6541495b6f5a4d15e2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_acdac9f0510698bc4c5a5bf2ce838cdd2}\label{hlsenc_8c_acdac9f0510698bc4c5a5bf2ce838cdd2}} 
+\index{hlsenc.c@{hlsenc.c}!parse\_cc\_stream\_mapstring@{parse\_cc\_stream\_mapstring}}
+\index{parse\_cc\_stream\_mapstring@{parse\_cc\_stream\_mapstring}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{parse\_cc\_stream\_mapstring()}{parse\_cc\_stream\_mapstring()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+cc\+\_\+stream\+\_\+mapstring (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2103 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_acdac9f0510698bc4c5a5bf2ce838cdd2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_acdac9f0510698bc4c5a5bf2ce838cdd2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_aadd1d3e57ae85a1343cc201885a64385}\label{hlsenc_8c_aadd1d3e57ae85a1343cc201885a64385}} 
+\index{hlsenc.c@{hlsenc.c}!parse\_playlist@{parse\_playlist}}
+\index{parse\_playlist@{parse\_playlist}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{parse\_playlist()}{parse\_playlist()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{url,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1176 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_aadd1d3e57ae85a1343cc201885a64385_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{hlsenc_8c_aadd1d3e57ae85a1343cc201885a64385_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a58b8c86ddd5e327a55bc6c11a358efc5}\label{hlsenc_8c_a58b8c86ddd5e327a55bc6c11a358efc5}} 
+\index{hlsenc.c@{hlsenc.c}!parse\_variant\_stream\_mapstring@{parse\_variant\_stream\_mapstring}}
+\index{parse\_variant\_stream\_mapstring@{parse\_variant\_stream\_mapstring}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{parse\_variant\_stream\_mapstring()}{parse\_variant\_stream\_mapstring()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+variant\+\_\+stream\+\_\+mapstring (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Expected format for var\+\_\+stream\+\_\+map string is as below\+: \char`\"{}a\+:0,v\+:0 a\+:1,v\+:1\char`\"{} \char`\"{}a\+:0,agroup\+:a0,default\+:1,language\+:\+E\+N\+G a\+:1,agroup\+:a1,default\+:0 v\+:0,agroup\+:a0  v\+:1,agroup\+:a1\char`\"{} This string specifies how to group the audio, video and subtitle streams into different variant streams. The variant stream groups are separated by space.
+
+a\+:, v\+:, s\+: are keys to specify audio, video and subtitle streams respectively. Allowed values are 0 to 9 digits (limited just based on practical usage)
+
+agroup\+: is key to specify audio group. A string can be given as value. sgroup\+: is key to specify subtitle group. A string can be given as value.
+
+Definition at line 1960 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a58b8c86ddd5e327a55bc6c11a358efc5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a58b8c86ddd5e327a55bc6c11a358efc5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_ad86ed4751a515d2ec640f8b83ac5f6c4}\label{hlsenc_8c_ad86ed4751a515d2ec640f8b83ac5f6c4}} 
+\index{hlsenc.c@{hlsenc.c}!randomize@{randomize}}
+\index{randomize@{randomize}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{randomize()}{randomize()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} randomize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 676 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{hlsenc_8c_ad86ed4751a515d2ec640f8b83ac5f6c4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_ad86ed4751a515d2ec640f8b83ac5f6c4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a7cc8fe768997580f440790887e8d70bd}\label{hlsenc_8c_a7cc8fe768997580f440790887e8d70bd}} 
+\index{hlsenc.c@{hlsenc.c}!reflush\_dynbuf@{reflush\_dynbuf}}
+\index{reflush\_dynbuf@{reflush\_dynbuf}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{reflush\_dynbuf()}{reflush\_dynbuf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} reflush\+\_\+dynbuf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{range\+\_\+length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 533 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a7cc8fe768997580f440790887e8d70bd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{hlsenc_8c_a7cc8fe768997580f440790887e8d70bd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a7273af44d675de7893a9a4e083a8cac3}\label{hlsenc_8c_a7273af44d675de7893a9a4e083a8cac3}} 
+\index{hlsenc.c@{hlsenc.c}!replace\_int\_data\_in\_filename@{replace\_int\_data\_in\_filename}}
+\index{replace\_int\_data\_in\_filename@{replace\_int\_data\_in\_filename}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{replace\_int\_data\_in\_filename()}{replace\_int\_data\_in\_filename()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} replace\+\_\+int\+\_\+data\+\_\+in\+\_\+filename (\begin{DoxyParamCaption}\item[{char $\ast$$\ast$}]{s,  }\item[{const char $\ast$}]{filename,  }\item[{char}]{placeholder,  }\item[{int64\+\_\+t}]{number }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 454 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a7273af44d675de7893a9a4e083a8cac3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a7273af44d675de7893a9a4e083a8cac3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a766d2c20450f1a32e9ff81517c3de12c}\label{hlsenc_8c_a766d2c20450f1a32e9ff81517c3de12c}} 
+\index{hlsenc.c@{hlsenc.c}!replace\_str\_data\_in\_filename@{replace\_str\_data\_in\_filename}}
+\index{replace\_str\_data\_in\_filename@{replace\_str\_data\_in\_filename}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{replace\_str\_data\_in\_filename()}{replace\_str\_data\_in\_filename()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} replace\+\_\+str\+\_\+data\+\_\+in\+\_\+filename (\begin{DoxyParamCaption}\item[{char $\ast$$\ast$}]{s,  }\item[{const char $\ast$}]{filename,  }\item[{char}]{placeholder,  }\item[{const char $\ast$}]{datastring }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 414 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a766d2c20450f1a32e9ff81517c3de12c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a766d2c20450f1a32e9ff81517c3de12c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a1b08008074d94d102818ed4be0ddd4ee}\label{hlsenc_8c_a1b08008074d94d102818ed4be0ddd4ee}} 
+\index{hlsenc.c@{hlsenc.c}!set\_http\_options@{set\_http\_options}}
+\index{set\_http\_options@{set\_http\_options}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_http\_options()}{set\_http\_options()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+http\+\_\+options (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options,  }\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 304 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a1b08008074d94d102818ed4be0ddd4ee_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a1b08008074d94d102818ed4be0ddd4ee_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_af31c322c696a786e2fa94c6d95b99123}\label{hlsenc_8c_af31c322c696a786e2fa94c6d95b99123}} 
+\index{hlsenc.c@{hlsenc.c}!sls\_flag\_check\_duration\_size@{sls\_flag\_check\_duration\_size}}
+\index{sls\_flag\_check\_duration\_size@{sls\_flag\_check\_duration\_size}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{sls\_flag\_check\_duration\_size()}{sls\_flag\_check\_duration\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sls\+\_\+flag\+\_\+check\+\_\+duration\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1010 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_af31c322c696a786e2fa94c6d95b99123_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=307pt]{hlsenc_8c_af31c322c696a786e2fa94c6d95b99123_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a03fd1aa03f7e0f8cc86c240f45a9834f}\label{hlsenc_8c_a03fd1aa03f7e0f8cc86c240f45a9834f}} 
+\index{hlsenc.c@{hlsenc.c}!sls\_flag\_check\_duration\_size\_index@{sls\_flag\_check\_duration\_size\_index}}
+\index{sls\_flag\_check\_duration\_size\_index@{sls\_flag\_check\_duration\_size\_index}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{sls\_flag\_check\_duration\_size\_index()}{sls\_flag\_check\_duration\_size\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sls\+\_\+flag\+\_\+check\+\_\+duration\+\_\+size\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 987 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=302pt]{hlsenc_8c_a03fd1aa03f7e0f8cc86c240f45a9834f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=284pt]{hlsenc_8c_a03fd1aa03f7e0f8cc86c240f45a9834f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a82879137d4fa6d4f63802a7518e8d975}\label{hlsenc_8c_a82879137d4fa6d4f63802a7518e8d975}} 
+\index{hlsenc.c@{hlsenc.c}!sls\_flag\_file\_rename@{sls\_flag\_file\_rename}}
+\index{sls\_flag\_file\_rename@{sls\_flag\_file\_rename}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{sls\_flag\_file\_rename()}{sls\_flag\_file\_rename()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} sls\+\_\+flag\+\_\+file\+\_\+rename (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs,  }\item[{char $\ast$}]{old\+\_\+filename }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1030 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a82879137d4fa6d4f63802a7518e8d975_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{hlsenc_8c_a82879137d4fa6d4f63802a7518e8d975_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a812738c0e01b76d7e25a701cd7f5ea3c}\label{hlsenc_8c_a812738c0e01b76d7e25a701cd7f5ea3c}} 
+\index{hlsenc.c@{hlsenc.c}!sls\_flag\_use\_localtime\_filename@{sls\_flag\_use\_localtime\_filename}}
+\index{sls\_flag\_use\_localtime\_filename@{sls\_flag\_use\_localtime\_filename}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{sls\_flag\_use\_localtime\_filename()}{sls\_flag\_use\_localtime\_filename()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sls\+\_\+flag\+\_\+use\+\_\+localtime\+\_\+filename (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{oc,  }\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1037 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a812738c0e01b76d7e25a701cd7f5ea3c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a812738c0e01b76d7e25a701cd7f5ea3c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a18bd338e6b60de99aa514538e121646b}\label{hlsenc_8c_a18bd338e6b60de99aa514538e121646b}} 
+\index{hlsenc.c@{hlsenc.c}!sls\_flags\_filename\_process@{sls\_flags\_filename\_process}}
+\index{sls\_flags\_filename\_process@{sls\_flags\_filename\_process}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{sls\_flags\_filename\_process()}{sls\_flags\_filename\_process()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sls\+\_\+flags\+\_\+filename\+\_\+process (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{hls,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs,  }\item[{\mbox{\hyperlink{struct_h_l_s_segment}{H\+L\+S\+Segment}} $\ast$}]{en,  }\item[{double}]{duration,  }\item[{int64\+\_\+t}]{pos,  }\item[{int64\+\_\+t}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 947 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a18bd338e6b60de99aa514538e121646b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a18bd338e6b60de99aa514538e121646b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_af51fa3afecd4d7005c7a93773edc2da2}\label{hlsenc_8c_af51fa3afecd4d7005c7a93773edc2da2}} 
+\index{hlsenc.c@{hlsenc.c}!update\_master\_pl\_info@{update\_master\_pl\_info}}
+\index{update\_master\_pl\_info@{update\_master\_pl\_info}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{update\_master\_pl\_info()}{update\_master\_pl\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+master\+\_\+pl\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+if output file\textquotesingle{}s directory has v, variants are created in sub-\/directories then master is created at the sub-\/directories level
+
+Definition at line 2218 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_af51fa3afecd4d7005c7a93773edc2da2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{hlsenc_8c_af51fa3afecd4d7005c7a93773edc2da2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a0ece4d108b7c1ff5323af2a784798356}\label{hlsenc_8c_a0ece4d108b7c1ff5323af2a784798356}} 
+\index{hlsenc.c@{hlsenc.c}!update\_variant\_stream\_info@{update\_variant\_stream\_info}}
+\index{update\_variant\_stream\_info@{update\_variant\_stream\_info}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{update\_variant\_stream\_info()}{update\_variant\_stream\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+variant\+\_\+stream\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2180 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a0ece4d108b7c1ff5323af2a784798356_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{hlsenc_8c_a0ece4d108b7c1ff5323af2a784798356_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_a4aa35ab99a445c84f272eaa54190f3bb}\label{hlsenc_8c_a4aa35ab99a445c84f272eaa54190f3bb}} 
+\index{hlsenc.c@{hlsenc.c}!validate\_name@{validate\_name}}
+\index{validate\_name@{validate\_name}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{validate\_name()}{validate\_name()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} validate\+\_\+name (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+vs,  }\item[{const char $\ast$}]{fn }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1862 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_a4aa35ab99a445c84f272eaa54190f3bb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=241pt]{hlsenc_8c_a4aa35ab99a445c84f272eaa54190f3bb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_afdf1ad5ede4d0651d18fa1d9847cfeae}\label{hlsenc_8c_afdf1ad5ede4d0651d18fa1d9847cfeae}} 
+\index{hlsenc.c@{hlsenc.c}!write\_codec\_attr@{write\_codec\_attr}}
+\index{write\_codec\_attr@{write\_codec\_attr}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_codec\_attr()}{write\_codec\_attr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+codec\+\_\+attr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{\mbox{\hyperlink{struct_variant_stream}{Variant\+Stream}} $\ast$}]{vs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 323 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_afdf1ad5ede4d0651d18fa1d9847cfeae_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{hlsenc_8c_afdf1ad5ede4d0651d18fa1d9847cfeae_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hlsenc_8c_abd93a54572245ad31d9b568ad8fb8383}\label{hlsenc_8c_abd93a54572245ad31d9b568ad8fb8383}} 
+\index{hlsenc.c@{hlsenc.c}!write\_styp@{write\_styp}}
+\index{write\_styp@{write\_styp}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_styp()}{write\_styp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+styp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 502 of file hlsenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hlsenc_8c_abd93a54572245ad31d9b568ad8fb8383_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=266pt]{hlsenc_8c_abd93a54572245ad31d9b568ad8fb8383_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{hlsenc_8c_a46337fbe713e44a58106b5bea71091b0}\label{hlsenc_8c_a46337fbe713e44a58106b5bea71091b0}} 
+\index{hlsenc.c@{hlsenc.c}!ff\_hls\_muxer@{ff\_hls\_muxer}}
+\index{ff\_hls\_muxer@{ff\_hls\_muxer}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{ff\_hls\_muxer}{ff\_hls\_muxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_output_format}{A\+V\+Output\+Format}} ff\+\_\+hls\+\_\+muxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}hls"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apple HTTP Live Streaming"{}}),}
+\DoxyCodeLine{    .extensions     = \textcolor{stringliteral}{"{}m3u8"{}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{hlsenc_8c_a70e97316f72d969c05afd297e3a5b3b4}{HLSContext}}),}
+\DoxyCodeLine{    .audio\_codec    = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceaadba4b5a087e2b6bf2acdd1b5aebb988}{AV\_CODEC\_ID\_AAC}},}
+\DoxyCodeLine{    .video\_codec    = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea3d4c051c8b18a3c18750676a308c10be}{AV\_CODEC\_ID\_H264}},}
+\DoxyCodeLine{    .subtitle\_codec = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea82b722838aa5158de9313be99930618a}{AV\_CODEC\_ID\_WEBVTT}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{avformat_8h_a752cce390d480521919aa5d8be24ac0b}{AVFMT\_NOFILE}} | \mbox{\hyperlink{avformat_8h_ab203c7b734e9c31b7c37d34f6e2c6aef}{AVFMT\_GLOBALHEADER}} | \mbox{\hyperlink{avformat_8h_a3b9a2012b993edb9e2ba3db6d55db1ae}{AVFMT\_ALLOW\_FLUSH}} | \mbox{\hyperlink{avformat_8h_a21abb57f90931c92c853e696cc1c358c}{AVFMT\_NODIMENSIONS}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{hlsenc_8c_a24da4c255a5e4cd4fad7b19d29a0303e}{hls\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{ffv1enc_8c_a5ba88be0a987de9abb6091eb8e167e09}{write\_header}}   = \mbox{\hyperlink{hlsenc_8c_a6de66c3ee9901f5c31632211e9ea9b71}{hls\_write\_header}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{ffmpeg_8c_a8507683cee9accbbda79588659abcea8}{write\_packet}}   = \mbox{\hyperlink{hlsenc_8c_acd66ba4efe1849d2aceef5ddf8a7af7d}{hls\_write\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{v4l2enc_8c_a4f80c0767194e6e297d2952ed1e75ccc}{write\_trailer}}  = \mbox{\hyperlink{hlsenc_8c_a84eb37d169051db335277f6efded2614}{hls\_write\_trailer}},}
+\DoxyCodeLine{    .deinit         = \mbox{\hyperlink{hlsenc_8c_a8c6abdaaa8dfda10e991496cfc91501f}{hls\_deinit}},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{hlsenc_8c_ad81856a38b90919614cb5a19aca1b94e}{hls\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 3131 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_ad81856a38b90919614cb5a19aca1b94e}\label{hlsenc_8c_ad81856a38b90919614cb5a19aca1b94e}} 
+\index{hlsenc.c@{hlsenc.c}!hls\_class@{hls\_class}}
+\index{hls\_class@{hls\_class}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{hls\_class}{hls\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} hls\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}hls muxer"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{hlsenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 3123 of file hlsenc.\+c.
+
+\mbox{\Hypertarget{hlsenc_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{hlsenc_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{hlsenc.c@{hlsenc.c}!options@{options}}
+\index{options@{options}!hlsenc.c@{hlsenc.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 3052 of file hlsenc.\+c.
+

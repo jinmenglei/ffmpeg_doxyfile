@@ -1,0 +1,966 @@
+\hypertarget{af__atempo_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+atempo.c File Reference}
+\label{af__atempo_8c}\index{E:/github/ffmpeg/libavfilter/af\_atempo.c@{E:/github/ffmpeg/libavfilter/af\_atempo.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavcodec/avfft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/eval.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/samplefmt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+atempo.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}}
+\item 
+struct \mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_aa877f32325a09637dc6d68a08ae60e0a}{Y\+A\+E\+\_\+\+A\+T\+E\+M\+P\+O\+\_\+\+M\+IN}}~0.\+5
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_a862948a93b199069d2c0eb538fe64057}{Y\+A\+E\+\_\+\+A\+T\+E\+M\+P\+O\+\_\+\+M\+AX}}~100.\+0
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_a6a17e62a4c494e4cbc15d951bd8b9878}{R\+E\+\_\+\+M\+A\+L\+L\+O\+C\+\_\+\+O\+R\+\_\+\+F\+A\+IL}}(\mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}},  field\+\_\+size)
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_a0548fbd988b8e1dfd56247d5e0e59d12}{yae\+\_\+init\+\_\+xdat}}(scalar\+\_\+type,  scalar\+\_\+max)
+\item 
+\#define \mbox{\hyperlink{af__atempo_8c_a043bf207741032661001615bbed4cc79}{yae\+\_\+blend}}(scalar\+\_\+type)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} \mbox{\hyperlink{af__atempo_8c_a7cc10237de6df8ba20b69421c10d8326}{Audio\+Fragment}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} \mbox{\hyperlink{af__atempo_8c_a69176c253de8e364ac9b85972b078ca8}{A\+Tempo\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901}{Filter\+State}} \{ \newline
+\mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a451643c3e60a96c3aeff0bff6795bcf5}{Y\+A\+E\+\_\+\+L\+O\+A\+D\+\_\+\+F\+R\+A\+G\+M\+E\+NT}}, 
+\mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af0ef4c6fcd5fd01120d72b349981e3fc}{Y\+A\+E\+\_\+\+A\+D\+J\+U\+S\+T\+\_\+\+P\+O\+S\+I\+T\+I\+ON}}, 
+\mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a0f4e76d2c5f6ca37a54144f5084fe79f}{Y\+A\+E\+\_\+\+R\+E\+L\+O\+A\+D\+\_\+\+F\+R\+A\+G\+M\+E\+NT}}, 
+\mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af7afe7dfa4254ac195f1b91ac5d2e39d}{Y\+A\+E\+\_\+\+O\+U\+T\+P\+U\+T\+\_\+\+O\+V\+E\+R\+L\+A\+P\+\_\+\+A\+DD}}, 
+\newline
+\mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a7620f2bfab2f9bcc80fe217bb5892396}{Y\+A\+E\+\_\+\+F\+L\+U\+S\+H\+\_\+\+O\+U\+T\+P\+UT}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{af__atempo_8c_a81d07be2fb3ff3291d39a8e82b349eb9}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (atempo)
+\item 
+static \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$ \mbox{\hyperlink{af__atempo_8c_a241f4f03abe4651a2b48c408a97363a4}{yae\+\_\+curr\+\_\+frag}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$ \mbox{\hyperlink{af__atempo_8c_ad6840903f145d21dc6b532e06d4276d6}{yae\+\_\+prev\+\_\+frag}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_a3f03046bb5585b88a1e7910811b08701}{yae\+\_\+clear}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_abd29786379537053bd838200af829ace}{yae\+\_\+release\+\_\+buffers}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a034e95e1b0c8c8040c390df0ed291414}{yae\+\_\+reset}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, enum \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{A\+V\+Sample\+Format}} \mbox{\hyperlink{filter__design_8txt_a7d537039ea0e18164d9edb0b5ca984dd}{format}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\+\_\+rate}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a7f7a2ce40a9bbbf5251b20b662d3ae07}{yae\+\_\+update}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_aeed6f09a7a3f2205a984d73f17c241ef}{yae\+\_\+downmix}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$frag)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a497160d41b2252ce25e297d7e4336f57}{yae\+\_\+load\+\_\+data}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$src\+\_\+ref, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+end, int64\+\_\+t stop\+\_\+here)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a8baf4784ea49a45874f81fd180ce9810}{yae\+\_\+load\+\_\+frag}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$src\+\_\+ref, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+end)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_a17b191efcfa15011ada0f52bca33d307}{yae\+\_\+advance\+\_\+to\+\_\+next\+\_\+frag}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_af9631aadad3779f83c500415ac4a08b8}{yae\+\_\+xcorr\+\_\+via\+\_\+rdft}} (\mbox{\hyperlink{group__lavc__fft_gaa306dc16df543b25d9910debc3f76b96}{F\+F\+T\+Sample}} $\ast$xcorr, \mbox{\hyperlink{struct_r_d_f_t_context}{R\+D\+F\+T\+Context}} $\ast$complex\+\_\+to\+\_\+real, const \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$xa, const \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$xb, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hca__data_8h_a446bc3805b5a8b73ee7121ebd7e4e8b0}{window}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a7b59977727b93157fa2b3bd470d83384}{yae\+\_\+align}} (\mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$frag, const \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$prev, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hca__data_8h_a446bc3805b5a8b73ee7121ebd7e4e8b0}{window}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} delta\+\_\+max, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} drift, \mbox{\hyperlink{group__lavc__fft_gaa306dc16df543b25d9910debc3f76b96}{F\+F\+T\+Sample}} $\ast$\mbox{\hyperlink{ilbcdec_8c_a50072b4e757b0e719dfe8450ba3dfbb0}{correlation}}, \mbox{\hyperlink{struct_r_d_f_t_context}{R\+D\+F\+T\+Context}} $\ast$complex\+\_\+to\+\_\+real)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_ab1eb5190f3adb3cb34e428f6674d272c}{yae\+\_\+adjust\+\_\+position}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a3da4e4fa64e097f718ddd58e5fbb9abc}{yae\+\_\+overlap\+\_\+add}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$dst\+\_\+ref, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+end)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_aa98ae6a55c4d03fc6b3477b3504c1efc}{yae\+\_\+apply}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$src\+\_\+ref, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+end, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$dst\+\_\+ref, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+end)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_aed7a28fb486f48261e80e1a5bba38172}{yae\+\_\+flush}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$dst\+\_\+ref, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst\+\_\+end)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__atempo_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_ab290697598353560db0c6e0131573103}{config\+\_\+props}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a6aee9071279c28b22006412830ad1f5d}{push\+\_\+samples}} (\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$atempo, \mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n\+\_\+out)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_af2556802b490e158994e97138eb009de}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$src\+\_\+buffer)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a72949c8fcad3f201712a3569fc6888cb}{request\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__atempo_8c_a0494cc8297aba3328e35aed9f714ef11}{process\+\_\+command}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$cmd, const char $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, char $\ast$res, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} res\+\_\+len, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{af__atempo_8c_ab7ec80cd42c537324caf3c82b0f4ee5f}{atempo\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__atempo_8c_a77622412d9a35334e0bad8195f80d85b}{atempo\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__atempo_8c_aad750b6f829ae5ba506e4bf35a058f6c}{atempo\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{af__atempo_8c_a4d7c9d72ec0a4386ccecc474f1dbdd6c}{ff\+\_\+af\+\_\+atempo}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+tempo scaling audio filter -- an implementation of W\+S\+O\+LA algorithm
+
+Based on M\+IT licensed yae\+Audio\+Tempo\+Filter.\+h and yae\+Audio\+Fragment.\+h from Apprentice Video player by Pavel Koshevoy. \href{https://sourceforge.net/projects/apprenticevideo/}{\texttt{ https\+://sourceforge.\+net/projects/apprenticevideo/}}
+
+An explanation of S\+O\+LA algorithm is available at \href{http://www.surina.net/article/time-and-pitch-scaling.html}{\texttt{ http\+://www.\+surina.\+net/article/time-\/and-\/pitch-\/scaling.\+html}}
+
+W\+S\+O\+LA is very similar to S\+O\+LA, only one major difference exists between these algorithms. S\+O\+LA shifts audio fragments along the output stream, where as W\+S\+O\+LA shifts audio fragments along the input stream.
+
+The advantage of W\+S\+O\+LA algorithm is that the overlap region size is always the same, therefore the blending function is constant and can be precomputed. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__atempo_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__atempo_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_atempo.c@{af\_atempo.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}}, x)}
+
+
+
+Definition at line 158 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a6a17e62a4c494e4cbc15d951bd8b9878}\label{af__atempo_8c_a6a17e62a4c494e4cbc15d951bd8b9878}} 
+\index{af\_atempo.c@{af\_atempo.c}!RE\_MALLOC\_OR\_FAIL@{RE\_MALLOC\_OR\_FAIL}}
+\index{RE\_MALLOC\_OR\_FAIL@{RE\_MALLOC\_OR\_FAIL}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{RE\_MALLOC\_OR\_FAIL}{RE\_MALLOC\_OR\_FAIL}}
+{\footnotesize\ttfamily \#define R\+E\+\_\+\+M\+A\+L\+L\+O\+C\+\_\+\+O\+R\+\_\+\+F\+A\+IL(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}},  }\item[{}]{field\+\_\+size }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                        \(\backslash\)}
+\DoxyCodeLine{        av\_freep(\&\mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}});                                       \(\backslash\)}
+\DoxyCodeLine{        field = \mbox{\hyperlink{tableprint__vlc_8h_ae97db1f58b6b1515ed57a83bea3dd572}{av\_malloc}}(field\_size);                          \(\backslash\)}
+\DoxyCodeLine{        if (!\mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}}) \{                                           \(\backslash\)}
+\DoxyCodeLine{            yae\_release\_buffers(atempo);                        \(\backslash\)}
+\DoxyCodeLine{            return \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{AVERROR}}(ENOMEM);                             \(\backslash\)}
+\DoxyCodeLine{        \}                                                       \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+
+
+Definition at line 247 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a862948a93b199069d2c0eb538fe64057}\label{af__atempo_8c_a862948a93b199069d2c0eb538fe64057}} 
+\index{af\_atempo.c@{af\_atempo.c}!YAE\_ATEMPO\_MAX@{YAE\_ATEMPO\_MAX}}
+\index{YAE\_ATEMPO\_MAX@{YAE\_ATEMPO\_MAX}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{YAE\_ATEMPO\_MAX}{YAE\_ATEMPO\_MAX}}
+{\footnotesize\ttfamily \#define Y\+A\+E\+\_\+\+A\+T\+E\+M\+P\+O\+\_\+\+M\+AX~100.\+0}
+
+
+
+Definition at line 156 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_aa877f32325a09637dc6d68a08ae60e0a}\label{af__atempo_8c_aa877f32325a09637dc6d68a08ae60e0a}} 
+\index{af\_atempo.c@{af\_atempo.c}!YAE\_ATEMPO\_MIN@{YAE\_ATEMPO\_MIN}}
+\index{YAE\_ATEMPO\_MIN@{YAE\_ATEMPO\_MIN}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{YAE\_ATEMPO\_MIN}{YAE\_ATEMPO\_MIN}}
+{\footnotesize\ttfamily \#define Y\+A\+E\+\_\+\+A\+T\+E\+M\+P\+O\+\_\+\+M\+IN~0.\+5}
+
+
+
+Definition at line 155 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a043bf207741032661001615bbed4cc79}\label{af__atempo_8c_a043bf207741032661001615bbed4cc79}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_blend@{yae\_blend}}
+\index{yae\_blend@{yae\_blend}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_blend}{yae\_blend}}
+{\footnotesize\ttfamily \#define yae\+\_\+blend(\begin{DoxyParamCaption}\item[{}]{scalar\+\_\+type }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                                                \(\backslash\)}
+\DoxyCodeLine{        const scalar\_type *aaa = (\textcolor{keyword}{const} scalar\_type *)\mbox{\hyperlink{undefined_8txt_ad99f336d4c117c453fef82993434eb4d}{a}};                \(\backslash\)}
+\DoxyCodeLine{        const scalar\_type *bbb = (\textcolor{keyword}{const} scalar\_type *)\mbox{\hyperlink{input_8c_ad6cdb6a14abe3eab42eaaadc93409aec}{b}};                \(\backslash\)}
+\DoxyCodeLine{                                                                        \(\backslash\)}
+\DoxyCodeLine{        scalar\_type *\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}     = (scalar\_type *)dst;                      \(\backslash\)}
+\DoxyCodeLine{        scalar\_type *out\_end = (scalar\_type *)dst\_end;                  \(\backslash\)}
+\DoxyCodeLine{        int64\_t \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}};                                                      \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{                                                                        \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{        for}} (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < overlap \&\& \mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}} < out\_end;                       \(\backslash\)}
+\DoxyCodeLine{             i++, atempo-\/>position[1]++, wa++, wb++) \{                  \(\backslash\)}
+\DoxyCodeLine{            float w0 = *wa;                                             \(\backslash\)}
+\DoxyCodeLine{            float w1 = *wb;                                             \(\backslash\)}
+\DoxyCodeLine{            int j;                                                      \mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{\(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{                                                                        \(\backslash\)}}}
+\DoxyCodeLine{\mbox{\hyperlink{h264pred__template_8c_a93cca9adbbca82ea00bf3250781f6dce}{            for}} (j = 0; j < atempo-\/>channels;                           \(\backslash\)}
+\DoxyCodeLine{                 j++, aaa++, bbb++, \mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}++) \{                            \(\backslash\)}
+\DoxyCodeLine{                float \mbox{\hyperlink{regdef_8h_a30084bbf7aceeb26e3e6c2dbc88cfa33}{t0}} = (float)*aaa;                                 \(\backslash\)}
+\DoxyCodeLine{                float \mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}} = (float)*bbb;                                 \(\backslash\)}
+\DoxyCodeLine{                                                                        \(\backslash\)}
+\DoxyCodeLine{                *\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}} =                                                  \(\backslash\)}
+\DoxyCodeLine{                    frag-\/>position[0] + \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < 0 ?                         \(\backslash\)}
+\DoxyCodeLine{                    *aaa :                                              \(\backslash\)}
+\DoxyCodeLine{                    (scalar\_type)(\mbox{\hyperlink{regdef_8h_a30084bbf7aceeb26e3e6c2dbc88cfa33}{t0}} * w0 + \mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}} * w1);                   \(\backslash\)}
+\DoxyCodeLine{            \}                                                           \(\backslash\)}
+\DoxyCodeLine{        \}                                                               \(\backslash\)}
+\DoxyCodeLine{        dst = (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} *)\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}};                                           \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+A helper macro for blending the overlap region of previous and current audio fragment. 
+
+Definition at line 727 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a0548fbd988b8e1dfd56247d5e0e59d12}\label{af__atempo_8c_a0548fbd988b8e1dfd56247d5e0e59d12}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_init\_xdat@{yae\_init\_xdat}}
+\index{yae\_init\_xdat@{yae\_init\_xdat}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_init\_xdat}{yae\_init\_xdat}}
+{\footnotesize\ttfamily \#define yae\+\_\+init\+\_\+xdat(\begin{DoxyParamCaption}\item[{}]{scalar\+\_\+type,  }\item[{}]{scalar\+\_\+max }\end{DoxyParamCaption})}
+
+A helper macro for initializing complex data buffer with scalar data of a given type. 
+
+Definition at line 346 of file af\+\_\+atempo.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__atempo_8c_a69176c253de8e364ac9b85972b078ca8}\label{af__atempo_8c_a69176c253de8e364ac9b85972b078ca8}} 
+\index{af\_atempo.c@{af\_atempo.c}!ATempoContext@{ATempoContext}}
+\index{ATempoContext@{ATempoContext}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{ATempoContext}{ATempoContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} \mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}}}
+
+Filter state machine \mbox{\Hypertarget{af__atempo_8c_a7cc10237de6df8ba20b69421c10d8326}\label{af__atempo_8c_a7cc10237de6df8ba20b69421c10d8326}} 
+\index{af\_atempo.c@{af\_atempo.c}!AudioFragment@{AudioFragment}}
+\index{AudioFragment@{AudioFragment}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{AudioFragment}{AudioFragment}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}}}
+
+A fragment of audio waveform 
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901}} 
+\index{af\_atempo.c@{af\_atempo.c}!FilterState@{FilterState}}
+\index{FilterState@{FilterState}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{FilterState}{FilterState}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__atempo_8c_a3d96158c86d1e22df38c343efd790901}{Filter\+State}}}
+
+Filter state machine states \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YAE\_LOAD\_FRAGMENT@{YAE\_LOAD\_FRAGMENT}!af\_atempo.c@{af\_atempo.c}}\index{af\_atempo.c@{af\_atempo.c}!YAE\_LOAD\_FRAGMENT@{YAE\_LOAD\_FRAGMENT}}}\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a451643c3e60a96c3aeff0bff6795bcf5}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a451643c3e60a96c3aeff0bff6795bcf5}} 
+Y\+A\+E\+\_\+\+L\+O\+A\+D\+\_\+\+F\+R\+A\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YAE\_ADJUST\_POSITION@{YAE\_ADJUST\_POSITION}!af\_atempo.c@{af\_atempo.c}}\index{af\_atempo.c@{af\_atempo.c}!YAE\_ADJUST\_POSITION@{YAE\_ADJUST\_POSITION}}}\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af0ef4c6fcd5fd01120d72b349981e3fc}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af0ef4c6fcd5fd01120d72b349981e3fc}} 
+Y\+A\+E\+\_\+\+A\+D\+J\+U\+S\+T\+\_\+\+P\+O\+S\+I\+T\+I\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YAE\_RELOAD\_FRAGMENT@{YAE\_RELOAD\_FRAGMENT}!af\_atempo.c@{af\_atempo.c}}\index{af\_atempo.c@{af\_atempo.c}!YAE\_RELOAD\_FRAGMENT@{YAE\_RELOAD\_FRAGMENT}}}\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a0f4e76d2c5f6ca37a54144f5084fe79f}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a0f4e76d2c5f6ca37a54144f5084fe79f}} 
+Y\+A\+E\+\_\+\+R\+E\+L\+O\+A\+D\+\_\+\+F\+R\+A\+G\+M\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YAE\_OUTPUT\_OVERLAP\_ADD@{YAE\_OUTPUT\_OVERLAP\_ADD}!af\_atempo.c@{af\_atempo.c}}\index{af\_atempo.c@{af\_atempo.c}!YAE\_OUTPUT\_OVERLAP\_ADD@{YAE\_OUTPUT\_OVERLAP\_ADD}}}\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af7afe7dfa4254ac195f1b91ac5d2e39d}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901af7afe7dfa4254ac195f1b91ac5d2e39d}} 
+Y\+A\+E\+\_\+\+O\+U\+T\+P\+U\+T\+\_\+\+O\+V\+E\+R\+L\+A\+P\+\_\+\+A\+DD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YAE\_FLUSH\_OUTPUT@{YAE\_FLUSH\_OUTPUT}!af\_atempo.c@{af\_atempo.c}}\index{af\_atempo.c@{af\_atempo.c}!YAE\_FLUSH\_OUTPUT@{YAE\_FLUSH\_OUTPUT}}}\mbox{\Hypertarget{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a7620f2bfab2f9bcc80fe217bb5892396}\label{af__atempo_8c_a3d96158c86d1e22df38c343efd790901a7620f2bfab2f9bcc80fe217bb5892396}} 
+Y\+A\+E\+\_\+\+F\+L\+U\+S\+H\+\_\+\+O\+U\+T\+P\+UT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 76 of file af\+\_\+atempo.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__atempo_8c_a81d07be2fb3ff3291d39a8e82b349eb9}\label{af__atempo_8c_a81d07be2fb3ff3291d39a8e82b349eb9}} 
+\index{af\_atempo.c@{af\_atempo.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{atempo}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{af__atempo_8c_ab290697598353560db0c6e0131573103}\label{af__atempo_8c_ab290697598353560db0c6e0131573103}} 
+\index{af\_atempo.c@{af\_atempo.c}!config\_props@{config\_props}}
+\index{config\_props@{config\_props}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{config\_props()}{config\_props()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+props (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1040 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_ab290697598353560db0c6e0131573103_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_af2556802b490e158994e97138eb009de}\label{af__atempo_8c_af2556802b490e158994e97138eb009de}} 
+\index{af\_atempo.c@{af\_atempo.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{src\+\_\+buffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1077 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_af2556802b490e158994e97138eb009de_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{af__atempo_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{af\_atempo.c@{af\_atempo.c}!init@{init}}
+\index{init@{init}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 982 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a0494cc8297aba3328e35aed9f714ef11}\label{af__atempo_8c_a0494cc8297aba3328e35aed9f714ef11}} 
+\index{af\_atempo.c@{af\_atempo.c}!process\_command@{process\_command}}
+\index{process\_command@{process\_command}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{process\_command()}{process\_command()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} process\+\_\+command (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{cmd,  }\item[{const char $\ast$}]{arg,  }\item[{char $\ast$}]{res,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{res\+\_\+len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1171 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a0494cc8297aba3328e35aed9f714ef11_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a6aee9071279c28b22006412830ad1f5d}\label{af__atempo_8c_a6aee9071279c28b22006412830ad1f5d}} 
+\index{af\_atempo.c@{af\_atempo.c}!push\_samples@{push\_samples}}
+\index{push\_samples@{push\_samples}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{push\_samples()}{push\_samples()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} push\+\_\+samples (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1051 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a6aee9071279c28b22006412830ad1f5d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{af__atempo_8c_a6aee9071279c28b22006412830ad1f5d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__atempo_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_atempo.c@{af\_atempo.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 996 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a72949c8fcad3f201712a3569fc6888cb}\label{af__atempo_8c_a72949c8fcad3f201712a3569fc6888cb}} 
+\index{af\_atempo.c@{af\_atempo.c}!request\_frame@{request\_frame}}
+\index{request\_frame@{request\_frame}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{request\_frame()}{request\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} request\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1125 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a72949c8fcad3f201712a3569fc6888cb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__atempo_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_atempo.c@{af\_atempo.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 990 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_ab1eb5190f3adb3cb34e428f6674d272c}\label{af__atempo_8c_ab1eb5190f3adb3cb34e428f6674d272c}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_adjust\_position@{yae\_adjust\_position}}
+\index{yae\_adjust\_position@{yae\_adjust\_position}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_adjust\_position()}{yae\_adjust\_position()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+adjust\+\_\+position (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Adjust current fragment position for better alignment with previous fragment.
+
+\begin{DoxyReturn}{Returns}
+alignment correction. 
+\end{DoxyReturn}
+
+
+Definition at line 689 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_ab1eb5190f3adb3cb34e428f6674d272c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_ab1eb5190f3adb3cb34e428f6674d272c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a17b191efcfa15011ada0f52bca33d307}\label{af__atempo_8c_a17b191efcfa15011ada0f52bca33d307}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_advance\_to\_next\_frag@{yae\_advance\_to\_next\_frag}}
+\index{yae\_advance\_to\_next\_frag@{yae\_advance\_to\_next\_frag}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_advance\_to\_next\_frag()}{yae\_advance\_to\_next\_frag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+advance\+\_\+to\+\_\+next\+\_\+frag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Prepare for loading next audio fragment. 
+
+Definition at line 579 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{af__atempo_8c_a17b191efcfa15011ada0f52bca33d307_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a17b191efcfa15011ada0f52bca33d307_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a7b59977727b93157fa2b3bd470d83384}\label{af__atempo_8c_a7b59977727b93157fa2b3bd470d83384}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_align@{yae\_align}}
+\index{yae\_align@{yae\_align}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_align()}{yae\_align()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+align (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$}]{frag,  }\item[{const \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$}]{prev,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{window,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{delta\+\_\+max,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{drift,  }\item[{\mbox{\hyperlink{group__lavc__fft_gaa306dc16df543b25d9910debc3f76b96}{F\+F\+T\+Sample}} $\ast$}]{correlation,  }\item[{\mbox{\hyperlink{struct_r_d_f_t_context}{R\+D\+F\+T\+Context}} $\ast$}]{complex\+\_\+to\+\_\+real }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Calculate alignment offset for given fragment relative to the previous fragment.
+
+\begin{DoxyReturn}{Returns}
+alignment offset of current fragment relative to previous. 
+\end{DoxyReturn}
+
+
+Definition at line 635 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a7b59977727b93157fa2b3bd470d83384_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a7b59977727b93157fa2b3bd470d83384_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_aa98ae6a55c4d03fc6b3477b3504c1efc}\label{af__atempo_8c_aa98ae6a55c4d03fc6b3477b3504c1efc}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_apply@{yae\_apply}}
+\index{yae\_apply@{yae\_apply}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_apply()}{yae\_apply()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+apply (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{src\+\_\+ref,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+end,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{dst\+\_\+ref,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Feed as much data to the filter as it is able to consume and receive as much processed data in the destination buffer as it is able to produce or store. 
+
+Definition at line 819 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_aa98ae6a55c4d03fc6b3477b3504c1efc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=241pt]{af__atempo_8c_aa98ae6a55c4d03fc6b3477b3504c1efc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a3f03046bb5585b88a1e7910811b08701}\label{af__atempo_8c_a3f03046bb5585b88a1e7910811b08701}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_clear@{yae\_clear}}
+\index{yae\_clear@{yae\_clear}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_clear()}{yae\_clear()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+clear (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Reset filter to initial state, do not deallocate existing local buffers. 
+
+Definition at line 184 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a3f03046bb5585b88a1e7910811b08701_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a3f03046bb5585b88a1e7910811b08701_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a241f4f03abe4651a2b48c408a97363a4}\label{af__atempo_8c_a241f4f03abe4651a2b48c408a97363a4}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_curr\_frag@{yae\_curr\_frag}}
+\index{yae\_curr\_frag@{yae\_curr\_frag}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_curr\_frag()}{yae\_curr\_frag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}}$\ast$ yae\+\_\+curr\+\_\+frag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 171 of file af\+\_\+atempo.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a241f4f03abe4651a2b48c408a97363a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_aeed6f09a7a3f2205a984d73f17c241ef}\label{af__atempo_8c_aeed6f09a7a3f2205a984d73f17c241ef}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_downmix@{yae\_downmix}}
+\index{yae\_downmix@{yae\_downmix}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_downmix()}{yae\_downmix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+downmix (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{\mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}} $\ast$}]{frag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Initialize complex data buffer of a given audio fragment with down-\/mixed mono data of appropriate scalar type. 
+
+Definition at line 396 of file af\+\_\+atempo.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_aeed6f09a7a3f2205a984d73f17c241ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_aed7a28fb486f48261e80e1a5bba38172}\label{af__atempo_8c_aed7a28fb486f48261e80e1a5bba38172}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_flush@{yae\_flush}}
+\index{yae\_flush@{yae\_flush}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_flush()}{yae\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{dst\+\_\+ref,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Flush any buffered data from the filter.
+
+\begin{DoxyReturn}{Returns}
+0 if all data was completely stored in the dst buffer, \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} if more destination buffer space is required. 
+\end{DoxyReturn}
+
+
+Definition at line 893 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_aed7a28fb486f48261e80e1a5bba38172_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{af__atempo_8c_aed7a28fb486f48261e80e1a5bba38172_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a497160d41b2252ce25e297d7e4336f57}\label{af__atempo_8c_a497160d41b2252ce25e297d7e4336f57}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_load\_data@{yae\_load\_data}}
+\index{yae\_load\_data@{yae\_load\_data}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_load\_data()}{yae\_load\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+load\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{src\+\_\+ref,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+end,  }\item[{int64\+\_\+t}]{stop\+\_\+here }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Populate the internal data buffer on as-\/needed basis.
+
+\begin{DoxyReturn}{Returns}
+0 if requested data was already available or was successfully loaded, \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} if more input data is required. 
+\end{DoxyReturn}
+
+
+Definition at line 424 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{af__atempo_8c_a497160d41b2252ce25e297d7e4336f57_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a497160d41b2252ce25e297d7e4336f57_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a8baf4784ea49a45874f81fd180ce9810}\label{af__atempo_8c_a8baf4784ea49a45874f81fd180ce9810}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_load\_frag@{yae\_load\_frag}}
+\index{yae\_load\_frag@{yae\_load\_frag}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_load\_frag()}{yae\_load\_frag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+load\+\_\+frag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{src\+\_\+ref,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Populate current audio fragment data buffer.
+
+\begin{DoxyReturn}{Returns}
+0 when the fragment is ready, \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} if more input data is required. 
+\end{DoxyReturn}
+
+
+Definition at line 499 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a8baf4784ea49a45874f81fd180ce9810_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a8baf4784ea49a45874f81fd180ce9810_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a3da4e4fa64e097f718ddd58e5fbb9abc}\label{af__atempo_8c_a3da4e4fa64e097f718ddd58e5fbb9abc}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_overlap\_add@{yae\_overlap\_add}}
+\index{yae\_overlap\_add@{yae\_overlap\_add}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_overlap\_add()}{yae\_overlap\_add()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+overlap\+\_\+add (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{dst\+\_\+ref,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Blend the overlap region of previous and current audio fragment and output the results to the given destination buffer.
+
+\begin{DoxyReturn}{Returns}
+0 if the overlap region was completely stored in the dst buffer, \mbox{\hyperlink{filter__design_8txt_adf2fb515710d47541f7150ecd2950e76}{A\+V\+E\+R\+R\+O\+R(\+E\+A\+G\+A\+I\+N)}} if more destination buffer space is required. 
+\end{DoxyReturn}
+
+
+Definition at line 764 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{af__atempo_8c_a3da4e4fa64e097f718ddd58e5fbb9abc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a3da4e4fa64e097f718ddd58e5fbb9abc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_ad6840903f145d21dc6b532e06d4276d6}\label{af__atempo_8c_ad6840903f145d21dc6b532e06d4276d6}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_prev\_frag@{yae\_prev\_frag}}
+\index{yae\_prev\_frag@{yae\_prev\_frag}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_prev\_frag()}{yae\_prev\_frag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_audio_fragment}{Audio\+Fragment}}$\ast$ yae\+\_\+prev\+\_\+frag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 176 of file af\+\_\+atempo.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_ad6840903f145d21dc6b532e06d4276d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_abd29786379537053bd838200af829ace}\label{af__atempo_8c_abd29786379537053bd838200af829ace}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_release\_buffers@{yae\_release\_buffers}}
+\index{yae\_release\_buffers@{yae\_release\_buffers}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_release\_buffers()}{yae\_release\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+release\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Reset filter to initial state and deallocate all buffers. 
+
+Definition at line 225 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_abd29786379537053bd838200af829ace_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_abd29786379537053bd838200af829ace_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a034e95e1b0c8c8040c390df0ed291414}\label{af__atempo_8c_a034e95e1b0c8c8040c390df0ed291414}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_reset@{yae\_reset}}
+\index{yae\_reset@{yae\_reset}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_reset()}{yae\_reset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+reset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_tempo_context}{A\+Tempo\+Context}} $\ast$}]{atempo,  }\item[{enum \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{A\+V\+Sample\+Format}}}]{format,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sample\+\_\+rate,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Prepare filter for processing audio data of given format, sample rate and number of channels. 
+
+Definition at line 261 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_a034e95e1b0c8c8040c390df0ed291414_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{af__atempo_8c_a034e95e1b0c8c8040c390df0ed291414_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_a7f7a2ce40a9bbbf5251b20b662d3ae07}\label{af__atempo_8c_a7f7a2ce40a9bbbf5251b20b662d3ae07}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_update@{yae\_update}}
+\index{yae\_update@{yae\_update}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_update()}{yae\_update()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} yae\+\_\+update (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 331 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{af__atempo_8c_a7f7a2ce40a9bbbf5251b20b662d3ae07_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{af__atempo_8c_a7f7a2ce40a9bbbf5251b20b662d3ae07_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__atempo_8c_af9631aadad3779f83c500415ac4a08b8}\label{af__atempo_8c_af9631aadad3779f83c500415ac4a08b8}} 
+\index{af\_atempo.c@{af\_atempo.c}!yae\_xcorr\_via\_rdft@{yae\_xcorr\_via\_rdft}}
+\index{yae\_xcorr\_via\_rdft@{yae\_xcorr\_via\_rdft}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{yae\_xcorr\_via\_rdft()}{yae\_xcorr\_via\_rdft()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} yae\+\_\+xcorr\+\_\+via\+\_\+rdft (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{group__lavc__fft_gaa306dc16df543b25d9910debc3f76b96}{F\+F\+T\+Sample}} $\ast$}]{xcorr,  }\item[{\mbox{\hyperlink{struct_r_d_f_t_context}{R\+D\+F\+T\+Context}} $\ast$}]{complex\+\_\+to\+\_\+real,  }\item[{const \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$}]{xa,  }\item[{const \mbox{\hyperlink{struct_f_f_t_complex}{F\+F\+T\+Complex}} $\ast$}]{xb,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{window }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Calculate cross-\/correlation via r\+D\+FT.
+
+Multiply two vectors of complex numbers (result of real\+\_\+to\+\_\+complex r\+D\+FT) and transform back via complex\+\_\+to\+\_\+real r\+D\+FT. 
+
+Definition at line 601 of file af\+\_\+atempo.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{af__atempo_8c_af9631aadad3779f83c500415ac4a08b8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__atempo_8c_af9631aadad3779f83c500415ac4a08b8_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__atempo_8c_a77622412d9a35334e0bad8195f80d85b}\label{af__atempo_8c_a77622412d9a35334e0bad8195f80d85b}} 
+\index{af\_atempo.c@{af\_atempo.c}!atempo\_inputs@{atempo\_inputs}}
+\index{atempo\_inputs@{atempo\_inputs}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{atempo\_inputs}{atempo\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} atempo\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{af__atempo_8c_af2556802b490e158994e97138eb009de}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{af__atempo_8c_ab290697598353560db0c6e0131573103}{config\_props}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1186 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_ab7ec80cd42c537324caf3c82b0f4ee5f}\label{af__atempo_8c_ab7ec80cd42c537324caf3c82b0f4ee5f}} 
+\index{af\_atempo.c@{af\_atempo.c}!atempo\_options@{atempo\_options}}
+\index{atempo\_options@{atempo\_options}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{atempo\_options}{atempo\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} atempo\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}tempo"{}}, \textcolor{stringliteral}{"{}set tempo scale factor"{}},}
+\DoxyCodeLine{      \mbox{\hyperlink{af__atempo_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(tempo), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae0b49ec51847a758ceb46976083da2e5}{AV\_OPT\_TYPE\_DOUBLE}}, \{ .dbl = 1.0 \},}
+\DoxyCodeLine{      \mbox{\hyperlink{af__atempo_8c_aa877f32325a09637dc6d68a08ae60e0a}{YAE\_ATEMPO\_MIN}},}
+\DoxyCodeLine{      \mbox{\hyperlink{af__atempo_8c_a862948a93b199069d2c0eb538fe64057}{YAE\_ATEMPO\_MAX}},}
+\DoxyCodeLine{      \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{AV\_OPT\_FLAG\_AUDIO\_PARAM}} | \mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{AV\_OPT\_FLAG\_FILTERING\_PARAM}} | \mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{AV\_OPT\_FLAG\_RUNTIME\_PARAM}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 160 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_aad750b6f829ae5ba506e4bf35a058f6c}\label{af__atempo_8c_aad750b6f829ae5ba506e4bf35a058f6c}} 
+\index{af\_atempo.c@{af\_atempo.c}!atempo\_outputs@{atempo\_outputs}}
+\index{atempo\_outputs@{atempo\_outputs}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{atempo\_outputs}{atempo\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} atempo\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .request\_frame = \mbox{\hyperlink{af__atempo_8c_a72949c8fcad3f201712a3569fc6888cb}{request\_frame}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1196 of file af\+\_\+atempo.\+c.
+
+\mbox{\Hypertarget{af__atempo_8c_a4d7c9d72ec0a4386ccecc474f1dbdd6c}\label{af__atempo_8c_a4d7c9d72ec0a4386ccecc474f1dbdd6c}} 
+\index{af\_atempo.c@{af\_atempo.c}!ff\_af\_atempo@{ff\_af\_atempo}}
+\index{ff\_af\_atempo@{ff\_af\_atempo}!af\_atempo.c@{af\_atempo.c}}
+\doxysubsubsection{\texorpdfstring{ff\_af\_atempo}{ff\_af\_atempo}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+af\+\_\+atempo}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name            = \textcolor{stringliteral}{"{}atempo"{}},}
+\DoxyCodeLine{    .description     = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Adjust audio tempo."{}}),}
+\DoxyCodeLine{    .init            = \mbox{\hyperlink{af__atempo_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .uninit          = \mbox{\hyperlink{af__atempo_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .query\_formats   = \mbox{\hyperlink{af__atempo_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .process\_command = \mbox{\hyperlink{af__atempo_8c_a0494cc8297aba3328e35aed9f714ef11}{process\_command}},}
+\DoxyCodeLine{    .priv\_size       = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__atempo_8c_a69176c253de8e364ac9b85972b078ca8}{ATempoContext}}),}
+\DoxyCodeLine{    .priv\_class      = \&atempo\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}          = \mbox{\hyperlink{af__atempo_8c_a77622412d9a35334e0bad8195f80d85b}{atempo\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}         = \mbox{\hyperlink{af__atempo_8c_aad750b6f829ae5ba506e4bf35a058f6c}{atempo\_outputs}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1205 of file af\+\_\+atempo.\+c.
+

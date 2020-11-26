@@ -1,0 +1,1008 @@
+\hypertarget{af__aiir_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+aiir.c File Reference}
+\label{af__aiir_8c}\index{E:/github/ffmpeg/libavfilter/af\_aiir.c@{E:/github/ffmpeg/libavfilter/af\_aiir.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/xga\+\_\+font\+\_\+data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+aiir.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_pair}{Pair}}
+\item 
+struct \mbox{\hyperlink{struct_biquad_context}{Biquad\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_i_i_r_channel}{I\+I\+R\+Channel}}
+\item 
+struct \mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_a618944b866e0421daf7c05a54f32a0b3}{I\+I\+R\+\_\+\+CH}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_a7cb49efa3699869ee38b8c79cbd85a16}{S\+E\+R\+I\+A\+L\+\_\+\+I\+I\+R\+\_\+\+CH}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_a07c442b2ea782a92f7d87f20b637c6ec}{P\+A\+R\+A\+L\+L\+E\+L\+\_\+\+I\+I\+R\+\_\+\+CH}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_a76ba789cde9c36cd57dbb390bdee7661}{AF}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{af__aiir_8c_a8956b9119e3f283cb31cf6e029da3277}{VF}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{af__aiir_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pair}{Pair}} \mbox{\hyperlink{af__aiir_8c_a8b903ce96768a6535112fb4d0d62c76b}{Pair}}
+\item 
+typedef struct \mbox{\hyperlink{struct_biquad_context}{Biquad\+Context}} \mbox{\hyperlink{af__aiir_8c_a1c3a10d13fd482cbeb11afcf21b9197d}{Biquad\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_i_i_r_channel}{I\+I\+R\+Channel}} \mbox{\hyperlink{af__aiir_8c_af3f52bba105d37460b046c5a7d5c0d5f}{I\+I\+R\+Channel}}
+\item 
+typedef struct \mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}} \mbox{\hyperlink{af__aiir_8c_a6a46387e4273b1b9dee209b0bd7dfac3}{Audio\+I\+I\+R\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_aac6df48016c6db31edc061e67adb21d2}{count\+\_\+coefficients}} (char $\ast$item\+\_\+str, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$nb\+\_\+items)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a6f09530a0c6feb288ec82c1dc00edffb}{read\+\_\+gains}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, char $\ast$item\+\_\+str, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+items)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a266e84c164cf54e9bb60524efbb57f64}{read\+\_\+tf\+\_\+coefficients}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, char $\ast$item\+\_\+str, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+items, double $\ast$dst)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a150513a37ea0e9b26631a5dc889d1497}{read\+\_\+zp\+\_\+coefficients}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, char $\ast$item\+\_\+str, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+items, double $\ast$dst, const char $\ast$\mbox{\hyperlink{filter__design_8txt_a7d537039ea0e18164d9edb0b5ca984dd}{format}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a63e6ecedef00e353bb2de6f6ec36270e}{read\+\_\+channels}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$item\+\_\+str, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ab)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_ad084b8701c0346027c3a174f06f567fd}{cmul}} (double \mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}, double \mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}, double re2, double im2, double $\ast$\mbox{\hyperlink{avf__showspectrum_8c_aebb37069fa02e6e368c0ca178b30a3ac}{RE}}, double $\ast$\mbox{\hyperlink{avf__showspectrum_8c_a5c8b49fc9d711f8b713d2d0810e91bc6}{IM}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a4c1d7b677352b4843b79af86147e52ef}{expand}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, double $\ast$pz, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, double $\ast$coefs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a6b6319632c616c9543a9fb4e5bf5ad0b}{normalize\+\_\+coeffs}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_aa99a960fa8755f6b5efc357a3504e3af}{convert\+\_\+zp2tf}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a52cdff018ee9e2c5764b12d37feaac35}{decompose\+\_\+zp2biquads}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_aab1ffa1495e1f36a32db44b7cb04a26f}{biquad\+\_\+process}} (double $\ast$x, double $\ast$y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length, double \mbox{\hyperlink{vf__xfade_8c_aadff26dc92c76dd4a4649e7b84fe6096}{b0}}, double \mbox{\hyperlink{vf__xfade_8c_a180fe8ca7166807bd5620993b31db453}{b1}}, double \mbox{\hyperlink{vf__xfade_8c_a1ec8ff9bd16da9be666575ef43488411}{b2}}, double \mbox{\hyperlink{vf__xfade_8c_aec4f9f3ed71210ae9a0dcab7fd889e7c}{a1}}, double \mbox{\hyperlink{vf__xfade_8c_abc59a775e755506a7c8d100170694ae5}{a2}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_adaadff2d5a876d2d149bea93e71de0ec}{solve}} (double $\ast$matrix, double $\ast$vector, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, double $\ast$y, double $\ast$x, double $\ast$lu)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_aa0c291f86c435590ee5bba97ad0ae762}{convert\+\_\+serial2parallel}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a3138cfdd80ff09ae6ecb3f94286a5208}{convert\+\_\+pr2zp}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a923805d1e4680f0b84df0c7b3020fc67}{convert\+\_\+sp2zp}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static double \mbox{\hyperlink{af__aiir_8c_a5f301310c1e7c089eb6c009d58aaccef}{fact}} (double \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}})
+\item 
+static double \mbox{\hyperlink{af__aiir_8c_ab188e79f87f57ed52849fa3270a5784e}{coef\+\_\+sf2zf}} (double $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aacpsdsp_8c_a0240ac851181b84ac374872dc5434ee4}{N}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a1b2dad00550ce4012bce39a572f08058}{convert\+\_\+sf2tf}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a41c926c96b00f2f1e8edaf123011073d}{convert\+\_\+pd2zp}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a094f27796d9300a32c8c940d0bf49387}{check\+\_\+stability}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a0d5608b15651078022486a3c103041a0}{drawtext}} (\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$pic, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, const char $\ast$txt, uint32\+\_\+t \mbox{\hyperlink{structcolor}{color}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a5b5b21f21084cd2f25056507a2637011}{draw\+\_\+line}} (\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x0, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y0, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y1, uint32\+\_\+t \mbox{\hyperlink{structcolor}{color}})
+\item 
+static double \mbox{\hyperlink{af__aiir_8c_a2a1a5ac9f503d7407c263d97dd89955e}{distance}} (double x0, double x1, double y0, double y1)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_acee403f828d847aea7f67dd302000185}{get\+\_\+response}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{filter__design_8txt_a7d537039ea0e18164d9edb0b5ca984dd}{format}}, double \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, const double $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, const double $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+b, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+a, double $\ast$magnitude, double $\ast$phase)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_a2f425497a6c2cb54d61f08c8ea920277}{draw\+\_\+response}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\+\_\+rate}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_a1b8de9d551ef9226bdf5f0a66863164b}{config\+\_\+video}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+\mbox{\hyperlink{af__aiir_8c_a9e746c8cae141288d463c3d13e89dba6}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (aiir)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char $\ast$ \mbox{\hyperlink{af__aiir_8c_a7e181478f50941265c2f369e4bfcc568}{format}} \mbox{[}$\,$\mbox{]} = \{ \char`\"{}\%lf\char`\"{}, \char`\"{}\%lf \%lfi\char`\"{}, \char`\"{}\%lf \%lfr\char`\"{}, \char`\"{}\%lf \%lfd\char`\"{}, \char`\"{}\%lf \%lfi\char`\"{} \}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__aiir_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{af__aiir_8c_a453cf23bacffe969703c3374d7c1f523}{aiir\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{af__aiir_8c_ae0ad1491d53b06b7c4c2a41f0eec2e5e}{ff\+\_\+af\+\_\+aiir}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__aiir_8c_a76ba789cde9c36cd57dbb390bdee7661}\label{af__aiir_8c_a76ba789cde9c36cd57dbb390bdee7661}} 
+\index{af\_aiir.c@{af\_aiir.c}!AF@{AF}}
+\index{AF@{AF}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{AF}{AF}}
+{\footnotesize\ttfamily \#define AF~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1458 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a618944b866e0421daf7c05a54f32a0b3}\label{af__aiir_8c_a618944b866e0421daf7c05a54f32a0b3}} 
+\index{af\_aiir.c@{af\_aiir.c}!IIR\_CH@{IIR\_CH}}
+\index{IIR\_CH@{IIR\_CH}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{IIR\_CH}{IIR\_CH}}
+{\footnotesize\ttfamily \#define I\+I\+R\+\_\+\+CH(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 123 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__aiir_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_aiir.c@{af\_aiir.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}}, x)}
+
+
+
+Definition at line 1457 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a07c442b2ea782a92f7d87f20b637c6ec}\label{af__aiir_8c_a07c442b2ea782a92f7d87f20b637c6ec}} 
+\index{af\_aiir.c@{af\_aiir.c}!PARALLEL\_IIR\_CH@{PARALLEL\_IIR\_CH}}
+\index{PARALLEL\_IIR\_CH@{PARALLEL\_IIR\_CH}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{PARALLEL\_IIR\_CH}{PARALLEL\_IIR\_CH}}
+{\footnotesize\ttfamily \#define P\+A\+R\+A\+L\+L\+E\+L\+\_\+\+I\+I\+R\+\_\+\+CH(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 238 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a7cb49efa3699869ee38b8c79cbd85a16}\label{af__aiir_8c_a7cb49efa3699869ee38b8c79cbd85a16}} 
+\index{af\_aiir.c@{af\_aiir.c}!SERIAL\_IIR\_CH@{SERIAL\_IIR\_CH}}
+\index{SERIAL\_IIR\_CH@{SERIAL\_IIR\_CH}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{SERIAL\_IIR\_CH}{SERIAL\_IIR\_CH}}
+{\footnotesize\ttfamily \#define S\+E\+R\+I\+A\+L\+\_\+\+I\+I\+R\+\_\+\+CH(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 179 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a8956b9119e3f283cb31cf6e029da3277}\label{af__aiir_8c_a8956b9119e3f283cb31cf6e029da3277}} 
+\index{af\_aiir.c@{af\_aiir.c}!VF@{VF}}
+\index{VF@{VF}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{VF}{VF}}
+{\footnotesize\ttfamily \#define VF~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1459 of file af\+\_\+aiir.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__aiir_8c_a6a46387e4273b1b9dee209b0bd7dfac3}\label{af__aiir_8c_a6a46387e4273b1b9dee209b0bd7dfac3}} 
+\index{af\_aiir.c@{af\_aiir.c}!AudioIIRContext@{AudioIIRContext}}
+\index{AudioIIRContext@{AudioIIRContext}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{AudioIIRContext}{AudioIIRContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}} \mbox{\hyperlink{struct_audio_i_i_r_context}{Audio\+I\+I\+R\+Context}}}
+
+\mbox{\Hypertarget{af__aiir_8c_a1c3a10d13fd482cbeb11afcf21b9197d}\label{af__aiir_8c_a1c3a10d13fd482cbeb11afcf21b9197d}} 
+\index{af\_aiir.c@{af\_aiir.c}!BiquadContext@{BiquadContext}}
+\index{BiquadContext@{BiquadContext}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{BiquadContext}{BiquadContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_biquad_context}{Biquad\+Context}} \mbox{\hyperlink{struct_biquad_context}{Biquad\+Context}}}
+
+\mbox{\Hypertarget{af__aiir_8c_af3f52bba105d37460b046c5a7d5c0d5f}\label{af__aiir_8c_af3f52bba105d37460b046c5a7d5c0d5f}} 
+\index{af\_aiir.c@{af\_aiir.c}!IIRChannel@{IIRChannel}}
+\index{IIRChannel@{IIRChannel}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{IIRChannel}{IIRChannel}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_i_i_r_channel}{I\+I\+R\+Channel}} \mbox{\hyperlink{struct_i_i_r_channel}{I\+I\+R\+Channel}}}
+
+\mbox{\Hypertarget{af__aiir_8c_a8b903ce96768a6535112fb4d0d62c76b}\label{af__aiir_8c_a8b903ce96768a6535112fb4d0d62c76b}} 
+\index{af\_aiir.c@{af\_aiir.c}!Pair@{Pair}}
+\index{Pair@{Pair}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{Pair}{Pair}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pair}{Pair}} \mbox{\hyperlink{struct_pair}{Pair}}}
+
+\mbox{\Hypertarget{af__aiir_8c_a5d1975e203ce6f822538d556409ccf6a}\label{af__aiir_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{af\_aiir.c@{af\_aiir.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__aiir_8c_a9e746c8cae141288d463c3d13e89dba6}\label{af__aiir_8c_a9e746c8cae141288d463c3d13e89dba6}} 
+\index{af\_aiir.c@{af\_aiir.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{aiir}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{af__aiir_8c_aab1ffa1495e1f36a32db44b7cb04a26f}\label{af__aiir_8c_aab1ffa1495e1f36a32db44b7cb04a26f}} 
+\index{af\_aiir.c@{af\_aiir.c}!biquad\_process@{biquad\_process}}
+\index{biquad\_process@{biquad\_process}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{biquad\_process()}{biquad\_process()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} biquad\+\_\+process (\begin{DoxyParamCaption}\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length,  }\item[{double}]{b0,  }\item[{double}]{b1,  }\item[{double}]{b2,  }\item[{double}]{a1,  }\item[{double}]{a2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 719 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{af__aiir_8c_aab1ffa1495e1f36a32db44b7cb04a26f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_aab1ffa1495e1f36a32db44b7cb04a26f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a094f27796d9300a32c8c940d0bf49387}\label{af__aiir_8c_a094f27796d9300a32c8c940d0bf49387}} 
+\index{af\_aiir.c@{af\_aiir.c}!check\_stability@{check\_stability}}
+\index{check\_stability@{check\_stability}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{check\_stability()}{check\_stability()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} check\+\_\+stability (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 976 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a094f27796d9300a32c8c940d0bf49387_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=337pt]{af__aiir_8c_a094f27796d9300a32c8c940d0bf49387_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_ad084b8701c0346027c3a174f06f567fd}\label{af__aiir_8c_ad084b8701c0346027c3a174f06f567fd}} 
+\index{af\_aiir.c@{af\_aiir.c}!cmul@{cmul}}
+\index{cmul@{cmul}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{cmul()}{cmul()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} cmul (\begin{DoxyParamCaption}\item[{double}]{re,  }\item[{double}]{im,  }\item[{double}]{re2,  }\item[{double}]{im2,  }\item[{double $\ast$}]{RE,  }\item[{double $\ast$}]{IM }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 448 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_ad084b8701c0346027c3a174f06f567fd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_ab188e79f87f57ed52849fa3270a5784e}\label{af__aiir_8c_ab188e79f87f57ed52849fa3270a5784e}} 
+\index{af\_aiir.c@{af\_aiir.c}!coef\_sf2zf@{coef\_sf2zf}}
+\index{coef\_sf2zf@{coef\_sf2zf}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{coef\_sf2zf()}{coef\_sf2zf()}}
+{\footnotesize\ttfamily static double coef\+\_\+sf2zf (\begin{DoxyParamCaption}\item[{double $\ast$}]{a,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{N,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 902 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=208pt]{af__aiir_8c_ab188e79f87f57ed52849fa3270a5784e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_ab188e79f87f57ed52849fa3270a5784e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_ad21a4e672440f6072991b632efe70c1b}\label{af__aiir_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{af\_aiir.c@{af\_aiir.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1213 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{af__aiir_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{af__aiir_8c_ad21a4e672440f6072991b632efe70c1b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a1b8de9d551ef9226bdf5f0a66863164b}\label{af__aiir_8c_a1b8de9d551ef9226bdf5f0a66863164b}} 
+\index{af\_aiir.c@{af\_aiir.c}!config\_video@{config\_video}}
+\index{config\_video@{config\_video}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{config\_video()}{config\_video()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+video (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1370 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=238pt]{af__aiir_8c_a1b8de9d551ef9226bdf5f0a66863164b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=214pt]{af__aiir_8c_a1b8de9d551ef9226bdf5f0a66863164b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a41c926c96b00f2f1e8edaf123011073d}\label{af__aiir_8c_a41c926c96b00f2f1e8edaf123011073d}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_pd2zp@{convert\_pd2zp}}
+\index{convert\_pd2zp@{convert\_pd2zp}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_pd2zp()}{convert\_pd2zp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} convert\+\_\+pd2zp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 949 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{af__aiir_8c_a41c926c96b00f2f1e8edaf123011073d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a3138cfdd80ff09ae6ecb3f94286a5208}\label{af__aiir_8c_a3138cfdd80ff09ae6ecb3f94286a5208}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_pr2zp@{convert\_pr2zp}}
+\index{convert\_pr2zp@{convert\_pr2zp}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_pr2zp()}{convert\_pr2zp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} convert\+\_\+pr2zp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 841 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=332pt]{af__aiir_8c_a3138cfdd80ff09ae6ecb3f94286a5208_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_aa0c291f86c435590ee5bba97ad0ae762}\label{af__aiir_8c_aa0c291f86c435590ee5bba97ad0ae762}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_serial2parallel@{convert\_serial2parallel}}
+\index{convert\_serial2parallel@{convert\_serial2parallel}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_serial2parallel()}{convert\_serial2parallel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} convert\+\_\+serial2parallel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 771 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_aa0c291f86c435590ee5bba97ad0ae762_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_aa0c291f86c435590ee5bba97ad0ae762_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a1b2dad00550ce4012bce39a572f08058}\label{af__aiir_8c_a1b2dad00550ce4012bce39a572f08058}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_sf2tf@{convert\_sf2tf}}
+\index{convert\_sf2tf@{convert\_sf2tf}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_sf2tf()}{convert\_sf2tf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} convert\+\_\+sf2tf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 921 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a1b2dad00550ce4012bce39a572f08058_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=326pt]{af__aiir_8c_a1b2dad00550ce4012bce39a572f08058_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a923805d1e4680f0b84df0c7b3020fc67}\label{af__aiir_8c_a923805d1e4680f0b84df0c7b3020fc67}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_sp2zp@{convert\_sp2zp}}
+\index{convert\_sp2zp@{convert\_sp2zp}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_sp2zp()}{convert\_sp2zp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} convert\+\_\+sp2zp (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 868 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{af__aiir_8c_a923805d1e4680f0b84df0c7b3020fc67_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_aa99a960fa8755f6b5efc357a3504e3af}\label{af__aiir_8c_aa99a960fa8755f6b5efc357a3504e3af}} 
+\index{af\_aiir.c@{af\_aiir.c}!convert\_zp2tf@{convert\_zp2tf}}
+\index{convert\_zp2tf@{convert\_zp2tf}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{convert\_zp2tf()}{convert\_zp2tf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} convert\+\_\+zp2tf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 509 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_aa99a960fa8755f6b5efc357a3504e3af_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=329pt]{af__aiir_8c_aa99a960fa8755f6b5efc357a3504e3af_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_aac6df48016c6db31edc061e67adb21d2}\label{af__aiir_8c_aac6df48016c6db31edc061e67adb21d2}} 
+\index{af\_aiir.c@{af\_aiir.c}!count\_coefficients@{count\_coefficients}}
+\index{count\_coefficients@{count\_coefficients}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{count\_coefficients()}{count\_coefficients()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} count\+\_\+coefficients (\begin{DoxyParamCaption}\item[{char $\ast$}]{item\+\_\+str,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{nb\+\_\+items }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 302 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_aac6df48016c6db31edc061e67adb21d2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a52cdff018ee9e2c5764b12d37feaac35}\label{af__aiir_8c_a52cdff018ee9e2c5764b12d37feaac35}} 
+\index{af\_aiir.c@{af\_aiir.c}!decompose\_zp2biquads@{decompose\_zp2biquads}}
+\index{decompose\_zp2biquads@{decompose\_zp2biquads}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{decompose\_zp2biquads()}{decompose\_zp2biquads()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decompose\+\_\+zp2biquads (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 557 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a52cdff018ee9e2c5764b12d37feaac35_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a52cdff018ee9e2c5764b12d37feaac35_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a2a1a5ac9f503d7407c263d97dd89955e}\label{af__aiir_8c_a2a1a5ac9f503d7407c263d97dd89955e}} 
+\index{af\_aiir.c@{af\_aiir.c}!distance@{distance}}
+\index{distance@{distance}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{distance()}{distance()}}
+{\footnotesize\ttfamily static double distance (\begin{DoxyParamCaption}\item[{double}]{x0,  }\item[{double}]{x1,  }\item[{double}]{y0,  }\item[{double}]{y1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1044 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=321pt]{af__aiir_8c_a2a1a5ac9f503d7407c263d97dd89955e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a2a1a5ac9f503d7407c263d97dd89955e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a5b5b21f21084cd2f25056507a2637011}\label{af__aiir_8c_a5b5b21f21084cd2f25056507a2637011}} 
+\index{af\_aiir.c@{af\_aiir.c}!draw\_line@{draw\_line}}
+\index{draw\_line@{draw\_line}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{draw\_line()}{draw\_line()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} draw\+\_\+line (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x0,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y0,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y1,  }\item[{uint32\+\_\+t}]{color }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1018 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a5b5b21f21084cd2f25056507a2637011_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a2f425497a6c2cb54d61f08c8ea920277}\label{af__aiir_8c_a2f425497a6c2cb54d61f08c8ea920277}} 
+\index{af\_aiir.c@{af\_aiir.c}!draw\_response@{draw\_response}}
+\index{draw\_response@{draw\_response}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{draw\_response()}{draw\_response()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} draw\+\_\+response (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sample\+\_\+rate }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1096 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a2f425497a6c2cb54d61f08c8ea920277_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=337pt]{af__aiir_8c_a2f425497a6c2cb54d61f08c8ea920277_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a0d5608b15651078022486a3c103041a0}\label{af__aiir_8c_a0d5608b15651078022486a3c103041a0}} 
+\index{af\_aiir.c@{af\_aiir.c}!drawtext@{drawtext}}
+\index{drawtext@{drawtext}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{drawtext()}{drawtext()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} drawtext (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{pic,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{const char $\ast$}]{txt,  }\item[{uint32\+\_\+t}]{color }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 995 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a0d5608b15651078022486a3c103041a0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a4c1d7b677352b4843b79af86147e52ef}\label{af__aiir_8c_a4c1d7b677352b4843b79af86147e52ef}} 
+\index{af\_aiir.c@{af\_aiir.c}!expand@{expand}}
+\index{expand@{expand}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{expand()}{expand()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} expand (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{double $\ast$}]{pz,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{double $\ast$}]{coefs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 454 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{af__aiir_8c_a4c1d7b677352b4843b79af86147e52ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a4c1d7b677352b4843b79af86147e52ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a5f301310c1e7c089eb6c009d58aaccef}\label{af__aiir_8c_a5f301310c1e7c089eb6c009d58aaccef}} 
+\index{af\_aiir.c@{af\_aiir.c}!fact@{fact}}
+\index{fact@{fact}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{fact()}{fact()}}
+{\footnotesize\ttfamily static double fact (\begin{DoxyParamCaption}\item[{double}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 895 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a5f301310c1e7c089eb6c009d58aaccef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{af__aiir_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{af\_aiir.c@{af\_aiir.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1315 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_acee403f828d847aea7f67dd302000185}\label{af__aiir_8c_acee403f828d847aea7f67dd302000185}} 
+\index{af\_aiir.c@{af\_aiir.c}!get\_response@{get\_response}}
+\index{get\_response@{get\_response}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{get\_response()}{get\_response()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+response (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{format,  }\item[{double}]{w,  }\item[{const double $\ast$}]{b,  }\item[{const double $\ast$}]{a,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+a,  }\item[{double $\ast$}]{magnitude,  }\item[{double $\ast$}]{phase }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1049 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_acee403f828d847aea7f67dd302000185_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_acee403f828d847aea7f67dd302000185_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{af\_aiir.c@{af\_aiir.c}!init@{init}}
+\index{init@{init}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1384 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a6b6319632c616c9543a9fb4e5bf5ad0b}\label{af__aiir_8c_a6b6319632c616c9543a9fb4e5bf5ad0b}} 
+\index{af\_aiir.c@{af\_aiir.c}!normalize\_coeffs@{normalize\_coeffs}}
+\index{normalize\_coeffs@{normalize\_coeffs}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{normalize\_coeffs()}{normalize\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} normalize\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 481 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a6b6319632c616c9543a9fb4e5bf5ad0b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_aiir.c@{af\_aiir.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 79 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a63e6ecedef00e353bb2de6f6ec36270e}\label{af__aiir_8c_a63e6ecedef00e353bb2de6f6ec36270e}} 
+\index{af\_aiir.c@{af\_aiir.c}!read\_channels@{read\_channels}}
+\index{read\_channels@{read\_channels}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{read\_channels()}{read\_channels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+channels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{item\+\_\+str,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ab }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 401 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a63e6ecedef00e353bb2de6f6ec36270e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=335pt]{af__aiir_8c_a63e6ecedef00e353bb2de6f6ec36270e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a6f09530a0c6feb288ec82c1dc00edffb}\label{af__aiir_8c_a6f09530a0c6feb288ec82c1dc00edffb}} 
+\index{af\_aiir.c@{af\_aiir.c}!read\_gains@{read\_gains}}
+\index{read\_gains@{read\_gains}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{read\_gains()}{read\_gains()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+gains (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{char $\ast$}]{item\+\_\+str,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+items }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 316 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a6f09530a0c6feb288ec82c1dc00edffb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{af__aiir_8c_a6f09530a0c6feb288ec82c1dc00edffb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a266e84c164cf54e9bb60524efbb57f64}\label{af__aiir_8c_a266e84c164cf54e9bb60524efbb57f64}} 
+\index{af\_aiir.c@{af\_aiir.c}!read\_tf\_coefficients@{read\_tf\_coefficients}}
+\index{read\_tf\_coefficients@{read\_tf\_coefficients}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{read\_tf\_coefficients()}{read\_tf\_coefficients()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+tf\+\_\+coefficients (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{char $\ast$}]{item\+\_\+str,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+items,  }\item[{double $\ast$}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 349 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a266e84c164cf54e9bb60524efbb57f64_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a266e84c164cf54e9bb60524efbb57f64_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_a150513a37ea0e9b26631a5dc889d1497}\label{af__aiir_8c_a150513a37ea0e9b26631a5dc889d1497}} 
+\index{af\_aiir.c@{af\_aiir.c}!read\_zp\_coefficients@{read\_zp\_coefficients}}
+\index{read\_zp\_coefficients@{read\_zp\_coefficients}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{read\_zp\_coefficients()}{read\_zp\_coefficients()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+zp\+\_\+coefficients (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{char $\ast$}]{item\+\_\+str,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+items,  }\item[{double $\ast$}]{dst,  }\item[{const char $\ast$}]{format }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 374 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a150513a37ea0e9b26631a5dc889d1497_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_a150513a37ea0e9b26631a5dc889d1497_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_adaadff2d5a876d2d149bea93e71de0ec}\label{af__aiir_8c_adaadff2d5a876d2d149bea93e71de0ec}} 
+\index{af\_aiir.c@{af\_aiir.c}!solve@{solve}}
+\index{solve@{solve}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{solve()}{solve()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} solve (\begin{DoxyParamCaption}\item[{double $\ast$}]{matrix,  }\item[{double $\ast$}]{vector,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{double $\ast$}]{y,  }\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{lu }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 737 of file af\+\_\+aiir.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_adaadff2d5a876d2d149bea93e71de0ec_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_aiir.c@{af\_aiir.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1428 of file af\+\_\+aiir.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__aiir_8c_a453cf23bacffe969703c3374d7c1f523}\label{af__aiir_8c_a453cf23bacffe969703c3374d7c1f523}} 
+\index{af\_aiir.c@{af\_aiir.c}!aiir\_options@{aiir\_options}}
+\index{aiir\_options@{aiir\_options}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{aiir\_options}{aiir\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} aiir\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1461 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_ae0ad1491d53b06b7c4c2a41f0eec2e5e}\label{af__aiir_8c_ae0ad1491d53b06b7c4c2a41f0eec2e5e}} 
+\index{af\_aiir.c@{af\_aiir.c}!ff\_af\_aiir@{ff\_af\_aiir}}
+\index{ff\_af\_aiir@{ff\_af\_aiir}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{ff\_af\_aiir}{ff\_af\_aiir}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+af\+\_\+aiir}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}aiir"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apply Infinite Impulse Response filter with supplied coefficients."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__aiir_8c_a6a46387e4273b1b9dee209b0bd7dfac3}{AudioIIRContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&aiir\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{af__aiir_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{af__aiir_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{af__aiir_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__aiir_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}        = \mbox{\hyperlink{af__aiir_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_ga1c5c173875bdbbbbaad943a5d951846d}{AVFILTER\_FLAG\_DYNAMIC\_OUTPUTS}} |}
+\DoxyCodeLine{                     \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1501 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a7e181478f50941265c2f369e4bfcc568}\label{af__aiir_8c_a7e181478f50941265c2f369e4bfcc568}} 
+\index{af\_aiir.c@{af\_aiir.c}!format@{format}}
+\index{format@{format}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{format}{format}}
+{\footnotesize\ttfamily const char$\ast$ format\mbox{[}$\,$\mbox{]} = \{ \char`\"{}\%lf\char`\"{}, \char`\"{}\%lf \%lfi\char`\"{}, \char`\"{}\%lf \%lfr\char`\"{}, \char`\"{}\%lf \%lfd\char`\"{}, \char`\"{}\%lf \%lfi\char`\"{} \}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 399 of file af\+\_\+aiir.\+c.
+
+\mbox{\Hypertarget{af__aiir_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{af__aiir_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{af\_aiir.c@{af\_aiir.c}!inputs@{inputs}}
+\index{inputs@{inputs}!af\_aiir.c@{af\_aiir.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{af__aiir_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1448 of file af\+\_\+aiir.\+c.
+

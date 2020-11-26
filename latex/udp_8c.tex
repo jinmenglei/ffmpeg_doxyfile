@@ -1,0 +1,759 @@
+\hypertarget{udp_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/udp.c File Reference}
+\label{udp_8c}\index{E:/github/ffmpeg/libavformat/udp.c@{E:/github/ffmpeg/libavformat/udp.c}}
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/fifo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/log.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}network.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}os\+\_\+support.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}url.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ip.\+h\char`\"{}}\newline
+Include dependency graph for udp.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{udp_8c_a8fb447618db946a9e2a596d9ea18763f}{\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+O\+U\+R\+CE}}
+\item 
+\#define \mbox{\hyperlink{udp_8c_ad3d8a3bd0c0b677acef144f2c2ef6d73}{\+\_\+\+B\+S\+D\+\_\+\+S\+O\+U\+R\+CE}}~/$\ast$ Needed \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} using struct ip\+\_\+mreq with recent glibc $\ast$/
+\item 
+\#define \mbox{\hyperlink{udp_8c_a1b2e3aea5b22026c1f4322cc2d78743d}{U\+D\+P\+L\+I\+T\+E\+\_\+\+S\+E\+N\+D\+\_\+\+C\+S\+C\+OV}}~10
+\item 
+\#define \mbox{\hyperlink{udp_8c_af421f8f6f43679e0ec3b2048aec37bec}{U\+D\+P\+L\+I\+T\+E\+\_\+\+R\+E\+C\+V\+\_\+\+C\+S\+C\+OV}}~11
+\item 
+\#define \mbox{\hyperlink{udp_8c_a76019e374e4b3301abea0090e9c5c0f6}{I\+P\+P\+R\+O\+T\+O\+\_\+\+U\+D\+P\+L\+I\+TE}}~136
+\item 
+\#define \mbox{\hyperlink{udp_8c_ae00bbae5a549824fed6ec3c646ce6c47}{I\+P\+V6\+\_\+\+A\+D\+D\+\_\+\+M\+E\+M\+B\+E\+R\+S\+H\+IP}}~I\+P\+V6\+\_\+\+J\+O\+I\+N\+\_\+\+G\+R\+O\+UP
+\item 
+\#define \mbox{\hyperlink{udp_8c_a6afe2eca1346e32c42d6358cbfeaebfe}{I\+P\+V6\+\_\+\+D\+R\+O\+P\+\_\+\+M\+E\+M\+B\+E\+R\+S\+H\+IP}}~I\+P\+V6\+\_\+\+L\+E\+A\+V\+E\+\_\+\+G\+R\+O\+UP
+\item 
+\#define \mbox{\hyperlink{udp_8c_a5d20473a838368ac190f608f4cf46f27}{U\+D\+P\+\_\+\+T\+X\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE}}~32768
+\item 
+\#define \mbox{\hyperlink{udp_8c_aa654a2855640f27d6212857d8404f1f8}{U\+D\+P\+\_\+\+R\+X\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE}}~393216
+\item 
+\#define \mbox{\hyperlink{udp_8c_af7a344b9d7950a11af57b8ce8330c918}{U\+D\+P\+\_\+\+M\+A\+X\+\_\+\+P\+K\+T\+\_\+\+S\+I\+ZE}}~65536
+\item 
+\#define \mbox{\hyperlink{udp_8c_a8a0fae83e487dc04b3cd774b3d4ee637}{U\+D\+P\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE}}~8
+\item 
+\#define \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}} \mbox{\hyperlink{udp_8c_ac1820f0456368f128cd7b9c02c463031}{U\+D\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a76edd8180749560383a8de9c8462d0d6}{udp\+\_\+set\+\_\+multicast\+\_\+ttl}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sockfd, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mcast\+T\+TL, struct sockaddr $\ast$addr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a1457cb8b09d3cf05892b2c9075908ea1}{udp\+\_\+join\+\_\+multicast\+\_\+group}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sockfd, struct sockaddr $\ast$addr, struct sockaddr $\ast$local\+\_\+addr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_ae54f7e2f64ee4eff30f6f32805794cb0}{udp\+\_\+leave\+\_\+multicast\+\_\+group}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sockfd, struct sockaddr $\ast$addr, struct sockaddr $\ast$local\+\_\+addr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_afa7ec28912853b153d030f4b522f0109}{udp\+\_\+set\+\_\+multicast\+\_\+sources}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sockfd, struct sockaddr $\ast$addr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} addr\+\_\+len, struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$local\+\_\+addr, struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$\mbox{\hyperlink{filter__design_8txt_add82a1467916ac6506985a580b1727db}{sources}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+sources, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} include)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a3cdf1bab6ff8a89ff2fc49db1e6635f2}{udp\+\_\+set\+\_\+url}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$addr, const char $\ast$hostname, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} port)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a17b99e81133c183c1b62f4616dc0ece2}{udp\+\_\+socket\+\_\+create}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$addr, socklen\+\_\+t $\ast$addr\+\_\+len, const char $\ast$localaddr)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_aee9876ab337e0dccb2ea1f9ef31ad45e}{udp\+\_\+port}} (struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$addr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} addr\+\_\+len)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a8f72a7dc34ebc9af1423c9cf68d4254c}{ff\+\_\+udp\+\_\+set\+\_\+remote\+\_\+url}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a4e08b6d5ca604ea7c7d5e1c16f069ee1}{ff\+\_\+udp\+\_\+get\+\_\+local\+\_\+port}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_ae2e076b83b42ad1642a592944cc21321}{udp\+\_\+get\+\_\+file\+\_\+handle}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7}{udp\+\_\+open}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a876e2d63f86c6c756196cbb883c53f36}{udplite\+\_\+open}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_afbd23f663de848ee2985483d4297b0c4}{udp\+\_\+read}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b}{udp\+\_\+write}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{udp_8c_a75db9308a872c1922bac4594d2ea0c37}{udp\+\_\+close}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{udp_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{udp_8c_aa3b8391a011d73114dfee2f2552423ac}{udp\+\_\+class}}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{udp_8c_acb420c626352881f9383ad2853d574a4}{udplite\+\_\+context\+\_\+class}}
+\item 
+const \mbox{\hyperlink{struct_u_r_l_protocol}{U\+R\+L\+Protocol}} \mbox{\hyperlink{udp_8c_a506793306c394dce097cc46ed2fb7ee7}{ff\+\_\+udp\+\_\+protocol}}
+\item 
+const \mbox{\hyperlink{struct_u_r_l_protocol}{U\+R\+L\+Protocol}} \mbox{\hyperlink{udp_8c_ab7ed0e3f236fc515f40d8712d65e0c6b}{ff\+\_\+udplite\+\_\+protocol}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+U\+DP protocol 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{udp_8c_ad3d8a3bd0c0b677acef144f2c2ef6d73}\label{udp_8c_ad3d8a3bd0c0b677acef144f2c2ef6d73}} 
+\index{udp.c@{udp.c}!\_BSD\_SOURCE@{\_BSD\_SOURCE}}
+\index{\_BSD\_SOURCE@{\_BSD\_SOURCE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{\_BSD\_SOURCE}{\_BSD\_SOURCE}}
+{\footnotesize\ttfamily \#define \+\_\+\+B\+S\+D\+\_\+\+S\+O\+U\+R\+CE~/$\ast$ Needed \mbox{\hyperlink{input_8c_a1cc7a9678a80af263f2be38bc9647316}{for}} using struct ip\+\_\+mreq with recent glibc $\ast$/}
+
+
+
+Definition at line 28 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a8fb447618db946a9e2a596d9ea18763f}\label{udp_8c_a8fb447618db946a9e2a596d9ea18763f}} 
+\index{udp.c@{udp.c}!\_DEFAULT\_SOURCE@{\_DEFAULT\_SOURCE}}
+\index{\_DEFAULT\_SOURCE@{\_DEFAULT\_SOURCE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{\_DEFAULT\_SOURCE}{\_DEFAULT\_SOURCE}}
+{\footnotesize\ttfamily \#define \+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+O\+U\+R\+CE}
+
+
+
+Definition at line 27 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_af316c33cc298530f245e8b55330e86b5}\label{udp_8c_af316c33cc298530f245e8b55330e86b5}} 
+\index{udp.c@{udp.c}!D@{D}}
+\index{D@{D}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{D}{D}}
+{\footnotesize\ttfamily \#define D~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 123 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a07484107e6d9fdf38b53edf631d6511d}\label{udp_8c_a07484107e6d9fdf38b53edf631d6511d}} 
+\index{udp.c@{udp.c}!E@{E}}
+\index{E@{E}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{E}{E}}
+{\footnotesize\ttfamily \#define E~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 124 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a76019e374e4b3301abea0090e9c5c0f6}\label{udp_8c_a76019e374e4b3301abea0090e9c5c0f6}} 
+\index{udp.c@{udp.c}!IPPROTO\_UDPLITE@{IPPROTO\_UDPLITE}}
+\index{IPPROTO\_UDPLITE@{IPPROTO\_UDPLITE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{IPPROTO\_UDPLITE}{IPPROTO\_UDPLITE}}
+{\footnotesize\ttfamily \#define I\+P\+P\+R\+O\+T\+O\+\_\+\+U\+D\+P\+L\+I\+TE~136}
+
+
+
+Definition at line 61 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_ae00bbae5a549824fed6ec3c646ce6c47}\label{udp_8c_ae00bbae5a549824fed6ec3c646ce6c47}} 
+\index{udp.c@{udp.c}!IPV6\_ADD\_MEMBERSHIP@{IPV6\_ADD\_MEMBERSHIP}}
+\index{IPV6\_ADD\_MEMBERSHIP@{IPV6\_ADD\_MEMBERSHIP}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{IPV6\_ADD\_MEMBERSHIP}{IPV6\_ADD\_MEMBERSHIP}}
+{\footnotesize\ttfamily \#define I\+P\+V6\+\_\+\+A\+D\+D\+\_\+\+M\+E\+M\+B\+E\+R\+S\+H\+IP~I\+P\+V6\+\_\+\+J\+O\+I\+N\+\_\+\+G\+R\+O\+UP}
+
+
+
+Definition at line 74 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a6afe2eca1346e32c42d6358cbfeaebfe}\label{udp_8c_a6afe2eca1346e32c42d6358cbfeaebfe}} 
+\index{udp.c@{udp.c}!IPV6\_DROP\_MEMBERSHIP@{IPV6\_DROP\_MEMBERSHIP}}
+\index{IPV6\_DROP\_MEMBERSHIP@{IPV6\_DROP\_MEMBERSHIP}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{IPV6\_DROP\_MEMBERSHIP}{IPV6\_DROP\_MEMBERSHIP}}
+{\footnotesize\ttfamily \#define I\+P\+V6\+\_\+\+D\+R\+O\+P\+\_\+\+M\+E\+M\+B\+E\+R\+S\+H\+IP~I\+P\+V6\+\_\+\+L\+E\+A\+V\+E\+\_\+\+G\+R\+O\+UP}
+
+
+
+Definition at line 75 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{udp.c@{udp.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}}, x)}
+
+
+
+Definition at line 122 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a8a0fae83e487dc04b3cd774b3d4ee637}\label{udp_8c_a8a0fae83e487dc04b3cd774b3d4ee637}} 
+\index{udp.c@{udp.c}!UDP\_HEADER\_SIZE@{UDP\_HEADER\_SIZE}}
+\index{UDP\_HEADER\_SIZE@{UDP\_HEADER\_SIZE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDP\_HEADER\_SIZE}{UDP\_HEADER\_SIZE}}
+{\footnotesize\ttfamily \#define U\+D\+P\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE~8}
+
+
+
+Definition at line 81 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_af7a344b9d7950a11af57b8ce8330c918}\label{udp_8c_af7a344b9d7950a11af57b8ce8330c918}} 
+\index{udp.c@{udp.c}!UDP\_MAX\_PKT\_SIZE@{UDP\_MAX\_PKT\_SIZE}}
+\index{UDP\_MAX\_PKT\_SIZE@{UDP\_MAX\_PKT\_SIZE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDP\_MAX\_PKT\_SIZE}{UDP\_MAX\_PKT\_SIZE}}
+{\footnotesize\ttfamily \#define U\+D\+P\+\_\+\+M\+A\+X\+\_\+\+P\+K\+T\+\_\+\+S\+I\+ZE~65536}
+
+
+
+Definition at line 80 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_aa654a2855640f27d6212857d8404f1f8}\label{udp_8c_aa654a2855640f27d6212857d8404f1f8}} 
+\index{udp.c@{udp.c}!UDP\_RX\_BUF\_SIZE@{UDP\_RX\_BUF\_SIZE}}
+\index{UDP\_RX\_BUF\_SIZE@{UDP\_RX\_BUF\_SIZE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDP\_RX\_BUF\_SIZE}{UDP\_RX\_BUF\_SIZE}}
+{\footnotesize\ttfamily \#define U\+D\+P\+\_\+\+R\+X\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE~393216}
+
+
+
+Definition at line 79 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a5d20473a838368ac190f608f4cf46f27}\label{udp_8c_a5d20473a838368ac190f608f4cf46f27}} 
+\index{udp.c@{udp.c}!UDP\_TX\_BUF\_SIZE@{UDP\_TX\_BUF\_SIZE}}
+\index{UDP\_TX\_BUF\_SIZE@{UDP\_TX\_BUF\_SIZE}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDP\_TX\_BUF\_SIZE}{UDP\_TX\_BUF\_SIZE}}
+{\footnotesize\ttfamily \#define U\+D\+P\+\_\+\+T\+X\+\_\+\+B\+U\+F\+\_\+\+S\+I\+ZE~32768}
+
+
+
+Definition at line 78 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_af421f8f6f43679e0ec3b2048aec37bec}\label{udp_8c_af421f8f6f43679e0ec3b2048aec37bec}} 
+\index{udp.c@{udp.c}!UDPLITE\_RECV\_CSCOV@{UDPLITE\_RECV\_CSCOV}}
+\index{UDPLITE\_RECV\_CSCOV@{UDPLITE\_RECV\_CSCOV}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDPLITE\_RECV\_CSCOV}{UDPLITE\_RECV\_CSCOV}}
+{\footnotesize\ttfamily \#define U\+D\+P\+L\+I\+T\+E\+\_\+\+R\+E\+C\+V\+\_\+\+C\+S\+C\+OV~11}
+
+
+
+Definition at line 57 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a1b2e3aea5b22026c1f4322cc2d78743d}\label{udp_8c_a1b2e3aea5b22026c1f4322cc2d78743d}} 
+\index{udp.c@{udp.c}!UDPLITE\_SEND\_CSCOV@{UDPLITE\_SEND\_CSCOV}}
+\index{UDPLITE\_SEND\_CSCOV@{UDPLITE\_SEND\_CSCOV}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDPLITE\_SEND\_CSCOV}{UDPLITE\_SEND\_CSCOV}}
+{\footnotesize\ttfamily \#define U\+D\+P\+L\+I\+T\+E\+\_\+\+S\+E\+N\+D\+\_\+\+C\+S\+C\+OV~10}
+
+
+
+Definition at line 56 of file udp.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{udp_8c_ac1820f0456368f128cd7b9c02c463031}\label{udp_8c_ac1820f0456368f128cd7b9c02c463031}} 
+\index{udp.c@{udp.c}!UDPContext@{UDPContext}}
+\index{UDPContext@{UDPContext}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{UDPContext}{UDPContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}} \mbox{\hyperlink{struct_u_d_p_context}{U\+D\+P\+Context}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{udp_8c_a4e08b6d5ca604ea7c7d5e1c16f069ee1}\label{udp_8c_a4e08b6d5ca604ea7c7d5e1c16f069ee1}} 
+\index{udp.c@{udp.c}!ff\_udp\_get\_local\_port@{ff\_udp\_get\_local\_port}}
+\index{ff\_udp\_get\_local\_port@{ff\_udp\_get\_local\_port}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_udp\_get\_local\_port()}{ff\_udp\_get\_local\_port()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+udp\+\_\+get\+\_\+local\+\_\+port (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})}
+
+Return the local port used by the U\+DP connection 
+\begin{DoxyParams}{Parameters}
+{\em h} & media file context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the local port number 
+\end{DoxyReturn}
+
+
+Definition at line 445 of file udp.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a4e08b6d5ca604ea7c7d5e1c16f069ee1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a8f72a7dc34ebc9af1423c9cf68d4254c}\label{udp_8c_a8f72a7dc34ebc9af1423c9cf68d4254c}} 
+\index{udp.c@{udp.c}!ff\_udp\_set\_remote\_url@{ff\_udp\_set\_remote\_url}}
+\index{ff\_udp\_set\_remote\_url@{ff\_udp\_set\_remote\_url}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_udp\_set\_remote\_url()}{ff\_udp\_set\_remote\_url()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+udp\+\_\+set\+\_\+remote\+\_\+url (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri }\end{DoxyParamCaption})}
+
+If no filename is given to av\+\_\+open\+\_\+input\+\_\+file because you want to get the local port first, then you must call this function to set the remote server address.
+
+url syntax\+: udp\+://host\+:port\mbox{[}?option=val...\mbox{]} option\+: \textquotesingle{}ttl=n\textquotesingle{} \+: set the ttl value (for multicast only) \textquotesingle{}localport=n\textquotesingle{} \+: set the local port \textquotesingle{}pkt\+\_\+size=n\textquotesingle{} \+: set max packet size \textquotesingle{}reuse=1\textquotesingle{} \+: enable reusing the socket \textquotesingle{}overrun\+\_\+nonfatal=1\textquotesingle{}\+: survive in case of circular buffer overrun
+
+
+\begin{DoxyParams}{Parameters}
+{\em h} & media file context \\
+\hline
+{\em uri} & of the remote server \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+zero if no error. 
+\end{DoxyReturn}
+
+
+Definition at line 406 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a8f72a7dc34ebc9af1423c9cf68d4254c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a8f72a7dc34ebc9af1423c9cf68d4254c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a75db9308a872c1922bac4594d2ea0c37}\label{udp_8c_a75db9308a872c1922bac4594d2ea0c37}} 
+\index{udp.c@{udp.c}!udp\_close@{udp\_close}}
+\index{udp\_close@{udp\_close}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_close()}{udp\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1053 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a75db9308a872c1922bac4594d2ea0c37_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_ae2e076b83b42ad1642a592944cc21321}\label{udp_8c_ae2e076b83b42ad1642a592944cc21321}} 
+\index{udp.c@{udp.c}!udp\_get\_file\_handle@{udp\_get\_file\_handle}}
+\index{udp\_get\_file\_handle@{udp\_get\_file\_handle}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_get\_file\_handle()}{udp\_get\_file\_handle()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+get\+\_\+file\+\_\+handle (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Return the udp file handle for select() usage to wait for several R\+TP streams at the same time. 
+\begin{DoxyParams}{Parameters}
+{\em h} & media file context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 456 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a1457cb8b09d3cf05892b2c9075908ea1}\label{udp_8c_a1457cb8b09d3cf05892b2c9075908ea1}} 
+\index{udp.c@{udp.c}!udp\_join\_multicast\_group@{udp\_join\_multicast\_group}}
+\index{udp\_join\_multicast\_group@{udp\_join\_multicast\_group}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_join\_multicast\_group()}{udp\_join\_multicast\_group()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+join\+\_\+multicast\+\_\+group (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sockfd,  }\item[{struct sockaddr $\ast$}]{addr,  }\item[{struct sockaddr $\ast$}]{local\+\_\+addr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 183 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a1457cb8b09d3cf05892b2c9075908ea1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a1457cb8b09d3cf05892b2c9075908ea1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_ae54f7e2f64ee4eff30f6f32805794cb0}\label{udp_8c_ae54f7e2f64ee4eff30f6f32805794cb0}} 
+\index{udp.c@{udp.c}!udp\_leave\_multicast\_group@{udp\_leave\_multicast\_group}}
+\index{udp\_leave\_multicast\_group@{udp\_leave\_multicast\_group}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_leave\_multicast\_group()}{udp\_leave\_multicast\_group()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+leave\+\_\+multicast\+\_\+group (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sockfd,  }\item[{struct sockaddr $\ast$}]{addr,  }\item[{struct sockaddr $\ast$}]{local\+\_\+addr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 216 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_ae54f7e2f64ee4eff30f6f32805794cb0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{udp_8c_ae54f7e2f64ee4eff30f6f32805794cb0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7}\label{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7}} 
+\index{udp.c@{udp.c}!udp\_open@{udp\_open}}
+\index{udp\_open@{udp\_open}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_open()}{udp\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 626 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_aee9876ab337e0dccb2ea1f9ef31ad45e}\label{udp_8c_aee9876ab337e0dccb2ea1f9ef31ad45e}} 
+\index{udp.c@{udp.c}!udp\_port@{udp\_port}}
+\index{udp\_port@{udp\_port}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_port()}{udp\_port()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+port (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{addr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{addr\+\_\+len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 376 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{udp_8c_aee9876ab337e0dccb2ea1f9ef31ad45e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{udp_8c_aee9876ab337e0dccb2ea1f9ef31ad45e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_afbd23f663de848ee2985483d4297b0c4}\label{udp_8c_afbd23f663de848ee2985483d4297b0c4}} 
+\index{udp.c@{udp.c}!udp\_read@{udp\_read}}
+\index{udp\_read@{udp\_read}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_read()}{udp\_read()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+read (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 939 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_afbd23f663de848ee2985483d4297b0c4_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_afa7ec28912853b153d030f4b522f0109}\label{udp_8c_afa7ec28912853b153d030f4b522f0109}} 
+\index{udp.c@{udp.c}!udp\_set\_multicast\_sources@{udp\_set\_multicast\_sources}}
+\index{udp\_set\_multicast\_sources@{udp\_set\_multicast\_sources}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_set\_multicast\_sources()}{udp\_set\_multicast\_sources()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+set\+\_\+multicast\+\_\+sources (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sockfd,  }\item[{struct sockaddr $\ast$}]{addr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{addr\+\_\+len,  }\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{local\+\_\+addr,  }\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{sources,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+sources,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{include }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 249 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_afa7ec28912853b153d030f4b522f0109_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_afa7ec28912853b153d030f4b522f0109_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a76edd8180749560383a8de9c8462d0d6}\label{udp_8c_a76edd8180749560383a8de9c8462d0d6}} 
+\index{udp.c@{udp.c}!udp\_set\_multicast\_ttl@{udp\_set\_multicast\_ttl}}
+\index{udp\_set\_multicast\_ttl@{udp\_set\_multicast\_ttl}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_set\_multicast\_ttl()}{udp\_set\_multicast\_ttl()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+set\+\_\+multicast\+\_\+ttl (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sockfd,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mcast\+T\+TL,  }\item[{struct sockaddr $\ast$}]{addr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 161 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a76edd8180749560383a8de9c8462d0d6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a76edd8180749560383a8de9c8462d0d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a3cdf1bab6ff8a89ff2fc49db1e6635f2}\label{udp_8c_a3cdf1bab6ff8a89ff2fc49db1e6635f2}} 
+\index{udp.c@{udp.c}!udp\_set\_url@{udp\_set\_url}}
+\index{udp\_set\_url@{udp\_set\_url}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_set\_url()}{udp\_set\_url()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+set\+\_\+url (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{addr,  }\item[{const char $\ast$}]{hostname,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{port }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 318 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=348pt]{udp_8c_a3cdf1bab6ff8a89ff2fc49db1e6635f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a3cdf1bab6ff8a89ff2fc49db1e6635f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a17b99e81133c183c1b62f4616dc0ece2}\label{udp_8c_a17b99e81133c183c1b62f4616dc0ece2}} 
+\index{udp.c@{udp.c}!udp\_socket\_create@{udp\_socket\_create}}
+\index{udp\_socket\_create@{udp\_socket\_create}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_socket\_create()}{udp\_socket\_create()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+socket\+\_\+create (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{struct \mbox{\hyperlink{structsockaddr__storage}{sockaddr\+\_\+storage}} $\ast$}]{addr,  }\item[{socklen\+\_\+t $\ast$}]{addr\+\_\+len,  }\item[{const char $\ast$}]{localaddr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 334 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a17b99e81133c183c1b62f4616dc0ece2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a17b99e81133c183c1b62f4616dc0ece2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b}\label{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b}} 
+\index{udp.c@{udp.c}!udp\_write@{udp\_write}}
+\index{udp\_write@{udp\_write}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_write()}{udp\_write()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udp\+\_\+write (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1003 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{udp_8c_a876e2d63f86c6c756196cbb883c53f36}\label{udp_8c_a876e2d63f86c6c756196cbb883c53f36}} 
+\index{udp.c@{udp.c}!udplite\_open@{udplite\_open}}
+\index{udplite\_open@{udplite\_open}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udplite\_open()}{udplite\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} udplite\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 929 of file udp.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{udp_8c_a876e2d63f86c6c756196cbb883c53f36_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{udp_8c_a506793306c394dce097cc46ed2fb7ee7}\label{udp_8c_a506793306c394dce097cc46ed2fb7ee7}} 
+\index{udp.c@{udp.c}!ff\_udp\_protocol@{ff\_udp\_protocol}}
+\index{ff\_udp\_protocol@{ff\_udp\_protocol}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_udp\_protocol}{ff\_udp\_protocol}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_u_r_l_protocol}{U\+R\+L\+Protocol}} ff\+\_\+udp\+\_\+protocol}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name                = \textcolor{stringliteral}{"{}udp"{}},}
+\DoxyCodeLine{    .url\_open            = \mbox{\hyperlink{udp_8c_a8e55996dbf8a2f253d9a791aa1542ef7}{udp\_open}},}
+\DoxyCodeLine{    .url\_read            = \mbox{\hyperlink{udp_8c_afbd23f663de848ee2985483d4297b0c4}{udp\_read}},}
+\DoxyCodeLine{    .url\_write           = \mbox{\hyperlink{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b}{udp\_write}},}
+\DoxyCodeLine{    .url\_close           = \mbox{\hyperlink{udp_8c_a75db9308a872c1922bac4594d2ea0c37}{udp\_close}},}
+\DoxyCodeLine{    .url\_get\_file\_handle = \mbox{\hyperlink{udp_8c_ae2e076b83b42ad1642a592944cc21321}{udp\_get\_file\_handle}},}
+\DoxyCodeLine{    .priv\_data\_size      = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{udp_8c_ac1820f0456368f128cd7b9c02c463031}{UDPContext}}),}
+\DoxyCodeLine{    .priv\_data\_class     = \&\mbox{\hyperlink{udp_8c_aa3b8391a011d73114dfee2f2552423ac}{udp\_class}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}               = \mbox{\hyperlink{url_8h_ae575748ec7008ec519ddb262d8f58508}{URL\_PROTOCOL\_FLAG\_NETWORK}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1097 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_ab7ed0e3f236fc515f40d8712d65e0c6b}\label{udp_8c_ab7ed0e3f236fc515f40d8712d65e0c6b}} 
+\index{udp.c@{udp.c}!ff\_udplite\_protocol@{ff\_udplite\_protocol}}
+\index{ff\_udplite\_protocol@{ff\_udplite\_protocol}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{ff\_udplite\_protocol}{ff\_udplite\_protocol}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_u_r_l_protocol}{U\+R\+L\+Protocol}} ff\+\_\+udplite\+\_\+protocol}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name                = \textcolor{stringliteral}{"{}udplite"{}},}
+\DoxyCodeLine{    .url\_open            = \mbox{\hyperlink{udp_8c_a876e2d63f86c6c756196cbb883c53f36}{udplite\_open}},}
+\DoxyCodeLine{    .url\_read            = \mbox{\hyperlink{udp_8c_afbd23f663de848ee2985483d4297b0c4}{udp\_read}},}
+\DoxyCodeLine{    .url\_write           = \mbox{\hyperlink{udp_8c_af1bf005bb83f4ecd1efe80b869a66d3b}{udp\_write}},}
+\DoxyCodeLine{    .url\_close           = \mbox{\hyperlink{udp_8c_a75db9308a872c1922bac4594d2ea0c37}{udp\_close}},}
+\DoxyCodeLine{    .url\_get\_file\_handle = \mbox{\hyperlink{udp_8c_ae2e076b83b42ad1642a592944cc21321}{udp\_get\_file\_handle}},}
+\DoxyCodeLine{    .priv\_data\_size      = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{udp_8c_ac1820f0456368f128cd7b9c02c463031}{UDPContext}}),}
+\DoxyCodeLine{    .priv\_data\_class     = \&\mbox{\hyperlink{udp_8c_acb420c626352881f9383ad2853d574a4}{udplite\_context\_class}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}               = \mbox{\hyperlink{url_8h_ae575748ec7008ec519ddb262d8f58508}{URL\_PROTOCOL\_FLAG\_NETWORK}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1109 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{udp_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{udp.c@{udp.c}!options@{options}}
+\index{options@{options}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}buffer\_size"{}},    \textcolor{stringliteral}{"{}System data size (in bytes)"{}},                     \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(buffer\_size),    \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{ .i64 = -\/1 \},    -\/1, INT\_MAX, .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bitrate"{}},        \textcolor{stringliteral}{"{}Bits to send per second"{}},                         \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{tests_2h264__levels_8c_a7ead09ba2ff985f7f74ab0f40ee7eecc}{bitrate}}),        \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a94d540a5b928da813ff94d9367a1078a}{AV\_OPT\_TYPE\_INT64}},  \{ .i64 = 0  \},     0, INT64\_MAX, .flags = \mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}burst\_bits"{}},     \textcolor{stringliteral}{"{}Max length of bursts in bits (when using bitrate)"{}}, \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(burst\_bits),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a94d540a5b928da813ff94d9367a1078a}{AV\_OPT\_TYPE\_INT64}},  \{ .i64 = 0  \},     0, INT64\_MAX, .flags = \mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}localport"{}},      \textcolor{stringliteral}{"{}Local port"{}},                                      \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(local\_port),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{ .i64 = -\/1 \},    -\/1, INT\_MAX, \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}local\_port"{}},     \textcolor{stringliteral}{"{}Local port"{}},                                      \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(local\_port),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{ .i64 = -\/1 \},    -\/1, INT\_MAX, .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}localaddr"{}},      \textcolor{stringliteral}{"{}Local address"{}},                                   \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(localaddr),      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},               .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}udplite\_coverage"{}}, \textcolor{stringliteral}{"{}choose UDPLite head size which should be validated by checksum"{}}, \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(udplite\_coverage), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, 0, INT\_MAX, \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}pkt\_size"{}},       \textcolor{stringliteral}{"{}Maximum UDP packet size"{}},                         \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(pkt\_size),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{ .i64 = 1472 \},  -\/1, INT\_MAX, .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}reuse"{}},          \textcolor{stringliteral}{"{}explicitly allow reusing UDP sockets"{}},            \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(reuse\_socket),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}},   \{ .i64 = -\/1 \},    -\/1, 1,       \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}reuse\_socket"{}},   \textcolor{stringliteral}{"{}explicitly allow reusing UDP sockets"{}},            \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(reuse\_socket),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}},   \{ .i64 = -\/1 \},    -\/1, 1,       .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}broadcast"{}}, \textcolor{stringliteral}{"{}explicitly allow or disallow broadcast destination"{}},   \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(is\_broadcast),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}},   \{ .i64 = 0  \},     0, 1,       \mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}ttl"{}},            \textcolor{stringliteral}{"{}Time to live (multicast only)"{}},                   \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(ttl),            \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{ .i64 = 16 \},     0, INT\_MAX, \mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}connect"{}},        \textcolor{stringliteral}{"{}set if connect() should be called on socket"{}},     \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(is\_connected),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}},   \{ .i64 =  0 \},     0, 1,       .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}fifo\_size"{}},      \textcolor{stringliteral}{"{}set the UDP receiving circular buffer size, expressed as a number of packets with size of 188 bytes"{}}, \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(circular\_buffer\_size), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 7*4096\}, 0, INT\_MAX, \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}overrun\_nonfatal"{}}, \textcolor{stringliteral}{"{}survive in case of UDP receiving circular buffer overrun"{}}, \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(overrun\_nonfatal), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1,    \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}timeout"{}},        \textcolor{stringliteral}{"{}set raise error timeout, in microseconds (only in read mode)"{}},\mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(timeout),         \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},  \{.i64 = 0\}, 0, INT\_MAX, \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}sources"{}},        \textcolor{stringliteral}{"{}Source list"{}},                                     \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{filter__design_8txt_add82a1467916ac6506985a580b1727db}{sources}}),        \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},               .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}block"{}},          \textcolor{stringliteral}{"{}Block list"{}},                                      \mbox{\hyperlink{udp_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}),          \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},               .flags = \mbox{\hyperlink{udp_8c_af316c33cc298530f245e8b55330e86b5}{D}}|\mbox{\hyperlink{udp_8c_a07484107e6d9fdf38b53edf631d6511d}{E}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 125 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_aa3b8391a011d73114dfee2f2552423ac}\label{udp_8c_aa3b8391a011d73114dfee2f2552423ac}} 
+\index{udp.c@{udp.c}!udp\_class@{udp\_class}}
+\index{udp\_class@{udp\_class}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udp\_class}{udp\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} udp\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}udp"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{udp_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 147 of file udp.\+c.
+
+\mbox{\Hypertarget{udp_8c_acb420c626352881f9383ad2853d574a4}\label{udp_8c_acb420c626352881f9383ad2853d574a4}} 
+\index{udp.c@{udp.c}!udplite\_context\_class@{udplite\_context\_class}}
+\index{udplite\_context\_class@{udplite\_context\_class}!udp.c@{udp.c}}
+\doxysubsubsection{\texorpdfstring{udplite\_context\_class}{udplite\_context\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} udplite\+\_\+context\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name     = \textcolor{stringliteral}{"{}udplite"{}},}
+\DoxyCodeLine{    .item\_name      = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option         = \mbox{\hyperlink{udp_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version        = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 154 of file udp.\+c.
+

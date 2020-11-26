@@ -1,0 +1,905 @@
+\hypertarget{vf__lut3d_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+lut3d.c File Reference}
+\label{vf__lut3d_8c}\index{E:/github/ffmpeg/libavfilter/vf\_lut3d.c@{E:/github/ffmpeg/libavfilter/vf\_lut3d.c}}
+{\ttfamily \#include \char`\"{}float.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/file.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intfloat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}drawutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}framesync.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+lut3d.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structrgbvec}{rgbvec}}
+\item 
+struct \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}}
+\item 
+struct \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a5c71a5e59a53413cd6c270266d63b031}{R}}~0
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_aed9ea78689ecce0b7264c02c7f8a9a54}{G}}~1
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a111da81ae5883147168bbb8366377b10}{B}}~2
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~3
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a5bb4257ca9fa4bfcf9391b7895b97761}{M\+A\+X\+\_\+\+L\+E\+V\+EL}}~256
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a683ec3ed976d09b0ae2b8b07dae7e443}{P\+R\+E\+L\+U\+T\+\_\+\+S\+I\+ZE}}~65536
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a50523edf90e2250de36f0afcbbc030fb}{C\+O\+M\+M\+O\+N\+\_\+\+O\+P\+T\+I\+O\+NS}}
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_afe45c5697f427cf50fd6887cd59b741e}{E\+X\+P\+O\+N\+E\+N\+T\+\_\+\+M\+A\+SK}}~0x7\+F800000
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_af02e9117e403fe139271f62523bcb397}{M\+A\+N\+T\+I\+S\+S\+A\+\_\+\+M\+A\+SK}}~0x007\+F\+F\+F\+FF
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_acf1c1ee00bc9986e892b8d7de85ea056}{S\+I\+G\+N\+\_\+\+M\+A\+SK}}~0x80000000
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a4465b848e84da9111133419413c6f842}{N\+E\+AR}}(x)~((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})((x) + .\+5))
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a7355421c23b2dd22cec3c1ef5bc380e1}{P\+R\+EV}}(x)~((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(x))
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a184eb1eeb21deade2e180823b4a0e04c}{N\+E\+XT}}(x)~(\mbox{\hyperlink{tiny__ssim_8c_a0f84cbd7fd810cd678157c98cbfad4b0}{F\+F\+M\+IN}}((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(x) + 1, lut3d-\/$>$lutsize -\/ 1))
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a18dc79cdf9e16ce091864da1a8b92e21}{D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+N\+C\+\_\+\+P\+L\+A\+N\+AR}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  nbits,  depth)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_aea38d44f810f3894d5552ea0a3d4664a}{D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+N\+C\+\_\+\+P\+L\+A\+N\+A\+R\+\_\+\+F\+L\+O\+AT}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  depth)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a321a5800931954d183d06dd5ead9e31b}{D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+NC}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  nbits)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a706068f562dd5c64a8b7bbd4b2298dd1}{M\+A\+X\+\_\+\+L\+I\+N\+E\+\_\+\+S\+I\+ZE}}~512
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a9611278063422e2dca6c6c665b5b4ec2}{N\+E\+X\+T\+\_\+\+L\+I\+NE}}(loop\+\_\+cond)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a51e865cb7b4f7a8831fa295ea8fe6084}{N\+E\+X\+T\+\_\+\+L\+I\+N\+E\+\_\+\+O\+R\+\_\+\+G\+O\+TO}}(loop\+\_\+cond,  label)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a5c8769180f91fe17f15d4b37a6c62593}{S\+E\+T\+\_\+\+C\+O\+L\+OR}}(\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}})
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_a791fd262b5db70842b1e4f06c3cb78ba}{N\+E\+X\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+O\+R\+\_\+\+G\+O\+TO}}(\mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}},  label)
+\item 
+\#define \mbox{\hyperlink{vf__lut3d_8c_aee185878491fc6d04445c7d7cdec447e}{S\+E\+T\+\_\+\+F\+U\+NC}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} \mbox{\hyperlink{vf__lut3d_8c_ac8d8e449afb5614c221f61dcc5d38698}{Lut3\+D\+Pre\+Lut}}
+\item 
+typedef struct \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} \mbox{\hyperlink{vf__lut3d_8c_a6b945d6b5c2887ee130d6a4ef4c5ddcb}{L\+U\+T3\+D\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__lut3d_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400}{interp\+\_\+mode}} \{ \mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400afdaec47bc5f0c29084069b4806b62044}{I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+N\+E\+A\+R\+E\+ST}}, 
+\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a2af28cb8e514a88c5b2c5db68eef7538}{I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+T\+R\+I\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a5bbfe05f303656e0c457a7d4bd1f9b6d}{I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+T\+E\+T\+R\+A\+H\+E\+D\+R\+AL}}, 
+\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a53f104e5b1f678857a2b9d7135e54ff4}{N\+B\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+M\+O\+DE}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static float \mbox{\hyperlink{vf__lut3d_8c_a040c6f4e8fa0947b331d273bb4991d0f}{sanitizef}} (float \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static float \mbox{\hyperlink{vf__lut3d_8c_aac08c89755a7789fa6655c4de4ce65f2}{lerpf}} (float \mbox{\hyperlink{regdef_8h_a2b3f75463b42545c79b95790e5bc0329}{v0}}, float v1, float \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} \mbox{\hyperlink{vf__lut3d_8c_a649c89ec57f32c04497188a6cb3a62a4}{lerp}} (const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$\mbox{\hyperlink{regdef_8h_a2b3f75463b42545c79b95790e5bc0329}{v0}}, const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$v1, float \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} \mbox{\hyperlink{vf__lut3d_8c_acf1acbda98d515e079941de297a9a34c}{interp\+\_\+nearest}} (const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$lut3d, const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} \mbox{\hyperlink{vf__lut3d_8c_a9a3c93cfd96e5d4e422222313822baaa}{interp\+\_\+trilinear}} (const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$lut3d, const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} \mbox{\hyperlink{vf__lut3d_8c_a929f418cb86a31a16175c6ce0206b29d}{interp\+\_\+tetrahedral}} (const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$lut3d, const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static float \mbox{\hyperlink{vf__lut3d_8c_ad80c30aca2c95d5794be09e79ae1f98c}{prelut\+\_\+interp\+\_\+1d\+\_\+linear}} (const \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} $\ast$prelut, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} idx, const float \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} \mbox{\hyperlink{vf__lut3d_8c_ab0d3f66c5b810ec3d5d4d0a9682fba65}{apply\+\_\+prelut}} (const \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} $\ast$prelut, const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a26bbaf3237eecc7c315a6a68b0d13b9c}{skip\+\_\+line}} (const char $\ast$p)
+\item 
+static char $\ast$ \mbox{\hyperlink{vf__lut3d_8c_aa70f78eaf3eed4a044fa977e79ffa29c}{fget\+\_\+next\+\_\+word}} (char $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_ac209f877fabc672c769ca05381858fd6}{allocate\+\_\+3dlut}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} lutsize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prelut)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_aecfb9247803ebb0895cff54da3807581}{parse\+\_\+dat}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_afef07c27381b33b753092c730456d564}{parse\+\_\+cube}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_ab84bd2fa84cbf0bb57eeb3a74757b227}{parse\+\_\+3dl}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a550af73c769cbeaa305fc7fcf3c0c01d}{parse\+\_\+m3d}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a22897166df9678aafbc12719d95da9aa}{nearest\+\_\+sample\+\_\+index}} (float $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, float x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} low, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hi)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_aee1f47d4254ab82214e930e675b452ae}{parse\+\_\+cinespace}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, F\+I\+LE $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a27a51aa393c2843b5a9ff304fe38c8e6}{set\+\_\+identity\+\_\+matrix}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$ \mbox{\hyperlink{vf__lut3d_8c_ab1e21cdf7e06dfdabe60cecba2eace4f}{apply\+\_\+lut}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__lut3d_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+3D Lookup table filter 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__lut3d_8c_a955f504eccf76b4eb2489c0adab03121}\label{vf__lut3d_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!A@{A}}
+\index{A@{A}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~3}
+
+
+
+Definition at line 46 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a111da81ae5883147168bbb8366377b10}\label{vf__lut3d_8c_a111da81ae5883147168bbb8366377b10}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!B@{B}}
+\index{B@{B}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{B}{B}}
+{\footnotesize\ttfamily \#define B~2}
+
+
+
+Definition at line 45 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a50523edf90e2250de36f0afcbbc030fb}\label{vf__lut3d_8c_a50523edf90e2250de36f0afcbbc030fb}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!COMMON\_OPTIONS@{COMMON\_OPTIONS}}
+\index{COMMON\_OPTIONS@{COMMON\_OPTIONS}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{COMMON\_OPTIONS}{COMMON\_OPTIONS}}
+{\footnotesize\ttfamily \#define C\+O\+M\+M\+O\+N\+\_\+\+O\+P\+T\+I\+O\+NS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}interp"{}}, \textcolor{stringliteral}{"{}select interpolation mode"{}}, \mbox{\hyperlink{vf__lut3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{af__adeclick_8c_add6dab59455dcfbf0d4b4c6b5705fb46}{interpolation}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a5bbfe05f303656e0c457a7d4bd1f9b6d}{INTERPOLATE\_TETRAHEDRAL}}\}, 0, \mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a53f104e5b1f678857a2b9d7135e54ff4}{NB\_INTERP\_MODE}}-\/1, \mbox{\hyperlink{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}interp\_mode"{}} \}, \(\backslash\)}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}nearest"{}},     \textcolor{stringliteral}{"{}use values from the nearest defined points"{}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400afdaec47bc5f0c29084069b4806b62044}{INTERPOLATE\_NEAREST}}\},     INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}interp\_mode"{}} \}, \(\backslash\)}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}trilinear"{}},   \textcolor{stringliteral}{"{}interpolate values using the 8 points defining a cube"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a2af28cb8e514a88c5b2c5db68eef7538}{INTERPOLATE\_TRILINEAR}}\},   INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}interp\_mode"{}} \}, \(\backslash\)}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}tetrahedral"{}}, \textcolor{stringliteral}{"{}interpolate values using a tetrahedron"{}},                0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a5bbfe05f303656e0c457a7d4bd1f9b6d}{INTERPOLATE\_TETRAHEDRAL}}\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}interp\_mode"{}} \}, \(\backslash\)}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+
+\end{DoxyCode}
+
+
+Definition at line 101 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a321a5800931954d183d06dd5ead9e31b}\label{vf__lut3d_8c_a321a5800931954d183d06dd5ead9e31b}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!DEFINE\_INTERP\_FUNC@{DEFINE\_INTERP\_FUNC}}
+\index{DEFINE\_INTERP\_FUNC@{DEFINE\_INTERP\_FUNC}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_INTERP\_FUNC}{DEFINE\_INTERP\_FUNC}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{nbits }\end{DoxyParamCaption})}
+
+
+
+Definition at line 426 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a18dc79cdf9e16ce091864da1a8b92e21}\label{vf__lut3d_8c_a18dc79cdf9e16ce091864da1a8b92e21}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!DEFINE\_INTERP\_FUNC\_PLANAR@{DEFINE\_INTERP\_FUNC\_PLANAR}}
+\index{DEFINE\_INTERP\_FUNC\_PLANAR@{DEFINE\_INTERP\_FUNC\_PLANAR}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_INTERP\_FUNC\_PLANAR}{DEFINE\_INTERP\_FUNC\_PLANAR}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+N\+C\+\_\+\+P\+L\+A\+N\+AR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{nbits,  }\item[{}]{depth }\end{DoxyParamCaption})}
+
+
+
+Definition at line 275 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_aea38d44f810f3894d5552ea0a3d4664a}\label{vf__lut3d_8c_aea38d44f810f3894d5552ea0a3d4664a}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT@{DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT}}
+\index{DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT@{DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT}{DEFINE\_INTERP\_FUNC\_PLANAR\_FLOAT}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+F\+U\+N\+C\+\_\+\+P\+L\+A\+N\+A\+R\+\_\+\+F\+L\+O\+AT(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{depth }\end{DoxyParamCaption})}
+
+
+
+Definition at line 361 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_afe45c5697f427cf50fd6887cd59b741e}\label{vf__lut3d_8c_afe45c5697f427cf50fd6887cd59b741e}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!EXPONENT\_MASK@{EXPONENT\_MASK}}
+\index{EXPONENT\_MASK@{EXPONENT\_MASK}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{EXPONENT\_MASK}{EXPONENT\_MASK}}
+{\footnotesize\ttfamily \#define E\+X\+P\+O\+N\+E\+N\+T\+\_\+\+M\+A\+SK~0x7\+F800000}
+
+
+
+Definition at line 108 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__lut3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 100 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_aed9ea78689ecce0b7264c02c7f8a9a54}\label{vf__lut3d_8c_aed9ea78689ecce0b7264c02c7f8a9a54}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!G@{G}}
+\index{G@{G}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{G}{G}}
+{\footnotesize\ttfamily \#define G~1}
+
+
+
+Definition at line 44 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_af02e9117e403fe139271f62523bcb397}\label{vf__lut3d_8c_af02e9117e403fe139271f62523bcb397}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!MANTISSA\_MASK@{MANTISSA\_MASK}}
+\index{MANTISSA\_MASK@{MANTISSA\_MASK}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{MANTISSA\_MASK}{MANTISSA\_MASK}}
+{\footnotesize\ttfamily \#define M\+A\+N\+T\+I\+S\+S\+A\+\_\+\+M\+A\+SK~0x007\+F\+F\+F\+FF}
+
+
+
+Definition at line 109 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a5bb4257ca9fa4bfcf9391b7895b97761}\label{vf__lut3d_8c_a5bb4257ca9fa4bfcf9391b7895b97761}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!MAX\_LEVEL@{MAX\_LEVEL}}
+\index{MAX\_LEVEL@{MAX\_LEVEL}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_LEVEL}{MAX\_LEVEL}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+L\+E\+V\+EL~256}
+
+
+
+Definition at line 61 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a706068f562dd5c64a8b7bbd4b2298dd1}\label{vf__lut3d_8c_a706068f562dd5c64a8b7bbd4b2298dd1}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!MAX\_LINE\_SIZE@{MAX\_LINE\_SIZE}}
+\index{MAX\_LINE\_SIZE@{MAX\_LINE\_SIZE}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_LINE\_SIZE}{MAX\_LINE\_SIZE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+L\+I\+N\+E\+\_\+\+S\+I\+ZE~512}
+
+
+
+Definition at line 483 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a4465b848e84da9111133419413c6f842}\label{vf__lut3d_8c_a4465b848e84da9111133419413c6f842}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!NEAR@{NEAR}}
+\index{NEAR@{NEAR}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{NEAR}{NEAR}}
+{\footnotesize\ttfamily \#define N\+E\+AR(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})((x) + .\+5))}
+
+
+
+Definition at line 145 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a184eb1eeb21deade2e180823b4a0e04c}\label{vf__lut3d_8c_a184eb1eeb21deade2e180823b4a0e04c}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!NEXT@{NEXT}}
+\index{NEXT@{NEXT}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{NEXT}{NEXT}}
+{\footnotesize\ttfamily \#define N\+E\+XT(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(\mbox{\hyperlink{tiny__ssim_8c_a0f84cbd7fd810cd678157c98cbfad4b0}{F\+F\+M\+IN}}((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(x) + 1, lut3d-\/$>$lutsize -\/ 1))}
+
+
+
+Definition at line 147 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a791fd262b5db70842b1e4f06c3cb78ba}\label{vf__lut3d_8c_a791fd262b5db70842b1e4f06c3cb78ba}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!NEXT\_FLOAT\_OR\_GOTO@{NEXT\_FLOAT\_OR\_GOTO}}
+\index{NEXT\_FLOAT\_OR\_GOTO@{NEXT\_FLOAT\_OR\_GOTO}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{NEXT\_FLOAT\_OR\_GOTO}{NEXT\_FLOAT\_OR\_GOTO}}
+{\footnotesize\ttfamily \#define N\+E\+X\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+O\+R\+\_\+\+G\+O\+TO(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}},  }\item[{}]{label }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{if} (!\mbox{\hyperlink{vf__lut3d_8c_aa70f78eaf3eed4a044fa977e79ffa29c}{fget\_next\_word}}(\mbox{\hyperlink{structline}{line}}, \textcolor{keyword}{sizeof}(\mbox{\hyperlink{structline}{line}}) ,\mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}})) \{           \(\backslash\)}
+\DoxyCodeLine{        ret = \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                          \(\backslash\)}
+\DoxyCodeLine{        goto label;                                         \(\backslash\)}
+\DoxyCodeLine{    \}                                                       \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{group__lavu__string_gaa21d05e9ef9081a5dc847cf033aad1cd}{av\_sscanf}}(\mbox{\hyperlink{structline}{line}}, \textcolor{stringliteral}{"{}\%f"{}}, \&\mbox{\hyperlink{writing__filters_8txt_a09f9d0cee65cb17a34e6e6d313c44b76}{value}}) != 1) \{               \(\backslash\)}
+\DoxyCodeLine{        ret = \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                          \(\backslash\)}
+\DoxyCodeLine{        goto label;                                         \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+Definition at line 800 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a9611278063422e2dca6c6c665b5b4ec2}\label{vf__lut3d_8c_a9611278063422e2dca6c6c665b5b4ec2}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!NEXT\_LINE@{NEXT\_LINE}}
+\index{NEXT\_LINE@{NEXT\_LINE}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{NEXT\_LINE}{NEXT\_LINE}}
+{\footnotesize\ttfamily \#define N\+E\+X\+T\+\_\+\+L\+I\+NE(\begin{DoxyParamCaption}\item[{}]{loop\+\_\+cond }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                           \(\backslash\)}
+\DoxyCodeLine{    if (!fgets(\mbox{\hyperlink{structline}{line}}, \textcolor{keyword}{sizeof}(\mbox{\hyperlink{structline}{line}}), \mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}})) \{                    \(\backslash\)}
+\DoxyCodeLine{        av\_log(\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{group__lavu__log__constants_gaffe151ff4cd8a24b2e77ac8d9616c85c}{AV\_LOG\_ERROR}}, \textcolor{stringliteral}{"{}Unexpected EOF\(\backslash\)n"{}});      \(\backslash\)}
+\DoxyCodeLine{        return \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                         \(\backslash\)}
+\DoxyCodeLine{    \}                                                       \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (loop\_cond)}
+
+\end{DoxyCode}
+
+
+Definition at line 526 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a51e865cb7b4f7a8831fa295ea8fe6084}\label{vf__lut3d_8c_a51e865cb7b4f7a8831fa295ea8fe6084}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!NEXT\_LINE\_OR\_GOTO@{NEXT\_LINE\_OR\_GOTO}}
+\index{NEXT\_LINE\_OR\_GOTO@{NEXT\_LINE\_OR\_GOTO}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{NEXT\_LINE\_OR\_GOTO}{NEXT\_LINE\_OR\_GOTO}}
+{\footnotesize\ttfamily \#define N\+E\+X\+T\+\_\+\+L\+I\+N\+E\+\_\+\+O\+R\+\_\+\+G\+O\+TO(\begin{DoxyParamCaption}\item[{}]{loop\+\_\+cond,  }\item[{}]{label }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{            \(\backslash\)}
+\DoxyCodeLine{    if (!fgets(\mbox{\hyperlink{structline}{line}}, \textcolor{keyword}{sizeof}(\mbox{\hyperlink{structline}{line}}), \mbox{\hyperlink{cbs__vp9_8c_a67e4f69aaf2fe15c3d298d0a2de865a3}{f}})) \{                    \(\backslash\)}
+\DoxyCodeLine{        av\_log(\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{group__lavu__log__constants_gaffe151ff4cd8a24b2e77ac8d9616c85c}{AV\_LOG\_ERROR}}, \textcolor{stringliteral}{"{}Unexpected EOF\(\backslash\)n"{}});      \(\backslash\)}
+\DoxyCodeLine{        ret = \mbox{\hyperlink{group__lavu__error_gaa6e5781e75b15ce44b0baea170c98a45}{AVERROR\_INVALIDDATA}};                          \(\backslash\)}
+\DoxyCodeLine{        goto label;                                         \(\backslash\)}
+\DoxyCodeLine{    \}                                                       \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (loop\_cond)}
+
+\end{DoxyCode}
+
+
+Definition at line 533 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__lut3d_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}}, x)}
+
+
+
+Definition at line 99 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a683ec3ed976d09b0ae2b8b07dae7e443}\label{vf__lut3d_8c_a683ec3ed976d09b0ae2b8b07dae7e443}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!PRELUT\_SIZE@{PRELUT\_SIZE}}
+\index{PRELUT\_SIZE@{PRELUT\_SIZE}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{PRELUT\_SIZE}{PRELUT\_SIZE}}
+{\footnotesize\ttfamily \#define P\+R\+E\+L\+U\+T\+\_\+\+S\+I\+ZE~65536}
+
+
+
+Definition at line 62 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a7355421c23b2dd22cec3c1ef5bc380e1}\label{vf__lut3d_8c_a7355421c23b2dd22cec3c1ef5bc380e1}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!PREV@{PREV}}
+\index{PREV@{PREV}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{PREV}{PREV}}
+{\footnotesize\ttfamily \#define P\+R\+EV(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(x))}
+
+
+
+Definition at line 146 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a5c71a5e59a53413cd6c270266d63b031}\label{vf__lut3d_8c_a5c71a5e59a53413cd6c270266d63b031}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!R@{R}}
+\index{R@{R}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{R}{R}}
+{\footnotesize\ttfamily \#define R~0}
+
+
+
+Definition at line 43 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a5c8769180f91fe17f15d4b37a6c62593}\label{vf__lut3d_8c_a5c8769180f91fe17f15d4b37a6c62593}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!SET\_COLOR@{SET\_COLOR}}
+\index{SET\_COLOR@{SET\_COLOR}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{SET\_COLOR}{SET\_COLOR}}
+{\footnotesize\ttfamily \#define S\+E\+T\+\_\+\+C\+O\+L\+OR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                  \(\backslash\)}
+\DoxyCodeLine{    while (\mbox{\hyperlink{group__lavu__string_ga96490acc8dd8d85f2ee43bc605661ffa}{av\_isspace}}(*\mbox{\hyperlink{structthread__data_a60f074815ea4b5a3b70619ba3f8cb958}{p}}))                  \(\backslash\)}
+\DoxyCodeLine{        p++;                                \(\backslash\)}
+\DoxyCodeLine{    switch (*\mbox{\hyperlink{structthread__data_a60f074815ea4b5a3b70619ba3f8cb958}{p}}) \{                           \(\backslash\)}
+\DoxyCodeLine{    case \textcolor{charliteral}{'r'}: rgb\_map[\mbox{\hyperlink{extract__extradata__bsf_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}] = 0; \textcolor{keywordflow}{break};       \(\backslash\)}
+\DoxyCodeLine{    case \textcolor{charliteral}{'g'}: rgb\_map[\mbox{\hyperlink{extract__extradata__bsf_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}] = 1; \textcolor{keywordflow}{break};       \(\backslash\)}
+\DoxyCodeLine{    case \textcolor{charliteral}{'b'}: rgb\_map[\mbox{\hyperlink{extract__extradata__bsf_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}] = 2; \textcolor{keywordflow}{break};       \(\backslash\)}
+\DoxyCodeLine{    \}                                       \(\backslash\)}
+\DoxyCodeLine{    while (*\mbox{\hyperlink{structthread__data_a60f074815ea4b5a3b70619ba3f8cb958}{p}} \&\& !\mbox{\hyperlink{group__lavu__string_ga96490acc8dd8d85f2ee43bc605661ffa}{av\_isspace}}(*\mbox{\hyperlink{structthread__data_a60f074815ea4b5a3b70619ba3f8cb958}{p}}))           \(\backslash\)}
+\DoxyCodeLine{        p++;                                \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__lut3d_8c_aee185878491fc6d04445c7d7cdec447e}\label{vf__lut3d_8c_aee185878491fc6d04445c7d7cdec447e}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!SET\_FUNC@{SET\_FUNC}}
+\index{SET\_FUNC@{SET\_FUNC}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{SET\_FUNC}{SET\_FUNC}}
+{\footnotesize\ttfamily \#define S\+E\+T\+\_\+\+F\+U\+NC(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                     \(\backslash\)}
+\DoxyCodeLine{    if (\mbox{\hyperlink{audioconvert_8c_a004d49561226c4c0d9a2ee7f52a5209e}{planar}} \&\& !isfloat) \{                                   \(\backslash\)}
+\DoxyCodeLine{        switch (depth) \{                                        \(\backslash\)}
+\DoxyCodeLine{        case  8: lut3d-\/>interp = interp\_8\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p8;   \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        case  9: lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p9;  \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        case 10: lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p10; \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        case 12: lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p12; \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        case 14: lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p14; \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        case 16: lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_p16; \textcolor{keywordflow}{break}; \(\backslash\)}
+\DoxyCodeLine{        \}                                                       \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (isfloat) \{ lut3d-\/>interp = interp\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}\#\#\_pf32; \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (is16bit) \{ lut3d-\/>interp = interp\_16\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}};     \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{else} \{       lut3d-\/>interp = interp\_8\_\#\#\mbox{\hyperlink{writing__filters_8txt_adb27990ed3d4ad300fd1dde281903508}{name}}; \}           \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__lut3d_8c_acf1c1ee00bc9986e892b8d7de85ea056}\label{vf__lut3d_8c_acf1c1ee00bc9986e892b8d7de85ea056}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!SIGN\_MASK@{SIGN\_MASK}}
+\index{SIGN\_MASK@{SIGN\_MASK}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{SIGN\_MASK}{SIGN\_MASK}}
+{\footnotesize\ttfamily \#define S\+I\+G\+N\+\_\+\+M\+A\+SK~0x80000000}
+
+
+
+Definition at line 110 of file vf\+\_\+lut3d.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__lut3d_8c_a6b945d6b5c2887ee130d6a4ef4c5ddcb}\label{vf__lut3d_8c_a6b945d6b5c2887ee130d6a4ef4c5ddcb}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!LUT3DContext@{LUT3DContext}}
+\index{LUT3DContext@{LUT3DContext}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{LUT3DContext}{LUT3DContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}}}
+
+\mbox{\Hypertarget{vf__lut3d_8c_ac8d8e449afb5614c221f61dcc5d38698}\label{vf__lut3d_8c_ac8d8e449afb5614c221f61dcc5d38698}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!Lut3DPreLut@{Lut3DPreLut}}
+\index{Lut3DPreLut@{Lut3DPreLut}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{Lut3DPreLut}{Lut3DPreLut}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}}}
+
+\mbox{\Hypertarget{vf__lut3d_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__lut3d_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400}\label{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!interp\_mode@{interp\_mode}}
+\index{interp\_mode@{interp\_mode}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{interp\_mode}{interp\_mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400}{interp\+\_\+mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERPOLATE\_NEAREST@{INTERPOLATE\_NEAREST}!vf\_lut3d.c@{vf\_lut3d.c}}\index{vf\_lut3d.c@{vf\_lut3d.c}!INTERPOLATE\_NEAREST@{INTERPOLATE\_NEAREST}}}\mbox{\Hypertarget{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400afdaec47bc5f0c29084069b4806b62044}\label{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400afdaec47bc5f0c29084069b4806b62044}} 
+I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+N\+E\+A\+R\+E\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERPOLATE\_TRILINEAR@{INTERPOLATE\_TRILINEAR}!vf\_lut3d.c@{vf\_lut3d.c}}\index{vf\_lut3d.c@{vf\_lut3d.c}!INTERPOLATE\_TRILINEAR@{INTERPOLATE\_TRILINEAR}}}\mbox{\Hypertarget{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a2af28cb8e514a88c5b2c5db68eef7538}\label{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a2af28cb8e514a88c5b2c5db68eef7538}} 
+I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+T\+R\+I\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INTERPOLATE\_TETRAHEDRAL@{INTERPOLATE\_TETRAHEDRAL}!vf\_lut3d.c@{vf\_lut3d.c}}\index{vf\_lut3d.c@{vf\_lut3d.c}!INTERPOLATE\_TETRAHEDRAL@{INTERPOLATE\_TETRAHEDRAL}}}\mbox{\Hypertarget{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a5bbfe05f303656e0c457a7d4bd1f9b6d}\label{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a5bbfe05f303656e0c457a7d4bd1f9b6d}} 
+I\+N\+T\+E\+R\+P\+O\+L\+A\+T\+E\+\_\+\+T\+E\+T\+R\+A\+H\+E\+D\+R\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_INTERP\_MODE@{NB\_INTERP\_MODE}!vf\_lut3d.c@{vf\_lut3d.c}}\index{vf\_lut3d.c@{vf\_lut3d.c}!NB\_INTERP\_MODE@{NB\_INTERP\_MODE}}}\mbox{\Hypertarget{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a53f104e5b1f678857a2b9d7135e54ff4}\label{vf__lut3d_8c_a11cf200d8631fd380fa96bb7e8cbe400a53f104e5b1f678857a2b9d7135e54ff4}} 
+N\+B\+\_\+\+I\+N\+T\+E\+R\+P\+\_\+\+M\+O\+DE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 48 of file vf\+\_\+lut3d.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__lut3d_8c_ac209f877fabc672c769ca05381858fd6}\label{vf__lut3d_8c_ac209f877fabc672c769ca05381858fd6}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!allocate\_3dlut@{allocate\_3dlut}}
+\index{allocate\_3dlut@{allocate\_3dlut}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{allocate\_3dlut()}{allocate\_3dlut()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} allocate\+\_\+3dlut (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{lutsize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{prelut }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 541 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_ac209f877fabc672c769ca05381858fd6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{vf__lut3d_8c_ac209f877fabc672c769ca05381858fd6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_ab1e21cdf7e06dfdabe60cecba2eace4f}\label{vf__lut3d_8c_ab1e21cdf7e06dfdabe60cecba2eace4f}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!apply\_lut@{apply\_lut}}
+\index{apply\_lut@{apply\_lut}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{apply\_lut()}{apply\_lut()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}}$\ast$ apply\+\_\+lut (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1096 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_ab1e21cdf7e06dfdabe60cecba2eace4f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=236pt]{vf__lut3d_8c_ab1e21cdf7e06dfdabe60cecba2eace4f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_ab0d3f66c5b810ec3d5d4d0a9682fba65}\label{vf__lut3d_8c_ab0d3f66c5b810ec3d5d4d0a9682fba65}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!apply\_prelut@{apply\_prelut}}
+\index{apply\_prelut@{apply\_prelut}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{apply\_prelut()}{apply\_prelut()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} apply\+\_\+prelut (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} $\ast$}]{prelut,  }\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 247 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__lut3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1057 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_aa70f78eaf3eed4a044fa977e79ffa29c}\label{vf__lut3d_8c_aa70f78eaf3eed4a044fa977e79ffa29c}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!fget\_next\_word@{fget\_next\_word}}
+\index{fget\_next\_word@{fget\_next\_word}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{fget\_next\_word()}{fget\_next\_word()}}
+{\footnotesize\ttfamily static char$\ast$ fget\+\_\+next\+\_\+word (\begin{DoxyParamCaption}\item[{char $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 492 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=263pt]{vf__lut3d_8c_aa70f78eaf3eed4a044fa977e79ffa29c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{vf__lut3d_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1125 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_acf1acbda98d515e079941de297a9a34c}\label{vf__lut3d_8c_acf1acbda98d515e079941de297a9a34c}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!interp\_nearest@{interp\_nearest}}
+\index{interp\_nearest@{interp\_nearest}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{interp\_nearest()}{interp\_nearest()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} interp\+\_\+nearest (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$}]{lut3d,  }\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Get the nearest defined point 
+
+Definition at line 132 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a929f418cb86a31a16175c6ce0206b29d}\label{vf__lut3d_8c_a929f418cb86a31a16175c6ce0206b29d}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!interp\_tetrahedral@{interp\_tetrahedral}}
+\index{interp\_tetrahedral@{interp\_tetrahedral}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{interp\_tetrahedral()}{interp\_tetrahedral()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} interp\+\_\+tetrahedral (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$}]{lut3d,  }\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Tetrahedral interpolation. Based on code found in Truelight Software Library paper. \begin{DoxySeeAlso}{See also}
+\href{http://www.filmlight.ltd.uk/pdf/whitepapers/FL-TL-TN-0057-SoftwareLib.pdf}{\texttt{ http\+://www.\+filmlight.\+ltd.\+uk/pdf/whitepapers/\+F\+L-\/\+T\+L-\/\+T\+N-\/0057-\/\+Software\+Lib.\+pdf}} 
+\end{DoxySeeAlso}
+
+
+Definition at line 132 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a9a3c93cfd96e5d4e422222313822baaa}\label{vf__lut3d_8c_a9a3c93cfd96e5d4e422222313822baaa}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!interp\_trilinear@{interp\_trilinear}}
+\index{interp\_trilinear@{interp\_trilinear}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{interp\_trilinear()}{interp\_trilinear()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} interp\+\_\+trilinear (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_l_u_t3_d_context}{L\+U\+T3\+D\+Context}} $\ast$}]{lut3d,  }\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Interpolate using the 8 vertices of a cube \begin{DoxySeeAlso}{See also}
+\href{https://en.wikipedia.org/wiki/Trilinear_interpolation}{\texttt{ https\+://en.\+wikipedia.\+org/wiki/\+Trilinear\+\_\+interpolation}} 
+\end{DoxySeeAlso}
+
+
+Definition at line 132 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_a649c89ec57f32c04497188a6cb3a62a4}\label{vf__lut3d_8c_a649c89ec57f32c04497188a6cb3a62a4}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!lerp@{lerp}}
+\index{lerp@{lerp}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{lerp()}{lerp()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrgbvec}{rgbvec}} lerp (\begin{DoxyParamCaption}\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{v0,  }\item[{const struct \mbox{\hyperlink{structrgbvec}{rgbvec}} $\ast$}]{v1,  }\item[{float}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 132 of file vf\+\_\+lut3d.\+c.
+
+\mbox{\Hypertarget{vf__lut3d_8c_aac08c89755a7789fa6655c4de4ce65f2}\label{vf__lut3d_8c_aac08c89755a7789fa6655c4de4ce65f2}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!lerpf@{lerpf}}
+\index{lerpf@{lerpf}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{lerpf()}{lerpf()}}
+{\footnotesize\ttfamily static float lerpf (\begin{DoxyParamCaption}\item[{float}]{v0,  }\item[{float}]{v1,  }\item[{float}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 132 of file vf\+\_\+lut3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=265pt]{vf__lut3d_8c_aac08c89755a7789fa6655c4de4ce65f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a22897166df9678aafbc12719d95da9aa}\label{vf__lut3d_8c_a22897166df9678aafbc12719d95da9aa}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!nearest\_sample\_index@{nearest\_sample\_index}}
+\index{nearest\_sample\_index@{nearest\_sample\_index}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{nearest\_sample\_index()}{nearest\_sample\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nearest\+\_\+sample\+\_\+index (\begin{DoxyParamCaption}\item[{float $\ast$}]{data,  }\item[{float}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{low,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{hi }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 772 of file vf\+\_\+lut3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{vf__lut3d_8c_a22897166df9678aafbc12719d95da9aa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_ab84bd2fa84cbf0bb57eeb3a74757b227}\label{vf__lut3d_8c_ab84bd2fa84cbf0bb57eeb3a74757b227}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!parse\_3dl@{parse\_3dl}}
+\index{parse\_3dl@{parse\_3dl}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{parse\_3dl()}{parse\_3dl()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+3dl (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 668 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_ab84bd2fa84cbf0bb57eeb3a74757b227_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_aee1f47d4254ab82214e930e675b452ae}\label{vf__lut3d_8c_aee1f47d4254ab82214e930e675b452ae}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!parse\_cinespace@{parse\_cinespace}}
+\index{parse\_cinespace@{parse\_cinespace}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{parse\_cinespace()}{parse\_cinespace()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+cinespace (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 810 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_aee1f47d4254ab82214e930e675b452ae_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_afef07c27381b33b753092c730456d564}\label{vf__lut3d_8c_afef07c27381b33b753092c730456d564}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!parse\_cube@{parse\_cube}}
+\index{parse\_cube@{parse\_cube}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{parse\_cube()}{parse\_cube()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+cube (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 611 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_afef07c27381b33b753092c730456d564_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_aecfb9247803ebb0895cff54da3807581}\label{vf__lut3d_8c_aecfb9247803ebb0895cff54da3807581}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!parse\_dat@{parse\_dat}}
+\index{parse\_dat@{parse\_dat}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{parse\_dat()}{parse\_dat()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+dat (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 576 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_aecfb9247803ebb0895cff54da3807581_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a550af73c769cbeaa305fc7fcf3c0c01d}\label{vf__lut3d_8c_a550af73c769cbeaa305fc7fcf3c0c01d}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!parse\_m3d@{parse\_m3d}}
+\index{parse\_m3d@{parse\_m3d}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{parse\_m3d()}{parse\_m3d()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+m3d (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{F\+I\+LE $\ast$}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 703 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_a550af73c769cbeaa305fc7fcf3c0c01d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_ad80c30aca2c95d5794be09e79ae1f98c}\label{vf__lut3d_8c_ad80c30aca2c95d5794be09e79ae1f98c}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!prelut\_interp\_1d\_linear@{prelut\_interp\_1d\_linear}}
+\index{prelut\_interp\_1d\_linear@{prelut\_interp\_1d\_linear}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{prelut\_interp\_1d\_linear()}{prelut\_interp\_1d\_linear()}}
+{\footnotesize\ttfamily static float prelut\+\_\+interp\+\_\+1d\+\_\+linear (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_lut3_d_pre_lut}{Lut3\+D\+Pre\+Lut}} $\ast$}]{prelut,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{idx,  }\item[{const float}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 247 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=265pt]{vf__lut3d_8c_ad80c30aca2c95d5794be09e79ae1f98c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__lut3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1032 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__lut3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a040c6f4e8fa0947b331d273bb4991d0f}\label{vf__lut3d_8c_a040c6f4e8fa0947b331d273bb4991d0f}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!sanitizef@{sanitizef}}
+\index{sanitizef@{sanitizef}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{sanitizef()}{sanitizef()}}
+{\footnotesize\ttfamily static float sanitizef (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 112 of file vf\+\_\+lut3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{vf__lut3d_8c_a040c6f4e8fa0947b331d273bb4991d0f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a27a51aa393c2843b5a9ff304fe38c8e6}\label{vf__lut3d_8c_a27a51aa393c2843b5a9ff304fe38c8e6}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!set\_identity\_matrix@{set\_identity\_matrix}}
+\index{set\_identity\_matrix@{set\_identity\_matrix}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{set\_identity\_matrix()}{set\_identity\_matrix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} set\+\_\+identity\+\_\+matrix (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1007 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__lut3d_8c_a27a51aa393c2843b5a9ff304fe38c8e6_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__lut3d_8c_a26bbaf3237eecc7c315a6a68b0d13b9c}\label{vf__lut3d_8c_a26bbaf3237eecc7c315a6a68b0d13b9c}} 
+\index{vf\_lut3d.c@{vf\_lut3d.c}!skip\_line@{skip\_line}}
+\index{skip\_line@{skip\_line}!vf\_lut3d.c@{vf\_lut3d.c}}
+\doxysubsubsection{\texorpdfstring{skip\_line()}{skip\_line()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} skip\+\_\+line (\begin{DoxyParamCaption}\item[{const char $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 485 of file vf\+\_\+lut3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=236pt]{vf__lut3d_8c_a26bbaf3237eecc7c315a6a68b0d13b9c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{vf__lut3d_8c_a26bbaf3237eecc7c315a6a68b0d13b9c_icgraph}
+\end{center}
+\end{figure}

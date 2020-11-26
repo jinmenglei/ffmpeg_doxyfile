@@ -1,0 +1,570 @@
+\hypertarget{vf__tonemap__opencl_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+tonemap\+\_\+opencl.c File Reference}
+\label{vf__tonemap__opencl_8c}\index{E:/github/ffmpeg/libavfilter/vf\_tonemap\_opencl.c@{E:/github/ffmpeg/libavfilter/vf\_tonemap\_opencl.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mem.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencl.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencl\+\_\+source.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}colorspace.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+tonemap\+\_\+opencl.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__tonemap__opencl_8c_af8fe3b70f9f06e18ed023fead1804fa4}{D\+E\+T\+E\+C\+T\+I\+O\+N\+\_\+\+F\+R\+A\+M\+ES}}~63
+\item 
+\#define \mbox{\hyperlink{vf__tonemap__opencl_8c_afb4f8c4df47d5cd308d2177e475a329b}{O\+P\+E\+N\+C\+L\+\_\+\+S\+O\+U\+R\+C\+E\+\_\+\+NB}}~3
+\item 
+\#define \mbox{\hyperlink{vf__tonemap__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__tonemap__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~(\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}} \mbox{\hyperlink{vf__tonemap__opencl_8c_af6c59071b65993a1a1a0e2abe92f5a29}{Tonemap\+Open\+C\+L\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586}{Tonemap\+Algorithm}} \{ \newline
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}{T\+O\+N\+E\+M\+A\+P\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}{T\+O\+N\+E\+M\+A\+P\+\_\+\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}{T\+O\+N\+E\+M\+A\+P\+\_\+\+G\+A\+M\+MA}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}{T\+O\+N\+E\+M\+A\+P\+\_\+\+C\+L\+IP}}, 
+\newline
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}{T\+O\+N\+E\+M\+A\+P\+\_\+\+R\+E\+I\+N\+H\+A\+RD}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}{T\+O\+N\+E\+M\+A\+P\+\_\+\+H\+A\+B\+LE}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+O\+B\+I\+US}}, 
+\mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX}}, 
+\newline
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}{T\+O\+N\+E\+M\+A\+P\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}{T\+O\+N\+E\+M\+A\+P\+\_\+\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}{T\+O\+N\+E\+M\+A\+P\+\_\+\+G\+A\+M\+MA}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}{T\+O\+N\+E\+M\+A\+P\+\_\+\+C\+L\+IP}}, 
+\newline
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}{T\+O\+N\+E\+M\+A\+P\+\_\+\+R\+E\+I\+N\+H\+A\+RD}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}{T\+O\+N\+E\+M\+A\+P\+\_\+\+H\+A\+B\+LE}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+O\+B\+I\+US}}, 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a8873d1d6232214e75e363f73b3e795db}{get\+\_\+rgb2rgb\+\_\+matrix}} (enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}} \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}} \mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, double rgb2rgb\mbox{[}3\mbox{]}\mbox{[}3\mbox{]})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__tonemap__opencl_8c_afe99a717645734a29060b6bd6d99b236}{tonemap\+\_\+opencl\+\_\+init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__tonemap__opencl_8c_ae723d40c3027a03b286f88dc485edfdc}{tonemap\+\_\+opencl\+\_\+config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a33482e377a85c84a7d228b36cd925c2e}{launch\+\_\+kernel}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx, cl\+\_\+kernel kernel, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{filter__design_8txt_ad29e68e2acddc1f10f601345de7bf4aa}{output}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}}, float peak)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a6e27d409732fb28d52a0daee77668c9c}{tonemap\+\_\+opencl\+\_\+filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__tonemap__opencl_8c_aec651b567fb8a1c4ee0d160da09290b5}{tonemap\+\_\+opencl\+\_\+uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx)
+\item 
+\mbox{\hyperlink{vf__tonemap__opencl_8c_a7d933f2d87c6318687b1f976d5156d89}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (tonemap\+\_\+opencl)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char $\ast$ \mbox{\hyperlink{vf__tonemap__opencl_8c_a0b9492af405597c59fbc7f93a6f3ce49}{linearize\+\_\+funcs}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}
+\item 
+static const char $\ast$ \mbox{\hyperlink{vf__tonemap__opencl_8c_a5e5525685dbc64b0e223bcf51d947146}{delinearize\+\_\+funcs}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}
+\item 
+static const struct \mbox{\hyperlink{struct_primary_coefficients}{Primary\+Coefficients}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a2eba64080898d3af720cb4558f11e5c2}{primaries\+\_\+table}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}
+\item 
+static const struct \mbox{\hyperlink{struct_whitepoint_coefficients}{Whitepoint\+Coefficients}} \mbox{\hyperlink{vf__tonemap__opencl_8c_ad179071e0b4f6afd5bfddc5a48276a12}{whitepoint\+\_\+table}} \mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}
+\item 
+static const char $\ast$ \mbox{\hyperlink{vf__tonemap__opencl_8c_a4b312c605a2326fa7f23801510470ba7}{tonemap\+\_\+func}} \mbox{[}\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX}}\mbox{]}
+\item 
+static const float \mbox{\hyperlink{vf__tonemap__opencl_8c_ae8414d376b9e136f5ce52058a8d775f3}{sdr\+\_\+avg}} = 0.\+25\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a5942b62b08d2f644f9a28aa3a07b42d9}{tonemap\+\_\+opencl\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__tonemap__opencl_8c_afd62bfa4ec6693ec0d32774755ecbcaf}{tonemap\+\_\+opencl\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__tonemap__opencl_8c_ab187d51021a54e9692caa1488220f262}{tonemap\+\_\+opencl\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__tonemap__opencl_8c_a3f91d74ee60e4f074117dbaef82a9757}{ff\+\_\+vf\+\_\+tonemap\+\_\+opencl}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_af8fe3b70f9f06e18ed023fead1804fa4}\label{vf__tonemap__opencl_8c_af8fe3b70f9f06e18ed023fead1804fa4}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!DETECTION\_FRAMES@{DETECTION\_FRAMES}}
+\index{DETECTION\_FRAMES@{DETECTION\_FRAMES}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{DETECTION\_FRAMES}{DETECTION\_FRAMES}}
+{\footnotesize\ttfamily \#define D\+E\+T\+E\+C\+T\+I\+O\+N\+\_\+\+F\+R\+A\+M\+ES~63}
+
+
+
+Definition at line 39 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__tonemap__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~(\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}})}
+
+
+
+Definition at line 486 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__tonemap__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}}, x)}
+
+
+
+Definition at line 485 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_afb4f8c4df47d5cd308d2177e475a329b}\label{vf__tonemap__opencl_8c_afb4f8c4df47d5cd308d2177e475a329b}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!OPENCL\_SOURCE\_NB@{OPENCL\_SOURCE\_NB}}
+\index{OPENCL\_SOURCE\_NB@{OPENCL\_SOURCE\_NB}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{OPENCL\_SOURCE\_NB}{OPENCL\_SOURCE\_NB}}
+{\footnotesize\ttfamily \#define O\+P\+E\+N\+C\+L\+\_\+\+S\+O\+U\+R\+C\+E\+\_\+\+NB~3}
+
+
+
+Definition at line 114 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_af6c59071b65993a1a1a0e2abe92f5a29}\label{vf__tonemap__opencl_8c_af6c59071b65993a1a1a0e2abe92f5a29}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TonemapOpenCLContext@{TonemapOpenCLContext}}
+\index{TonemapOpenCLContext@{TonemapOpenCLContext}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{TonemapOpenCLContext}{TonemapOpenCLContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}} \mbox{\hyperlink{struct_tonemap_open_c_l_context}{Tonemap\+Open\+C\+L\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TonemapAlgorithm@{TonemapAlgorithm}}
+\index{TonemapAlgorithm@{TonemapAlgorithm}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{TonemapAlgorithm}{TonemapAlgorithm}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__tonemap_8c_a2ca4358709712134d33225d0d2f13586}{Tonemap\+Algorithm}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_NONE@{TONEMAP\_NONE}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_NONE@{TONEMAP\_NONE}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_LINEAR@{TONEMAP\_LINEAR}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_LINEAR@{TONEMAP\_LINEAR}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_GAMMA@{TONEMAP\_GAMMA}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_GAMMA@{TONEMAP\_GAMMA}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+G\+A\+M\+MA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_CLIP@{TONEMAP\_CLIP}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_CLIP@{TONEMAP\_CLIP}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+C\+L\+IP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_REINHARD@{TONEMAP\_REINHARD}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_REINHARD@{TONEMAP\_REINHARD}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+R\+E\+I\+N\+H\+A\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_HABLE@{TONEMAP\_HABLE}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_HABLE@{TONEMAP\_HABLE}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+H\+A\+B\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_MOBIUS@{TONEMAP\_MOBIUS}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_MOBIUS@{TONEMAP\_MOBIUS}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+O\+B\+I\+US&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_MAX@{TONEMAP\_MAX}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_MAX@{TONEMAP\_MAX}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_NONE@{TONEMAP\_NONE}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_NONE@{TONEMAP\_NONE}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_LINEAR@{TONEMAP\_LINEAR}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_LINEAR@{TONEMAP\_LINEAR}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_GAMMA@{TONEMAP\_GAMMA}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_GAMMA@{TONEMAP\_GAMMA}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+G\+A\+M\+MA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_CLIP@{TONEMAP\_CLIP}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_CLIP@{TONEMAP\_CLIP}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+C\+L\+IP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_REINHARD@{TONEMAP\_REINHARD}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_REINHARD@{TONEMAP\_REINHARD}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+R\+E\+I\+N\+H\+A\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_HABLE@{TONEMAP\_HABLE}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_HABLE@{TONEMAP\_HABLE}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+H\+A\+B\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_MOBIUS@{TONEMAP\_MOBIUS}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_MOBIUS@{TONEMAP\_MOBIUS}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+O\+B\+I\+US&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TONEMAP\_MAX@{TONEMAP\_MAX}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!TONEMAP\_MAX@{TONEMAP\_MAX}}}\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}\label{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}} 
+T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 41 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a7d933f2d87c6318687b1f976d5156d89}\label{vf__tonemap__opencl_8c_a7d933f2d87c6318687b1f976d5156d89}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{tonemap\+\_\+opencl}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a8873d1d6232214e75e363f73b3e795db}\label{vf__tonemap__opencl_8c_a8873d1d6232214e75e363f73b3e795db}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!get\_rgb2rgb\_matrix@{get\_rgb2rgb\_matrix}}
+\index{get\_rgb2rgb\_matrix@{get\_rgb2rgb\_matrix}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{get\_rgb2rgb\_matrix()}{get\_rgb2rgb\_matrix()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+rgb2rgb\+\_\+matrix (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}}}]{in,  }\item[{enum \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7}{A\+V\+Color\+Primaries}}}]{out,  }\item[{double}]{rgb2rgb\mbox{[}3\mbox{]}\mbox{[}3\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 104 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_a8873d1d6232214e75e363f73b3e795db_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_a8873d1d6232214e75e363f73b3e795db_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a33482e377a85c84a7d228b36cd925c2e}\label{vf__tonemap__opencl_8c_a33482e377a85c84a7d228b36cd925c2e}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!launch\_kernel@{launch\_kernel}}
+\index{launch\_kernel@{launch\_kernel}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{launch\_kernel()}{launch\_kernel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} launch\+\_\+kernel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx,  }\item[{cl\+\_\+kernel}]{kernel,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{output,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{input,  }\item[{float}]{peak }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 306 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_a33482e377a85c84a7d228b36cd925c2e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{vf__tonemap__opencl_8c_a33482e377a85c84a7d228b36cd925c2e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_ae723d40c3027a03b286f88dc485edfdc}\label{vf__tonemap__opencl_8c_ae723d40c3027a03b286f88dc485edfdc}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_config\_output@{tonemap\_opencl\_config\_output}}
+\index{tonemap\_opencl\_config\_output@{tonemap\_opencl\_config\_output}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_config\_output()}{tonemap\_opencl\_config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tonemap\+\_\+opencl\+\_\+config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 282 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_ae723d40c3027a03b286f88dc485edfdc_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a6e27d409732fb28d52a0daee77668c9c}\label{vf__tonemap__opencl_8c_a6e27d409732fb28d52a0daee77668c9c}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_filter\_frame@{tonemap\_opencl\_filter\_frame}}
+\index{tonemap\_opencl\_filter\_frame@{tonemap\_opencl\_filter\_frame}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_filter\_frame()}{tonemap\_opencl\_filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tonemap\+\_\+opencl\+\_\+filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 338 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_a6e27d409732fb28d52a0daee77668c9c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_afe99a717645734a29060b6bd6d99b236}\label{vf__tonemap__opencl_8c_afe99a717645734a29060b6bd6d99b236}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_init@{tonemap\_opencl\_init}}
+\index{tonemap\_opencl\_init@{tonemap\_opencl\_init}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_init()}{tonemap\_opencl\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tonemap\+\_\+opencl\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 119 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_afe99a717645734a29060b6bd6d99b236_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{vf__tonemap__opencl_8c_afe99a717645734a29060b6bd6d99b236_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_aec651b567fb8a1c4ee0d160da09290b5}\label{vf__tonemap__opencl_8c_aec651b567fb8a1c4ee0d160da09290b5}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_uninit@{tonemap\_opencl\_uninit}}
+\index{tonemap\_opencl\_uninit@{tonemap\_opencl\_uninit}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_uninit()}{tonemap\_opencl\_uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} tonemap\+\_\+opencl\+\_\+uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 461 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__tonemap__opencl_8c_aec651b567fb8a1c4ee0d160da09290b5_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a5e5525685dbc64b0e223bcf51d947146}\label{vf__tonemap__opencl_8c_a5e5525685dbc64b0e223bcf51d947146}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!delinearize\_funcs@{delinearize\_funcs}}
+\index{delinearize\_funcs@{delinearize\_funcs}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{delinearize\_funcs}{delinearize\_funcs}}
+{\footnotesize\ttfamily const char$\ast$ delinearize\+\_\+funcs\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd8960c59aa927ce6bee76a9594ffd95}{AVCOL\_TRC\_BT709}}]     = \textcolor{stringliteral}{"{}inverse\_eotf\_bt1886"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6ae093f58aff406b86c6de6b9c9bc80b3a}{AVCOL\_TRC\_BT2020\_10}}] = \textcolor{stringliteral}{"{}inverse\_eotf\_bt1886"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 79 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a3f91d74ee60e4f074117dbaef82a9757}\label{vf__tonemap__opencl_8c_a3f91d74ee60e4f074117dbaef82a9757}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!ff\_vf\_tonemap\_opencl@{ff\_vf\_tonemap\_opencl}}
+\index{ff\_vf\_tonemap\_opencl@{ff\_vf\_tonemap\_opencl}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_tonemap\_opencl}{ff\_vf\_tonemap\_opencl}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+tonemap\+\_\+opencl}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}tonemap\_opencl"{}},}
+\DoxyCodeLine{    .description    = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Perform HDR to SDR conversion with tonemapping."{}}),}
+\DoxyCodeLine{    .priv\_size      = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__tonemap__opencl_8c_af6c59071b65993a1a1a0e2abe92f5a29}{TonemapOpenCLContext}}),}
+\DoxyCodeLine{    .priv\_class     = \&tonemap\_opencl\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \&\mbox{\hyperlink{opencl_8c_a78e70e71221ecf678d4c3f2756f5682b}{ff\_opencl\_filter\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{crystalhd_8c_a47e28e6ea289d3f83ad1883ddde5a422}{uninit}}         = \&\mbox{\hyperlink{vf__tonemap__opencl_8c_aec651b567fb8a1c4ee0d160da09290b5}{tonemap\_opencl\_uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aeval_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}}  = \&\mbox{\hyperlink{opencl_8c_ad0424e96c8176309c6743fd1a8b84bdc}{ff\_opencl\_filter\_query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}         = \mbox{\hyperlink{vf__tonemap__opencl_8c_afd62bfa4ec6693ec0d32774755ecbcaf}{tonemap\_opencl\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}        = \mbox{\hyperlink{vf__tonemap__opencl_8c_ab187d51021a54e9692caa1488220f262}{tonemap\_opencl\_outputs}},}
+\DoxyCodeLine{    .flags\_internal = \mbox{\hyperlink{libavfilter_2internal_8h_a58d239fb5092965f79256de6e903ed8a}{FF\_FILTER\_FLAG\_HWFRAME\_AWARE}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 543 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a0b9492af405597c59fbc7f93a6f3ce49}\label{vf__tonemap__opencl_8c_a0b9492af405597c59fbc7f93a6f3ce49}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!linearize\_funcs@{linearize\_funcs}}
+\index{linearize\_funcs@{linearize\_funcs}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{linearize\_funcs}{linearize\_funcs}}
+{\footnotesize\ttfamily const char$\ast$ linearize\+\_\+funcs\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd90c992604891bb6ee498b1bae6bb56}{A\+V\+C\+O\+L\+\_\+\+T\+R\+C\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a39fcb1cb8098f2bfaf355093885e7769}{AVCOL\_TRC\_SMPTE2084}}] = \textcolor{stringliteral}{"{}eotf\_st2084"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6aa21a497d0b7f2d0eab46faf9372c04a3}{AVCOL\_TRC\_ARIB\_STD\_B67}}] = \textcolor{stringliteral}{"{}inverse\_oetf\_hlg"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 74 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a2eba64080898d3af720cb4558f11e5c2}\label{vf__tonemap__opencl_8c_a2eba64080898d3af720cb4558f11e5c2}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!primaries\_table@{primaries\_table}}
+\index{primaries\_table@{primaries\_table}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{primaries\_table}{primaries\_table}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_primary_coefficients}{Primary\+Coefficients}} primaries\+\_\+table\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a4f1c38f3e06cd2c49b28046bbf3a4cbd}{AVCOL\_PRI\_BT709}}]  = \{ 0.640, 0.330, 0.300, 0.600, 0.150, 0.060 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7adee9de223d6a8683fd2177b43444404c}{AVCOL\_PRI\_BT2020}}] = \{ 0.708, 0.292, 0.170, 0.797, 0.131, 0.046 \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 79 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_ae8414d376b9e136f5ce52058a8d775f3}\label{vf__tonemap__opencl_8c_ae8414d376b9e136f5ce52058a8d775f3}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!sdr\_avg@{sdr\_avg}}
+\index{sdr\_avg@{sdr\_avg}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{sdr\_avg}{sdr\_avg}}
+{\footnotesize\ttfamily const float sdr\+\_\+avg = 0.\+25\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 117 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a4b312c605a2326fa7f23801510470ba7}\label{vf__tonemap__opencl_8c_a4b312c605a2326fa7f23801510470ba7}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_func@{tonemap\_func}}
+\index{tonemap\_func@{tonemap\_func}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_func}{tonemap\_func}}
+{\footnotesize\ttfamily const char$\ast$ tonemap\+\_\+func\mbox{[}\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a6dace8e3e6708c14d60e0e3c05e73439}{T\+O\+N\+E\+M\+A\+P\+\_\+\+M\+AX}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586acdfc5303b784535f0ccdb424e4b9daa8}{TONEMAP\_NONE}}]     = \textcolor{stringliteral}{"{}direct"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a1dee0d2952c68e2be9e67eb15a148bdb}{TONEMAP\_LINEAR}}]   = \textcolor{stringliteral}{"{}linear"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586af37e79d3b981fd4ccf803bb9b56ddc44}{TONEMAP\_GAMMA}}]    = \textcolor{stringliteral}{"{}gamma"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ad0b6978d9ce51e2f0acb578abce82a06}{TONEMAP\_CLIP}}]     = \textcolor{stringliteral}{"{}clip"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586ab877b4edc7f3fbae922a1f2e94e380b2}{TONEMAP\_REINHARD}}] = \textcolor{stringliteral}{"{}reinhard"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586a141505704525e5916b8f1b4a3028ecf1}{TONEMAP\_HABLE}}]    = \textcolor{stringliteral}{"{}hable"{}},}
+\DoxyCodeLine{    [\mbox{\hyperlink{vf__tonemap__opencl_8c_a2ca4358709712134d33225d0d2f13586aad755135755b8c970810e9bf968eb912}{TONEMAP\_MOBIUS}}]   = \textcolor{stringliteral}{"{}mobius"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 94 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_afd62bfa4ec6693ec0d32774755ecbcaf}\label{vf__tonemap__opencl_8c_afd62bfa4ec6693ec0d32774755ecbcaf}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_inputs@{tonemap\_opencl\_inputs}}
+\index{tonemap\_opencl\_inputs@{tonemap\_opencl\_inputs}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_inputs}{tonemap\_opencl\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} tonemap\+\_\+opencl\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame = \&\mbox{\hyperlink{vf__tonemap__opencl_8c_a6e27d409732fb28d52a0daee77668c9c}{tonemap\_opencl\_filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \&\mbox{\hyperlink{opencl_8c_a5fae8f981f497850faaf71344969efe3}{ff\_opencl\_filter\_config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 524 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_a5942b62b08d2f644f9a28aa3a07b42d9}\label{vf__tonemap__opencl_8c_a5942b62b08d2f644f9a28aa3a07b42d9}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_options@{tonemap\_opencl\_options}}
+\index{tonemap\_opencl\_options@{tonemap\_opencl\_options}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_options}{tonemap\_opencl\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} tonemap\+\_\+opencl\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 487 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_ab187d51021a54e9692caa1488220f262}\label{vf__tonemap__opencl_8c_ab187d51021a54e9692caa1488220f262}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!tonemap\_opencl\_outputs@{tonemap\_opencl\_outputs}}
+\index{tonemap\_opencl\_outputs@{tonemap\_opencl\_outputs}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{tonemap\_opencl\_outputs}{tonemap\_opencl\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} tonemap\+\_\+opencl\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \&\mbox{\hyperlink{vf__tonemap__opencl_8c_ae723d40c3027a03b286f88dc485edfdc}{tonemap\_opencl\_config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 534 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__tonemap__opencl_8c_ad179071e0b4f6afd5bfddc5a48276a12}\label{vf__tonemap__opencl_8c_ad179071e0b4f6afd5bfddc5a48276a12}} 
+\index{vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}!whitepoint\_table@{whitepoint\_table}}
+\index{whitepoint\_table@{whitepoint\_table}!vf\_tonemap\_opencl.c@{vf\_tonemap\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{whitepoint\_table}{whitepoint\_table}}
+{\footnotesize\ttfamily const struct \mbox{\hyperlink{struct_whitepoint_coefficients}{Whitepoint\+Coefficients}} whitepoint\+\_\+table\mbox{[}\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a21614813a78ac5fe8d3e1187474d042f}{A\+V\+C\+O\+L\+\_\+\+P\+R\+I\+\_\+\+NB}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a4f1c38f3e06cd2c49b28046bbf3a4cbd}{AVCOL\_PRI\_BT709}}]  = \{ 0.3127, 0.3290 \},}
+\DoxyCodeLine{    [\mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7adee9de223d6a8683fd2177b43444404c}{AVCOL\_PRI\_BT2020}}] = \{ 0.3127, 0.3290 \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 79 of file vf\+\_\+tonemap\+\_\+opencl.\+c.
+

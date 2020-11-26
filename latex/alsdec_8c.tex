@@ -1,0 +1,1013 @@
+\hypertarget{alsdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/alsdec.c File Reference}
+\label{alsdec_8c}\index{E:/github/ffmpeg/libavcodec/alsdec.c@{E:/github/ffmpeg/libavcodec/alsdec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}unary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpeg4audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bgmc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bswapdsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mlz.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/samplefmt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/crc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/softfloat\+\_\+ieee754.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intfloat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+Include dependency graph for alsdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}}
+\item 
+struct \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{alsdec_8c_ae49ff377b3ff9bf9999426b670d097a8}{M\+I\+S\+S\+I\+N\+G\+\_\+\+E\+RR}}(\mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}},  str,  errval)
+\item 
+\#define \mbox{\hyperlink{alsdec_8c_af0a7c1dd19bf4e60e5dd56bf88c0f23b}{I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+O\+U\+T\+P\+UT}}(\mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}} \mbox{\hyperlink{alsdec_8c_a0eef68d981394f2d5ebba5cb931c0618}{A\+L\+S\+Specific\+Config}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} \mbox{\hyperlink{alsdec_8c_a09c33b193d9a5025f39d81a513dc476e}{A\+L\+S\+Channel\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} \mbox{\hyperlink{alsdec_8c_a860fa5ca05c7d651906b692e7b573cbe}{A\+L\+S\+Dec\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} \mbox{\hyperlink{alsdec_8c_a560e6ee754cb1635cd701dc8c3ed103c}{A\+L\+S\+Block\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{alsdec_8c_a775fa0c930a58453c747e073316f1774}{R\+A\+\_\+\+Flag}} \{ \mbox{\hyperlink{alsdec_8c_a775fa0c930a58453c747e073316f1774a8e1ae95741bcf5fb2f989658710ede55}{R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{alsdec_8c_a775fa0c930a58453c747e073316f1774a3485cbad8b820e962c2f639e507c1593}{R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+F\+R\+A\+M\+ES}}, 
+\mbox{\hyperlink{alsdec_8c_a775fa0c930a58453c747e073316f1774a341038c2926f169a7be570a3ebb0f68a}{R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+H\+E\+A\+D\+ER}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_a7dc7cfc23733d0e652b8bdb6af088aa8}{dprint\+\_\+specific\+\_\+config}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a10b2eedf6c43278f8f2c8a99727b16ce}{read\+\_\+specific\+\_\+config}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_ae70c48e486ce19c926642ac4e89b78c9}{check\+\_\+specific\+\_\+config}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_af2472b6ee332a561e201081680ac726b}{parse\+\_\+bs\+\_\+info}} (const uint32\+\_\+t bs\+\_\+info, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} div, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$$\ast$div\+\_\+blocks, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$num\+\_\+blocks)
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{alsdec_8c_a973a3788d6536f53f8b396f182a2f870}{decode\+\_\+rice}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_a5a200f40e0ea3411ad28cd78a825b80e}{parcor\+\_\+to\+\_\+lpc}} (unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$par, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$cof)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_aec31a1fbe9d5a96d09f80480392468ae}{get\+\_\+block\+\_\+sizes}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$div\+\_\+blocks, uint32\+\_\+t $\ast$bs\+\_\+info)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a251b5aa33fee1ba0f5f2dcc39382f70e}{read\+\_\+const\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_a88a894c0aff963550678f20d30de184c}{decode\+\_\+const\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a3adee2f99a98519174e0da6b83d49e04}{read\+\_\+var\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a76e57d58198c1655efbfd58ed80e063e}{decode\+\_\+var\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_ac14c02e03af955de595b68e42e376428}{read\+\_\+block}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_afa20bfceabe353a67e64e237882b69fc}{decode\+\_\+block}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_ae3bbfdf20feb4bbf757e262090c8c1c1}{read\+\_\+decode\+\_\+block}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_a174bc2df0331a1dbaf82a7a9686b8e27}{zero\+\_\+remaining}} (unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} b\+\_\+max, const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$div\+\_\+blocks, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a95908c2b7f46b7fc41310c2a7563e36f}{decode\+\_\+blocks\+\_\+ind}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ra\+\_\+frame, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$div\+\_\+blocks, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$js\+\_\+blocks)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a0e8d33267061652fad16d8e57c9defac}{decode\+\_\+blocks}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ra\+\_\+frame, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$div\+\_\+blocks, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$js\+\_\+blocks)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a406825424d27ef22b2a0edc527b1e1df}{als\+\_\+weighting}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} off)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a0c07cf5dc7d3eb67e7adf340aba62e7f}{read\+\_\+channel\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} $\ast$cd, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_ad8507e8a8442ae16a944c947308ad269}{revert\+\_\+channel\+\_\+correlation}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$bd, \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} $\ast$$\ast$cd, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$reverted, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}} \mbox{\hyperlink{alsdec_8c_a1f79d9c73e13a35592e830f5236b79b5}{multiply}} (\mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_af47ca44522ba094d1450abddbb32b496}{read\+\_\+diff\+\_\+float\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ra\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a5d8d7f3e90b476e40e72bb43ccf68e94}{read\+\_\+frame\+\_\+data}} (\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ra\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alsdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alsdec_8c_a9f05885d6fc14dff44ab920d10db771e}{flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const int8\+\_\+t \mbox{\hyperlink{alsdec_8c_a2b42950305d9f9ca373a49699d856a72}{parcor\+\_\+rice\+\_\+table}} \mbox{[}3\mbox{]}\mbox{[}20\mbox{]}\mbox{[}2\mbox{]}
+\item 
+static const int16\+\_\+t \mbox{\hyperlink{alsdec_8c_addf22ec3adf0425c7805f8b68ccd0e80}{parcor\+\_\+scaled\+\_\+values}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{alsdec_8c_a9deb7c1b0f36ebab1220d9edd3293347}{ltp\+\_\+gain\+\_\+values}} \mbox{[}4\mbox{]}\mbox{[}4\mbox{]}
+\item 
+static const int16\+\_\+t \mbox{\hyperlink{alsdec_8c_a8536b3fb9a6c1dc45680c48e9177764e}{mcc\+\_\+weightings}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{alsdec_8c_a473573dd7d57807c1a8a902514b20d7c}{tail\+\_\+code}} \mbox{[}16\mbox{]}\mbox{[}6\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{alsdec_8c_ad01e9e1800358c68e3ccd336773edebb}{ff\+\_\+als\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+M\+P\+E\+G-\/4 A\+LS decoder \begin{DoxyAuthor}{Author}
+Thilo Borgmann $<$thilo.\+borgmann {\itshape at} mail.\+de$>$ 
+\end{DoxyAuthor}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{alsdec_8c_af0a7c1dd19bf4e60e5dd56bf88c0f23b}\label{alsdec_8c_af0a7c1dd19bf4e60e5dd56bf88c0f23b}} 
+\index{alsdec.c@{alsdec.c}!INTERLEAVE\_OUTPUT@{INTERLEAVE\_OUTPUT}}
+\index{INTERLEAVE\_OUTPUT@{INTERLEAVE\_OUTPUT}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{INTERLEAVE\_OUTPUT}{INTERLEAVE\_OUTPUT}}
+{\footnotesize\ttfamily \#define I\+N\+T\+E\+R\+L\+E\+A\+V\+E\+\_\+\+O\+U\+T\+P\+UT(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{                                                                                \(\backslash\)}
+\DoxyCodeLine{        int\#\#\mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}}\#\#\_t *dest = (\textcolor{keywordtype}{int}\#\#\mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}}\#\#\_t*)\mbox{\hyperlink{filter__design_8txt_a48ad71a5b40cdd5f23c601f33665a953}{frame}}-\/>data[0];                          \(\backslash\)}
+\DoxyCodeLine{        \textcolor{keywordtype}{int} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}} = avctx-\/>channels;                                              \(\backslash\)}
+\DoxyCodeLine{        \mbox{\hyperlink{audio__convert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\_t}} *raw\_samples = \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>raw\_samples[0];                                  \(\backslash\)}
+\DoxyCodeLine{        \textcolor{keywordtype}{int} raw\_step = \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}} > 1 ? \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>raw\_samples[1] -\/ raw\_samples : 1;         \(\backslash\)}
+\DoxyCodeLine{        \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}} = \mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}} -\/ \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>avctx-\/>bits\_per\_raw\_sample;                               \(\backslash\)}
+\DoxyCodeLine{        \mbox{\hyperlink{filter__design_8txt_a0e82f1088fdc24c14bf175d2ac77523f}{if}} (!\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>cs\_switch) \{                                                       \(\backslash\)}
+\DoxyCodeLine{            for (\mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}} = 0; \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}} < \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>cur\_frame\_length; \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}++)               \(\backslash\)}
+\DoxyCodeLine{                \textcolor{keywordflow}{for} (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} = 0; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} < \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}++)                                       \(\backslash\)}
+\DoxyCodeLine{                    *dest++ = raw\_samples[\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}*raw\_step + \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}] * (1\mbox{\hyperlink{arm_2vp56__arith_8h_a2e9a0e2ee6ec47b10497aa3fa424707a}{U}} << \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}});      \(\backslash\)}
+\DoxyCodeLine{        \} \textcolor{keywordflow}{else} \{                                                                     \(\backslash\)}
+\DoxyCodeLine{            for (\mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}} = 0; \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}} < \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>cur\_frame\_length; \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}++)               \(\backslash\)}
+\DoxyCodeLine{                \textcolor{keywordflow}{for} (\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} = 0; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}} < \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}; \mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}++)                                       \(\backslash\)}
+\DoxyCodeLine{                    *dest++ = raw\_samples[sconf-\/>chan\_pos[\mbox{\hyperlink{undefined_8txt_a12d8853991e25cc8d069554379c29ef6}{c}}]*raw\_step + \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}] * (1\mbox{\hyperlink{arm_2vp56__arith_8h_a2e9a0e2ee6ec47b10497aa3fa424707a}{U}} << \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}});\(\backslash\)}
+\DoxyCodeLine{        \}                                                                            \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{alsdec_8c_ae49ff377b3ff9bf9999426b670d097a8}\label{alsdec_8c_ae49ff377b3ff9bf9999426b670d097a8}} 
+\index{alsdec.c@{alsdec.c}!MISSING\_ERR@{MISSING\_ERR}}
+\index{MISSING\_ERR@{MISSING\_ERR}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{MISSING\_ERR}{MISSING\_ERR}}
+{\footnotesize\ttfamily \#define M\+I\+S\+S\+I\+N\+G\+\_\+\+E\+RR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}},  }\item[{}]{str,  }\item[{}]{errval }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \{                                                   \(\backslash\)}
+\DoxyCodeLine{        if (\mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}}) \{                                     \(\backslash\)}
+\DoxyCodeLine{            avpriv\_report\_missing\_feature(\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>avctx,   \(\backslash\)}
+\DoxyCodeLine{                                          \mbox{\hyperlink{namespaceconvert__header_ae1e061c0db8a47f53e1f3de5e371872e}{str}});         \(\backslash\)}
+\DoxyCodeLine{            error = errval;                             \(\backslash\)}
+\DoxyCodeLine{        \}                                               \(\backslash\)}
+\DoxyCodeLine{    \}}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{alsdec_8c_a560e6ee754cb1635cd701dc8c3ed103c}\label{alsdec_8c_a560e6ee754cb1635cd701dc8c3ed103c}} 
+\index{alsdec.c@{alsdec.c}!ALSBlockData@{ALSBlockData}}
+\index{ALSBlockData@{ALSBlockData}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ALSBlockData}{ALSBlockData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} \mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}}}
+
+\mbox{\Hypertarget{alsdec_8c_a09c33b193d9a5025f39d81a513dc476e}\label{alsdec_8c_a09c33b193d9a5025f39d81a513dc476e}} 
+\index{alsdec.c@{alsdec.c}!ALSChannelData@{ALSChannelData}}
+\index{ALSChannelData@{ALSChannelData}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ALSChannelData}{ALSChannelData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} \mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}}}
+
+\mbox{\Hypertarget{alsdec_8c_a860fa5ca05c7d651906b692e7b573cbe}\label{alsdec_8c_a860fa5ca05c7d651906b692e7b573cbe}} 
+\index{alsdec.c@{alsdec.c}!ALSDecContext@{ALSDecContext}}
+\index{ALSDecContext@{ALSDecContext}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ALSDecContext}{ALSDecContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} \mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}}}
+
+\mbox{\Hypertarget{alsdec_8c_a0eef68d981394f2d5ebba5cb931c0618}\label{alsdec_8c_a0eef68d981394f2d5ebba5cb931c0618}} 
+\index{alsdec.c@{alsdec.c}!ALSSpecificConfig@{ALSSpecificConfig}}
+\index{ALSSpecificConfig@{ALSSpecificConfig}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ALSSpecificConfig}{ALSSpecificConfig}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}} \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{alsdec_8c_a775fa0c930a58453c747e073316f1774}\label{alsdec_8c_a775fa0c930a58453c747e073316f1774}} 
+\index{alsdec.c@{alsdec.c}!RA\_Flag@{RA\_Flag}}
+\index{RA\_Flag@{RA\_Flag}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{RA\_Flag}{RA\_Flag}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{alsdec_8c_a775fa0c930a58453c747e073316f1774}{R\+A\+\_\+\+Flag}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RA\_FLAG\_NONE@{RA\_FLAG\_NONE}!alsdec.c@{alsdec.c}}\index{alsdec.c@{alsdec.c}!RA\_FLAG\_NONE@{RA\_FLAG\_NONE}}}\mbox{\Hypertarget{alsdec_8c_a775fa0c930a58453c747e073316f1774a8e1ae95741bcf5fb2f989658710ede55}\label{alsdec_8c_a775fa0c930a58453c747e073316f1774a8e1ae95741bcf5fb2f989658710ede55}} 
+R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RA\_FLAG\_FRAMES@{RA\_FLAG\_FRAMES}!alsdec.c@{alsdec.c}}\index{alsdec.c@{alsdec.c}!RA\_FLAG\_FRAMES@{RA\_FLAG\_FRAMES}}}\mbox{\Hypertarget{alsdec_8c_a775fa0c930a58453c747e073316f1774a3485cbad8b820e962c2f639e507c1593}\label{alsdec_8c_a775fa0c930a58453c747e073316f1774a3485cbad8b820e962c2f639e507c1593}} 
+R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+F\+R\+A\+M\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RA\_FLAG\_HEADER@{RA\_FLAG\_HEADER}!alsdec.c@{alsdec.c}}\index{alsdec.c@{alsdec.c}!RA\_FLAG\_HEADER@{RA\_FLAG\_HEADER}}}\mbox{\Hypertarget{alsdec_8c_a775fa0c930a58453c747e073316f1774a341038c2926f169a7be570a3ebb0f68a}\label{alsdec_8c_a775fa0c930a58453c747e073316f1774a341038c2926f169a7be570a3ebb0f68a}} 
+R\+A\+\_\+\+F\+L\+A\+G\+\_\+\+H\+E\+A\+D\+ER&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 151 of file alsdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{alsdec_8c_a406825424d27ef22b2a0edc527b1e1df}\label{alsdec_8c_a406825424d27ef22b2a0edc527b1e1df}} 
+\index{alsdec.c@{alsdec.c}!als\_weighting@{als\_weighting}}
+\index{als\_weighting@{als\_weighting}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{als\_weighting()}{als\_weighting()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} als\+\_\+weighting (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{off }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1214 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a406825424d27ef22b2a0edc527b1e1df_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a406825424d27ef22b2a0edc527b1e1df_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_ae70c48e486ce19c926642ac4e89b78c9}\label{alsdec_8c_ae70c48e486ce19c926642ac4e89b78c9}} 
+\index{alsdec.c@{alsdec.c}!check\_specific\_config@{check\_specific\_config}}
+\index{check\_specific\_config@{check\_specific\_config}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{check\_specific\_config()}{check\_specific\_config()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check\+\_\+specific\+\_\+config (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Check the \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}} for unsupported features. 
+
+Definition at line 446 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{alsdec_8c_ae70c48e486ce19c926642ac4e89b78c9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{alsdec_8c_ae70c48e486ce19c926642ac4e89b78c9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_afa20bfceabe353a67e64e237882b69fc}\label{alsdec_8c_afa20bfceabe353a67e64e237882b69fc}} 
+\index{alsdec.c@{alsdec.c}!decode\_block@{decode\_block}}
+\index{decode\_block@{decode\_block}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_block()}{decode\_block()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+block (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the block data. 
+
+Definition at line 1035 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_afa20bfceabe353a67e64e237882b69fc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_afa20bfceabe353a67e64e237882b69fc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a0e8d33267061652fad16d8e57c9defac}\label{alsdec_8c_a0e8d33267061652fad16d8e57c9defac}} 
+\index{alsdec.c@{alsdec.c}!decode\_blocks@{decode\_blocks}}
+\index{decode\_blocks@{decode\_blocks}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_blocks()}{decode\_blocks()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+blocks (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ra\+\_\+frame,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c,  }\item[{const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{div\+\_\+blocks,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{js\+\_\+blocks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode blocks dependently. 
+
+Definition at line 1130 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a0e8d33267061652fad16d8e57c9defac_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a0e8d33267061652fad16d8e57c9defac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a95908c2b7f46b7fc41310c2a7563e36f}\label{alsdec_8c_a95908c2b7f46b7fc41310c2a7563e36f}} 
+\index{alsdec.c@{alsdec.c}!decode\_blocks\_ind@{decode\_blocks\_ind}}
+\index{decode\_blocks\_ind@{decode\_blocks\_ind}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_blocks\_ind()}{decode\_blocks\_ind()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+blocks\+\_\+ind (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ra\+\_\+frame,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c,  }\item[{const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{div\+\_\+blocks,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{js\+\_\+blocks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode blocks independently. 
+
+Definition at line 1090 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a95908c2b7f46b7fc41310c2a7563e36f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a95908c2b7f46b7fc41310c2a7563e36f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a88a894c0aff963550678f20d30de184c}\label{alsdec_8c_a88a894c0aff963550678f20d30de184c}} 
+\index{alsdec.c@{alsdec.c}!decode\_const\_block\_data@{decode\_const\_block\_data}}
+\index{decode\_const\_block\_data@{decode\_const\_block\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_const\_block\_data()}{decode\_const\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+const\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the block data for a constant block 
+
+Definition at line 614 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=275pt]{alsdec_8c_a88a894c0aff963550678f20d30de184c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a88a894c0aff963550678f20d30de184c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}\label{alsdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}} 
+\index{alsdec.c@{alsdec.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Uninitialize the A\+LS decoder. 
+
+Definition at line 1918 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{alsdec_8c_a84e2e3c224f78dc08a5587b23c72d34b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}\label{alsdec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}} 
+\index{alsdec.c@{alsdec.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode an A\+LS frame. 
+
+Definition at line 1782 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ae667617d4f9eb1b396ccf497dea6c9fb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{alsdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{alsdec.c@{alsdec.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Initialize the A\+LS decoder. 
+
+Definition at line 1970 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a973a3788d6536f53f8b396f182a2f870}\label{alsdec_8c_a973a3788d6536f53f8b396f182a2f870}} 
+\index{alsdec.c@{alsdec.c}!decode\_rice@{decode\_rice}}
+\index{decode\_rice@{decode\_rice}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_rice()}{decode\_rice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} decode\+\_\+rice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read and decode a Rice codeword. 
+
+Definition at line 493 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a973a3788d6536f53f8b396f182a2f870_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a973a3788d6536f53f8b396f182a2f870_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a76e57d58198c1655efbfd58ed80e063e}\label{alsdec_8c_a76e57d58198c1655efbfd58ed80e063e}} 
+\index{alsdec.c@{alsdec.c}!decode\_var\_block\_data@{decode\_var\_block\_data}}
+\index{decode\_var\_block\_data@{decode\_var\_block\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_var\_block\_data()}{decode\_var\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+var\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the block data for a non-\/constant block 
+
+Definition at line 903 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a76e57d58198c1655efbfd58ed80e063e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a76e57d58198c1655efbfd58ed80e063e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a7dc7cfc23733d0e652b8bdb6af088aa8}\label{alsdec_8c_a7dc7cfc23733d0e652b8bdb6af088aa8}} 
+\index{alsdec.c@{alsdec.c}!dprint\_specific\_config@{dprint\_specific\_config}}
+\index{dprint\_specific\_config@{dprint\_specific\_config}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{dprint\_specific\_config()}{dprint\_specific\_config()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dprint\+\_\+specific\+\_\+config (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 262 of file alsdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a7dc7cfc23733d0e652b8bdb6af088aa8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a9f05885d6fc14dff44ab920d10db771e}\label{alsdec_8c_a9f05885d6fc14dff44ab920d10db771e}} 
+\index{alsdec.c@{alsdec.c}!flush@{flush}}
+\index{flush@{flush}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{flush()}{flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Flush (reset) the frame ID after seeking. 
+
+Definition at line 2164 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_aec31a1fbe9d5a96d09f80480392468ae}\label{alsdec_8c_aec31a1fbe9d5a96d09f80480392468ae}} 
+\index{alsdec.c@{alsdec.c}!get\_block\_sizes@{get\_block\_sizes}}
+\index{get\_block\_sizes@{get\_block\_sizes}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_block\_sizes()}{get\_block\_sizes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+block\+\_\+sizes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{div\+\_\+blocks,  }\item[{uint32\+\_\+t $\ast$}]{bs\+\_\+info }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read block switching field if necessary and set actual block sizes. Also assure that the block sizes of the last frame correspond to the actual number of samples. 
+
+Definition at line 531 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_aec31a1fbe9d5a96d09f80480392468ae_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_aec31a1fbe9d5a96d09f80480392468ae_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a1f79d9c73e13a35592e830f5236b79b5}\label{alsdec_8c_a1f79d9c73e13a35592e830f5236b79b5}} 
+\index{alsdec.c@{alsdec.c}!multiply@{multiply}}
+\index{multiply@{multiply}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{multiply()}{multiply()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}} multiply (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}}}]{a,  }\item[{\mbox{\hyperlink{struct_soft_float___i_e_e_e754}{Soft\+Float\+\_\+\+I\+E\+E\+E754}}}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+multiply two softfloats and handle the rounding off 
+
+Definition at line 1383 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{alsdec_8c_a1f79d9c73e13a35592e830f5236b79b5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a1f79d9c73e13a35592e830f5236b79b5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a5a200f40e0ea3411ad28cd78a825b80e}\label{alsdec_8c_a5a200f40e0ea3411ad28cd78a825b80e}} 
+\index{alsdec.c@{alsdec.c}!parcor\_to\_lpc@{parcor\_to\_lpc}}
+\index{parcor\_to\_lpc@{parcor\_to\_lpc}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{parcor\_to\_lpc()}{parcor\_to\_lpc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} parcor\+\_\+to\+\_\+lpc (\begin{DoxyParamCaption}\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{par,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{cof }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Convert P\+A\+R\+C\+OR coefficient k to direct filter coefficient. 
+
+Definition at line 511 of file alsdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a5a200f40e0ea3411ad28cd78a825b80e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_af2472b6ee332a561e201081680ac726b}\label{alsdec_8c_af2472b6ee332a561e201081680ac726b}} 
+\index{alsdec.c@{alsdec.c}!parse\_bs\_info@{parse\_bs\_info}}
+\index{parse\_bs\_info@{parse\_bs\_info}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{parse\_bs\_info()}{parse\_bs\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} parse\+\_\+bs\+\_\+info (\begin{DoxyParamCaption}\item[{const uint32\+\_\+t}]{bs\+\_\+info,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{div,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$$\ast$}]{div\+\_\+blocks,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{num\+\_\+blocks }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Parse the bs\+\_\+info field to extract the block partitioning used in block switching mode, refer to I\+S\+O/\+I\+EC 14496-\/3, section 11.\+6.\+2. 
+
+Definition at line 470 of file alsdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_af2472b6ee332a561e201081680ac726b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_ac14c02e03af955de595b68e42e376428}\label{alsdec_8c_ac14c02e03af955de595b68e42e376428}} 
+\index{alsdec.c@{alsdec.c}!read\_block@{read\_block}}
+\index{read\_block@{read\_block}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_block()}{read\_block()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+block (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the block data. 
+
+Definition at line 1012 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ac14c02e03af955de595b68e42e376428_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ac14c02e03af955de595b68e42e376428_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a0c07cf5dc7d3eb67e7adf340aba62e7f}\label{alsdec_8c_a0c07cf5dc7d3eb67e7adf340aba62e7f}} 
+\index{alsdec.c@{alsdec.c}!read\_channel\_data@{read\_channel\_data}}
+\index{read\_channel\_data@{read\_channel\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_channel\_data()}{read\_channel\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+channel\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} $\ast$}]{cd,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the channel data. 
+
+Definition at line 1223 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a0c07cf5dc7d3eb67e7adf340aba62e7f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a0c07cf5dc7d3eb67e7adf340aba62e7f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a251b5aa33fee1ba0f5f2dcc39382f70e}\label{alsdec_8c_a251b5aa33fee1ba0f5f2dcc39382f70e}} 
+\index{alsdec.c@{alsdec.c}!read\_const\_block\_data@{read\_const\_block\_data}}
+\index{read\_const\_block\_data@{read\_const\_block\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_const\_block\_data()}{read\_const\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+const\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the block data for a constant block 
+
+Definition at line 584 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a251b5aa33fee1ba0f5f2dcc39382f70e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a251b5aa33fee1ba0f5f2dcc39382f70e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_ae3bbfdf20feb4bbf757e262090c8c1c1}\label{alsdec_8c_ae3bbfdf20feb4bbf757e262090c8c1c1}} 
+\index{alsdec.c@{alsdec.c}!read\_decode\_block@{read\_decode\_block}}
+\index{read\_decode\_block@{read\_decode\_block}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_decode\_block()}{read\_decode\_block()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+decode\+\_\+block (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read and decode block data successively. 
+
+Definition at line 1061 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ae3bbfdf20feb4bbf757e262090c8c1c1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ae3bbfdf20feb4bbf757e262090c8c1c1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_af47ca44522ba094d1450abddbb32b496}\label{alsdec_8c_af47ca44522ba094d1450abddbb32b496}} 
+\index{alsdec.c@{alsdec.c}!read\_diff\_float\_data@{read\_diff\_float\_data}}
+\index{read\_diff\_float\_data@{read\_diff\_float\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_diff\_float\_data()}{read\_diff\_float\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+diff\+\_\+float\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ra\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read and decode the floating point sample data 
+
+Definition at line 1442 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_af47ca44522ba094d1450abddbb32b496_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_af47ca44522ba094d1450abddbb32b496_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a5d8d7f3e90b476e40e72bb43ccf68e94}\label{alsdec_8c_a5d8d7f3e90b476e40e72bb43ccf68e94}} 
+\index{alsdec.c@{alsdec.c}!read\_frame\_data@{read\_frame\_data}}
+\index{read\_frame\_data@{read\_frame\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_frame\_data()}{read\_frame\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+frame\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ra\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the frame data. $<$ block sizes.
+
+Definition at line 1625 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a5d8d7f3e90b476e40e72bb43ccf68e94_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{alsdec_8c_a5d8d7f3e90b476e40e72bb43ccf68e94_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a10b2eedf6c43278f8f2c8a99727b16ce}\label{alsdec_8c_a10b2eedf6c43278f8f2c8a99727b16ce}} 
+\index{alsdec.c@{alsdec.c}!read\_specific\_config@{read\_specific\_config}}
+\index{read\_specific\_config@{read\_specific\_config}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_specific\_config()}{read\_specific\_config()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+specific\+\_\+config (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read an \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}} from a buffer into the output struct. 
+
+Definition at line 292 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a10b2eedf6c43278f8f2c8a99727b16ce_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{alsdec_8c_a10b2eedf6c43278f8f2c8a99727b16ce_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a3adee2f99a98519174e0da6b83d49e04}\label{alsdec_8c_a3adee2f99a98519174e0da6b83d49e04}} 
+\index{alsdec.c@{alsdec.c}!read\_var\_block\_data@{read\_var\_block\_data}}
+\index{read\_var\_block\_data@{read\_var\_block\_data}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{read\_var\_block\_data()}{read\_var\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+var\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the block data for a non-\/constant block 
+
+Definition at line 628 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a3adee2f99a98519174e0da6b83d49e04_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a3adee2f99a98519174e0da6b83d49e04_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_ad8507e8a8442ae16a944c947308ad269}\label{alsdec_8c_ad8507e8a8442ae16a944c947308ad269}} 
+\index{alsdec.c@{alsdec.c}!revert\_channel\_correlation@{revert\_channel\_correlation}}
+\index{revert\_channel\_correlation@{revert\_channel\_correlation}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{revert\_channel\_correlation()}{revert\_channel\_correlation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} revert\+\_\+channel\+\_\+correlation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_l_s_dec_context}{A\+L\+S\+Dec\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_l_s_block_data}{A\+L\+S\+Block\+Data}} $\ast$}]{bd,  }\item[{\mbox{\hyperlink{struct_a_l_s_channel_data}{A\+L\+S\+Channel\+Data}} $\ast$$\ast$}]{cd,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{reverted,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Recursively reverts the inter-\/channel correlation for a block. 
+
+Definition at line 1270 of file alsdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ad8507e8a8442ae16a944c947308ad269_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_ad8507e8a8442ae16a944c947308ad269_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alsdec_8c_a174bc2df0331a1dbaf82a7a9686b8e27}\label{alsdec_8c_a174bc2df0331a1dbaf82a7a9686b8e27}} 
+\index{alsdec.c@{alsdec.c}!zero\_remaining@{zero\_remaining}}
+\index{zero\_remaining@{zero\_remaining}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{zero\_remaining()}{zero\_remaining()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} zero\+\_\+remaining (\begin{DoxyParamCaption}\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{b,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{b\+\_\+max,  }\item[{const unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{div\+\_\+blocks,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Compute the number of samples left to decode for the current frame and sets these samples to zero. 
+
+Definition at line 1075 of file alsdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alsdec_8c_a174bc2df0331a1dbaf82a7a9686b8e27_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{alsdec_8c_ad01e9e1800358c68e3ccd336773edebb}\label{alsdec_8c_ad01e9e1800358c68e3ccd336773edebb}} 
+\index{alsdec.c@{alsdec.c}!ff\_als\_decoder@{ff\_als\_decoder}}
+\index{ff\_als\_decoder@{ff\_als\_decoder}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_als\_decoder}{ff\_als\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+als\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}als"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}MPEG-\/4 Audio Lossless Coding (ALS)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea3084d85d4882836e9d6c5b224a8f68bd}{AV\_CODEC\_ID\_MP4ALS}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{alsdec_8c_a860fa5ca05c7d651906b692e7b573cbe}{ALSDecContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{alsdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{alsdec_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{alsdec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}{decode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{alsdec_8c_a9f05885d6fc14dff44ab920d10db771e}{flush}}          = \mbox{\hyperlink{alsdec_8c_a9f05885d6fc14dff44ab920d10db771e}{flush}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2172 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_a9deb7c1b0f36ebab1220d9edd3293347}\label{alsdec_8c_a9deb7c1b0f36ebab1220d9edd3293347}} 
+\index{alsdec.c@{alsdec.c}!ltp\_gain\_values@{ltp\_gain\_values}}
+\index{ltp\_gain\_values@{ltp\_gain\_values}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{ltp\_gain\_values}{ltp\_gain\_values}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} ltp\+\_\+gain\+\_\+values\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ 0,  8, 16,  24\},}
+\DoxyCodeLine{    \{32, 40, 48,  56\},}
+\DoxyCodeLine{    \{64, 70, 76,  82\},}
+\DoxyCodeLine{    \{88, 92, 96, 100\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Gain values of p(0) for long-\/term prediction. To be indexed by the Rice coded indices. 
+
+Definition at line 110 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_a8536b3fb9a6c1dc45680c48e9177764e}\label{alsdec_8c_a8536b3fb9a6c1dc45680c48e9177764e}} 
+\index{alsdec.c@{alsdec.c}!mcc\_weightings@{mcc\_weightings}}
+\index{mcc\_weightings@{mcc\_weightings}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{mcc\_weightings}{mcc\_weightings}}
+{\footnotesize\ttfamily const int16\+\_\+t mcc\+\_\+weightings\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    204,  192,  179,  166,  153,  140,  128,  115,}
+\DoxyCodeLine{    102,   89,   76,   64,   51,   38,   25,   12,}
+\DoxyCodeLine{      0,  -\/12,  -\/25,  -\/38,  -\/51,  -\/64,  -\/76,  -\/89,}
+\DoxyCodeLine{   -\/102, -\/115, -\/128, -\/140, -\/153, -\/166, -\/179, -\/192}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Inter-\/channel weighting factors for multi-\/channel correlation. To be indexed by the Rice coded indices. 
+
+Definition at line 121 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_a2b42950305d9f9ca373a49699d856a72}\label{alsdec_8c_a2b42950305d9f9ca373a49699d856a72}} 
+\index{alsdec.c@{alsdec.c}!parcor\_rice\_table@{parcor\_rice\_table}}
+\index{parcor\_rice\_table@{parcor\_rice\_table}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{parcor\_rice\_table}{parcor\_rice\_table}}
+{\footnotesize\ttfamily const int8\+\_\+t parcor\+\_\+rice\+\_\+table\mbox{[}3\mbox{]}\mbox{[}20\mbox{]}\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \{-\/52, 4\}, \{-\/29, 5\}, \{-\/31, 4\}, \{ 19, 4\}, \{-\/16, 4\},}
+\DoxyCodeLine{      \{ 12, 3\}, \{ -\/7, 3\}, \{  9, 3\}, \{ -\/5, 3\}, \{  6, 3\},}
+\DoxyCodeLine{      \{ -\/4, 3\}, \{  3, 3\}, \{ -\/3, 2\}, \{  3, 2\}, \{ -\/2, 2\},}
+\DoxyCodeLine{      \{  3, 2\}, \{ -\/1, 2\}, \{  2, 2\}, \{ -\/1, 2\}, \{  2, 2\} \},}
+\DoxyCodeLine{    \{ \{-\/58, 3\}, \{-\/42, 4\}, \{-\/46, 4\}, \{ 37, 5\}, \{-\/36, 4\},}
+\DoxyCodeLine{      \{ 29, 4\}, \{-\/29, 4\}, \{ 25, 4\}, \{-\/23, 4\}, \{ 20, 4\},}
+\DoxyCodeLine{      \{-\/17, 4\}, \{ 16, 4\}, \{-\/12, 4\}, \{ 12, 3\}, \{-\/10, 4\},}
+\DoxyCodeLine{      \{  7, 3\}, \{ -\/4, 4\}, \{  3, 3\}, \{ -\/1, 3\}, \{  1, 3\} \},}
+\DoxyCodeLine{    \{ \{-\/59, 3\}, \{-\/45, 5\}, \{-\/50, 4\}, \{ 38, 4\}, \{-\/39, 4\},}
+\DoxyCodeLine{      \{ 32, 4\}, \{-\/30, 4\}, \{ 25, 3\}, \{-\/23, 3\}, \{ 20, 3\},}
+\DoxyCodeLine{      \{-\/20, 3\}, \{ 16, 3\}, \{-\/13, 3\}, \{ 10, 3\}, \{ -\/7, 3\},}
+\DoxyCodeLine{      \{  3, 3\}, \{  0, 3\}, \{ -\/1, 3\}, \{  2, 3\}, \{ -\/1, 2\} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Rice parameters and corresponding index offsets for decoding the indices of scaled P\+A\+R\+C\+OR values. The table chosen is set globally by the encoder and stored in \mbox{\hyperlink{struct_a_l_s_specific_config}{A\+L\+S\+Specific\+Config}}. 
+
+Definition at line 50 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_addf22ec3adf0425c7805f8b68ccd0e80}\label{alsdec_8c_addf22ec3adf0425c7805f8b68ccd0e80}} 
+\index{alsdec.c@{alsdec.c}!parcor\_scaled\_values@{parcor\_scaled\_values}}
+\index{parcor\_scaled\_values@{parcor\_scaled\_values}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{parcor\_scaled\_values}{parcor\_scaled\_values}}
+{\footnotesize\ttfamily const int16\+\_\+t parcor\+\_\+scaled\+\_\+values\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+Scaled P\+A\+R\+C\+OR values used for the first two P\+A\+R\+C\+OR coefficients. To be indexed by the Rice coded indices. Generated by\+: parcor\+\_\+scaled\+\_\+values\mbox{[}i\mbox{]} = 32 + ((i $\ast$ (i+1)) $<$$<$ 7) -\/ (1 $<$$<$ 20) Actual values are divided by 32 in order to be stored in 16 bits. 
+
+Definition at line 71 of file alsdec.\+c.
+
+\mbox{\Hypertarget{alsdec_8c_a473573dd7d57807c1a8a902514b20d7c}\label{alsdec_8c_a473573dd7d57807c1a8a902514b20d7c}} 
+\index{alsdec.c@{alsdec.c}!tail\_code@{tail\_code}}
+\index{tail\_code@{tail\_code}!alsdec.c@{alsdec.c}}
+\doxysubsubsection{\texorpdfstring{tail\_code}{tail\_code}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} tail\+\_\+code\mbox{[}16\mbox{]}\mbox{[}6\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ 74, 44, 25, 13,  7, 3\},}
+\DoxyCodeLine{    \{ 68, 42, 24, 13,  7, 3\},}
+\DoxyCodeLine{    \{ 58, 39, 23, 13,  7, 3\},}
+\DoxyCodeLine{    \{126, 70, 37, 19, 10, 5\},}
+\DoxyCodeLine{    \{132, 70, 37, 20, 10, 5\},}
+\DoxyCodeLine{    \{124, 70, 38, 20, 10, 5\},}
+\DoxyCodeLine{    \{120, 69, 37, 20, 11, 5\},}
+\DoxyCodeLine{    \{116, 67, 37, 20, 11, 5\},}
+\DoxyCodeLine{    \{108, 66, 36, 20, 10, 5\},}
+\DoxyCodeLine{    \{102, 62, 36, 20, 10, 5\},}
+\DoxyCodeLine{    \{ 88, 58, 34, 19, 10, 5\},}
+\DoxyCodeLine{    \{162, 89, 49, 25, 13, 7\},}
+\DoxyCodeLine{    \{156, 87, 49, 26, 14, 7\},}
+\DoxyCodeLine{    \{150, 86, 47, 26, 14, 7\},}
+\DoxyCodeLine{    \{142, 84, 47, 26, 14, 7\},}
+\DoxyCodeLine{    \{131, 79, 46, 26, 14, 7\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Tail codes used in arithmetic coding using block Gilbert-\/\+Moore codes. 
+
+Definition at line 131 of file alsdec.\+c.
+

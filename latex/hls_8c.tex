@@ -1,0 +1,1545 @@
+\hypertarget{hls_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/hls.c File Reference}
+\label{hls_8c}\index{E:/github/ffmpeg/libavformat/hls.c@{E:/github/ffmpeg/libavformat/hls.c}}
+{\ttfamily \#include \char`\"{}libavformat/http.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/dict.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}id3v2.\+h\char`\"{}}\newline
+Include dependency graph for hls.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structsegment}{segment}}
+\item 
+struct \mbox{\hyperlink{structplaylist}{playlist}}
+\item 
+struct \mbox{\hyperlink{structrendition}{rendition}}
+\item 
+struct \mbox{\hyperlink{structvariant}{variant}}
+\item 
+struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}
+\item 
+struct \mbox{\hyperlink{structvariant__info}{variant\+\_\+info}}
+\item 
+struct \mbox{\hyperlink{structkey__info}{key\+\_\+info}}
+\item 
+struct \mbox{\hyperlink{structinit__section__info}{init\+\_\+section\+\_\+info}}
+\item 
+struct \mbox{\hyperlink{structrendition__info}{rendition\+\_\+info}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{hls_8c_a1d51567e0f6916e91f5bd3719d56cce6}{I\+N\+I\+T\+I\+A\+L\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE}}~32768
+\item 
+\#define \mbox{\hyperlink{hls_8c_a08b774e8b3eabbceeb56aa337b10aa0f}{M\+A\+X\+\_\+\+F\+I\+E\+L\+D\+\_\+\+L\+EN}}~64
+\item 
+\#define \mbox{\hyperlink{hls_8c_a02693c2f6dc0a975ae780368f19cef26}{M\+A\+X\+\_\+\+C\+H\+A\+R\+A\+C\+T\+E\+R\+I\+S\+T\+I\+C\+S\+\_\+\+L\+EN}}~512
+\item 
+\#define \mbox{\hyperlink{hls_8c_a429f8ad3747c179267fb4cf4715ee022}{M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE}}~90000
+\item 
+\#define \mbox{\hyperlink{hls_8c_aa363d9efd89c8c77e81be92cc83ad97f}{M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+S\+E\+\_\+Q}}~(\mbox{\hyperlink{struct_a_v_rational}{A\+V\+Rational}})\{1, \mbox{\hyperlink{hls_8c_a429f8ad3747c179267fb4cf4715ee022}{M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE}}\}
+\item 
+\#define \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} \mbox{\hyperlink{hls_8c_a70e97316f72d969c05afd297e3a5b3b4}{H\+L\+S\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{hls_8c_aab0feaba617470cb4aa830dc5935238c}{Key\+Type}} \{ \mbox{\hyperlink{hls_8c_aab0feaba617470cb4aa830dc5935238ca8b8daa06bdfb9245dc7c1030e6bf845c}{K\+E\+Y\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{hls_8c_aab0feaba617470cb4aa830dc5935238ca8dae7a5380f0c5b3c5d0283e6ddd08a2}{K\+E\+Y\+\_\+\+A\+E\+S\+\_\+128}}, 
+\mbox{\hyperlink{hls_8c_aab0feaba617470cb4aa830dc5935238ca4e21c06189e5bb219d6b06eafb22fa7c}{K\+E\+Y\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+A\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{hls_8c_a5b8341033ad519e80384ddf6dba5f53f}{Playlist\+Type}} \{ \newline
+\mbox{\hyperlink{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa0e64aac1151e2577284a60956a2acc7c}{P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+U\+N\+S\+P\+E\+C\+I\+F\+I\+ED}}, 
+\mbox{\hyperlink{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa89dfd80a3a9920b6fb19ef6bb05ceba3}{P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+V\+E\+NT}}, 
+\mbox{\hyperlink{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa22ae7449f3b2b7fa9c01b48a8d97c06c}{P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+OD}}, 
+\mbox{\hyperlink{hlsplaylist_8h_a5b8341033ad519e80384ddf6dba5f53fa6832e91707d40eaae074166ba2754666}{P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+NE}}, 
+\newline
+\mbox{\hyperlink{hlsplaylist_8h_a5b8341033ad519e80384ddf6dba5f53fa7e748af71ff8edc407d5076daddb4f61}{P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+V\+E\+NT}}, 
+\mbox{\hyperlink{hlsplaylist_8h_a5b8341033ad519e80384ddf6dba5f53fa04628f6724a13ce9a887d50524879dac}{P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+OD}}, 
+\mbox{\hyperlink{hlsplaylist_8h_a5b8341033ad519e80384ddf6dba5f53fa594266a5f0ea23d80d10d9e318c3fb49}{P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+NB}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a8f099c2646b13ec4f14aedf0cfee990f}{free\+\_\+segment\+\_\+dynarray}} (struct \mbox{\hyperlink{structsegment}{segment}} $\ast$$\ast$segments, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n\+\_\+segments)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a3f4bf8f009fe2ac51a7ce3b93a853b44}{free\+\_\+segment\+\_\+list}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a4d140e4069fcd727cd59e296aaccecfc}{free\+\_\+init\+\_\+section\+\_\+list}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_ad6d126a65bbe40d0ca72bd3fe10f10bd}{free\+\_\+playlist\+\_\+list}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_aee53dfa61d9aeddb39dbc47a9c7fe31d}{free\+\_\+variant\+\_\+list}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_abbba50198ab277900a4a7641e9407f3d}{free\+\_\+rendition\+\_\+list}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$ \mbox{\hyperlink{hls_8c_a7f1099f9f7a8194ec69a18acc58c7c4c}{new\+\_\+playlist}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const char $\ast$url, const char $\ast$\mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}})
+\item 
+static struct \mbox{\hyperlink{structvariant}{variant}} $\ast$ \mbox{\hyperlink{hls_8c_adf51bbce2c9208b0b67e46323291dc76}{new\+\_\+variant}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structvariant__info}{variant\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$url, const char $\ast$\mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a02d580db9cb7e6340d9aff2a2ed67dca}{handle\+\_\+variant\+\_\+args}} (struct \mbox{\hyperlink{structvariant__info}{variant\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} key\+\_\+len, char $\ast$$\ast$dest, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$dest\+\_\+len)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a63ddc662a6781ed32d69cc701e8a3eed}{handle\+\_\+key\+\_\+args}} (struct \mbox{\hyperlink{structkey__info}{key\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} key\+\_\+len, char $\ast$$\ast$dest, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$dest\+\_\+len)
+\item 
+static struct \mbox{\hyperlink{structsegment}{segment}} $\ast$ \mbox{\hyperlink{hls_8c_a9a39579d9a25474cee5631078f4ed6ef}{new\+\_\+init\+\_\+section}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, struct \mbox{\hyperlink{structinit__section__info}{init\+\_\+section\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$url\+\_\+base)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a29e4320721a665ed581230ba845edf93}{handle\+\_\+init\+\_\+section\+\_\+args}} (struct \mbox{\hyperlink{structinit__section__info}{init\+\_\+section\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} key\+\_\+len, char $\ast$$\ast$dest, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$dest\+\_\+len)
+\item 
+static struct \mbox{\hyperlink{structrendition}{rendition}} $\ast$ \mbox{\hyperlink{hls_8c_a10c239af15a4847777709ded418529f2}{new\+\_\+rendition}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structrendition__info}{rendition\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$url\+\_\+base)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a45646bc8888199610982d4c221424a7b}{handle\+\_\+rendition\+\_\+args}} (struct \mbox{\hyperlink{structrendition__info}{rendition\+\_\+info}} $\ast$\mbox{\hyperlink{mips_8txt_a1fbad9337ceb50622aa5cb6b2ff47c09}{info}}, const char $\ast$\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} key\+\_\+len, char $\ast$$\ast$dest, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$dest\+\_\+len)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a5a88a73bce1dbb1a00d49861714f97a6}{ensure\+\_\+playlist}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$$\ast$pls, const char $\ast$url)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a67b8e08f443cba60f63b00db7a2e1f4e}{open\+\_\+url\+\_\+keepalive}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$pb, const char $\ast$url, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ac58372b9fe97a1a37655095a8e76db0b}{open\+\_\+url}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$pb, const char $\ast$url, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{tests_2movenc_8c_af540b728145b614e34c4e10930354b93}{opts}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$opts2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$is\+\_\+http\+\_\+out)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_aa28eb6d0b367b76e95e0b0c926ef4ef8}{parse\+\_\+playlist}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const char $\ast$url, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static struct \mbox{\hyperlink{structsegment}{segment}} $\ast$ \mbox{\hyperlink{hls_8c_a2c37dec80f72172d952bc1a91fc89396}{current\+\_\+segment}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static struct \mbox{\hyperlink{structsegment}{segment}} $\ast$ \mbox{\hyperlink{hls_8c_a0a8c95ceca0f52607974f991b9f13158}{next\+\_\+segment}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a14ea7a63ebd0cc0b2c066d824733fba3}{read\+\_\+from\+\_\+url}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, struct \mbox{\hyperlink{structsegment}{segment}} $\ast$seg, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a631da9a4ef85937bc81c183383e196d3}{parse\+\_\+id3}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$metadata, int64\+\_\+t $\ast$dts, \mbox{\hyperlink{struct_i_d3v2_extra_meta_a_p_i_c}{I\+D3v2\+Extra\+Meta\+A\+P\+IC}} $\ast$$\ast$apic, \mbox{\hyperlink{struct_i_d3v2_extra_meta}{I\+D3v2\+Extra\+Meta}} $\ast$$\ast$extra\+\_\+meta)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ad61e59d2058979c601a0b376a6e3e382}{id3\+\_\+has\+\_\+changed\+\_\+values}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$metadata, \mbox{\hyperlink{struct_i_d3v2_extra_meta_a_p_i_c}{I\+D3v2\+Extra\+Meta\+A\+P\+IC}} $\ast$apic)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a8300da86e8bfe963ab43f4461283fb35}{handle\+\_\+id3}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_ae0e9c0ab527095d33177d87e09e7fc3f}{intercept\+\_\+id3}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a096342a369adaf1ca5fe1b92e3e31fe0}{open\+\_\+input}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, struct \mbox{\hyperlink{structsegment}{segment}} $\ast$seg, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a0a7ebc8121cd25db6ebb58d24324f3e3}{update\+\_\+init\+\_\+section}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, struct \mbox{\hyperlink{structsegment}{segment}} $\ast$seg)
+\item 
+static int64\+\_\+t \mbox{\hyperlink{hls_8c_a654f014186cdc994411fd43c5bf51f69}{default\+\_\+reload\+\_\+interval}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ae5570c4843c11c1ca954a3e8ea3be3cd}{playlist\+\_\+needed}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a33833d99f4c7b3a9f820fad60cd7c1b1}{read\+\_\+data}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$opaque, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a58efe7b53c9ba6e8339162c6ada87dd9}{add\+\_\+renditions\+\_\+to\+\_\+variant}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structvariant}{variant}} $\ast$var, enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}, const char $\ast$group\+\_\+id)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a69fffafd26179457b3e645d8c2f57d4d}{add\+\_\+metadata\+\_\+from\+\_\+renditions}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_af5e3f6e8327e7dd0de1d908b82f6b7bc}{find\+\_\+timestamp\+\_\+in\+\_\+playlist}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, int64\+\_\+t timestamp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$seq\+\_\+no)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ab5974070cf1146f8ac901cc57e8cc9fb}{select\+\_\+cur\+\_\+seq\+\_\+no}} (\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ab798928212b2dc2e5f859973a3f54282}{save\+\_\+avio\+\_\+options}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a812a8110646c23d1afe9d9ef530566e9}{nested\+\_\+io\+\_\+open}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$pb, const char $\ast$url, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{tests_2movenc_8c_af540b728145b614e34c4e10930354b93}{opts}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a749494f1c48a8092485ffb6f2959d5db}{add\+\_\+stream\+\_\+to\+\_\+programs}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$stream)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a3ae06c22ab7bc905a6c392558117f613}{set\+\_\+stream\+\_\+info\+\_\+from\+\_\+input\+\_\+stream}} (\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$st, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$ist)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a6cb918c172b54060adc5c23b1f72fb63}{update\+\_\+streams\+\_\+from\+\_\+subdemuxer}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a00cc94e485a168d05ddc87280b893d5c}{update\+\_\+noheader\+\_\+flag}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a7749ca1171307f4b3da532bafa57587d}{hls\+\_\+close}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a2bafa10a801293ba511a6ddf438a842b}{hls\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a5c486b9f18fb4357725540a49d6ce041}{recheck\+\_\+discard\+\_\+flags}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rate__distortion_8txt_a526861bf57e81f603c2201f788ae709c}{first}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{hls_8c_a6248b67c4ecefd718be5bea376c9fd71}{fill\+\_\+timing\+\_\+for\+\_\+id3\+\_\+timestamped\+\_\+stream}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{struct_a_v_rational}{A\+V\+Rational}} \mbox{\hyperlink{hls_8c_a5c9082beb065d7f920c1c65ff7464dcf}{get\+\_\+timebase}} (struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a99652a378b85ecf299b694beeb5b3563}{compare\+\_\+ts\+\_\+with\+\_\+wrapdetect}} (int64\+\_\+t ts\+\_\+a, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls\+\_\+a, int64\+\_\+t ts\+\_\+b, struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$pls\+\_\+b)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_ab64c6b1097d65e287b1dcbaec781c855}{hls\+\_\+read\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_afb6dbd1f29d4a9527d6b74aaf906c202}{hls\+\_\+read\+\_\+seek}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t timestamp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hls_8c_a596419d76e9a269b301b2e5f8a884818}{hls\+\_\+probe}} (const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$p)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{hls_8c_abb1efe09bbb6c9c58a4418ed8e405c0c}{hls\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{hls_8c_ad81856a38b90919614cb5a19aca1b94e}{hls\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} \mbox{\hyperlink{hls_8c_af17dc03e500e6907cd8bdcb8433713fa}{ff\+\_\+hls\+\_\+demuxer}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Apple H\+T\+TP Live Streaming demuxer \href{http://tools.ietf.org/html/draft-pantos-http-live-streaming}{\texttt{ http\+://tools.\+ietf.\+org/html/draft-\/pantos-\/http-\/live-\/streaming}} 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{hls.c@{hls.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 2369 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a1d51567e0f6916e91f5bd3719d56cce6}\label{hls_8c_a1d51567e0f6916e91f5bd3719d56cce6}} 
+\index{hls.c@{hls.c}!INITIAL\_BUFFER\_SIZE@{INITIAL\_BUFFER\_SIZE}}
+\index{INITIAL\_BUFFER\_SIZE@{INITIAL\_BUFFER\_SIZE}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{INITIAL\_BUFFER\_SIZE}{INITIAL\_BUFFER\_SIZE}}
+{\footnotesize\ttfamily \#define I\+N\+I\+T\+I\+A\+L\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE~32768}
+
+
+
+Definition at line 42 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a02693c2f6dc0a975ae780368f19cef26}\label{hls_8c_a02693c2f6dc0a975ae780368f19cef26}} 
+\index{hls.c@{hls.c}!MAX\_CHARACTERISTICS\_LEN@{MAX\_CHARACTERISTICS\_LEN}}
+\index{MAX\_CHARACTERISTICS\_LEN@{MAX\_CHARACTERISTICS\_LEN}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_CHARACTERISTICS\_LEN}{MAX\_CHARACTERISTICS\_LEN}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+C\+H\+A\+R\+A\+C\+T\+E\+R\+I\+S\+T\+I\+C\+S\+\_\+\+L\+EN~512}
+
+
+
+Definition at line 45 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a08b774e8b3eabbceeb56aa337b10aa0f}\label{hls_8c_a08b774e8b3eabbceeb56aa337b10aa0f}} 
+\index{hls.c@{hls.c}!MAX\_FIELD\_LEN@{MAX\_FIELD\_LEN}}
+\index{MAX\_FIELD\_LEN@{MAX\_FIELD\_LEN}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_FIELD\_LEN}{MAX\_FIELD\_LEN}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+F\+I\+E\+L\+D\+\_\+\+L\+EN~64}
+
+
+
+Definition at line 44 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a429f8ad3747c179267fb4cf4715ee022}\label{hls_8c_a429f8ad3747c179267fb4cf4715ee022}} 
+\index{hls.c@{hls.c}!MPEG\_TIME\_BASE@{MPEG\_TIME\_BASE}}
+\index{MPEG\_TIME\_BASE@{MPEG\_TIME\_BASE}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{MPEG\_TIME\_BASE}{MPEG\_TIME\_BASE}}
+{\footnotesize\ttfamily \#define M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE~90000}
+
+
+
+Definition at line 47 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_aa363d9efd89c8c77e81be92cc83ad97f}\label{hls_8c_aa363d9efd89c8c77e81be92cc83ad97f}} 
+\index{hls.c@{hls.c}!MPEG\_TIME\_BASE\_Q@{MPEG\_TIME\_BASE\_Q}}
+\index{MPEG\_TIME\_BASE\_Q@{MPEG\_TIME\_BASE\_Q}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{MPEG\_TIME\_BASE\_Q}{MPEG\_TIME\_BASE\_Q}}
+{\footnotesize\ttfamily \#define M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+S\+E\+\_\+Q~(\mbox{\hyperlink{struct_a_v_rational}{A\+V\+Rational}})\{1, \mbox{\hyperlink{hls_8c_a429f8ad3747c179267fb4cf4715ee022}{M\+P\+E\+G\+\_\+\+T\+I\+M\+E\+\_\+\+B\+A\+SE}}\}}
+
+
+
+Definition at line 48 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{hls.c@{hls.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}, x)}
+
+
+
+Definition at line 2368 of file hls.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{hls_8c_a70e97316f72d969c05afd297e3a5b3b4}\label{hls_8c_a70e97316f72d969c05afd297e3a5b3b4}} 
+\index{hls.c@{hls.c}!HLSContext@{HLSContext}}
+\index{HLSContext@{HLSContext}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{HLSContext}{HLSContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} \mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{hls_8c_aab0feaba617470cb4aa830dc5935238c}\label{hls_8c_aab0feaba617470cb4aa830dc5935238c}} 
+\index{hls.c@{hls.c}!KeyType@{KeyType}}
+\index{KeyType@{KeyType}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{KeyType}{KeyType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{hls_8c_aab0feaba617470cb4aa830dc5935238c}{Key\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{KEY\_NONE@{KEY\_NONE}!hls.c@{hls.c}}\index{hls.c@{hls.c}!KEY\_NONE@{KEY\_NONE}}}\mbox{\Hypertarget{hls_8c_aab0feaba617470cb4aa830dc5935238ca8b8daa06bdfb9245dc7c1030e6bf845c}\label{hls_8c_aab0feaba617470cb4aa830dc5935238ca8b8daa06bdfb9245dc7c1030e6bf845c}} 
+K\+E\+Y\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{KEY\_AES\_128@{KEY\_AES\_128}!hls.c@{hls.c}}\index{hls.c@{hls.c}!KEY\_AES\_128@{KEY\_AES\_128}}}\mbox{\Hypertarget{hls_8c_aab0feaba617470cb4aa830dc5935238ca8dae7a5380f0c5b3c5d0283e6ddd08a2}\label{hls_8c_aab0feaba617470cb4aa830dc5935238ca8dae7a5380f0c5b3c5d0283e6ddd08a2}} 
+K\+E\+Y\+\_\+\+A\+E\+S\+\_\+128&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{KEY\_SAMPLE\_AES@{KEY\_SAMPLE\_AES}!hls.c@{hls.c}}\index{hls.c@{hls.c}!KEY\_SAMPLE\_AES@{KEY\_SAMPLE\_AES}}}\mbox{\Hypertarget{hls_8c_aab0feaba617470cb4aa830dc5935238ca4e21c06189e5bb219d6b06eafb22fa7c}\label{hls_8c_aab0feaba617470cb4aa830dc5935238ca4e21c06189e5bb219d6b06eafb22fa7c}} 
+K\+E\+Y\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+A\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 62 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53f}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53f}} 
+\index{hls.c@{hls.c}!PlaylistType@{PlaylistType}}
+\index{PlaylistType@{PlaylistType}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{PlaylistType}{PlaylistType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{hls_8c_a5b8341033ad519e80384ddf6dba5f53f}{Playlist\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLS\_TYPE\_UNSPECIFIED@{PLS\_TYPE\_UNSPECIFIED}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLS\_TYPE\_UNSPECIFIED@{PLS\_TYPE\_UNSPECIFIED}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa0e64aac1151e2577284a60956a2acc7c}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa0e64aac1151e2577284a60956a2acc7c}} 
+P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+U\+N\+S\+P\+E\+C\+I\+F\+I\+ED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLS\_TYPE\_EVENT@{PLS\_TYPE\_EVENT}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLS\_TYPE\_EVENT@{PLS\_TYPE\_EVENT}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa89dfd80a3a9920b6fb19ef6bb05ceba3}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa89dfd80a3a9920b6fb19ef6bb05ceba3}} 
+P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+V\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLS\_TYPE\_VOD@{PLS\_TYPE\_VOD}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLS\_TYPE\_VOD@{PLS\_TYPE\_VOD}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa22ae7449f3b2b7fa9c01b48a8d97c06c}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa22ae7449f3b2b7fa9c01b48a8d97c06c}} 
+P\+L\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+OD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLAYLIST\_TYPE\_NONE@{PLAYLIST\_TYPE\_NONE}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLAYLIST\_TYPE\_NONE@{PLAYLIST\_TYPE\_NONE}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa6832e91707d40eaae074166ba2754666}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa6832e91707d40eaae074166ba2754666}} 
+P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLAYLIST\_TYPE\_EVENT@{PLAYLIST\_TYPE\_EVENT}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLAYLIST\_TYPE\_EVENT@{PLAYLIST\_TYPE\_EVENT}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa7e748af71ff8edc407d5076daddb4f61}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa7e748af71ff8edc407d5076daddb4f61}} 
+P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+V\+E\+NT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLAYLIST\_TYPE\_VOD@{PLAYLIST\_TYPE\_VOD}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLAYLIST\_TYPE\_VOD@{PLAYLIST\_TYPE\_VOD}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa04628f6724a13ce9a887d50524879dac}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa04628f6724a13ce9a887d50524879dac}} 
+P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+OD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PLAYLIST\_TYPE\_NB@{PLAYLIST\_TYPE\_NB}!hls.c@{hls.c}}\index{hls.c@{hls.c}!PLAYLIST\_TYPE\_NB@{PLAYLIST\_TYPE\_NB}}}\mbox{\Hypertarget{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa594266a5f0ea23d80d10d9e318c3fb49}\label{hls_8c_a5b8341033ad519e80384ddf6dba5f53fa594266a5f0ea23d80d10d9e318c3fb49}} 
+P\+L\+A\+Y\+L\+I\+S\+T\+\_\+\+T\+Y\+P\+E\+\_\+\+NB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 82 of file hls.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{hls_8c_a69fffafd26179457b3e645d8c2f57d4d}\label{hls_8c_a69fffafd26179457b3e645d8c2f57d4d}} 
+\index{hls.c@{hls.c}!add\_metadata\_from\_renditions@{add\_metadata\_from\_renditions}}
+\index{add\_metadata\_from\_renditions@{add\_metadata\_from\_renditions}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{add\_metadata\_from\_renditions()}{add\_metadata\_from\_renditions()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+metadata\+\_\+from\+\_\+renditions (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}}}]{type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1595 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a69fffafd26179457b3e645d8c2f57d4d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a69fffafd26179457b3e645d8c2f57d4d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a58efe7b53c9ba6e8339162c6ada87dd9}\label{hls_8c_a58efe7b53c9ba6e8339162c6ada87dd9}} 
+\index{hls.c@{hls.c}!add\_renditions\_to\_variant@{add\_renditions\_to\_variant}}
+\index{add\_renditions\_to\_variant@{add\_renditions\_to\_variant}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{add\_renditions\_to\_variant()}{add\_renditions\_to\_variant()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+renditions\+\_\+to\+\_\+variant (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structvariant}{variant}} $\ast$}]{var,  }\item[{enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{A\+V\+Media\+Type}}}]{type,  }\item[{const char $\ast$}]{group\+\_\+id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1571 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{hls_8c_a58efe7b53c9ba6e8339162c6ada87dd9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a749494f1c48a8092485ffb6f2959d5db}\label{hls_8c_a749494f1c48a8092485ffb6f2959d5db}} 
+\index{hls.c@{hls.c}!add\_stream\_to\_programs@{add\_stream\_to\_programs}}
+\index{add\_stream\_to\_programs@{add\_stream\_to\_programs}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{add\_stream\_to\_programs()}{add\_stream\_to\_programs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} add\+\_\+stream\+\_\+to\+\_\+programs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{stream }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1724 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a749494f1c48a8092485ffb6f2959d5db_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a749494f1c48a8092485ffb6f2959d5db_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a99652a378b85ecf299b694beeb5b3563}\label{hls_8c_a99652a378b85ecf299b694beeb5b3563}} 
+\index{hls.c@{hls.c}!compare\_ts\_with\_wrapdetect@{compare\_ts\_with\_wrapdetect}}
+\index{compare\_ts\_with\_wrapdetect@{compare\_ts\_with\_wrapdetect}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{compare\_ts\_with\_wrapdetect()}{compare\_ts\_with\_wrapdetect()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compare\+\_\+ts\+\_\+with\+\_\+wrapdetect (\begin{DoxyParamCaption}\item[{int64\+\_\+t}]{ts\+\_\+a,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls\+\_\+a,  }\item[{int64\+\_\+t}]{ts\+\_\+b,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls\+\_\+b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2127 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a99652a378b85ecf299b694beeb5b3563_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{hls_8c_a99652a378b85ecf299b694beeb5b3563_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a2c37dec80f72172d952bc1a91fc89396}\label{hls_8c_a2c37dec80f72172d952bc1a91fc89396}} 
+\index{hls.c@{hls.c}!current\_segment@{current\_segment}}
+\index{current\_segment@{current\_segment}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{current\_segment()}{current\_segment()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structsegment}{segment}}$\ast$ current\+\_\+segment (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 987 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a2c37dec80f72172d952bc1a91fc89396_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a654f014186cdc994411fd43c5bf51f69}\label{hls_8c_a654f014186cdc994411fd43c5bf51f69}} 
+\index{hls.c@{hls.c}!default\_reload\_interval@{default\_reload\_interval}}
+\index{default\_reload\_interval@{default\_reload\_interval}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{default\_reload\_interval()}{default\_reload\_interval()}}
+{\footnotesize\ttfamily static int64\+\_\+t default\+\_\+reload\+\_\+interval (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1358 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a654f014186cdc994411fd43c5bf51f69_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a5a88a73bce1dbb1a00d49861714f97a6}\label{hls_8c_a5a88a73bce1dbb1a00d49861714f97a6}} 
+\index{hls.c@{hls.c}!ensure\_playlist@{ensure\_playlist}}
+\index{ensure\_playlist@{ensure\_playlist}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{ensure\_playlist()}{ensure\_playlist()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ensure\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$$\ast$}]{pls,  }\item[{const char $\ast$}]{url }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 591 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a5a88a73bce1dbb1a00d49861714f97a6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a5a88a73bce1dbb1a00d49861714f97a6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a6248b67c4ecefd718be5bea376c9fd71}\label{hls_8c_a6248b67c4ecefd718be5bea376c9fd71}} 
+\index{hls.c@{hls.c}!fill\_timing\_for\_id3\_timestamped\_stream@{fill\_timing\_for\_id3\_timestamped\_stream}}
+\index{fill\_timing\_for\_id3\_timestamped\_stream@{fill\_timing\_for\_id3\_timestamped\_stream}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{fill\_timing\_for\_id3\_timestamped\_stream()}{fill\_timing\_for\_id3\_timestamped\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fill\+\_\+timing\+\_\+for\+\_\+id3\+\_\+timestamped\+\_\+stream (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2094 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a6248b67c4ecefd718be5bea376c9fd71_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{hls_8c_a6248b67c4ecefd718be5bea376c9fd71_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_af5e3f6e8327e7dd0de1d908b82f6b7bc}\label{hls_8c_af5e3f6e8327e7dd0de1d908b82f6b7bc}} 
+\index{hls.c@{hls.c}!find\_timestamp\_in\_playlist@{find\_timestamp\_in\_playlist}}
+\index{find\_timestamp\_in\_playlist@{find\_timestamp\_in\_playlist}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{find\_timestamp\_in\_playlist()}{find\_timestamp\_in\_playlist()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+timestamp\+\_\+in\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{int64\+\_\+t}]{timestamp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{seq\+\_\+no }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1627 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{hls_8c_af5e3f6e8327e7dd0de1d908b82f6b7bc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_af5e3f6e8327e7dd0de1d908b82f6b7bc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a4d140e4069fcd727cd59e296aaccecfc}\label{hls_8c_a4d140e4069fcd727cd59e296aaccecfc}} 
+\index{hls.c@{hls.c}!free\_init\_section\_list@{free\_init\_section\_list}}
+\index{free\_init\_section\_list@{free\_init\_section\_list}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_init\_section\_list()}{free\_init\_section\_list()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+init\+\_\+section\+\_\+list (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 235 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a4d140e4069fcd727cd59e296aaccecfc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ad6d126a65bbe40d0ca72bd3fe10f10bd}\label{hls_8c_ad6d126a65bbe40d0ca72bd3fe10f10bd}} 
+\index{hls.c@{hls.c}!free\_playlist\_list@{free\_playlist\_list}}
+\index{free\_playlist\_list@{free\_playlist\_list}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_playlist\_list()}{free\_playlist\_list()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+playlist\+\_\+list (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 246 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ad6d126a65bbe40d0ca72bd3fe10f10bd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ad6d126a65bbe40d0ca72bd3fe10f10bd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_abbba50198ab277900a4a7641e9407f3d}\label{hls_8c_abbba50198ab277900a4a7641e9407f3d}} 
+\index{hls.c@{hls.c}!free\_rendition\_list@{free\_rendition\_list}}
+\index{free\_rendition\_list@{free\_rendition\_list}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_rendition\_list()}{free\_rendition\_list()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+rendition\+\_\+list (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 287 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_abbba50198ab277900a4a7641e9407f3d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a8f099c2646b13ec4f14aedf0cfee990f}\label{hls_8c_a8f099c2646b13ec4f14aedf0cfee990f}} 
+\index{hls.c@{hls.c}!free\_segment\_dynarray@{free\_segment\_dynarray}}
+\index{free\_segment\_dynarray@{free\_segment\_dynarray}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_segment\_dynarray()}{free\_segment\_dynarray()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+segment\+\_\+dynarray (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structsegment}{segment}} $\ast$$\ast$}]{segments,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n\+\_\+segments }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 218 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a8f099c2646b13ec4f14aedf0cfee990f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a3f4bf8f009fe2ac51a7ce3b93a853b44}\label{hls_8c_a3f4bf8f009fe2ac51a7ce3b93a853b44}} 
+\index{hls.c@{hls.c}!free\_segment\_list@{free\_segment\_list}}
+\index{free\_segment\_list@{free\_segment\_list}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_segment\_list()}{free\_segment\_list()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+segment\+\_\+list (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 228 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=327pt]{hls_8c_a3f4bf8f009fe2ac51a7ce3b93a853b44_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a3f4bf8f009fe2ac51a7ce3b93a853b44_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_aee53dfa61d9aeddb39dbc47a9c7fe31d}\label{hls_8c_aee53dfa61d9aeddb39dbc47a9c7fe31d}} 
+\index{hls.c@{hls.c}!free\_variant\_list@{free\_variant\_list}}
+\index{free\_variant\_list@{free\_variant\_list}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{free\_variant\_list()}{free\_variant\_list()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+variant\+\_\+list (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 275 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_aee53dfa61d9aeddb39dbc47a9c7fe31d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a5c9082beb065d7f920c1c65ff7464dcf}\label{hls_8c_a5c9082beb065d7f920c1c65ff7464dcf}} 
+\index{hls.c@{hls.c}!get\_timebase@{get\_timebase}}
+\index{get\_timebase@{get\_timebase}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{get\_timebase()}{get\_timebase()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_a_v_rational}{A\+V\+Rational}} get\+\_\+timebase (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2119 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a5c9082beb065d7f920c1c65ff7464dcf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a8300da86e8bfe963ab43f4461283fb35}\label{hls_8c_a8300da86e8bfe963ab43f4461283fb35}} 
+\index{hls.c@{hls.c}!handle\_id3@{handle\_id3}}
+\index{handle\_id3@{handle\_id3}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{handle\_id3()}{handle\_id3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+id3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1072 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a8300da86e8bfe963ab43f4461283fb35_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a8300da86e8bfe963ab43f4461283fb35_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a29e4320721a665ed581230ba845edf93}\label{hls_8c_a29e4320721a665ed581230ba845edf93}} 
+\index{hls.c@{hls.c}!handle\_init\_section\_args@{handle\_init\_section\_args}}
+\index{handle\_init\_section\_args@{handle\_init\_section\_args}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{handle\_init\_section\_args()}{handle\_init\_section\_args()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+init\+\_\+section\+\_\+args (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structinit__section__info}{init\+\_\+section\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{key,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{key\+\_\+len,  }\item[{char $\ast$$\ast$}]{dest,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{dest\+\_\+len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 439 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a29e4320721a665ed581230ba845edf93_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a63ddc662a6781ed32d69cc701e8a3eed}\label{hls_8c_a63ddc662a6781ed32d69cc701e8a3eed}} 
+\index{hls.c@{hls.c}!handle\_key\_args@{handle\_key\_args}}
+\index{handle\_key\_args@{handle\_key\_args}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{handle\_key\_args()}{handle\_key\_args()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+key\+\_\+args (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structkey__info}{key\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{key,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{key\+\_\+len,  }\item[{char $\ast$$\ast$}]{dest,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{dest\+\_\+len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 375 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a63ddc662a6781ed32d69cc701e8a3eed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a45646bc8888199610982d4c221424a7b}\label{hls_8c_a45646bc8888199610982d4c221424a7b}} 
+\index{hls.c@{hls.c}!handle\_rendition\_args@{handle\_rendition\_args}}
+\index{handle\_rendition\_args@{handle\_rendition\_args}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{handle\_rendition\_args()}{handle\_rendition\_args()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+rendition\+\_\+args (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structrendition__info}{rendition\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{key,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{key\+\_\+len,  }\item[{char $\ast$$\ast$}]{dest,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{dest\+\_\+len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 547 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a45646bc8888199610982d4c221424a7b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a02d580db9cb7e6340d9aff2a2ed67dca}\label{hls_8c_a02d580db9cb7e6340d9aff2a2ed67dca}} 
+\index{hls.c@{hls.c}!handle\_variant\_args@{handle\_variant\_args}}
+\index{handle\_variant\_args@{handle\_variant\_args}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{handle\_variant\_args()}{handle\_variant\_args()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+variant\+\_\+args (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structvariant__info}{variant\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{key,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{key\+\_\+len,  }\item[{char $\ast$$\ast$}]{dest,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{dest\+\_\+len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 351 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a02d580db9cb7e6340d9aff2a2ed67dca_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a7749ca1171307f4b3da532bafa57587d}\label{hls_8c_a7749ca1171307f4b3da532bafa57587d}} 
+\index{hls.c@{hls.c}!hls\_close@{hls\_close}}
+\index{hls\_close@{hls\_close}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_close()}{hls\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1829 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a7749ca1171307f4b3da532bafa57587d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{hls_8c_a7749ca1171307f4b3da532bafa57587d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a596419d76e9a269b301b2e5f8a884818}\label{hls_8c_a596419d76e9a269b301b2e5f8a884818}} 
+\index{hls.c@{hls.c}!hls\_probe@{hls\_probe}}
+\index{hls\_probe@{hls\_probe}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_probe()}{hls\_probe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+probe (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_a_v_probe_data}{A\+V\+Probe\+Data}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2354 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_a2bafa10a801293ba511a6ddf438a842b}\label{hls_8c_a2bafa10a801293ba511a6ddf438a842b}} 
+\index{hls.c@{hls.c}!hls\_read\_header@{hls\_read\_header}}
+\index{hls\_read\_header@{hls\_read\_header}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_read\_header()}{hls\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1843 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a2bafa10a801293ba511a6ddf438a842b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ab64c6b1097d65e287b1dcbaec781c855}\label{hls_8c_ab64c6b1097d65e287b1dcbaec781c855}} 
+\index{hls.c@{hls.c}!hls\_read\_packet@{hls\_read\_packet}}
+\index{hls\_read\_packet@{hls\_read\_packet}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_read\_packet()}{hls\_read\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+read\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2136 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ab64c6b1097d65e287b1dcbaec781c855_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_afb6dbd1f29d4a9527d6b74aaf906c202}\label{hls_8c_afb6dbd1f29d4a9527d6b74aaf906c202}} 
+\index{hls.c@{hls.c}!hls\_read\_seek@{hls\_read\_seek}}
+\index{hls\_read\_seek@{hls\_read\_seek}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_read\_seek()}{hls\_read\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hls\+\_\+read\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{timestamp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2272 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_afb6dbd1f29d4a9527d6b74aaf906c202_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ad61e59d2058979c601a0b376a6e3e382}\label{hls_8c_ad61e59d2058979c601a0b376a6e3e382}} 
+\index{hls.c@{hls.c}!id3\_has\_changed\_values@{id3\_has\_changed\_values}}
+\index{id3\_has\_changed\_values@{id3\_has\_changed\_values}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{id3\_has\_changed\_values()}{id3\_has\_changed\_values()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} id3\+\_\+has\+\_\+changed\+\_\+values (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$}]{metadata,  }\item[{\mbox{\hyperlink{struct_i_d3v2_extra_meta_a_p_i_c}{I\+D3v2\+Extra\+Meta\+A\+P\+IC}} $\ast$}]{apic }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1043 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ad61e59d2058979c601a0b376a6e3e382_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ad61e59d2058979c601a0b376a6e3e382_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ae0e9c0ab527095d33177d87e09e7fc3f}\label{hls_8c_ae0e9c0ab527095d33177d87e09e7fc3f}} 
+\index{hls.c@{hls.c}!intercept\_id3@{intercept\_id3}}
+\index{intercept\_id3@{intercept\_id3}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{intercept\_id3()}{intercept\_id3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} intercept\+\_\+id3 (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1114 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ae0e9c0ab527095d33177d87e09e7fc3f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ae0e9c0ab527095d33177d87e09e7fc3f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a812a8110646c23d1afe9d9ef530566e9}\label{hls_8c_a812a8110646c23d1afe9d9ef530566e9}} 
+\index{hls.c@{hls.c}!nested\_io\_open@{nested\_io\_open}}
+\index{nested\_io\_open@{nested\_io\_open}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{nested\_io\_open()}{nested\_io\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nested\+\_\+io\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{pb,  }\item[{const char $\ast$}]{url,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{opts }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1714 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=266pt]{hls_8c_a812a8110646c23d1afe9d9ef530566e9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{hls_8c_a812a8110646c23d1afe9d9ef530566e9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a9a39579d9a25474cee5631078f4ed6ef}\label{hls_8c_a9a39579d9a25474cee5631078f4ed6ef}} 
+\index{hls.c@{hls.c}!new\_init\_section@{new\_init\_section}}
+\index{new\_init\_section@{new\_init\_section}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{new\_init\_section()}{new\_init\_section()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structsegment}{segment}}$\ast$ new\+\_\+init\+\_\+section (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{struct \mbox{\hyperlink{structinit__section__info}{init\+\_\+section\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{url\+\_\+base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 395 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a9a39579d9a25474cee5631078f4ed6ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a9a39579d9a25474cee5631078f4ed6ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a7f1099f9f7a8194ec69a18acc58c7c4c}\label{hls_8c_a7f1099f9f7a8194ec69a18acc58c7c4c}} 
+\index{hls.c@{hls.c}!new\_playlist@{new\_playlist}}
+\index{new\_playlist@{new\_playlist}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{new\_playlist()}{new\_playlist()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structplaylist}{playlist}}$\ast$ new\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{const char $\ast$}]{url,  }\item[{const char $\ast$}]{base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 296 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a7f1099f9f7a8194ec69a18acc58c7c4c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a7f1099f9f7a8194ec69a18acc58c7c4c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a10c239af15a4847777709ded418529f2}\label{hls_8c_a10c239af15a4847777709ded418529f2}} 
+\index{hls.c@{hls.c}!new\_rendition@{new\_rendition}}
+\index{new\_rendition@{new\_rendition}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{new\_rendition()}{new\_rendition()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structrendition}{rendition}}$\ast$ new\+\_\+rendition (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structrendition__info}{rendition\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{url\+\_\+base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 463 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a10c239af15a4847777709ded418529f2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a10c239af15a4847777709ded418529f2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_adf51bbce2c9208b0b67e46323291dc76}\label{hls_8c_adf51bbce2c9208b0b67e46323291dc76}} 
+\index{hls.c@{hls.c}!new\_variant@{new\_variant}}
+\index{new\_variant@{new\_variant}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{new\_variant()}{new\_variant()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structvariant}{variant}}$\ast$ new\+\_\+variant (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structvariant__info}{variant\+\_\+info}} $\ast$}]{info,  }\item[{const char $\ast$}]{url,  }\item[{const char $\ast$}]{base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 325 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_adf51bbce2c9208b0b67e46323291dc76_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_adf51bbce2c9208b0b67e46323291dc76_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a0a8c95ceca0f52607974f991b9f13158}\label{hls_8c_a0a8c95ceca0f52607974f991b9f13158}} 
+\index{hls.c@{hls.c}!next\_segment@{next\_segment}}
+\index{next\_segment@{next\_segment}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{next\_segment()}{next\_segment()}}
+{\footnotesize\ttfamily static struct \mbox{\hyperlink{structsegment}{segment}}$\ast$ next\+\_\+segment (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 992 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a0a8c95ceca0f52607974f991b9f13158_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a096342a369adaf1ca5fe1b92e3e31fe0}\label{hls_8c_a096342a369adaf1ca5fe1b92e3e31fe0}} 
+\index{hls.c@{hls.c}!open\_input@{open\_input}}
+\index{open\_input@{open\_input}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{open\_input()}{open\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} open\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{struct \mbox{\hyperlink{structsegment}{segment}} $\ast$}]{seg,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1214 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a096342a369adaf1ca5fe1b92e3e31fe0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a096342a369adaf1ca5fe1b92e3e31fe0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ac58372b9fe97a1a37655095a8e76db0b}\label{hls_8c_ac58372b9fe97a1a37655095a8e76db0b}} 
+\index{hls.c@{hls.c}!open\_url@{open\_url}}
+\index{open\_url@{open\_url}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{open\_url()}{open\_url()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} open\+\_\+url (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{pb,  }\item[{const char $\ast$}]{url,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{opts,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$}]{opts2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{is\+\_\+http\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 619 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ac58372b9fe97a1a37655095a8e76db0b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ac58372b9fe97a1a37655095a8e76db0b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a67b8e08f443cba60f63b00db7a2e1f4e}\label{hls_8c_a67b8e08f443cba60f63b00db7a2e1f4e}} 
+\index{hls.c@{hls.c}!open\_url\_keepalive@{open\_url\_keepalive}}
+\index{open\_url\_keepalive@{open\_url\_keepalive}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{open\_url\_keepalive()}{open\_url\_keepalive()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} open\+\_\+url\+\_\+keepalive (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$$\ast$}]{pb,  }\item[{const char $\ast$}]{url,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 601 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a67b8e08f443cba60f63b00db7a2e1f4e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a67b8e08f443cba60f63b00db7a2e1f4e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a631da9a4ef85937bc81c183383e196d3}\label{hls_8c_a631da9a4ef85937bc81c183383e196d3}} 
+\index{hls.c@{hls.c}!parse\_id3@{parse\_id3}}
+\index{parse\_id3@{parse\_id3}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{parse\_id3()}{parse\_id3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} parse\+\_\+id3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{metadata,  }\item[{int64\+\_\+t $\ast$}]{dts,  }\item[{\mbox{\hyperlink{struct_i_d3v2_extra_meta_a_p_i_c}{I\+D3v2\+Extra\+Meta\+A\+P\+IC}} $\ast$$\ast$}]{apic,  }\item[{\mbox{\hyperlink{struct_i_d3v2_extra_meta}{I\+D3v2\+Extra\+Meta}} $\ast$$\ast$}]{extra\+\_\+meta }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1017 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a631da9a4ef85937bc81c183383e196d3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a631da9a4ef85937bc81c183383e196d3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_aa28eb6d0b367b76e95e0b0c926ef4ef8}\label{hls_8c_aa28eb6d0b367b76e95e0b0c926ef4ef8}} 
+\index{hls.c@{hls.c}!parse\_playlist@{parse\_playlist}}
+\index{parse\_playlist@{parse\_playlist}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{parse\_playlist()}{parse\_playlist()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+playlist (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{const char $\ast$}]{url,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 704 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_aa28eb6d0b367b76e95e0b0c926ef4ef8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_aa28eb6d0b367b76e95e0b0c926ef4ef8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ae5570c4843c11c1ca954a3e8ea3be3cd}\label{hls_8c_ae5570c4843c11c1ca954a3e8ea3be3cd}} 
+\index{hls.c@{hls.c}!playlist\_needed@{playlist\_needed}}
+\index{playlist\_needed@{playlist\_needed}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{playlist\_needed()}{playlist\_needed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} playlist\+\_\+needed (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1365 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ae5570c4843c11c1ca954a3e8ea3be3cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a33833d99f4c7b3a9f820fad60cd7c1b1}\label{hls_8c_a33833d99f4c7b3a9f820fad60cd7c1b1}} 
+\index{hls.c@{hls.c}!read\_data@{read\_data}}
+\index{read\_data@{read\_data}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{read\_data()}{read\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{opaque,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1411 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a33833d99f4c7b3a9f820fad60cd7c1b1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=263pt]{hls_8c_a33833d99f4c7b3a9f820fad60cd7c1b1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a14ea7a63ebd0cc0b2c066d824733fba3}\label{hls_8c_a14ea7a63ebd0cc0b2c066d824733fba3}} 
+\index{hls.c@{hls.c}!read\_from\_url@{read\_from\_url}}
+\index{read\_from\_url@{read\_from\_url}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{read\_from\_url()}{read\_from\_url()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+from\+\_\+url (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{struct \mbox{\hyperlink{structsegment}{segment}} $\ast$}]{seg,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1000 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a14ea7a63ebd0cc0b2c066d824733fba3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a14ea7a63ebd0cc0b2c066d824733fba3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a5c486b9f18fb4357725540a49d6ce041}\label{hls_8c_a5c486b9f18fb4357725540a49d6ce041}} 
+\index{hls.c@{hls.c}!recheck\_discard\_flags@{recheck\_discard\_flags}}
+\index{recheck\_discard\_flags@{recheck\_discard\_flags}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{recheck\_discard\_flags()}{recheck\_discard\_flags()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} recheck\+\_\+discard\+\_\+flags (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{first }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2054 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a5c486b9f18fb4357725540a49d6ce041_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{hls_8c_a5c486b9f18fb4357725540a49d6ce041_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ab798928212b2dc2e5f859973a3f54282}\label{hls_8c_ab798928212b2dc2e5f859973a3f54282}} 
+\index{hls.c@{hls.c}!save\_avio\_options@{save\_avio\_options}}
+\index{save\_avio\_options@{save\_avio\_options}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{save\_avio\_options()}{save\_avio\_options()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} save\+\_\+avio\+\_\+options (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1692 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ab798928212b2dc2e5f859973a3f54282_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{hls_8c_ab798928212b2dc2e5f859973a3f54282_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_ab5974070cf1146f8ac901cc57e8cc9fb}\label{hls_8c_ab5974070cf1146f8ac901cc57e8cc9fb}} 
+\index{hls.c@{hls.c}!select\_cur\_seq\_no@{select\_cur\_seq\_no}}
+\index{select\_cur\_seq\_no@{select\_cur\_seq\_no}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{select\_cur\_seq\_no()}{select\_cur\_seq\_no()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} select\+\_\+cur\+\_\+seq\+\_\+no (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_l_s_context}{H\+L\+S\+Context}} $\ast$}]{c,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1653 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ab5974070cf1146f8ac901cc57e8cc9fb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_ab5974070cf1146f8ac901cc57e8cc9fb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a3ae06c22ab7bc905a6c392558117f613}\label{hls_8c_a3ae06c22ab7bc905a6c392558117f613}} 
+\index{hls.c@{hls.c}!set\_stream\_info\_from\_input\_stream@{set\_stream\_info\_from\_input\_stream}}
+\index{set\_stream\_info\_from\_input\_stream@{set\_stream\_info\_from\_input\_stream}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{set\_stream\_info\_from\_input\_stream()}{set\_stream\_info\_from\_input\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} set\+\_\+stream\+\_\+info\+\_\+from\+\_\+input\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{st,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{ist }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1750 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a3ae06c22ab7bc905a6c392558117f613_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a3ae06c22ab7bc905a6c392558117f613_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a0a7ebc8121cd25db6ebb58d24324f3e3}\label{hls_8c_a0a7ebc8121cd25db6ebb58d24324f3e3}} 
+\index{hls.c@{hls.c}!update\_init\_section@{update\_init\_section}}
+\index{update\_init\_section@{update\_init\_section}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{update\_init\_section()}{update\_init\_section()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+init\+\_\+section (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls,  }\item[{struct \mbox{\hyperlink{structsegment}{segment}} $\ast$}]{seg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1301 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a0a7ebc8121cd25db6ebb58d24324f3e3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a0a7ebc8121cd25db6ebb58d24324f3e3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a00cc94e485a168d05ddc87280b893d5c}\label{hls_8c_a00cc94e485a168d05ddc87280b893d5c}} 
+\index{hls.c@{hls.c}!update\_noheader\_flag@{update\_noheader\_flag}}
+\index{update\_noheader\_flag@{update\_noheader\_flag}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{update\_noheader\_flag()}{update\_noheader\_flag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+noheader\+\_\+flag (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1808 of file hls.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{hls_8c_a00cc94e485a168d05ddc87280b893d5c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{hls_8c_a6cb918c172b54060adc5c23b1f72fb63}\label{hls_8c_a6cb918c172b54060adc5c23b1f72fb63}} 
+\index{hls.c@{hls.c}!update\_streams\_from\_subdemuxer@{update\_streams\_from\_subdemuxer}}
+\index{update\_streams\_from\_subdemuxer@{update\_streams\_from\_subdemuxer}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{update\_streams\_from\_subdemuxer()}{update\_streams\_from\_subdemuxer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+streams\+\_\+from\+\_\+subdemuxer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{struct \mbox{\hyperlink{structplaylist}{playlist}} $\ast$}]{pls }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1783 of file hls.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hls_8c_a6cb918c172b54060adc5c23b1f72fb63_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{hls_8c_a6cb918c172b54060adc5c23b1f72fb63_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{hls_8c_af17dc03e500e6907cd8bdcb8433713fa}\label{hls_8c_af17dc03e500e6907cd8bdcb8433713fa}} 
+\index{hls.c@{hls.c}!ff\_hls\_demuxer@{ff\_hls\_demuxer}}
+\index{ff\_hls\_demuxer@{ff\_hls\_demuxer}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{ff\_hls\_demuxer}{ff\_hls\_demuxer}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_input_format}{A\+V\+Input\+Format}} ff\+\_\+hls\+\_\+demuxer}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}hls"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apple HTTP Live Streaming"{}}),}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{hls_8c_ad81856a38b90919614cb5a19aca1b94e}{hls\_class}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{hls_8c_a70e97316f72d969c05afd297e3a5b3b4}{HLSContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{avformat_8h_a860dc077e9c782de0d49a2d4d968b64a}{AVFMT\_NOGENSEARCH}} | \mbox{\hyperlink{avformat_8h_a4d232408e799fa2b2f2705a3e8e0b4b8}{AVFMT\_TS\_DISCONT}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libavformat_2jvdec_8c_a4517a6dcebdb863ba6840921970a41ac}{read\_probe}}     = \mbox{\hyperlink{hls_8c_a596419d76e9a269b301b2e5f8a884818}{hls\_probe}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{ffv1dec_8c_a0b9c6775a65106fc8bf33cd388ec715c}{read\_header}}    = \mbox{\hyperlink{hls_8c_a2bafa10a801293ba511a6ddf438a842b}{hls\_read\_header}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avio__reading_8c_a3a86bff38e7cb9093d0a32316b73b29c}{read\_packet}}    = \mbox{\hyperlink{hls_8c_ab64c6b1097d65e287b1dcbaec781c855}{hls\_read\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_a3469cc7152b70da4356d17e698a55850}{read\_close}}     = \mbox{\hyperlink{hls_8c_a7749ca1171307f4b3da532bafa57587d}{hls\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libcdio_8c_aaf64d43f28f7aaf168968366472d52d7}{read\_seek}}      = \mbox{\hyperlink{hls_8c_afb6dbd1f29d4a9527d6b74aaf906c202}{hls\_read\_seek}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2397 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_ad81856a38b90919614cb5a19aca1b94e}\label{hls_8c_ad81856a38b90919614cb5a19aca1b94e}} 
+\index{hls.c@{hls.c}!hls\_class@{hls\_class}}
+\index{hls\_class@{hls\_class}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_class}{hls\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} hls\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}hls demuxer"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{hls_8c_abb1efe09bbb6c9c58a4418ed8e405c0c}{hls\_options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2390 of file hls.\+c.
+
+\mbox{\Hypertarget{hls_8c_abb1efe09bbb6c9c58a4418ed8e405c0c}\label{hls_8c_abb1efe09bbb6c9c58a4418ed8e405c0c}} 
+\index{hls.c@{hls.c}!hls\_options@{hls\_options}}
+\index{hls\_options@{hls\_options}!hls.c@{hls.c}}
+\doxysubsubsection{\texorpdfstring{hls\_options}{hls\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} hls\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}live\_start\_index"{}}, \textcolor{stringliteral}{"{}segment index to start live streams at (negative values are from the end)"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(live\_start\_index), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/3\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}allowed\_extensions"{}}, \textcolor{stringliteral}{"{}List of file extensions that hls is allowed to access"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(allowed\_extensions), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}},}
+\DoxyCodeLine{        \{.str = \textcolor{stringliteral}{"{}3gp,aac,avi,ac3,eac3,flac,mkv,m3u8,m4a,m4s,m4v,mpg,mov,mp2,mp3,mp4,mpeg,mpegts,ogg,ogv,oga,ts,vob,wav"{}}\},}
+\DoxyCodeLine{        INT\_MIN, INT\_MAX, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}max\_reload"{}}, \textcolor{stringliteral}{"{}Maximum number of times a insufficient list is attempted to be reloaded"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(max\_reload), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 1000\}, 0, INT\_MAX, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}m3u8\_hold\_counters"{}}, \textcolor{stringliteral}{"{}The maximum number of times to load m3u8 when it refreshes without new segments"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(m3u8\_hold\_counters), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 1000\}, 0, INT\_MAX, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}http\_persistent"{}}, \textcolor{stringliteral}{"{}Use persistent HTTP connections"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(http\_persistent), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 1\}, 0, 1, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}http\_multiple"{}}, \textcolor{stringliteral}{"{}Use multiple HTTP connections for fetching segments"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(http\_multiple), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = -\/1\}, -\/1, 1, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}http\_seekable"{}}, \textcolor{stringliteral}{"{}Use HTTP partial requests, 0 = disable, 1 = enable, -\/1 = auto"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{hls_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(http\_seekable), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = -\/1\}, -\/1, 1, \mbox{\hyperlink{hls_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2370 of file hls.\+c.
+

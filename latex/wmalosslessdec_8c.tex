@@ -1,0 +1,952 @@
+\hypertarget{wmalosslessdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/wmalosslessdec.c File Reference}
+\label{wmalosslessdec_8c}\index{E:/github/ffmpeg/libavcodec/wmalosslessdec.c@{E:/github/ffmpeg/libavcodec/wmalosslessdec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/attributes.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lossless\+\_\+audiodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wma.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}wma\+\_\+common.\+h\char`\"{}}\newline
+Include dependency graph for wmalosslessdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_wmall_channel_ctx}{Wmall\+Channel\+Ctx}}
+\begin{DoxyCompactList}\small\item\em frame-\/specific decoder context for a single channel \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}}
+\begin{DoxyCompactList}\small\item\em main decoder context \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_a3a6c448a22d2abd82aa6b840d7553146}{W\+M\+A\+L\+L\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~8
+\begin{DoxyCompactList}\small\item\em max number of handled channels \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_abe31044e248ed58986088de9f2528ade}{M\+A\+X\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES}}~32
+\begin{DoxyCompactList}\small\item\em max number of subframes per channel \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_a004b751f8a5906ffd88e98f5aff8a275}{M\+A\+X\+\_\+\+B\+A\+N\+DS}}~29
+\begin{DoxyCompactList}\small\item\em max number of scale factor bands \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_aec6f87b5adab846fb54ffb94851b5c00}{M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+S\+I\+ZE}}~32768
+\begin{DoxyCompactList}\small\item\em maximum compressed frame size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_ab08dffec08ac450d78d4c062b571939e}{M\+A\+X\+\_\+\+O\+R\+D\+ER}}~256
+\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_af471c4a4438c75bc3d73b505ddfed55e}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}}~6
+\begin{DoxyCompactList}\small\item\em log2 of min block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}}~14
+\begin{DoxyCompactList}\small\item\em log2 of max block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_a8de4bf3a2c2d41124633deabee2e193d}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE}}~(1 $<$$<$ \mbox{\hyperlink{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}})
+\begin{DoxyCompactList}\small\item\em maximum block size \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_affac2696e815bee53a3af6acc9868759}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+Z\+ES}}~(\mbox{\hyperlink{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}} -\/ \mbox{\hyperlink{wmalosslessdec_8c_af471c4a4438c75bc3d73b505ddfed55e}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}} + 1)
+\begin{DoxyCompactList}\small\item\em possible block sizes \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_af2ee50775f06e874a84d2fc3499367aa}{W\+M\+A\+L\+L\+\_\+\+C\+O\+E\+F\+F\+\_\+\+P\+A\+D\+\_\+\+S\+I\+ZE}}~16
+\begin{DoxyCompactList}\small\item\em pad coef buffers with 0 for use with S\+I\+MD \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_ad7ca8e0ff01ad90943a6f539e1e5f4dd}{W\+M\+A\+S\+I\+GN}}(x)~(((x) $>$ 0) -\/ ((x) $<$ 0))
+\item 
+\#define \mbox{\hyperlink{wmalosslessdec_8c_a09bb8a0ec53b8d1c4ccccf78f9ed00c0}{C\+D\+\_\+\+L\+MS}}(\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  R\+O\+U\+ND)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_wmall_channel_ctx}{Wmall\+Channel\+Ctx}} \mbox{\hyperlink{wmalosslessdec_8c_a8101ae68221e6758ea00685db9e9cce7}{Wmall\+Channel\+Ctx}}
+\begin{DoxyCompactList}\small\item\em frame-\/specific decoder context for a single channel \end{DoxyCompactList}\item 
+typedef struct \mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} \mbox{\hyperlink{wmalosslessdec_8c_afeab6c4e66f5119a9fe7bd14c473b1ad}{Wmall\+Decode\+Ctx}}
+\begin{DoxyCompactList}\small\item\em main decoder context \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a9e2e35fffc4327252c9ca0458e1c3d1b}{decode\+\_\+subframe\+\_\+length}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\begin{DoxyCompactList}\small\item\em Decode the subframe length. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_af7fa25b0fe85f1faa2435c5fe6987a70}{decode\+\_\+tilehdr}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Decode how the data in the frame is split into subframes. Every W\+MA frame contains the encoded data for a fixed number of samples per channel. The data for every channel might be split into several subframes. This function will reconstruct the list of subframes for every channel. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a338909f92839e54040669bf7af855265}{decode\+\_\+ac\+\_\+filter}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_ac4af20926cce5a2bc3dcd93beb874d1f}{decode\+\_\+mclms}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a38de729d343016bcdf536d222d37a41e}{decode\+\_\+cdlms}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a32b021cfa2b04269ad1b3900b5a40037}{decode\+\_\+channel\+\_\+residues}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tile\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_afc2fc6abd598f578318e572e25d28c73}{decode\+\_\+lpc}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a2da38dc968fb8bd1321091c5f412299b}{clear\+\_\+codec\+\_\+buffers}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_ad968c962b45a15d3eb572b1f37281abd}{reset\+\_\+codec}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Reset filter parameters and transient area at new seekable tile. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a0beaf0f77cf0a653175061e80bacf4f0}{mclms\+\_\+update}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} icoef, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{siprdata_8h_a3cce87604695942e930d8853d9cad953}{pred}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a7fb9a251882052f2ad4c8c994268cab2}{mclms\+\_\+predict}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} icoef, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{siprdata_8h_a3cce87604695942e930d8853d9cad953}{pred}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a042e286aed2605242228c1d701e343a4}{revert\+\_\+mclms}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tile\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_ad838eb265aca89db5e5e5f9c68e3912f}{use\+\_\+high\+\_\+update\+\_\+speed}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ich)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_afeab850968cf3a42e3eec637a5b55f6e}{use\+\_\+normal\+\_\+update\+\_\+speed}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ich)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_affd2f0d8ee502550c37be569edfafdd3}{revert\+\_\+inter\+\_\+ch\+\_\+decorr}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tile\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a783812b461a12c729905ae91c12a628b}{revert\+\_\+acfilter}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tile\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a08b02984b30e6ff2d4ded6411f3d364a}{decode\+\_\+subframe}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_ac416aad910871d9af73f5ce41e790561}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\begin{DoxyCompactList}\small\item\em Decode one W\+MA frame. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_adbe62e96deab08d8c74ba6353eb15214}{remaining\+\_\+bits}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb)
+\begin{DoxyCompactList}\small\item\em Calculate remaining input buffer length. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_a70e2a00d626880b4f55f66f539af19f9}{save\+\_\+bits}} (\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mjpeg2jpeg__bsf_8c_a7171d7a6736250cb1c93100b33ee0ea3}{append}})
+\begin{DoxyCompactList}\small\item\em Fill the bit reservoir with a (partial) frame. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a9ce3a23125e0de1ebf016f0d2375b016}{decode\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{wmalosslessdec_8c_a48462025775e112b5220440bdd4da254}{decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{wmalosslessdec_8c_af6f3f889bb51998e7ce82f78830887d1}{ff\+\_\+wmalossless\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{wmalosslessdec_8c_a09bb8a0ec53b8d1c4ccccf78f9ed00c0}\label{wmalosslessdec_8c_a09bb8a0ec53b8d1c4ccccf78f9ed00c0}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!CD\_LMS@{CD\_LMS}}
+\index{CD\_LMS@{CD\_LMS}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{CD\_LMS}{CD\_LMS}}
+{\footnotesize\ttfamily \#define C\+D\+\_\+\+L\+MS(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}},  }\item[{}]{R\+O\+U\+ND }\end{DoxyParamCaption})}
+
+
+
+Definition at line 729 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_a004b751f8a5906ffd88e98f5aff8a275}\label{wmalosslessdec_8c_a004b751f8a5906ffd88e98f5aff8a275}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!MAX\_BANDS@{MAX\_BANDS}}
+\index{MAX\_BANDS@{MAX\_BANDS}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BANDS}{MAX\_BANDS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+A\+N\+DS~29}
+
+
+
+max number of scale factor bands 
+
+
+
+Definition at line 41 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_aec6f87b5adab846fb54ffb94851b5c00}\label{wmalosslessdec_8c_aec6f87b5adab846fb54ffb94851b5c00}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!MAX\_FRAMESIZE@{MAX\_FRAMESIZE}}
+\index{MAX\_FRAMESIZE@{MAX\_FRAMESIZE}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_FRAMESIZE}{MAX\_FRAMESIZE}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+S\+I\+ZE~32768}
+
+
+
+maximum compressed frame size 
+
+
+
+Definition at line 42 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_ab08dffec08ac450d78d4c062b571939e}\label{wmalosslessdec_8c_ab08dffec08ac450d78d4c062b571939e}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!MAX\_ORDER@{MAX\_ORDER}}
+\index{MAX\_ORDER@{MAX\_ORDER}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_ORDER}{MAX\_ORDER}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+O\+R\+D\+ER~256}
+
+
+
+Definition at line 43 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_abe31044e248ed58986088de9f2528ade}\label{wmalosslessdec_8c_abe31044e248ed58986088de9f2528ade}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!MAX\_SUBFRAMES@{MAX\_SUBFRAMES}}
+\index{MAX\_SUBFRAMES@{MAX\_SUBFRAMES}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_SUBFRAMES}{MAX\_SUBFRAMES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+S\+U\+B\+F\+R\+A\+M\+ES~32}
+
+
+
+max number of subframes per channel 
+
+
+
+Definition at line 40 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}\label{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_BLOCK\_MAX\_BITS@{WMALL\_BLOCK\_MAX\_BITS}}
+\index{WMALL\_BLOCK\_MAX\_BITS@{WMALL\_BLOCK\_MAX\_BITS}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_BLOCK\_MAX\_BITS}{WMALL\_BLOCK\_MAX\_BITS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS~14}
+
+
+
+log2 of max block size 
+
+
+
+Definition at line 46 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_a8de4bf3a2c2d41124633deabee2e193d}\label{wmalosslessdec_8c_a8de4bf3a2c2d41124633deabee2e193d}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_BLOCK\_MAX\_SIZE@{WMALL\_BLOCK\_MAX\_SIZE}}
+\index{WMALL\_BLOCK\_MAX\_SIZE@{WMALL\_BLOCK\_MAX\_SIZE}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_BLOCK\_MAX\_SIZE}{WMALL\_BLOCK\_MAX\_SIZE}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE~(1 $<$$<$ \mbox{\hyperlink{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}})}
+
+
+
+maximum block size 
+
+
+
+Definition at line 47 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_af471c4a4438c75bc3d73b505ddfed55e}\label{wmalosslessdec_8c_af471c4a4438c75bc3d73b505ddfed55e}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_BLOCK\_MIN\_BITS@{WMALL\_BLOCK\_MIN\_BITS}}
+\index{WMALL\_BLOCK\_MIN\_BITS@{WMALL\_BLOCK\_MIN\_BITS}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_BLOCK\_MIN\_BITS}{WMALL\_BLOCK\_MIN\_BITS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS~6}
+
+
+
+log2 of min block size 
+
+
+
+Definition at line 45 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_affac2696e815bee53a3af6acc9868759}\label{wmalosslessdec_8c_affac2696e815bee53a3af6acc9868759}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_BLOCK\_SIZES@{WMALL\_BLOCK\_SIZES}}
+\index{WMALL\_BLOCK\_SIZES@{WMALL\_BLOCK\_SIZES}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_BLOCK\_SIZES}{WMALL\_BLOCK\_SIZES}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+Z\+ES~(\mbox{\hyperlink{wmalosslessdec_8c_a61a2f369aeb0295f8532a5a2ea578774}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+A\+X\+\_\+\+B\+I\+TS}} -\/ \mbox{\hyperlink{wmalosslessdec_8c_af471c4a4438c75bc3d73b505ddfed55e}{W\+M\+A\+L\+L\+\_\+\+B\+L\+O\+C\+K\+\_\+\+M\+I\+N\+\_\+\+B\+I\+TS}} + 1)}
+
+
+
+possible block sizes 
+
+
+
+Definition at line 48 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_af2ee50775f06e874a84d2fc3499367aa}\label{wmalosslessdec_8c_af2ee50775f06e874a84d2fc3499367aa}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_COEFF\_PAD\_SIZE@{WMALL\_COEFF\_PAD\_SIZE}}
+\index{WMALL\_COEFF\_PAD\_SIZE@{WMALL\_COEFF\_PAD\_SIZE}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_COEFF\_PAD\_SIZE}{WMALL\_COEFF\_PAD\_SIZE}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+C\+O\+E\+F\+F\+\_\+\+P\+A\+D\+\_\+\+S\+I\+ZE~16}
+
+
+
+pad coef buffers with 0 for use with S\+I\+MD 
+
+
+
+Definition at line 50 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_a3a6c448a22d2abd82aa6b840d7553146}\label{wmalosslessdec_8c_a3a6c448a22d2abd82aa6b840d7553146}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMALL\_MAX\_CHANNELS@{WMALL\_MAX\_CHANNELS}}
+\index{WMALL\_MAX\_CHANNELS@{WMALL\_MAX\_CHANNELS}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMALL\_MAX\_CHANNELS}{WMALL\_MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define W\+M\+A\+L\+L\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~8}
+
+
+
+max number of handled channels 
+
+current decoder limitations 
+
+Definition at line 39 of file wmalosslessdec.\+c.
+
+\mbox{\Hypertarget{wmalosslessdec_8c_ad7ca8e0ff01ad90943a6f539e1e5f4dd}\label{wmalosslessdec_8c_ad7ca8e0ff01ad90943a6f539e1e5f4dd}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WMASIGN@{WMASIGN}}
+\index{WMASIGN@{WMASIGN}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WMASIGN}{WMASIGN}}
+{\footnotesize\ttfamily \#define W\+M\+A\+S\+I\+GN(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(((x) $>$ 0) -\/ ((x) $<$ 0))}
+
+Get sign of integer (1 for positive, -\/1 for negative and 0 for zero) 
+
+Definition at line 178 of file wmalosslessdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{wmalosslessdec_8c_a8101ae68221e6758ea00685db9e9cce7}\label{wmalosslessdec_8c_a8101ae68221e6758ea00685db9e9cce7}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WmallChannelCtx@{WmallChannelCtx}}
+\index{WmallChannelCtx@{WmallChannelCtx}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WmallChannelCtx}{WmallChannelCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_wmall_channel_ctx}{Wmall\+Channel\+Ctx}} \mbox{\hyperlink{struct_wmall_channel_ctx}{Wmall\+Channel\+Ctx}}}
+
+
+
+frame-\/specific decoder context for a single channel 
+
+\mbox{\Hypertarget{wmalosslessdec_8c_afeab6c4e66f5119a9fe7bd14c473b1ad}\label{wmalosslessdec_8c_afeab6c4e66f5119a9fe7bd14c473b1ad}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!WmallDecodeCtx@{WmallDecodeCtx}}
+\index{WmallDecodeCtx@{WmallDecodeCtx}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{WmallDecodeCtx}{WmallDecodeCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} \mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}}}
+
+
+
+main decoder context 
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{wmalosslessdec_8c_a2da38dc968fb8bd1321091c5f412299b}\label{wmalosslessdec_8c_a2da38dc968fb8bd1321091c5f412299b}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!clear\_codec\_buffers@{clear\_codec\_buffers}}
+\index{clear\_codec\_buffers@{clear\_codec\_buffers}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{clear\_codec\_buffers()}{clear\_codec\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} clear\+\_\+codec\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 577 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a2da38dc968fb8bd1321091c5f412299b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a338909f92839e54040669bf7af855265}\label{wmalosslessdec_8c_a338909f92839e54040669bf7af855265}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_ac\_filter@{decode\_ac\_filter}}
+\index{decode\_ac\_filter@{decode\_ac\_filter}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_ac\_filter()}{decode\_ac\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+ac\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 418 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=346pt]{wmalosslessdec_8c_a338909f92839e54040669bf7af855265_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a338909f92839e54040669bf7af855265_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a38de729d343016bcdf536d222d37a41e}\label{wmalosslessdec_8c_a38de729d343016bcdf536d222d37a41e}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_cdlms@{decode\_cdlms}}
+\index{decode\_cdlms@{decode\_cdlms}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_cdlms()}{decode\_cdlms()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+cdlms (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 451 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{wmalosslessdec_8c_a38de729d343016bcdf536d222d37a41e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a38de729d343016bcdf536d222d37a41e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a32b021cfa2b04269ad1b3900b5a40037}\label{wmalosslessdec_8c_a32b021cfa2b04269ad1b3900b5a40037}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_channel\_residues@{decode\_channel\_residues}}
+\index{decode\_channel\_residues@{decode\_channel\_residues}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_channel\_residues()}{decode\_channel\_residues()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+channel\+\_\+residues (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tile\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 508 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a32b021cfa2b04269ad1b3900b5a40037_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a32b021cfa2b04269ad1b3900b5a40037_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a48462025775e112b5220440bdd4da254}\label{wmalosslessdec_8c_a48462025775e112b5220440bdd4da254}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_close@{decode\_close}}
+\index{decode\_close@{decode\_close}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_close()}{decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1315 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a48462025775e112b5220440bdd4da254_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_ac416aad910871d9af73f5ce41e790561}\label{wmalosslessdec_8c_ac416aad910871d9af73f5ce41e790561}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode one W\+MA frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if the trailer bit indicates that this is the last frame, 1 if there are additional frames 
+\end{DoxyReturn}
+
+
+Definition at line 1021 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_ac416aad910871d9af73f5ce41e790561_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{wmalosslessdec_8c_ac416aad910871d9af73f5ce41e790561_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{wmalosslessdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 180 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_afc2fc6abd598f578318e572e25d28c73}\label{wmalosslessdec_8c_afc2fc6abd598f578318e572e25d28c73}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_lpc@{decode\_lpc}}
+\index{decode\_lpc@{decode\_lpc}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_lpc()}{decode\_lpc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+lpc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 565 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_afc2fc6abd598f578318e572e25d28c73_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_afc2fc6abd598f578318e572e25d28c73_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_ac4af20926cce5a2bc3dcd93beb874d1f}\label{wmalosslessdec_8c_ac4af20926cce5a2bc3dcd93beb874d1f}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_mclms@{decode\_mclms}}
+\index{decode\_mclms@{decode\_mclms}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_mclms()}{decode\_mclms()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+mclms (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 428 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=342pt]{wmalosslessdec_8c_ac4af20926cce5a2bc3dcd93beb874d1f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_ac4af20926cce5a2bc3dcd93beb874d1f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a9ce3a23125e0de1ebf016f0d2375b016}\label{wmalosslessdec_8c_a9ce3a23125e0de1ebf016f0d2375b016}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_packet@{decode\_packet}}
+\index{decode\_packet@{decode\_packet}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_packet()}{decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1181 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{wmalosslessdec_8c_a9ce3a23125e0de1ebf016f0d2375b016_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a08b02984b30e6ff2d4ded6411f3d364a}\label{wmalosslessdec_8c_a08b02984b30e6ff2d4ded6411f3d364a}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_subframe@{decode\_subframe}}
+\index{decode\_subframe@{decode\_subframe}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subframe()}{decode\_subframe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subframe (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 835 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a08b02984b30e6ff2d4ded6411f3d364a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a08b02984b30e6ff2d4ded6411f3d364a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a9e2e35fffc4327252c9ca0458e1c3d1b}\label{wmalosslessdec_8c_a9e2e35fffc4327252c9ca0458e1c3d1b}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_subframe\_length@{decode\_subframe\_length}}
+\index{decode\_subframe\_length@{decode\_subframe\_length}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subframe\_length()}{decode\_subframe\_length()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subframe\+\_\+length (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode the subframe length. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context \\
+\hline
+{\em offset} & sample offset in the frame \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+decoded subframe length on success, $<$ 0 in case of an error 
+\end{DoxyReturn}
+
+
+Definition at line 291 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{wmalosslessdec_8c_a9e2e35fffc4327252c9ca0458e1c3d1b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a9e2e35fffc4327252c9ca0458e1c3d1b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_af7fa25b0fe85f1faa2435c5fe6987a70}\label{wmalosslessdec_8c_af7fa25b0fe85f1faa2435c5fe6987a70}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!decode\_tilehdr@{decode\_tilehdr}}
+\index{decode\_tilehdr@{decode\_tilehdr}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_tilehdr()}{decode\_tilehdr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+tilehdr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Decode how the data in the frame is split into subframes. Every W\+MA frame contains the encoded data for a fixed number of samples per channel. The data for every channel might be split into several subframes. This function will reconstruct the list of subframes for every channel. 
+
+If the subframes are not evenly split, the algorithm estimates the channels with the lowest number of total samples. Afterwards, for each of these channels a bit is read from the bitstream that indicates if the channel contains a subframe with the next subframe size that is going to be read from the bitstream or not. If a channel contains such a subframe, the subframe size gets added to the channel\textquotesingle{}s subframe list. The algorithm repeats these steps until the frame is properly divided between the individual channels.
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 on success, $<$ 0 in case of an error 
+\end{DoxyReturn}
+
+
+Definition at line 333 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_af7fa25b0fe85f1faa2435c5fe6987a70_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_af7fa25b0fe85f1faa2435c5fe6987a70_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}\label{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!flush@{flush}}
+\index{flush@{flush}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{flush()}{flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1302 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=222pt]{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a7fb9a251882052f2ad4c8c994268cab2}\label{wmalosslessdec_8c_a7fb9a251882052f2ad4c8c994268cab2}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!mclms\_predict@{mclms\_predict}}
+\index{mclms\_predict@{mclms\_predict}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{mclms\_predict()}{mclms\_predict()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mclms\+\_\+predict (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{icoef,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{pred }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 663 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a7fb9a251882052f2ad4c8c994268cab2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a0beaf0f77cf0a653175061e80bacf4f0}\label{wmalosslessdec_8c_a0beaf0f77cf0a653175061e80bacf4f0}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!mclms\_update@{mclms\_update}}
+\index{mclms\_update@{mclms\_update}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{mclms\_update()}{mclms\_update()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mclms\+\_\+update (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{icoef,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{pred }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 621 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=225pt]{wmalosslessdec_8c_a0beaf0f77cf0a653175061e80bacf4f0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a0beaf0f77cf0a653175061e80bacf4f0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_adbe62e96deab08d8c74ba6353eb15214}\label{wmalosslessdec_8c_adbe62e96deab08d8c74ba6353eb15214}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!remaining\_bits@{remaining\_bits}}
+\index{remaining\_bits@{remaining\_bits}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{remaining\_bits()}{remaining\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} remaining\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Calculate remaining input buffer length. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em gb} & bitstream reader context \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+remaining size in bits 
+\end{DoxyReturn}
+
+
+Definition at line 1124 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{wmalosslessdec_8c_adbe62e96deab08d8c74ba6353eb15214_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{wmalosslessdec_8c_adbe62e96deab08d8c74ba6353eb15214_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_ad968c962b45a15d3eb572b1f37281abd}\label{wmalosslessdec_8c_ad968c962b45a15d3eb572b1f37281abd}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!reset\_codec@{reset\_codec}}
+\index{reset\_codec@{reset\_codec}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{reset\_codec()}{reset\_codec()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} reset\+\_\+codec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Reset filter parameters and transient area at new seekable tile. 
+
+
+
+Definition at line 606 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_ad968c962b45a15d3eb572b1f37281abd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a783812b461a12c729905ae91c12a628b}\label{wmalosslessdec_8c_a783812b461a12c729905ae91c12a628b}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!revert\_acfilter@{revert\_acfilter}}
+\index{revert\_acfilter@{revert\_acfilter}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{revert\_acfilter()}{revert\_acfilter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} revert\+\_\+acfilter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tile\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 800 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a783812b461a12c729905ae91c12a628b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_affd2f0d8ee502550c37be569edfafdd3}\label{wmalosslessdec_8c_affd2f0d8ee502550c37be569edfafdd3}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!revert\_inter\_ch\_decorr@{revert\_inter\_ch\_decorr}}
+\index{revert\_inter\_ch\_decorr@{revert\_inter\_ch\_decorr}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{revert\_inter\_ch\_decorr()}{revert\_inter\_ch\_decorr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} revert\+\_\+inter\+\_\+ch\+\_\+decorr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tile\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 787 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_affd2f0d8ee502550c37be569edfafdd3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a042e286aed2605242228c1d701e343a4}\label{wmalosslessdec_8c_a042e286aed2605242228c1d701e343a4}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!revert\_mclms@{revert\_mclms}}
+\index{revert\_mclms@{revert\_mclms}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{revert\_mclms()}{revert\_mclms()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} revert\+\_\+mclms (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tile\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 685 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=335pt]{wmalosslessdec_8c_a042e286aed2605242228c1d701e343a4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a042e286aed2605242228c1d701e343a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_a70e2a00d626880b4f55f66f539af19f9}\label{wmalosslessdec_8c_a70e2a00d626880b4f55f66f539af19f9}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!save\_bits@{save\_bits}}
+\index{save\_bits@{save\_bits}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{save\_bits()}{save\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} save\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{append }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Fill the bit reservoir with a (partial) frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & codec context \\
+\hline
+{\em gb} & bitstream reader context \\
+\hline
+{\em len} & length of the partial frame \\
+\hline
+{\em append} & decides whether to reset the buffer or not \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1136 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_a70e2a00d626880b4f55f66f539af19f9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{wmalosslessdec_8c_a70e2a00d626880b4f55f66f539af19f9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_ad838eb265aca89db5e5e5f9c68e3912f}\label{wmalosslessdec_8c_ad838eb265aca89db5e5e5f9c68e3912f}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!use\_high\_update\_speed@{use\_high\_update\_speed}}
+\index{use\_high\_update\_speed@{use\_high\_update\_speed}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{use\_high\_update\_speed()}{use\_high\_update\_speed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} use\+\_\+high\+\_\+update\+\_\+speed (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ich }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 694 of file wmalosslessdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_ad838eb265aca89db5e5e5f9c68e3912f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{wmalosslessdec_8c_afeab850968cf3a42e3eec637a5b55f6e}\label{wmalosslessdec_8c_afeab850968cf3a42e3eec637a5b55f6e}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!use\_normal\_update\_speed@{use\_normal\_update\_speed}}
+\index{use\_normal\_update\_speed@{use\_normal\_update\_speed}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{use\_normal\_update\_speed()}{use\_normal\_update\_speed()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} use\+\_\+normal\+\_\+update\+\_\+speed (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_wmall_decode_ctx}{Wmall\+Decode\+Ctx}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ich }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 712 of file wmalosslessdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=278pt]{wmalosslessdec_8c_afeab850968cf3a42e3eec637a5b55f6e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{wmalosslessdec_8c_afeab850968cf3a42e3eec637a5b55f6e_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{wmalosslessdec_8c_af6f3f889bb51998e7ce82f78830887d1}\label{wmalosslessdec_8c_af6f3f889bb51998e7ce82f78830887d1}} 
+\index{wmalosslessdec.c@{wmalosslessdec.c}!ff\_wmalossless\_decoder@{ff\_wmalossless\_decoder}}
+\index{ff\_wmalossless\_decoder@{ff\_wmalossless\_decoder}!wmalosslessdec.c@{wmalosslessdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_wmalossless\_decoder}{ff\_wmalossless\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+wmalossless\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}wmalossless"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Windows Media Audio Lossless"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea8105401278b4938d0f3aaabbac1d3242}{AV\_CODEC\_ID\_WMALOSSLESS}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{wmalosslessdec_8c_afeab6c4e66f5119a9fe7bd14c473b1ad}{WmallDecodeCtx}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{wmalosslessdec_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{wmalosslessdec_8c_a48462025775e112b5220440bdd4da254}{decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{wmalosslessdec_8c_a9ce3a23125e0de1ebf016f0d2375b016}{decode\_packet}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}          = \mbox{\hyperlink{wmalosslessdec_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}} | \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{AV\_SAMPLE\_FMT\_S16P}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{AV\_SAMPLE\_FMT\_S32P}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1325 of file wmalosslessdec.\+c.
+

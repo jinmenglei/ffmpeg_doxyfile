@@ -1,0 +1,526 @@
+\hypertarget{libavcodec_2smacker_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/smacker.c File Reference}
+\label{libavcodec_2smacker_8c}\index{E:/github/ffmpeg/libavcodec/smacker.c@{E:/github/ffmpeg/libavcodec/smacker.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+Include dependency graph for smacker.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_huff_context}{Huff\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_a14015408c28f83a25df6e592688e509d}{S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS}}~9
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_ac35c2387bc79c11e99e606ddce073d2f}{S\+M\+K\+\_\+\+N\+O\+DE}}~0x80000000
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_a121dff47f961844d520a449763c9db95}{S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON}}~\mbox{\hyperlink{tiny__ssim_8c_a0f84cbd7fd810cd678157c98cbfad4b0}{F\+F\+M\+IN}}(32, 3 $\ast$ \mbox{\hyperlink{libavcodec_2smacker_8c_a14015408c28f83a25df6e592688e509d}{S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS}})
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_ac4009b3e0a34798c873bd0c2ebc0d2dd}{S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+B\+I\+G\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON}}~500
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_aacb464290bb27b2794d11b8cbbd066db}{U\+N\+C\+H\+E\+C\+K\+E\+D\+\_\+\+B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+ER}}~1
+\item 
+\#define \mbox{\hyperlink{libavcodec_2smacker_8c_ab9ef831966fb2c5f522c19e809354830}{B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} \mbox{\hyperlink{libavcodec_2smacker_8c_ae39cb276805354ce490c540309125525}{Smack\+V\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_huff_context}{Huff\+Context}} \mbox{\hyperlink{libavcodec_2smacker_8c_aca7003f0975132c28f13f2db8db04822}{Huff\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}} \mbox{\hyperlink{libavcodec_2smacker_8c_a06ef10a45413ab2b094bf957ad8dd21b}{D\+B\+Ctx}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472}{Smk\+Block\+Types}} \{ \mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a8f0bb3067dfc59ddc0cbe52cce34e93c}{S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+M\+O\+NO}} = 0, 
+\mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472aa405f5d28f82b935e2ae762aafe709d2}{S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+F\+U\+LL}} = 1, 
+\mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a2c58c11c89c245124a68698f178f16aa}{S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+S\+K\+IP}} = 2, 
+\mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472ab95fd6a0818c7bcf09a2a7a916659eb0}{S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+F\+I\+LL}} = 3
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_aa3d00857cf96de6d71f687a0f76293f9}{smacker\+\_\+decode\+\_\+tree}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_huff_context}{Huff\+Context}} $\ast$hc, uint32\+\_\+t prefix, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_a6d8695d5eece44bd30558a7688e28eb5}{smacker\+\_\+decode\+\_\+bigtree}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_af82581a4c73da1d43966b00cb20f42c0}{smacker\+\_\+decode\+\_\+header\+\_\+tree}} (\mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} $\ast$smk, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$$\ast$recodes, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$last, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_a656cb1d3b4a5fcf7bebf905b1e82862f}{decode\+\_\+header\+\_\+trees}} (\mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} $\ast$smk)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2smacker_8c_ab8bec5d09441ccafc8ed169a49033a3a}{last\+\_\+reset}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$recode, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$last)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_aa96b1d49fd52618cee5f39481fb7cfda}{smk\+\_\+get\+\_\+code}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$recode, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$last)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\+\_\+end}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_aa96668e745aa3592e511248249930f7e}{smka\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_aa91daf7d66ef65f5672b319943c16317}{smka\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2smacker_8c_a74977ece7c1835d8bf21f52b823ce60f}{block\+\_\+runs}} \mbox{[}64\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2smacker_8c_a25868a12881d5eadef1d2d1a1c7b1261}{ff\+\_\+smacker\+\_\+decoder}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2smacker_8c_a4e8cb25b19f92fd43fa7ea2375afade7}{ff\+\_\+smackaud\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Smacker decoder 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_ab9ef831966fb2c5f522c19e809354830}\label{libavcodec_2smacker_8c_ab9ef831966fb2c5f522c19e809354830}} 
+\index{smacker.c@{smacker.c}!BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}}
+\index{BITSTREAM\_READER\_LE@{BITSTREAM\_READER\_LE}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{BITSTREAM\_READER\_LE}{BITSTREAM\_READER\_LE}}
+{\footnotesize\ttfamily \#define B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+E\+R\+\_\+\+LE}
+
+
+
+Definition at line 51 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_ac35c2387bc79c11e99e606ddce073d2f}\label{libavcodec_2smacker_8c_ac35c2387bc79c11e99e606ddce073d2f}} 
+\index{smacker.c@{smacker.c}!SMK\_NODE@{SMK\_NODE}}
+\index{SMK\_NODE@{SMK\_NODE}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SMK\_NODE}{SMK\_NODE}}
+{\footnotesize\ttfamily \#define S\+M\+K\+\_\+\+N\+O\+DE~0x80000000}
+
+
+
+Definition at line 39 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a14015408c28f83a25df6e592688e509d}\label{libavcodec_2smacker_8c_a14015408c28f83a25df6e592688e509d}} 
+\index{smacker.c@{smacker.c}!SMKTREE\_BITS@{SMKTREE\_BITS}}
+\index{SMKTREE\_BITS@{SMKTREE\_BITS}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SMKTREE\_BITS}{SMKTREE\_BITS}}
+{\footnotesize\ttfamily \#define S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS~9}
+
+
+
+Definition at line 38 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_ac4009b3e0a34798c873bd0c2ebc0d2dd}\label{libavcodec_2smacker_8c_ac4009b3e0a34798c873bd0c2ebc0d2dd}} 
+\index{smacker.c@{smacker.c}!SMKTREE\_DECODE\_BIG\_MAX\_RECURSION@{SMKTREE\_DECODE\_BIG\_MAX\_RECURSION}}
+\index{SMKTREE\_DECODE\_BIG\_MAX\_RECURSION@{SMKTREE\_DECODE\_BIG\_MAX\_RECURSION}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SMKTREE\_DECODE\_BIG\_MAX\_RECURSION}{SMKTREE\_DECODE\_BIG\_MAX\_RECURSION}}
+{\footnotesize\ttfamily \#define S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+B\+I\+G\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON~500}
+
+
+
+Definition at line 42 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a121dff47f961844d520a449763c9db95}\label{libavcodec_2smacker_8c_a121dff47f961844d520a449763c9db95}} 
+\index{smacker.c@{smacker.c}!SMKTREE\_DECODE\_MAX\_RECURSION@{SMKTREE\_DECODE\_MAX\_RECURSION}}
+\index{SMKTREE\_DECODE\_MAX\_RECURSION@{SMKTREE\_DECODE\_MAX\_RECURSION}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SMKTREE\_DECODE\_MAX\_RECURSION}{SMKTREE\_DECODE\_MAX\_RECURSION}}
+{\footnotesize\ttfamily \#define S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON~\mbox{\hyperlink{tiny__ssim_8c_a0f84cbd7fd810cd678157c98cbfad4b0}{F\+F\+M\+IN}}(32, 3 $\ast$ \mbox{\hyperlink{libavcodec_2smacker_8c_a14015408c28f83a25df6e592688e509d}{S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS}})}
+
+
+
+Definition at line 41 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aacb464290bb27b2794d11b8cbbd066db}\label{libavcodec_2smacker_8c_aacb464290bb27b2794d11b8cbbd066db}} 
+\index{smacker.c@{smacker.c}!UNCHECKED\_BITSTREAM\_READER@{UNCHECKED\_BITSTREAM\_READER}}
+\index{UNCHECKED\_BITSTREAM\_READER@{UNCHECKED\_BITSTREAM\_READER}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{UNCHECKED\_BITSTREAM\_READER}{UNCHECKED\_BITSTREAM\_READER}}
+{\footnotesize\ttfamily \#define U\+N\+C\+H\+E\+C\+K\+E\+D\+\_\+\+B\+I\+T\+S\+T\+R\+E\+A\+M\+\_\+\+R\+E\+A\+D\+ER~1}
+
+
+
+Definition at line 49 of file smacker.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a06ef10a45413ab2b094bf957ad8dd21b}\label{libavcodec_2smacker_8c_a06ef10a45413ab2b094bf957ad8dd21b}} 
+\index{smacker.c@{smacker.c}!DBCtx@{DBCtx}}
+\index{DBCtx@{DBCtx}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{DBCtx}{DBCtx}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}} \mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}}}
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aca7003f0975132c28f13f2db8db04822}\label{libavcodec_2smacker_8c_aca7003f0975132c28f13f2db8db04822}} 
+\index{smacker.c@{smacker.c}!HuffContext@{HuffContext}}
+\index{HuffContext@{HuffContext}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{HuffContext}{HuffContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_huff_context}{Huff\+Context}} \mbox{\hyperlink{struct_huff_context}{Huff\+Context}}}
+
+\mbox{\hyperlink{struct_context}{Context}} used for code reconstructing \mbox{\Hypertarget{libavcodec_2smacker_8c_ae39cb276805354ce490c540309125525}\label{libavcodec_2smacker_8c_ae39cb276805354ce490c540309125525}} 
+\index{smacker.c@{smacker.c}!SmackVContext@{SmackVContext}}
+\index{SmackVContext@{SmackVContext}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SmackVContext}{SmackVContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} \mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472}\label{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472}} 
+\index{smacker.c@{smacker.c}!SmkBlockTypes@{SmkBlockTypes}}
+\index{SmkBlockTypes@{SmkBlockTypes}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{SmkBlockTypes}{SmkBlockTypes}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472}{Smk\+Block\+Types}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SMK\_BLK\_MONO@{SMK\_BLK\_MONO}!smacker.c@{smacker.c}}\index{smacker.c@{smacker.c}!SMK\_BLK\_MONO@{SMK\_BLK\_MONO}}}\mbox{\Hypertarget{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a8f0bb3067dfc59ddc0cbe52cce34e93c}\label{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a8f0bb3067dfc59ddc0cbe52cce34e93c}} 
+S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+M\+O\+NO&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SMK\_BLK\_FULL@{SMK\_BLK\_FULL}!smacker.c@{smacker.c}}\index{smacker.c@{smacker.c}!SMK\_BLK\_FULL@{SMK\_BLK\_FULL}}}\mbox{\Hypertarget{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472aa405f5d28f82b935e2ae762aafe709d2}\label{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472aa405f5d28f82b935e2ae762aafe709d2}} 
+S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+F\+U\+LL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SMK\_BLK\_SKIP@{SMK\_BLK\_SKIP}!smacker.c@{smacker.c}}\index{smacker.c@{smacker.c}!SMK\_BLK\_SKIP@{SMK\_BLK\_SKIP}}}\mbox{\Hypertarget{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a2c58c11c89c245124a68698f178f16aa}\label{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472a2c58c11c89c245124a68698f178f16aa}} 
+S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+S\+K\+IP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SMK\_BLK\_FILL@{SMK\_BLK\_FILL}!smacker.c@{smacker.c}}\index{smacker.c@{smacker.c}!SMK\_BLK\_FILL@{SMK\_BLK\_FILL}}}\mbox{\Hypertarget{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472ab95fd6a0818c7bcf09a2a7a916659eb0}\label{libavcodec_2smacker_8c_a012eb1310964223261d2764c67980472ab95fd6a0818c7bcf09a2a7a916659eb0}} 
+S\+M\+K\+\_\+\+B\+L\+K\+\_\+\+F\+I\+LL&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 96 of file smacker.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a84e2e3c224f78dc08a5587b23c72d34b}\label{libavcodec_2smacker_8c_a84e2e3c224f78dc08a5587b23c72d34b}} 
+\index{smacker.c@{smacker.c}!decode\_end@{decode\_end}}
+\index{decode\_end@{decode\_end}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{decode\_end()}{decode\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 531 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_a84e2e3c224f78dc08a5587b23c72d34b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_abddc1015c488c3fdb1b0ce8c0350c8da}\label{libavcodec_2smacker_8c_abddc1015c488c3fdb1b0ce8c0350c8da}} 
+\index{smacker.c@{smacker.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 374 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_abddc1015c488c3fdb1b0ce8c0350c8da_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a656cb1d3b4a5fcf7bebf905b1e82862f}\label{libavcodec_2smacker_8c_a656cb1d3b4a5fcf7bebf905b1e82862f}} 
+\index{smacker.c@{smacker.c}!decode\_header\_trees@{decode\_header\_trees}}
+\index{decode\_header\_trees@{decode\_header\_trees}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{decode\_header\_trees()}{decode\_header\_trees()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+header\+\_\+trees (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} $\ast$}]{smk }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 275 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_a656cb1d3b4a5fcf7bebf905b1e82862f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{libavcodec_2smacker_8c_a656cb1d3b4a5fcf7bebf905b1e82862f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a669de65d99fa3e9e8a350bf4442c4ceb}\label{libavcodec_2smacker_8c_a669de65d99fa3e9e8a350bf4442c4ceb}} 
+\index{smacker.c@{smacker.c}!decode\_init@{decode\_init}}
+\index{decode\_init@{decode\_init}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{decode\_init()}{decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 546 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_a669de65d99fa3e9e8a350bf4442c4ceb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_ab8bec5d09441ccafc8ed169a49033a3a}\label{libavcodec_2smacker_8c_ab8bec5d09441ccafc8ed169a49033a3a}} 
+\index{smacker.c@{smacker.c}!last\_reset@{last\_reset}}
+\index{last\_reset@{last\_reset}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{last\_reset()}{last\_reset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} last\+\_\+reset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{recode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{last }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 347 of file smacker.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{libavcodec_2smacker_8c_ab8bec5d09441ccafc8ed169a49033a3a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a6d8695d5eece44bd30558a7688e28eb5}\label{libavcodec_2smacker_8c_a6d8695d5eece44bd30558a7688e28eb5}} 
+\index{smacker.c@{smacker.c}!smacker\_decode\_bigtree@{smacker\_decode\_bigtree}}
+\index{smacker\_decode\_bigtree@{smacker\_decode\_bigtree}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smacker\_decode\_bigtree()}{smacker\_decode\_bigtree()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smacker\+\_\+decode\+\_\+bigtree (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_d_b_ctx}{D\+B\+Ctx}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode header tree
+
+Checks before the first read, can overread by 6 $\ast$ S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS on success. 
+
+Definition at line 142 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_a6d8695d5eece44bd30558a7688e28eb5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_a6d8695d5eece44bd30558a7688e28eb5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_af82581a4c73da1d43966b00cb20f42c0}\label{libavcodec_2smacker_8c_af82581a4c73da1d43966b00cb20f42c0}} 
+\index{smacker.c@{smacker.c}!smacker\_decode\_header\_tree@{smacker\_decode\_header\_tree}}
+\index{smacker\_decode\_header\_tree@{smacker\_decode\_header\_tree}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smacker\_decode\_header\_tree()}{smacker\_decode\_header\_tree()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smacker\+\_\+decode\+\_\+header\+\_\+tree (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_smack_v_context}{Smack\+V\+Context}} $\ast$}]{smk,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$$\ast$}]{recodes,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{last,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Store large tree as F\+Fmpeg\textquotesingle{}s vlc codes
+
+Can read F\+F\+M\+AX(1 + S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON, 2 + 3 $\ast$ 16) bits before the first check; can overread by 6 $\ast$ S\+M\+K\+T\+R\+E\+E\+\_\+\+B\+I\+TS + 1 on success. 
+
+Definition at line 198 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_af82581a4c73da1d43966b00cb20f42c0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_af82581a4c73da1d43966b00cb20f42c0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aa3d00857cf96de6d71f687a0f76293f9}\label{libavcodec_2smacker_8c_aa3d00857cf96de6d71f687a0f76293f9}} 
+\index{smacker.c@{smacker.c}!smacker\_decode\_tree@{smacker\_decode\_tree}}
+\index{smacker\_decode\_tree@{smacker\_decode\_tree}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smacker\_decode\_tree()}{smacker\_decode\_tree()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smacker\+\_\+decode\+\_\+tree (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_huff_context}{Huff\+Context}} $\ast$}]{hc,  }\item[{uint32\+\_\+t}]{prefix,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode local frame tree
+
+Can read S\+M\+K\+T\+R\+E\+E\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+M\+A\+X\+\_\+\+R\+E\+C\+U\+R\+S\+I\+ON before the first check; does not overread gb on success. 
+
+Definition at line 108 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_aa3d00857cf96de6d71f687a0f76293f9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_aa3d00857cf96de6d71f687a0f76293f9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aa96b1d49fd52618cee5f39481fb7cfda}\label{libavcodec_2smacker_8c_aa96b1d49fd52618cee5f39481fb7cfda}} 
+\index{smacker.c@{smacker.c}!smk\_get\_code@{smk\_get\_code}}
+\index{smk\_get\_code@{smk\_get\_code}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smk\_get\_code()}{smk\_get\_code()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smk\+\_\+get\+\_\+code (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{recode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{last }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 353 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_aa96b1d49fd52618cee5f39481fb7cfda_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{libavcodec_2smacker_8c_aa96b1d49fd52618cee5f39481fb7cfda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aa91daf7d66ef65f5672b319943c16317}\label{libavcodec_2smacker_8c_aa91daf7d66ef65f5672b319943c16317}} 
+\index{smacker.c@{smacker.c}!smka\_decode\_frame@{smka\_decode\_frame}}
+\index{smka\_decode\_frame@{smka\_decode\_frame}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smka\_decode\_frame()}{smka\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smka\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode Smacker audio data 
+
+Definition at line 589 of file smacker.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2smacker_8c_aa91daf7d66ef65f5672b319943c16317_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_aa96668e745aa3592e511248249930f7e}\label{libavcodec_2smacker_8c_aa96668e745aa3592e511248249930f7e}} 
+\index{smacker.c@{smacker.c}!smka\_decode\_init@{smka\_decode\_init}}
+\index{smka\_decode\_init@{smka\_decode\_init}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{smka\_decode\_init()}{smka\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} smka\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 574 of file smacker.\+c.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a74977ece7c1835d8bf21f52b823ce60f}\label{libavcodec_2smacker_8c_a74977ece7c1835d8bf21f52b823ce60f}} 
+\index{smacker.c@{smacker.c}!block\_runs@{block\_runs}}
+\index{block\_runs@{block\_runs}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{block\_runs}{block\_runs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+runs\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{      1,    2,    3,    4,    5,    6,    7,    8,}
+\DoxyCodeLine{      9,   10,   11,   12,   13,   14,   15,   16,}
+\DoxyCodeLine{     17,   18,   19,   20,   21,   22,   23,   24,}
+\DoxyCodeLine{     25,   26,   27,   28,   29,   30,   31,   32,}
+\DoxyCodeLine{     33,   34,   35,   36,   37,   38,   39,   40,}
+\DoxyCodeLine{     41,   42,   43,   44,   45,   46,   47,   48,}
+\DoxyCodeLine{     49,   50,   51,   52,   53,   54,   55,   56,}
+\DoxyCodeLine{     57,   58,   59,  128,  256,  512, 1024, 2048 \}}
+
+\end{DoxyCode}
+
+
+Definition at line 86 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a4e8cb25b19f92fd43fa7ea2375afade7}\label{libavcodec_2smacker_8c_a4e8cb25b19f92fd43fa7ea2375afade7}} 
+\index{smacker.c@{smacker.c}!ff\_smackaud\_decoder@{ff\_smackaud\_decoder}}
+\index{ff\_smackaud\_decoder@{ff\_smackaud\_decoder}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{ff\_smackaud\_decoder}{ff\_smackaud\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+smackaud\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}smackaud"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Smacker audio"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cead5871fc95fa45eed7b2984bb02c41450}{AV\_CODEC\_ID\_SMACKAUDIO}},}
+\DoxyCodeLine{    .init           = \mbox{\hyperlink{libavcodec_2smacker_8c_aa96668e745aa3592e511248249930f7e}{smka\_decode\_init}},}
+\DoxyCodeLine{    .decode         = \mbox{\hyperlink{libavcodec_2smacker_8c_aa91daf7d66ef65f5672b319943c16317}{smka\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 738 of file smacker.\+c.
+
+\mbox{\Hypertarget{libavcodec_2smacker_8c_a25868a12881d5eadef1d2d1a1c7b1261}\label{libavcodec_2smacker_8c_a25868a12881d5eadef1d2d1a1c7b1261}} 
+\index{smacker.c@{smacker.c}!ff\_smacker\_decoder@{ff\_smacker\_decoder}}
+\index{ff\_smacker\_decoder@{ff\_smacker\_decoder}!smacker.c@{smacker.c}}
+\doxysubsubsection{\texorpdfstring{ff\_smacker\_decoder}{ff\_smacker\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+smacker\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}smackvid"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Smacker video"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea201ece382d697009aa13d77a482d8365}{AV\_CODEC\_ID\_SMACKVIDEO}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libavcodec_2smacker_8c_ae39cb276805354ce490c540309125525}{SmackVContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2smacker_8c_a669de65d99fa3e9e8a350bf4442c4ceb}{decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2smacker_8c_a84e2e3c224f78dc08a5587b23c72d34b}{decode\_end}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2smacker_8c_abddc1015c488c3fdb1b0ce8c0350c8da}{decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 725 of file smacker.\+c.
+

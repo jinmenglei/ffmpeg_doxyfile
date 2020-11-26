@@ -1,0 +1,1086 @@
+\hypertarget{af__hdcd_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+hdcd.c File Reference}
+\label{af__hdcd_8c}\index{E:/github/ffmpeg/libavfilter/af\_hdcd.c@{E:/github/ffmpeg/libavfilter/af\_hdcd.c}}
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+hdcd.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}}
+\item 
+struct \mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}}
+\item 
+struct \mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a176afdaa6331eb0c8fe64a26afd398f3}{P\+E\+A\+K\+\_\+\+E\+X\+T\+\_\+\+L\+E\+V\+EL}}~0x5981 /$\ast$ + sizeof(\mbox{\hyperlink{af__hdcd_8c_a1ea34e1a6447b792c449935b299534dd}{peaktab}})-\/1 = 0x8000  $\ast$/
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a5614bced649e49c1e2265f756b2f8d04}{H\+D\+C\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+\_\+\+S\+T\+E\+R\+E\+O\+\_\+\+D\+E\+F\+A\+U\+LT}}~1
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a4ced23227cbcc3d3841f6d27f1bc0d45}{H\+D\+C\+D\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~2
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_acd1589335177f3ca627c7b9cd1e13eaf}{G\+A\+I\+N\+T\+O\+F\+L\+O\+AT}}(\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}})~(\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) ? -\/(float)(\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}$>$$>$1) -\/ ((\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}} \& 1) ? 0.\+5 \+: 0.\+0) \+: 0.\+0
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a17e61f4dd3242babd11a776fc3cf5b47}{A\+P\+P\+L\+Y\+\_\+\+G\+A\+IN}}(\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}})~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}}\{int64\+\_\+t s64 = \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}; s64 $\ast$= \mbox{\hyperlink{af__hdcd_8c_afe6d1391ba25242981efb99d7547135f}{gaintab}}\mbox{[}\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}\mbox{]}; \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}} = (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}})(s64 $>$$>$ 23); \}while(0);
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a247f11fe0897df5601a04cf1b2ab32df}{T\+O\+N\+E\+G\+E\+N16}}(sn,  \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}},  sr,  \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}})~(int16\+\_\+t)(sin((6.\+28318530718 $\ast$ (sn) $\ast$ (\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})) /(sr)) $\ast$ (\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $\ast$ 0x7fff)
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a4fac1307e483284efc041d24cd783e70}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+O\+F\+F\+\_\+\+D\+E\+SC}}~\char`\"{}disabled\char`\"{}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a911c1a5734cffacfbac1021e258d13e5}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+L\+L\+E\+\_\+\+D\+E\+SC}}~\char`\"{}gain adjustment \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}} at each \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}\char`\"{}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a4899961f9500f4227304ca50a6fb1d04}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+P\+E\+\_\+\+D\+E\+SC}}~\char`\"{}samples where peak extend occurs\char`\"{}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a82d6f1a3eca71230f4f019d58b24b869}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+C\+D\+T\+\_\+\+D\+E\+SC}}~\char`\"{}samples where the \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}} detect timer \mbox{\hyperlink{swscale_8txt_a723c667eda7f9b65ec345ca1e08ab17a}{is}} active\char`\"{}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a7f7dffa4f266798b4ee049e9ba061f66}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+G\+M\+\_\+\+D\+E\+SC}}~\char`\"{}samples where the target gain \mbox{\hyperlink{writing__filters_8txt_af557804962c73200941dbc38090b2470}{does}} \mbox{\hyperlink{filter__design_8txt_a025a8cdb5c3b1625f70486924286ebe9}{not}} match between \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}\char`\"{}
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} \mbox{\hyperlink{af__hdcd_8c_a46bdef139098d574adc11a1cbf1a61c2}{hdcd\+\_\+state}}
+\item 
+typedef struct \mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} \mbox{\hyperlink{af__hdcd_8c_a14f794c1ed2351bd8cf750b57fb8f57c}{hdcd\+\_\+detection\+\_\+data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} \mbox{\hyperlink{af__hdcd_8c_aa2dc4811cc9244ff3ed5cca5fcc0b43e}{H\+D\+C\+D\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6e}{hdcd\+\_\+pe}} \{ \mbox{\hyperlink{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ead8e841fe012704f3c533df9959100b8e}{H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+N\+E\+V\+ER}} = 0, 
+\mbox{\hyperlink{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6eae401123693751adcb29436f91f4e7d03}{H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+I\+N\+T\+E\+R\+M\+I\+T\+T\+E\+NT}} = 1, 
+\mbox{\hyperlink{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ea622156932d917638afaa3a4528ef4db6}{H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+P\+E\+R\+M\+A\+N\+E\+NT}} = 2
+ \}
+\item 
+enum \mbox{\hyperlink{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0}{hdcd\+\_\+dv}} \{ \mbox{\hyperlink{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0aef087c114455f1f49aa9efdb77cd6a9c}{H\+D\+C\+D\+\_\+\+N\+O\+NE}} = 0, 
+\mbox{\hyperlink{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0a8cce514d9c1d8cde35c1884e692f5a4c}{H\+D\+C\+D\+\_\+\+N\+O\+\_\+\+E\+F\+F\+E\+CT}} = 1, 
+\mbox{\hyperlink{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0ac43e7f19d44f73518105f021e61a081b}{H\+D\+C\+D\+\_\+\+E\+F\+F\+E\+C\+T\+U\+AL}} = 2
+ \}
+\item 
+enum \mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672}{hdcd\+\_\+pf}} \{ \mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a254a21f6f138bfafca1809ef740f4cc0}{H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+\+N\+O\+NE}} = 0, 
+\mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a2a5424067cdabb85f23fbf0e0735831d}{H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+A}} = 1, 
+\mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a134790b6bae349a973f64c73a67860a5}{H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+B}} = 2, 
+\mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a0a91d0c06c15bb2128400098aeecae6d}{H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+\+M\+IX}} = 3
+ \}
+\item 
+enum \mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795}{hdcd\+\_\+ana\+\_\+mode}} \{ \newline
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795acd60532aa31c1a270b79794cac61ce4b}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+O\+FF}} = 0, 
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795ad8876d3110cd60b9d7ed343f64cf0be9}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+L\+LE}} = 1, 
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a12e3bcf36f79dcec60da6070ade7e955}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+PE}} = 2, 
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a6388685dd1d27aac5a585aa9461d3a00}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+C\+DT}} = 3, 
+\newline
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a10a0b36875abf247d3170363366652cc}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+GM}} = 4, 
+\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a5fddcecbfbfff9b6b075b0b7f863d353}{H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+OP}} = 5
+ \}
+\item 
+enum \mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}{hdcd\+\_\+control\+\_\+result}} \{ \mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34ae73d26100549b67648fa61f5002495f5}{H\+D\+C\+D\+\_\+\+OK}} =0, 
+\mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34a599c58fe2776b2eea221ec1bd3cec7ea}{H\+D\+C\+D\+\_\+\+T\+G\+\_\+\+M\+I\+S\+M\+A\+T\+CH}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{af__hdcd_8c_a04220298049f7b7de9f64a41273d0c2b}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (hdcd)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a9613de8a41f41464ac3ff686bd027a7d}{hdcd\+\_\+reset}} (\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, unsigned rate, unsigned cdt\+\_\+ms)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a1627c15097b6058136e89cad5c9dd8a3}{hdcd\+\_\+integrate}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$states, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{checkasm_8c_adf916204820072417ed73a32de1cefcf}{flag}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a7d16c3f3b3639d4787b3c572b45d2091}{hdcd\+\_\+scan}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$states, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a2d74961971984ae7137f9cf37cd1412e}{hdcd\+\_\+analyze\+\_\+prepare}} (\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{af__hdcd_8c_ad99928e48df964cf965559e0ce5c9131}{hdcd\+\_\+analyze\+\_\+gen}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} v, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} maxv)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a2dac8c66457a2cf34df6469e1f569c0e}{hdcd\+\_\+analyze}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gain, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} target\+\_\+gain, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} extend, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cdt\+\_\+active, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tg\+\_\+mismatch)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_ac502d82c1efb3b10f0c214059603e302}{hdcd\+\_\+envelope}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vbits, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gain, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} target\+\_\+gain, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} extend)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_aeccbad8094053cbae66d771dbfa14fdd}{hdcd\+\_\+control}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$peak\+\_\+extend, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$target\+\_\+gain)
+\item 
+static \mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}{hdcd\+\_\+control\+\_\+result}} \mbox{\hyperlink{af__hdcd_8c_add9c0d488fad31e353410d7170367e6c}{hdcd\+\_\+control\+\_\+stereo}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$peak\+\_\+extend0, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$peak\+\_\+extend1)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a704f11e59c055c243a0e38ae43b0e3e4}{hdcd\+\_\+process}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a2d48f7533a33a60ece8ca854bae14900}{hdcd\+\_\+process\+\_\+stereo}} (\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a872417bf6a291cc0f613852c994adbc2}{hdcd\+\_\+detect\+\_\+reset}} (\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$detect)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a07235be9eca1f40f12059773284535cc}{hdcd\+\_\+detect\+\_\+start}} (\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$detect)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_af20578e48400869edb62627d12e40e5f}{hdcd\+\_\+detect\+\_\+onech}} (\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$\mbox{\hyperlink{trasher_8c_a1b0c7bd4d79798ef4e0ce23894c9aeb2}{state}}, \mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$detect)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_a6f31a631615a4963840f85184dcf88a0}{hdcd\+\_\+detect\+\_\+end}} (\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$detect, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__hdcd_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__hdcd_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const uint32\+\_\+t \mbox{\hyperlink{af__hdcd_8c_a1ea34e1a6447b792c449935b299534dd}{peaktab}} \mbox{[}0x2680\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{af__hdcd_8c_a8523ebbeda7e08fe6deb7e9e62d5c90f}{readaheadtab}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{af__hdcd_8c_afe6d1391ba25242981efb99d7547135f}{gaintab}} \mbox{[}$\,$\mbox{]}
+\item 
+static const char $\ast$const \mbox{\hyperlink{af__hdcd_8c_aa54f2030d601bd1ca4bbd84d9fbeba1b}{pe\+\_\+str}} \mbox{[}$\,$\mbox{]}
+\item 
+static const char $\ast$const \mbox{\hyperlink{af__hdcd_8c_ab2c9d9193e0fdb292cecefbdb14f00a9}{pf\+\_\+str}} \mbox{[}$\,$\mbox{]}
+\item 
+static const char $\ast$const \mbox{\hyperlink{af__hdcd_8c_a7fa4a7dfcfc318486970748bd101c146}{ana\+\_\+mode\+\_\+str}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{af__hdcd_8c_a05638fbc5de5c226006ce415a4289f8e}{hdcd\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__hdcd_8c_a0d606e891c8bbe6f0e6a37f6afe63fd4}{avfilter\+\_\+af\+\_\+hdcd\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__hdcd_8c_ada17e260c4e85f5ccedf65c5ff0aa505}{avfilter\+\_\+af\+\_\+hdcd\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{af__hdcd_8c_acf4256f66952bd44b2c7ad5931eefb4c}{ff\+\_\+af\+\_\+hdcd}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+H\+D\+CD decoding filter 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}\label{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!A@{A}}
+\index{A@{A}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 985 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a17e61f4dd3242babd11a776fc3cf5b47}\label{af__hdcd_8c_a17e61f4dd3242babd11a776fc3cf5b47}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!APPLY\_GAIN@{APPLY\_GAIN}}
+\index{APPLY\_GAIN@{APPLY\_GAIN}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{APPLY\_GAIN}{APPLY\_GAIN}}
+{\footnotesize\ttfamily \#define A\+P\+P\+L\+Y\+\_\+\+G\+A\+IN(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}},  }\item[{}]{\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}} }\end{DoxyParamCaption})~\mbox{\hyperlink{writing__filters_8txt_a2fc212b4a1ca554a0deba7b2ab5b723b}{do}}\{int64\+\_\+t s64 = \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}; s64 $\ast$= \mbox{\hyperlink{af__hdcd_8c_afe6d1391ba25242981efb99d7547135f}{gaintab}}\mbox{[}\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}\mbox{]}; \mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}} = (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}})(s64 $>$$>$ 23); \}while(0);}
+
+apply gain, 11-\/bit (3.\+8) fixed point, always negative but stored positive. 
+
+Definition at line 835 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_acd1589335177f3ca627c7b9cd1e13eaf}\label{af__hdcd_8c_acd1589335177f3ca627c7b9cd1e13eaf}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!GAINTOFLOAT@{GAINTOFLOAT}}
+\index{GAINTOFLOAT@{GAINTOFLOAT}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{GAINTOFLOAT}{GAINTOFLOAT}}
+{\footnotesize\ttfamily \#define G\+A\+I\+N\+T\+O\+F\+L\+O\+AT(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}} }\end{DoxyParamCaption})~(\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) ? -\/(float)(\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}$>$$>$1) -\/ ((\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}} \& 1) ? 0.\+5 \+: 0.\+0) \+: 0.\+0}
+
+convert to float from 4-\/bit (3.\+1) fixed-\/point the always-\/negative value is stored positive, so make it negative 
+
+Definition at line 831 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a82d6f1a3eca71230f4f019d58b24b869}\label{af__hdcd_8c_a82d6f1a3eca71230f4f019d58b24b869}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_CDT\_DESC@{HDCD\_ANA\_CDT\_DESC}}
+\index{HDCD\_ANA\_CDT\_DESC@{HDCD\_ANA\_CDT\_DESC}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_ANA\_CDT\_DESC}{HDCD\_ANA\_CDT\_DESC}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+C\+D\+T\+\_\+\+D\+E\+SC~\char`\"{}samples where the \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}} detect timer \mbox{\hyperlink{swscale_8txt_a723c667eda7f9b65ec345ca1e08ab17a}{is}} active\char`\"{}}
+
+
+
+Definition at line 933 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a911c1a5734cffacfbac1021e258d13e5}\label{af__hdcd_8c_a911c1a5734cffacfbac1021e258d13e5}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_LLE\_DESC@{HDCD\_ANA\_LLE\_DESC}}
+\index{HDCD\_ANA\_LLE\_DESC@{HDCD\_ANA\_LLE\_DESC}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_ANA\_LLE\_DESC}{HDCD\_ANA\_LLE\_DESC}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+L\+L\+E\+\_\+\+D\+E\+SC~\char`\"{}gain adjustment \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}} at each \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}}\char`\"{}}
+
+
+
+Definition at line 931 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a4fac1307e483284efc041d24cd783e70}\label{af__hdcd_8c_a4fac1307e483284efc041d24cd783e70}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_OFF\_DESC@{HDCD\_ANA\_OFF\_DESC}}
+\index{HDCD\_ANA\_OFF\_DESC@{HDCD\_ANA\_OFF\_DESC}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_ANA\_OFF\_DESC}{HDCD\_ANA\_OFF\_DESC}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+O\+F\+F\+\_\+\+D\+E\+SC~\char`\"{}disabled\char`\"{}}
+
+analyze mode descriptions\+: macro for \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} definitions, array of const char for mapping mode to string 
+
+Definition at line 930 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a4899961f9500f4227304ca50a6fb1d04}\label{af__hdcd_8c_a4899961f9500f4227304ca50a6fb1d04}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_PE\_DESC@{HDCD\_ANA\_PE\_DESC}}
+\index{HDCD\_ANA\_PE\_DESC@{HDCD\_ANA\_PE\_DESC}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_ANA\_PE\_DESC}{HDCD\_ANA\_PE\_DESC}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+P\+E\+\_\+\+D\+E\+SC~\char`\"{}samples where peak extend occurs\char`\"{}}
+
+
+
+Definition at line 932 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a7f7dffa4f266798b4ee049e9ba061f66}\label{af__hdcd_8c_a7f7dffa4f266798b4ee049e9ba061f66}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_TGM\_DESC@{HDCD\_ANA\_TGM\_DESC}}
+\index{HDCD\_ANA\_TGM\_DESC@{HDCD\_ANA\_TGM\_DESC}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_ANA\_TGM\_DESC}{HDCD\_ANA\_TGM\_DESC}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+G\+M\+\_\+\+D\+E\+SC~\char`\"{}samples where the target gain \mbox{\hyperlink{writing__filters_8txt_af557804962c73200941dbc38090b2470}{does}} \mbox{\hyperlink{filter__design_8txt_a025a8cdb5c3b1625f70486924286ebe9}{not}} match between \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}\char`\"{}}
+
+
+
+Definition at line 934 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a4ced23227cbcc3d3841f6d27f1bc0d45}\label{af__hdcd_8c_a4ced23227cbcc3d3841f6d27f1bc0d45}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_MAX\_CHANNELS@{HDCD\_MAX\_CHANNELS}}
+\index{HDCD\_MAX\_CHANNELS@{HDCD\_MAX\_CHANNELS}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_MAX\_CHANNELS}{HDCD\_MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~2}
+
+
+
+Definition at line 827 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a5614bced649e49c1e2265f756b2f8d04}\label{af__hdcd_8c_a5614bced649e49c1e2265f756b2f8d04}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PROCESS\_STEREO\_DEFAULT@{HDCD\_PROCESS\_STEREO\_DEFAULT}}
+\index{HDCD\_PROCESS\_STEREO\_DEFAULT@{HDCD\_PROCESS\_STEREO\_DEFAULT}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCD\_PROCESS\_STEREO\_DEFAULT}{HDCD\_PROCESS\_STEREO\_DEFAULT}}
+{\footnotesize\ttfamily \#define H\+D\+C\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+\_\+\+S\+T\+E\+R\+E\+O\+\_\+\+D\+E\+F\+A\+U\+LT~1}
+
+
+
+Definition at line 826 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}}, x)}
+
+
+
+Definition at line 984 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a176afdaa6331eb0c8fe64a26afd398f3}\label{af__hdcd_8c_a176afdaa6331eb0c8fe64a26afd398f3}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!PEAK\_EXT\_LEVEL@{PEAK\_EXT\_LEVEL}}
+\index{PEAK\_EXT\_LEVEL@{PEAK\_EXT\_LEVEL}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{PEAK\_EXT\_LEVEL}{PEAK\_EXT\_LEVEL}}
+{\footnotesize\ttfamily \#define P\+E\+A\+K\+\_\+\+E\+X\+T\+\_\+\+L\+E\+V\+EL~0x5981 /$\ast$ + sizeof(\mbox{\hyperlink{af__hdcd_8c_a1ea34e1a6447b792c449935b299534dd}{peaktab}})-\/1 = 0x8000  $\ast$/}
+
+
+
+Definition at line 52 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a247f11fe0897df5601a04cf1b2ab32df}\label{af__hdcd_8c_a247f11fe0897df5601a04cf1b2ab32df}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!TONEGEN16@{TONEGEN16}}
+\index{TONEGEN16@{TONEGEN16}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{TONEGEN16}{TONEGEN16}}
+{\footnotesize\ttfamily \#define T\+O\+N\+E\+G\+E\+N16(\begin{DoxyParamCaption}\item[{}]{sn,  }\item[{}]{\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}},  }\item[{}]{sr,  }\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}} }\end{DoxyParamCaption})~(int16\+\_\+t)(sin((6.\+28318530718 $\ast$ (sn) $\ast$ (\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})) /(sr)) $\ast$ (\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $\ast$ 0x7fff)}
+
+tone generator\+: sample\+\_\+number, frequency, sample\+\_\+rate, amplitude 
+
+Definition at line 838 of file af\+\_\+hdcd.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__hdcd_8c_a14f794c1ed2351bd8cf750b57fb8f57c}\label{af__hdcd_8c_a14f794c1ed2351bd8cf750b57fb8f57c}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_detection\_data@{hdcd\_detection\_data}}
+\index{hdcd\_detection\_data@{hdcd\_detection\_data}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_detection\_data}{hdcd\_detection\_data}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} \mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}}}
+
+\mbox{\Hypertarget{af__hdcd_8c_a46bdef139098d574adc11a1cbf1a61c2}\label{af__hdcd_8c_a46bdef139098d574adc11a1cbf1a61c2}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_state@{hdcd\_state}}
+\index{hdcd\_state@{hdcd\_state}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_state}{hdcd\_state}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} \mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}}}
+
+\mbox{\Hypertarget{af__hdcd_8c_aa2dc4811cc9244ff3ed5cca5fcc0b43e}\label{af__hdcd_8c_aa2dc4811cc9244ff3ed5cca5fcc0b43e}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!HDCDContext@{HDCDContext}}
+\index{HDCDContext@{HDCDContext}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{HDCDContext}{HDCDContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} \mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_ana\_mode@{hdcd\_ana\_mode}}
+\index{hdcd\_ana\_mode@{hdcd\_ana\_mode}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_ana\_mode}{hdcd\_ana\_mode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795}{hdcd\+\_\+ana\+\_\+mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_OFF@{HDCD\_ANA\_OFF}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_OFF@{HDCD\_ANA\_OFF}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795acd60532aa31c1a270b79794cac61ce4b}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795acd60532aa31c1a270b79794cac61ce4b}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+O\+FF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_LLE@{HDCD\_ANA\_LLE}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_LLE@{HDCD\_ANA\_LLE}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795ad8876d3110cd60b9d7ed343f64cf0be9}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795ad8876d3110cd60b9d7ed343f64cf0be9}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+L\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_PE@{HDCD\_ANA\_PE}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_PE@{HDCD\_ANA\_PE}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a12e3bcf36f79dcec60da6070ade7e955}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a12e3bcf36f79dcec60da6070ade7e955}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_CDT@{HDCD\_ANA\_CDT}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_CDT@{HDCD\_ANA\_CDT}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a6388685dd1d27aac5a585aa9461d3a00}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a6388685dd1d27aac5a585aa9461d3a00}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+C\+DT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_TGM@{HDCD\_ANA\_TGM}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_TGM@{HDCD\_ANA\_TGM}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a10a0b36875abf247d3170363366652cc}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a10a0b36875abf247d3170363366652cc}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+GM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_ANA\_TOP@{HDCD\_ANA\_TOP}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_ANA\_TOP@{HDCD\_ANA\_TOP}}}\mbox{\Hypertarget{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a5fddcecbfbfff9b6b075b0b7f863d353}\label{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a5fddcecbfbfff9b6b075b0b7f863d353}} 
+H\+D\+C\+D\+\_\+\+A\+N\+A\+\_\+\+T\+OP&used in max value of \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 920 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}\label{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_control\_result@{hdcd\_control\_result}}
+\index{hdcd\_control\_result@{hdcd\_control\_result}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_control\_result}{hdcd\_control\_result}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}{hdcd\+\_\+control\+\_\+result}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_OK@{HDCD\_OK}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_OK@{HDCD\_OK}}}\mbox{\Hypertarget{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34ae73d26100549b67648fa61f5002495f5}\label{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34ae73d26100549b67648fa61f5002495f5}} 
+H\+D\+C\+D\+\_\+\+OK&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_TG\_MISMATCH@{HDCD\_TG\_MISMATCH}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_TG\_MISMATCH@{HDCD\_TG\_MISMATCH}}}\mbox{\Hypertarget{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34a599c58fe2776b2eea221ec1bd3cec7ea}\label{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34a599c58fe2776b2eea221ec1bd3cec7ea}} 
+H\+D\+C\+D\+\_\+\+T\+G\+\_\+\+M\+I\+S\+M\+A\+T\+CH&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 1341 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0}\label{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_dv@{hdcd\_dv}}
+\index{hdcd\_dv@{hdcd\_dv}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_dv}{hdcd\_dv}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0}{hdcd\+\_\+dv}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_NONE@{HDCD\_NONE}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_NONE@{HDCD\_NONE}}}\mbox{\Hypertarget{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0aef087c114455f1f49aa9efdb77cd6a9c}\label{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0aef087c114455f1f49aa9efdb77cd6a9c}} 
+H\+D\+C\+D\+\_\+\+N\+O\+NE&H\+D\+CD packets do not (yet) appear ~\newline
+ \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_NO\_EFFECT@{HDCD\_NO\_EFFECT}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_NO\_EFFECT@{HDCD\_NO\_EFFECT}}}\mbox{\Hypertarget{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0a8cce514d9c1d8cde35c1884e692f5a4c}\label{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0a8cce514d9c1d8cde35c1884e692f5a4c}} 
+H\+D\+C\+D\+\_\+\+N\+O\+\_\+\+E\+F\+F\+E\+CT&H\+D\+CD packets appear, but all control codes are N\+OP \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_EFFECTUAL@{HDCD\_EFFECTUAL}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_EFFECTUAL@{HDCD\_EFFECTUAL}}}\mbox{\Hypertarget{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0ac43e7f19d44f73518105f021e61a081b}\label{af__hdcd_8c_ab56b41fd3395094ca11d6ddb364ba5d0ac43e7f19d44f73518105f021e61a081b}} 
+H\+D\+C\+D\+\_\+\+E\+F\+F\+E\+C\+T\+U\+AL&H\+D\+CD packets appear, and change the output in some way \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 890 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6e}\label{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6e}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_pe@{hdcd\_pe}}
+\index{hdcd\_pe@{hdcd\_pe}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_pe}{hdcd\_pe}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6e}{hdcd\+\_\+pe}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PE\_NEVER@{HDCD\_PE\_NEVER}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PE\_NEVER@{HDCD\_PE\_NEVER}}}\mbox{\Hypertarget{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ead8e841fe012704f3c533df9959100b8e}\label{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ead8e841fe012704f3c533df9959100b8e}} 
+H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+N\+E\+V\+ER&All valid packets have PE set to off \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PE\_INTERMITTENT@{HDCD\_PE\_INTERMITTENT}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PE\_INTERMITTENT@{HDCD\_PE\_INTERMITTENT}}}\mbox{\Hypertarget{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6eae401123693751adcb29436f91f4e7d03}\label{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6eae401123693751adcb29436f91f4e7d03}} 
+H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+I\+N\+T\+E\+R\+M\+I\+T\+T\+E\+NT&Some valid packets have PE set to on \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PE\_PERMANENT@{HDCD\_PE\_PERMANENT}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PE\_PERMANENT@{HDCD\_PE\_PERMANENT}}}\mbox{\Hypertarget{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ea622156932d917638afaa3a4528ef4db6}\label{af__hdcd_8c_a7b62e204f0f3696c1c0d9b4caaf31a6ea622156932d917638afaa3a4528ef4db6}} 
+H\+D\+C\+D\+\_\+\+P\+E\+\_\+\+P\+E\+R\+M\+A\+N\+E\+NT&All valid packets have PE set to on ~\newline
+ \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 878 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672}\label{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_pf@{hdcd\_pf}}
+\index{hdcd\_pf@{hdcd\_pf}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_pf}{hdcd\_pf}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672}{hdcd\+\_\+pf}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PVER\_NONE@{HDCD\_PVER\_NONE}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PVER\_NONE@{HDCD\_PVER\_NONE}}}\mbox{\Hypertarget{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a254a21f6f138bfafca1809ef740f4cc0}\label{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a254a21f6f138bfafca1809ef740f4cc0}} 
+H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+\+N\+O\+NE&No packets (yet) discovered \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PVER\_A@{HDCD\_PVER\_A}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PVER\_A@{HDCD\_PVER\_A}}}\mbox{\Hypertarget{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a2a5424067cdabb85f23fbf0e0735831d}\label{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a2a5424067cdabb85f23fbf0e0735831d}} 
+H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+A&Packets of type A (8-\/bit control) discovered \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PVER\_B@{HDCD\_PVER\_B}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PVER\_B@{HDCD\_PVER\_B}}}\mbox{\Hypertarget{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a134790b6bae349a973f64c73a67860a5}\label{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a134790b6bae349a973f64c73a67860a5}} 
+H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+B&Packets of type B (8-\/bit control, 8-\/bit X\+OR) discovered \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HDCD\_PVER\_MIX@{HDCD\_PVER\_MIX}!af\_hdcd.c@{af\_hdcd.c}}\index{af\_hdcd.c@{af\_hdcd.c}!HDCD\_PVER\_MIX@{HDCD\_PVER\_MIX}}}\mbox{\Hypertarget{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a0a91d0c06c15bb2128400098aeecae6d}\label{af__hdcd_8c_a02bdcfd0de28847a6111911901d1b672a0a91d0c06c15bb2128400098aeecae6d}} 
+H\+D\+C\+D\+\_\+\+P\+V\+E\+R\+\_\+\+M\+IX&Packets of type A and B discovered, most likely an encoding error \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 896 of file af\+\_\+hdcd.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__hdcd_8c_a04220298049f7b7de9f64a41273d0c2b}\label{af__hdcd_8c_a04220298049f7b7de9f64a41273d0c2b}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{hdcd}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{af__hdcd_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{af__hdcd_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1711 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=313pt]{af__hdcd_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{af__hdcd_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1527 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a2dac8c66457a2cf34df6469e1f569c0e}\label{af__hdcd_8c_a2dac8c66457a2cf34df6469e1f569c0e}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_analyze@{hdcd\_analyze}}
+\index{hdcd\_analyze@{hdcd\_analyze}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_analyze()}{hdcd\_analyze()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hdcd\+\_\+analyze (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{gain,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{target\+\_\+gain,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{extend,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mode,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{cdt\+\_\+active,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tg\+\_\+mismatch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+behaves like \mbox{\hyperlink{af__hdcd_8c_ac502d82c1efb3b10f0c214059603e302}{hdcd\+\_\+envelope()}}, but encodes processing information in a way that is audible (and visible in an audio editor) to aid analysis. 
+
+Definition at line 1206 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{af__hdcd_8c_a2dac8c66457a2cf34df6469e1f569c0e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a2dac8c66457a2cf34df6469e1f569c0e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_ad99928e48df964cf965559e0ce5c9131}\label{af__hdcd_8c_ad99928e48df964cf965559e0ce5c9131}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_analyze\_gen@{hdcd\_analyze\_gen}}
+\index{hdcd\_analyze\_gen@{hdcd\_analyze\_gen}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_analyze\_gen()}{hdcd\_analyze\_gen()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} hdcd\+\_\+analyze\+\_\+gen (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{sample,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{v,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{maxv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+encode a value in the given sample by adjusting the amplitude 
+
+Definition at line 1196 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_ad99928e48df964cf965559e0ce5c9131_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a2d74961971984ae7137f9cf37cd1412e}\label{af__hdcd_8c_a2d74961971984ae7137f9cf37cd1412e}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_analyze\_prepare@{hdcd\_analyze\_prepare}}
+\index{hdcd\_analyze\_prepare@{hdcd\_analyze\_prepare}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_analyze\_prepare()}{hdcd\_analyze\_prepare()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+analyze\+\_\+prepare (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{state,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+replace audio with solid tone, but save L\+S\+Bs 
+
+Definition at line 1178 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a2d74961971984ae7137f9cf37cd1412e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_aeccbad8094053cbae66d771dbfa14fdd}\label{af__hdcd_8c_aeccbad8094053cbae66d771dbfa14fdd}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_control@{hdcd\_control}}
+\index{hdcd\_control@{hdcd\_control}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_control()}{hdcd\_control()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+control (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{state,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{peak\+\_\+extend,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{target\+\_\+gain }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+extract fields from control code 
+
+Definition at line 1335 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_aeccbad8094053cbae66d771dbfa14fdd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_add9c0d488fad31e353410d7170367e6c}\label{af__hdcd_8c_add9c0d488fad31e353410d7170367e6c}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_control\_stereo@{hdcd\_control\_stereo}}
+\index{hdcd\_control\_stereo@{hdcd\_control\_stereo}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_control\_stereo()}{hdcd\_control\_stereo()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{af__hdcd_8c_a955ad04de256e635a26b7258d0c22d34}{hdcd\+\_\+control\+\_\+result}} hdcd\+\_\+control\+\_\+stereo (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{peak\+\_\+extend0,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{peak\+\_\+extend1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1346 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{af__hdcd_8c_add9c0d488fad31e353410d7170367e6c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_add9c0d488fad31e353410d7170367e6c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a6f31a631615a4963840f85184dcf88a0}\label{af__hdcd_8c_a6f31a631615a4963840f85184dcf88a0}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_detect\_end@{hdcd\_detect\_end}}
+\index{hdcd\_detect\_end@{hdcd\_detect\_end}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_detect\_end()}{hdcd\_detect\_end()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+detect\+\_\+end (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$}]{detect,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1516 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=271pt]{af__hdcd_8c_a6f31a631615a4963840f85184dcf88a0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_af20578e48400869edb62627d12e40e5f}\label{af__hdcd_8c_af20578e48400869edb62627d12e40e5f}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_detect\_onech@{hdcd\_detect\_onech}}
+\index{hdcd\_detect\_onech@{hdcd\_detect\_onech}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_detect\_onech()}{hdcd\_detect\_onech()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+detect\+\_\+onech (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{state,  }\item[{\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$}]{detect }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1490 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{af__hdcd_8c_af20578e48400869edb62627d12e40e5f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a872417bf6a291cc0f613852c994adbc2}\label{af__hdcd_8c_a872417bf6a291cc0f613852c994adbc2}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_detect\_reset@{hdcd\_detect\_reset}}
+\index{hdcd\_detect\_reset@{hdcd\_detect\_reset}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_detect\_reset()}{hdcd\_detect\_reset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+detect\+\_\+reset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$}]{detect }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1471 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{af__hdcd_8c_a872417bf6a291cc0f613852c994adbc2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a07235be9eca1f40f12059773284535cc}\label{af__hdcd_8c_a07235be9eca1f40f12059773284535cc}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_detect\_start@{hdcd\_detect\_start}}
+\index{hdcd\_detect\_start@{hdcd\_detect\_start}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_detect\_start()}{hdcd\_detect\_start()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+detect\+\_\+start (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__detection__data}{hdcd\+\_\+detection\+\_\+data}} $\ast$}]{detect }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1483 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=275pt]{af__hdcd_8c_a07235be9eca1f40f12059773284535cc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_ac502d82c1efb3b10f0c214059603e302}\label{af__hdcd_8c_ac502d82c1efb3b10f0c214059603e302}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_envelope@{hdcd\_envelope}}
+\index{hdcd\_envelope@{hdcd\_envelope}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_envelope()}{hdcd\_envelope()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hdcd\+\_\+envelope (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vbits,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{gain,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{target\+\_\+gain,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{extend }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+apply H\+D\+CD decoding parameters to a series of samples 
+
+Definition at line 1266 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_ac502d82c1efb3b10f0c214059603e302_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a1627c15097b6058136e89cad5c9dd8a3}\label{af__hdcd_8c_a1627c15097b6058136e89cad5c9dd8a3}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_integrate@{hdcd\_integrate}}
+\index{hdcd\_integrate@{hdcd\_integrate}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_integrate()}{hdcd\_integrate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hdcd\+\_\+integrate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{states,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{flag,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1041 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{af__hdcd_8c_a1627c15097b6058136e89cad5c9dd8a3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a1627c15097b6058136e89cad5c9dd8a3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a704f11e59c055c243a0e38ae43b0e3e4}\label{af__hdcd_8c_a704f11e59c055c243a0e38ae43b0e3e4}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_process@{hdcd\_process}}
+\index{hdcd\_process@{hdcd\_process}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_process()}{hdcd\_process()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+process (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{state,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1365 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a704f11e59c055c243a0e38ae43b0e3e4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=257pt]{af__hdcd_8c_a704f11e59c055c243a0e38ae43b0e3e4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a2d48f7533a33a60ece8ca854bae14900}\label{af__hdcd_8c_a2d48f7533a33a60ece8ca854bae14900}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_process\_stereo@{hdcd\_process\_stereo}}
+\index{hdcd\_process\_stereo@{hdcd\_process\_stereo}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_process\_stereo()}{hdcd\_process\_stereo()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+process\+\_\+stereo (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1406 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a2d48f7533a33a60ece8ca854bae14900_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=290pt]{af__hdcd_8c_a2d48f7533a33a60ece8ca854bae14900_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a9613de8a41f41464ac3ff686bd027a7d}\label{af__hdcd_8c_a9613de8a41f41464ac3ff686bd027a7d}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_reset@{hdcd\_reset}}
+\index{hdcd\_reset@{hdcd\_reset}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_reset()}{hdcd\_reset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} hdcd\+\_\+reset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{state,  }\item[{unsigned}]{rate,  }\item[{unsigned}]{cdt\+\_\+ms }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1012 of file af\+\_\+hdcd.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{af__hdcd_8c_a9613de8a41f41464ac3ff686bd027a7d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a7d16c3f3b3639d4787b3c572b45d2091}\label{af__hdcd_8c_a7d16c3f3b3639d4787b3c572b45d2091}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_scan@{hdcd\_scan}}
+\index{hdcd\_scan@{hdcd\_scan}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_scan()}{hdcd\_scan()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} hdcd\+\_\+scan (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_d_c_d_context}{H\+D\+C\+D\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{structhdcd__state}{hdcd\+\_\+state}} $\ast$}]{states,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1126 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=337pt]{af__hdcd_8c_a7d16c3f3b3639d4787b3c572b45d2091_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a7d16c3f3b3639d4787b3c572b45d2091_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!init@{init}}
+\index{init@{init}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1696 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1602 of file af\+\_\+hdcd.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__hdcd_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__hdcd_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1654 of file af\+\_\+hdcd.\+c.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__hdcd_8c_a7fa4a7dfcfc318486970748bd101c146}\label{af__hdcd_8c_a7fa4a7dfcfc318486970748bd101c146}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!ana\_mode\_str@{ana\_mode\_str}}
+\index{ana\_mode\_str@{ana\_mode\_str}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{ana\_mode\_str}{ana\_mode\_str}}
+{\footnotesize\ttfamily const char$\ast$ const ana\+\_\+mode\+\_\+str\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \mbox{\hyperlink{af__hdcd_8c_a4fac1307e483284efc041d24cd783e70}{HDCD\_ANA\_OFF\_DESC}},}
+\DoxyCodeLine{    \mbox{\hyperlink{af__hdcd_8c_a911c1a5734cffacfbac1021e258d13e5}{HDCD\_ANA\_LLE\_DESC}},}
+\DoxyCodeLine{    \mbox{\hyperlink{af__hdcd_8c_a4899961f9500f4227304ca50a6fb1d04}{HDCD\_ANA\_PE\_DESC}},}
+\DoxyCodeLine{    \mbox{\hyperlink{af__hdcd_8c_a82d6f1a3eca71230f4f019d58b24b869}{HDCD\_ANA\_CDT\_DESC}},}
+\DoxyCodeLine{    \mbox{\hyperlink{af__hdcd_8c_a7f7dffa4f266798b4ee049e9ba061f66}{HDCD\_ANA\_TGM\_DESC}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 935 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a0d606e891c8bbe6f0e6a37f6afe63fd4}\label{af__hdcd_8c_a0d606e891c8bbe6f0e6a37f6afe63fd4}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!avfilter\_af\_hdcd\_inputs@{avfilter\_af\_hdcd\_inputs}}
+\index{avfilter\_af\_hdcd\_inputs@{avfilter\_af\_hdcd\_inputs}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{avfilter\_af\_hdcd\_inputs}{avfilter\_af\_hdcd\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} avfilter\+\_\+af\+\_\+hdcd\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{af__hdcd_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{af__hdcd_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1757 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_ada17e260c4e85f5ccedf65c5ff0aa505}\label{af__hdcd_8c_ada17e260c4e85f5ccedf65c5ff0aa505}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!avfilter\_af\_hdcd\_outputs@{avfilter\_af\_hdcd\_outputs}}
+\index{avfilter\_af\_hdcd\_outputs@{avfilter\_af\_hdcd\_outputs}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{avfilter\_af\_hdcd\_outputs}{avfilter\_af\_hdcd\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} avfilter\+\_\+af\+\_\+hdcd\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1767 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_acf4256f66952bd44b2c7ad5931eefb4c}\label{af__hdcd_8c_acf4256f66952bd44b2c7ad5931eefb4c}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!ff\_af\_hdcd@{ff\_af\_hdcd}}
+\index{ff\_af\_hdcd@{ff\_af\_hdcd}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{ff\_af\_hdcd}{ff\_af\_hdcd}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+af\+\_\+hdcd}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}hdcd"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apply High Definition Compatible Digital (HDCD) decoding."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__hdcd_8c_aa2dc4811cc9244ff3ed5cca5fcc0b43e}{HDCDContext}}),}
+\DoxyCodeLine{    .priv\_class    = \&hdcd\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{af__hdcd_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__hdcd_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{af__hdcd_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{af__hdcd_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{af__hdcd_8c_a0d606e891c8bbe6f0e6a37f6afe63fd4}{avfilter\_af\_hdcd\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{af__hdcd_8c_ada17e260c4e85f5ccedf65c5ff0aa505}{avfilter\_af\_hdcd\_outputs}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1775 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_afe6d1391ba25242981efb99d7547135f}\label{af__hdcd_8c_afe6d1391ba25242981efb99d7547135f}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!gaintab@{gaintab}}
+\index{gaintab@{gaintab}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{gaintab}{gaintab}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} gaintab\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 694 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a05638fbc5de5c226006ce415a4289f8e}\label{af__hdcd_8c_a05638fbc5de5c226006ce415a4289f8e}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!hdcd\_options@{hdcd\_options}}
+\index{hdcd\_options@{hdcd\_options}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{hdcd\_options}{hdcd\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} hdcd\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}disable\_autoconvert"{}}, \textcolor{stringliteral}{"{}Disable any format conversion or resampling in the filter graph."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(disable\_autoconvert), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = 1 \}, 0, 1, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}process\_stereo"{}}, \textcolor{stringliteral}{"{}Process stereo channels together. Only apply target\_gain when both channels match."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(process\_stereo), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = \mbox{\hyperlink{af__hdcd_8c_a5614bced649e49c1e2265f756b2f8d04}{HDCD\_PROCESS\_STEREO\_DEFAULT}} \}, 0, 1, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}cdt\_ms"{}}, \textcolor{stringliteral}{"{}Code detect timer period in ms."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(cdt\_ms), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 2000 \}, 100, 60000, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}force\_pe"{}}, \textcolor{stringliteral}{"{}Always extend peaks above -\/3dBFS even when PE is not signaled."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(force\_pe), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{ .i64 = 0 \}, 0, 1, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}analyze\_mode"{}},  \textcolor{stringliteral}{"{}Replace audio with solid tone and signal some processing aspect in the amplitude."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(analyze\_mode), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795acd60532aa31c1a270b79794cac61ce4b}{HDCD\_ANA\_OFF}} \}, 0, \mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a5fddcecbfbfff9b6b075b0b7f863d353}{HDCD\_ANA\_TOP}}-\/1, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}}\},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}off"{}}, \mbox{\hyperlink{af__hdcd_8c_a4fac1307e483284efc041d24cd783e70}{HDCD\_ANA\_OFF\_DESC}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795acd60532aa31c1a270b79794cac61ce4b}{HDCD\_ANA\_OFF}}\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}lle"{}}, \mbox{\hyperlink{af__hdcd_8c_a911c1a5734cffacfbac1021e258d13e5}{HDCD\_ANA\_LLE\_DESC}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795ad8876d3110cd60b9d7ed343f64cf0be9}{HDCD\_ANA\_LLE}}\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}pe"{}},  \mbox{\hyperlink{af__hdcd_8c_a4899961f9500f4227304ca50a6fb1d04}{HDCD\_ANA\_PE\_DESC}},  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a12e3bcf36f79dcec60da6070ade7e955}{HDCD\_ANA\_PE}}\},  0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}cdt"{}}, \mbox{\hyperlink{af__hdcd_8c_a82d6f1a3eca71230f4f019d58b24b869}{HDCD\_ANA\_CDT\_DESC}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a6388685dd1d27aac5a585aa9461d3a00}{HDCD\_ANA\_CDT}}\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}tgm"{}}, \mbox{\hyperlink{af__hdcd_8c_a7f7dffa4f266798b4ee049e9ba061f66}{HDCD\_ANA\_TGM\_DESC}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{af__hdcd_8c_a8dc9fdc416d992d12bb7f2eb51eab795a10a0b36875abf247d3170363366652cc}{HDCD\_ANA\_TGM}}\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}analyze\_mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bits\_per\_sample"{}},  \textcolor{stringliteral}{"{}Valid bits per sample (location of the true LSB)."{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{af__hdcd_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(bits\_per\_sample), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64=16 \}, 16, 24, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}bits\_per\_sample"{}}\},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}16"{}}, \textcolor{stringliteral}{"{}16-\/bit (in s32 or s16)"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=16\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}bits\_per\_sample"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}20"{}}, \textcolor{stringliteral}{"{}20-\/bit (in s32)"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=20\}, 0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}bits\_per\_sample"{}} \},}
+\DoxyCodeLine{        \{ \textcolor{stringliteral}{"{}24"{}}, \textcolor{stringliteral}{"{}24-\/bit (in s32)"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=24\},  0, 0, \mbox{\hyperlink{af__hdcd_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}bits\_per\_sample"{}} \},}
+\DoxyCodeLine{    \{\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 986 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_aa54f2030d601bd1ca4bbd84d9fbeba1b}\label{af__hdcd_8c_aa54f2030d601bd1ca4bbd84d9fbeba1b}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!pe\_str@{pe\_str}}
+\index{pe\_str@{pe\_str}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{pe\_str}{pe\_str}}
+{\footnotesize\ttfamily const char$\ast$ const pe\+\_\+str\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \textcolor{stringliteral}{"{}never enabled"{}},}
+\DoxyCodeLine{    \textcolor{stringliteral}{"{}enabled intermittently"{}},}
+\DoxyCodeLine{    \textcolor{stringliteral}{"{}enabled permanently"{}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 884 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a1ea34e1a6447b792c449935b299534dd}\label{af__hdcd_8c_a1ea34e1a6447b792c449935b299534dd}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!peaktab@{peaktab}}
+\index{peaktab@{peaktab}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{peaktab}{peaktab}}
+{\footnotesize\ttfamily const uint32\+\_\+t peaktab\mbox{[}0x2680\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 53 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_ab2c9d9193e0fdb292cecefbdb14f00a9}\label{af__hdcd_8c_ab2c9d9193e0fdb292cecefbdb14f00a9}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!pf\_str@{pf\_str}}
+\index{pf\_str@{pf\_str}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{pf\_str}{pf\_str}}
+{\footnotesize\ttfamily const char$\ast$ const pf\+\_\+str\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \textcolor{stringliteral}{"{}?"{}}, \textcolor{stringliteral}{"{}A"{}}, \textcolor{stringliteral}{"{}B"{}}, \textcolor{stringliteral}{"{}A+B"{}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 903 of file af\+\_\+hdcd.\+c.
+
+\mbox{\Hypertarget{af__hdcd_8c_a8523ebbeda7e08fe6deb7e9e62d5c90f}\label{af__hdcd_8c_a8523ebbeda7e08fe6deb7e9e62d5c90f}} 
+\index{af\_hdcd.c@{af\_hdcd.c}!readaheadtab@{readaheadtab}}
+\index{readaheadtab@{readaheadtab}!af\_hdcd.c@{af\_hdcd.c}}
+\doxysubsubsection{\texorpdfstring{readaheadtab}{readaheadtab}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} readaheadtab\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0x03, 0x02, 0x01, 0x01, 0x1f, 0x1e, 0x1f, 0x11, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f,}
+\DoxyCodeLine{    0x10, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e,}
+\DoxyCodeLine{    0x1f, 0x0f, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f,}
+\DoxyCodeLine{    0x1e, 0x1f, 0x1b, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d,}
+\DoxyCodeLine{    0x1f, 0x1e, 0x0e, 0x19, 0x07, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f,}
+\DoxyCodeLine{    0x1d, 0x1f, 0x1e, 0x1f, 0x1b, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e,}
+\DoxyCodeLine{    0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1a, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f,}
+\DoxyCodeLine{    0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1b, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c,}
+\DoxyCodeLine{    0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x0d, 0x18, 0x20, 0x06, 0x1e, 0x1f, 0x12, 0x1f, 0x1e, 0x1f,}
+\DoxyCodeLine{    0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1b, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e,}
+\DoxyCodeLine{    0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1a, 0x08, 0x1e, 0x1f, 0x1d, 0x1f,}
+\DoxyCodeLine{    0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1b, 0x1f, 0x1e, 0x1f, 0x1d,}
+\DoxyCodeLine{    0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x19, 0x1f, 0x13, 0x1f,}
+\DoxyCodeLine{    0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1b, 0x09, 0x1e,}
+\DoxyCodeLine{    0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x1f, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1a, 0x14,}
+\DoxyCodeLine{    0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1c, 0x0a, 0x1e, 0x1f, 0x1d, 0x1f, 0x1e, 0x1f, 0x1b,}
+\DoxyCodeLine{    0x15, 0x1e, 0x1f, 0x1d, 0x0b, 0x1e, 0x1f, 0x1c, 0x16, 0x1e, 0x0c, 0x1d, 0x17, 0x1e, 0x1f,}
+\DoxyCodeLine{    0x20}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 672 of file af\+\_\+hdcd.\+c.
+

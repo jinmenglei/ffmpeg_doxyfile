@@ -1,0 +1,1793 @@
+\hypertarget{mlpenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/mlpenc.c File Reference}
+\label{mlpenc_8c}\index{E:/github/ffmpeg/libavcodec/mlpenc.c@{E:/github/ffmpeg/libavcodec/mlpenc.c}}
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio\+\_\+frame\+\_\+queue.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/crc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/samplefmt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mlp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lpc.\+h\char`\"{}}\newline
+Include dependency graph for mlpenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_restart_header}{Restart\+Header}}
+\item 
+struct \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}}
+\item 
+struct \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}}
+\item 
+struct \mbox{\hyperlink{struct_best_offset}{Best\+Offset}}
+\item 
+struct \mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_path_counter}{Path\+Counter}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ad5576520034056657355ef8ce023d894}{M\+A\+J\+O\+R\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+I\+N\+T\+E\+R\+V\+AL}}~16
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_aa2ab716af4c1c9195be2a672d6208c55}{M\+L\+P\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER}}~1
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a707273b0522bcff43b141c2bdf17ebd1}{M\+L\+P\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER}}~8
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ad932012d1f50fdfb2d772637c1314d0e}{M\+L\+P\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~8
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ad4f7d85848db2f6cc7fec7f6ed336cb4}{M\+L\+P\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~15
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a01bd3b5c66886b74db03e8671540ab92}{H\+U\+F\+F\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+M\+IN}}~(-\/16384)
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ae3301e70199668ab616279551a45683b}{H\+U\+F\+F\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+M\+AX}}~( 16383)
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ac28df43a2f1e754da232c7d6a642190f}{N\+U\+M\+\_\+\+C\+O\+D\+E\+B\+O\+O\+KS}}~4
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a7c1e9a6b17964df93ebe86a8909ac050}{S\+Y\+N\+C\+\_\+\+M\+A\+J\+OR}}~0xf8726f
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a1a4e6d404a99ebe461877524fa2a5a2f}{M\+A\+J\+O\+R\+\_\+\+S\+Y\+N\+C\+\_\+\+I\+N\+F\+O\+\_\+\+S\+I\+G\+N\+A\+T\+U\+RE}}~0x\+B752
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a9b46ed007a5e12da14737c27a474d2d6}{S\+Y\+N\+C\+\_\+\+M\+LP}}~0xbb
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a618af9203a7a876411cb216cb7f55c7e}{S\+Y\+N\+C\+\_\+\+T\+R\+U\+E\+HD}}~0xba
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_ae2ba46cb9293621cc994fb0a989d3bd0}{F\+L\+A\+G\+S\+\_\+\+D\+V\+DA}}~0x4000
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a4ad88e889fcd7ffb9dfc58666d1ecf72}{F\+L\+A\+G\+S\+\_\+\+C\+O\+N\+ST}}~0x8000
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a2a7c31a8c82231203e4546dee7969199}{S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+M\+A\+X\+\_\+2\+\_\+\+C\+H\+AN}}~0x01
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_af25623f9cfd114e6a630c73b872c8567}{S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+H\+I\+G\+H\+\_\+\+R\+A\+TE}}~0x02
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a005e38236084f5660e836af4d76f37b6}{S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+A\+L\+W\+A\+Y\+S\+\_\+\+S\+ET}}~0x04
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_acf775fc5a80fecd52a5fc0057f818e99}{S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+2\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}~0x08
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a611069fbf2033b59f03fba5b6a2314f6}{S\+A\+M\+P\+L\+E\+\_\+\+M\+AX}}(bitdepth)~((1 $<$$<$ (bitdepth -\/ 1)) -\/ 1)
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_aa787d9580e00413fb0e0fa855e4d987e}{S\+A\+M\+P\+L\+E\+\_\+\+M\+IN}}(bitdepth)~($\sim$\mbox{\hyperlink{mlpenc_8c_a611069fbf2033b59f03fba5b6a2314f6}{S\+A\+M\+P\+L\+E\+\_\+\+M\+AX}}(bitdepth))
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a996fb265e0043e35fa0a69b29d99526a}{M\+S\+B\+\_\+\+M\+A\+SK}}(\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}})~(-\/(\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(1\mbox{\hyperlink{cbs__jpeg_8c_a134a0c87e88a327dcbeee6de7b0d6282}{u}} $<$$<$ (\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}})))
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a8f9247fbef4e52a89d423a6f29f4b614}{Z\+E\+R\+O\+\_\+\+P\+A\+TH}}~\textquotesingle{}0\textquotesingle{}
+\item 
+\#define \mbox{\hyperlink{mlpenc_8c_a8966e73cf4527128ecf3435cb5a1e19d}{C\+O\+D\+E\+B\+O\+O\+K\+\_\+\+C\+H\+A\+N\+G\+E\+\_\+\+B\+I\+TS}}~21
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} \mbox{\hyperlink{mlpenc_8c_a4ee3c1db0022c1b921a6f6ca2ee2f8bb}{Best\+Offset}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22}{Param\+Flags}} \{ \newline
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2d0d2395974af174b50868a56471c9cf}{P\+A\+R\+A\+M\+S\+\_\+\+D\+E\+F\+A\+U\+LT}} = 0xff, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22afe96eccbd74b7908808dc8e6ae94ae4e}{P\+A\+R\+A\+M\+\_\+\+P\+R\+E\+S\+E\+N\+C\+E\+\_\+\+F\+L\+A\+GS}} = 1 $<$$<$ 8, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a433aa1c895d86df07bbd71860b8c3656}{P\+A\+R\+A\+M\+\_\+\+B\+L\+O\+C\+K\+S\+I\+ZE}} = 1 $<$$<$ 7, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a037c4c3fb96102d69a8959dcbcf3ba88}{P\+A\+R\+A\+M\+\_\+\+M\+A\+T\+R\+IX}} = 1 $<$$<$ 6, 
+\newline
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22ae15fa2ff9267e219e2a919bcff57c612}{P\+A\+R\+A\+M\+\_\+\+O\+U\+T\+S\+H\+I\+FT}} = 1 $<$$<$ 5, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22aade2a06352a6277e2938af740c0f4c6c}{P\+A\+R\+A\+M\+\_\+\+Q\+U\+A\+N\+T\+S\+T\+EP}} = 1 $<$$<$ 4, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a93a3ea5c878ec0d32654d6f203878744}{P\+A\+R\+A\+M\+\_\+\+F\+IR}} = 1 $<$$<$ 3, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a6931030cf0bd9781dc5d69480abb9b88}{P\+A\+R\+A\+M\+\_\+\+I\+IR}} = 1 $<$$<$ 2, 
+\newline
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a67c2a68bf2e47e49ffd54fd89853ba3a}{P\+A\+R\+A\+M\+\_\+\+H\+U\+F\+F\+O\+F\+F\+S\+ET}} = 1 $<$$<$ 1, 
+\mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2585186da3164e3778930f40ed14f3bd}{P\+A\+R\+A\+M\+\_\+\+P\+R\+E\+S\+E\+NT}} = 1 $<$$<$ 0
+ \}
+\item 
+enum \mbox{\hyperlink{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9e}{Input\+Bit\+Depth}} \{ \mbox{\hyperlink{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9eabb0eee326b181eb02d5c284fc424ffeb}{B\+I\+T\+S\+\_\+16}}, 
+\mbox{\hyperlink{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea65a9811f1de5cf90bc7739464ec66969}{B\+I\+T\+S\+\_\+20}}, 
+\mbox{\hyperlink{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea275067f048fbba39d65f9245a7ba37b2}{B\+I\+T\+S\+\_\+24}}
+ \}
+\item 
+enum \mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}{M\+L\+P\+Ch\+Mode}} \{ \mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa7512b759cc75eecf08bbcf25a82f28f8}{M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+R\+I\+G\+HT}}, 
+\mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098faf920cc629016c528b46989421324e149}{M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+S\+I\+DE}}, 
+\mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098fafe65fb47dce77052e08640f37ccd105c}{M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+R\+I\+G\+H\+T\+\_\+\+S\+I\+DE}}, 
+\mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa4a48695d248cba2542611782180b308b}{M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+M\+I\+D\+\_\+\+S\+I\+DE}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_ac3861755d77e3b51bef8b2052f7182d6}{compare\+\_\+filter\+\_\+params}} (const \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$prev\+\_\+cp, const \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$cp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_acf9d31c3b5b644148e1abad37999faac}{compare\+\_\+matrix\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$prev, const \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$mp)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a6ef81b53ba7f4448aa1b3486cdbc6120}{compare\+\_\+decoding\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a33c7002b62ebad30385111b997c84442}{copy\+\_\+filter\+\_\+params}} (\mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$dst\+\_\+cp, \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$src\+\_\+cp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_ae792a23f86ad46a37876a00e3d270a47}{copy\+\_\+matrix\+\_\+params}} (\mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$dst, \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_ac8a43d5b1b486c831ca3365a298b2547}{copy\+\_\+restart\+\_\+frame\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} substr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a29c5e6675bc969f90bab35b7c67cc38f}{clear\+\_\+decoding\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} decoding\+\_\+params\mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a93760b2068a5a21f047cc6778e343316}{clear\+\_\+channel\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} channel\+\_\+params\mbox{[}\mbox{\hyperlink{tests_2checkasm_2flacdsp_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a4a3f1d9fde15404017f479023dc6dbbb}{default\+\_\+decoding\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} decoding\+\_\+params\mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_aaf83396c069f74107e1b254bba5d54f0}{number\+\_\+sbits}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} number)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a7b6477a38ffb31ed091542cb8db1a3f0}{mlp\+\_\+peak\+\_\+bitrate}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} peak\+\_\+bitrate, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ffmpeg__filter_8c_a9feef5270e0e54f103868362df0cd27a}{sample\+\_\+rate}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a9aa2838f63989346b3cef049c12016eb}{mlp\+\_\+encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a1af5a78db98bafdf78cded47e960876c}{write\+\_\+major\+\_\+sync}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_ad39494079aad3a12ee4a98f5194bcf6a}{write\+\_\+restart\+\_\+header}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a06c8af2ad9394715e9c53c5b45c8be11}{write\+\_\+matrix\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a58ece851e05194956d1d650ec5fa9595}{write\+\_\+filter\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_ac7bdaf490635f61491d4cb6b48f28947}{write\+\_\+decoding\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} params\+\_\+changed)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a2859c5fea361645734e04235ea1f6bf9}{write\+\_\+block\+\_\+data}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb)
+\item 
+static \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$ \mbox{\hyperlink{mlpenc_8c_a3248db0583651f3fcc879a96814a824f}{write\+\_\+substrs}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} restart\+\_\+frame, uint16\+\_\+t substream\+\_\+data\+\_\+len\mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a5c914266af51e04ce8d75e774225efa6}{write\+\_\+frame\+\_\+headers}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{structframe__header}{frame\+\_\+header}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$substream\+\_\+headers, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} restart\+\_\+frame, uint16\+\_\+t substream\+\_\+data\+\_\+len\mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]})
+\item 
+static unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_adf283efe75a88d83df17b0262662387e}{write\+\_\+access\+\_\+unit}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} restart\+\_\+frame)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a38265e628e7a134a88f22d49234d381d}{input\+\_\+data\+\_\+internal}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is24)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a9a371bcc72d6998885cffaf64a0ad0d2}{input\+\_\+data}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_af7491232c46fa2942962cfb737ceef02}{input\+\_\+to\+\_\+sample\+\_\+buffer}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a79c9862ac9afdf80c94abb68382b5943}{number\+\_\+trailing\+\_\+zeroes}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{flacdsp__template_8c_a924f03b9b06f2793262e576df93492db}{sample}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a5362e7d64eae9cd9b684410fd26f7d46}{determine\+\_\+quant\+\_\+step\+\_\+size}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_aa907ef964500d8b2e35c1f3000012ce6}{code\+\_\+filter\+\_\+coeffs}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_filter_params}{Filter\+Params}} $\ast$\mbox{\hyperlink{regdef_8h_ae771351dd440a8640270282362e338d0}{fp}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$fcoeff)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a2491da7e93d67801fa8efcf5a2ec3f62}{set\+\_\+filter\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} clear\+\_\+filter)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a31cfc66499b51b48cc47149b51f9db7f}{determine\+\_\+filters}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static enum \mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}{M\+L\+P\+Ch\+Mode}} \mbox{\hyperlink{mlpenc_8c_a3328047d009b31ffc5e7c36d15d4a3d7}{estimate\+\_\+stereo\+\_\+mode}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_add9644c0b59a67ba377c659269f69f27}{code\+\_\+matrix\+\_\+coeffs}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mat)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a8c76be3ae2a595e8666a90231a74b47c}{lossless\+\_\+matrix\+\_\+coeffs}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_ab489ca191d6a45ed1a07db8d2c008b10}{no\+\_\+codebook\+\_\+bits\+\_\+offset}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, int16\+\_\+t \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$bo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_acfb4d06c9ddaa70de0b63b0fc5f97d7d}{no\+\_\+codebook\+\_\+bits}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$bo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a828221123790f95ab9a8cf795bfa0506}{codebook\+\_\+bits\+\_\+offset}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cfhdenc_8c_a10b2ef2302ea7c1ef22b811f9d07678a}{codebook}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} sample\+\_\+min, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} sample\+\_\+max, int16\+\_\+t \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}}, \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$bo)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a474e583de6753549980fb75b59df6ffc}{codebook\+\_\+bits}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cfhdenc_8c_a10b2ef2302ea7c1ef22b811f9d07678a}{codebook}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$bo, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} direction)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a61ad8d034e9f6a4a3244042fb7fb7c35}{determine\+\_\+bits}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_aed9d9faeee7b6c517bf9fa8cc7f188cd}{apply\+\_\+filter}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a54bf14a05a0d97e240e53dfd656e75a9}{apply\+\_\+filters}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a4bf2f10aa4e74e31cc746d8f47cca19e}{generate\+\_\+2\+\_\+noise\+\_\+channels}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a1ab9d630a973ed550825c6e59b8a5a4f}{rematrix\+\_\+channels}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a5e15e6fd40bdf2d150837dc144dc58d9}{clear\+\_\+path\+\_\+counter}} (\mbox{\hyperlink{struct_path_counter}{Path\+Counter}} $\ast$path\+\_\+counter)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_ab39441a27347996f5c9b9ee235520f65}{compare\+\_\+best\+\_\+offset}} (\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$prev, \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$cur)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a4d0c0ccfe71c8d7d7d14063db680bebd}{best\+\_\+codebook\+\_\+path\+\_\+cost}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{struct_path_counter}{Path\+Counter}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cur\+\_\+codebook)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_aef79725c7264ddfdc9a9823ae6df9058}{set\+\_\+best\+\_\+codebook}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_af3d7e175eec3b5581b9d38616c71efb5}{set\+\_\+major\+\_\+params}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a12308b3892e048f59ae9ef05b6eb067c}{analyze\+\_\+sample\+\_\+buffer}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{mlpenc_8c_a48c02f76d428485e78783357e000df46}{process\+\_\+major\+\_\+frame}} (\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a070fc2b0de3c6e5cdf23a6324f4a27e5}{mlp\+\_\+encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a471fb8b2a4c82a0acba71c33d4893bfb}{mlp\+\_\+encode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} \mbox{\hyperlink{mlpenc_8c_ac19a300afd930e864b35e1a3e4e24e9b}{restart\+\_\+channel\+\_\+params}} \mbox{[}\mbox{\hyperlink{tests_2checkasm_2flacdsp_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}\mbox{]}
+\item 
+static \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} \mbox{\hyperlink{mlpenc_8c_a7aaba87cd747f76d39080abd328255cc}{restart\+\_\+decoding\+\_\+params}} \mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]}
+\item 
+static \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} \mbox{\hyperlink{mlpenc_8c_a6cf2c9926e18b30818f62b5248ce804b}{restart\+\_\+best\+\_\+offset}} \mbox{[}\mbox{\hyperlink{mlpenc_8c_ac28df43a2f1e754da232c7d6a642190f}{N\+U\+M\+\_\+\+C\+O\+D\+E\+B\+O\+O\+KS}}\mbox{]} = \{\{0\}\}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mlpenc_8c_a0d0d38a28b9ebbbbeb8caeb0a32a0350}{codebook\+\_\+extremes}} \mbox{[}3\mbox{]}\mbox{[}2\mbox{]}
+\item 
+static const char $\ast$ \mbox{\hyperlink{mlpenc_8c_ad4155f3a4ad78af2660d09a8e7137d93}{path\+\_\+counter\+\_\+codebook}} \mbox{[}$\,$\mbox{]} = \{ \char`\"{}0\char`\"{}, \char`\"{}1\char`\"{}, \char`\"{}2\char`\"{}, \char`\"{}3\char`\"{}, \}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{mlpenc_8c_a8966e73cf4527128ecf3435cb5a1e19d}\label{mlpenc_8c_a8966e73cf4527128ecf3435cb5a1e19d}} 
+\index{mlpenc.c@{mlpenc.c}!CODEBOOK\_CHANGE\_BITS@{CODEBOOK\_CHANGE\_BITS}}
+\index{CODEBOOK\_CHANGE\_BITS@{CODEBOOK\_CHANGE\_BITS}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{CODEBOOK\_CHANGE\_BITS}{CODEBOOK\_CHANGE\_BITS}}
+{\footnotesize\ttfamily \#define C\+O\+D\+E\+B\+O\+O\+K\+\_\+\+C\+H\+A\+N\+G\+E\+\_\+\+B\+I\+TS~21}
+
+
+
+Definition at line 1957 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a4ad88e889fcd7ffb9dfc58666d1ecf72}\label{mlpenc_8c_a4ad88e889fcd7ffb9dfc58666d1ecf72}} 
+\index{mlpenc.c@{mlpenc.c}!FLAGS\_CONST@{FLAGS\_CONST}}
+\index{FLAGS\_CONST@{FLAGS\_CONST}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS\_CONST}{FLAGS\_CONST}}
+{\footnotesize\ttfamily \#define F\+L\+A\+G\+S\+\_\+\+C\+O\+N\+ST~0x8000}
+
+
+
+Definition at line 217 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ae2ba46cb9293621cc994fb0a989d3bd0}\label{mlpenc_8c_ae2ba46cb9293621cc994fb0a989d3bd0}} 
+\index{mlpenc.c@{mlpenc.c}!FLAGS\_DVDA@{FLAGS\_DVDA}}
+\index{FLAGS\_DVDA@{FLAGS\_DVDA}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS\_DVDA}{FLAGS\_DVDA}}
+{\footnotesize\ttfamily \#define F\+L\+A\+G\+S\+\_\+\+D\+V\+DA~0x4000}
+
+
+
+Definition at line 215 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ae3301e70199668ab616279551a45683b}\label{mlpenc_8c_ae3301e70199668ab616279551a45683b}} 
+\index{mlpenc.c@{mlpenc.c}!HUFF\_OFFSET\_MAX@{HUFF\_OFFSET\_MAX}}
+\index{HUFF\_OFFSET\_MAX@{HUFF\_OFFSET\_MAX}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{HUFF\_OFFSET\_MAX}{HUFF\_OFFSET\_MAX}}
+{\footnotesize\ttfamily \#define H\+U\+F\+F\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+M\+AX~( 16383)}
+
+
+
+Definition at line 98 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a01bd3b5c66886b74db03e8671540ab92}\label{mlpenc_8c_a01bd3b5c66886b74db03e8671540ab92}} 
+\index{mlpenc.c@{mlpenc.c}!HUFF\_OFFSET\_MIN@{HUFF\_OFFSET\_MIN}}
+\index{HUFF\_OFFSET\_MIN@{HUFF\_OFFSET\_MIN}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{HUFF\_OFFSET\_MIN}{HUFF\_OFFSET\_MIN}}
+{\footnotesize\ttfamily \#define H\+U\+F\+F\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+M\+IN~(-\/16384)}
+
+
+
+Definition at line 97 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ad5576520034056657355ef8ce023d894}\label{mlpenc_8c_ad5576520034056657355ef8ce023d894}} 
+\index{mlpenc.c@{mlpenc.c}!MAJOR\_HEADER\_INTERVAL@{MAJOR\_HEADER\_INTERVAL}}
+\index{MAJOR\_HEADER\_INTERVAL@{MAJOR\_HEADER\_INTERVAL}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MAJOR\_HEADER\_INTERVAL}{MAJOR\_HEADER\_INTERVAL}}
+{\footnotesize\ttfamily \#define M\+A\+J\+O\+R\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+I\+N\+T\+E\+R\+V\+AL~16}
+
+M\+LP encoder Copyright (c) 2008 Ramiro Polla Copyright (c) 2016-\/2019 Jai Luthra
+
+This file is part of F\+Fmpeg.
+
+F\+Fmpeg is free software; you can redistribute it and/or modify it under the terms of the G\+NU Lesser General Public License as published by the Free Software Foundation; either version 2.\+1 of the License, or (at your option) any later version.
+
+F\+Fmpeg is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU Lesser General Public License for more details.
+
+You should have received a copy of the G\+NU Lesser General Public License along with F\+Fmpeg; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-\/1301 U\+SA 
+
+Definition at line 33 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a1a4e6d404a99ebe461877524fa2a5a2f}\label{mlpenc_8c_a1a4e6d404a99ebe461877524fa2a5a2f}} 
+\index{mlpenc.c@{mlpenc.c}!MAJOR\_SYNC\_INFO\_SIGNATURE@{MAJOR\_SYNC\_INFO\_SIGNATURE}}
+\index{MAJOR\_SYNC\_INFO\_SIGNATURE@{MAJOR\_SYNC\_INFO\_SIGNATURE}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MAJOR\_SYNC\_INFO\_SIGNATURE}{MAJOR\_SYNC\_INFO\_SIGNATURE}}
+{\footnotesize\ttfamily \#define M\+A\+J\+O\+R\+\_\+\+S\+Y\+N\+C\+\_\+\+I\+N\+F\+O\+\_\+\+S\+I\+G\+N\+A\+T\+U\+RE~0x\+B752}
+
+
+
+Definition at line 209 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a707273b0522bcff43b141c2bdf17ebd1}\label{mlpenc_8c_a707273b0522bcff43b141c2bdf17ebd1}} 
+\index{mlpenc.c@{mlpenc.c}!MLP\_MAX\_LPC\_ORDER@{MLP\_MAX\_LPC\_ORDER}}
+\index{MLP\_MAX\_LPC\_ORDER@{MLP\_MAX\_LPC\_ORDER}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MLP\_MAX\_LPC\_ORDER}{MLP\_MAX\_LPC\_ORDER}}
+{\footnotesize\ttfamily \#define M\+L\+P\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER~8}
+
+
+
+Definition at line 36 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ad4f7d85848db2f6cc7fec7f6ed336cb4}\label{mlpenc_8c_ad4f7d85848db2f6cc7fec7f6ed336cb4}} 
+\index{mlpenc.c@{mlpenc.c}!MLP\_MAX\_LPC\_SHIFT@{MLP\_MAX\_LPC\_SHIFT}}
+\index{MLP\_MAX\_LPC\_SHIFT@{MLP\_MAX\_LPC\_SHIFT}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MLP\_MAX\_LPC\_SHIFT}{MLP\_MAX\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define M\+L\+P\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~15}
+
+
+
+Definition at line 38 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_aa2ab716af4c1c9195be2a672d6208c55}\label{mlpenc_8c_aa2ab716af4c1c9195be2a672d6208c55}} 
+\index{mlpenc.c@{mlpenc.c}!MLP\_MIN\_LPC\_ORDER@{MLP\_MIN\_LPC\_ORDER}}
+\index{MLP\_MIN\_LPC\_ORDER@{MLP\_MIN\_LPC\_ORDER}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MLP\_MIN\_LPC\_ORDER}{MLP\_MIN\_LPC\_ORDER}}
+{\footnotesize\ttfamily \#define M\+L\+P\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER~1}
+
+
+
+Definition at line 35 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ad932012d1f50fdfb2d772637c1314d0e}\label{mlpenc_8c_ad932012d1f50fdfb2d772637c1314d0e}} 
+\index{mlpenc.c@{mlpenc.c}!MLP\_MIN\_LPC\_SHIFT@{MLP\_MIN\_LPC\_SHIFT}}
+\index{MLP\_MIN\_LPC\_SHIFT@{MLP\_MIN\_LPC\_SHIFT}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MLP\_MIN\_LPC\_SHIFT}{MLP\_MIN\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define M\+L\+P\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~8}
+
+
+
+Definition at line 37 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a996fb265e0043e35fa0a69b29d99526a}\label{mlpenc_8c_a996fb265e0043e35fa0a69b29d99526a}} 
+\index{mlpenc.c@{mlpenc.c}!MSB\_MASK@{MSB\_MASK}}
+\index{MSB\_MASK@{MSB\_MASK}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MSB\_MASK}{MSB\_MASK}}
+{\footnotesize\ttfamily \#define M\+S\+B\+\_\+\+M\+A\+SK(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}} }\end{DoxyParamCaption})~(-\/(\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}})(1\mbox{\hyperlink{cbs__jpeg_8c_a134a0c87e88a327dcbeee6de7b0d6282}{u}} $<$$<$ (\mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}})))}
+
+
+
+Definition at line 1798 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ac28df43a2f1e754da232c7d6a642190f}\label{mlpenc_8c_ac28df43a2f1e754da232c7d6a642190f}} 
+\index{mlpenc.c@{mlpenc.c}!NUM\_CODEBOOKS@{NUM\_CODEBOOKS}}
+\index{NUM\_CODEBOOKS@{NUM\_CODEBOOKS}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{NUM\_CODEBOOKS}{NUM\_CODEBOOKS}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+C\+O\+D\+E\+B\+O\+O\+KS~4}
+
+Number of possible codebooks (counting \char`\"{}no codebooks\char`\"{}) 
+
+Definition at line 101 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a611069fbf2033b59f03fba5b6a2314f6}\label{mlpenc_8c_a611069fbf2033b59f03fba5b6a2314f6}} 
+\index{mlpenc.c@{mlpenc.c}!SAMPLE\_MAX@{SAMPLE\_MAX}}
+\index{SAMPLE\_MAX@{SAMPLE\_MAX}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SAMPLE\_MAX}{SAMPLE\_MAX}}
+{\footnotesize\ttfamily \#define S\+A\+M\+P\+L\+E\+\_\+\+M\+AX(\begin{DoxyParamCaption}\item[{}]{bitdepth }\end{DoxyParamCaption})~((1 $<$$<$ (bitdepth -\/ 1)) -\/ 1)}
+
+
+
+Definition at line 1795 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_aa787d9580e00413fb0e0fa855e4d987e}\label{mlpenc_8c_aa787d9580e00413fb0e0fa855e4d987e}} 
+\index{mlpenc.c@{mlpenc.c}!SAMPLE\_MIN@{SAMPLE\_MIN}}
+\index{SAMPLE\_MIN@{SAMPLE\_MIN}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SAMPLE\_MIN}{SAMPLE\_MIN}}
+{\footnotesize\ttfamily \#define S\+A\+M\+P\+L\+E\+\_\+\+M\+IN(\begin{DoxyParamCaption}\item[{}]{bitdepth }\end{DoxyParamCaption})~($\sim$\mbox{\hyperlink{mlpenc_8c_a611069fbf2033b59f03fba5b6a2314f6}{S\+A\+M\+P\+L\+E\+\_\+\+M\+AX}}(bitdepth))}
+
+
+
+Definition at line 1796 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_acf775fc5a80fecd52a5fc0057f818e99}\label{mlpenc_8c_acf775fc5a80fecd52a5fc0057f818e99}} 
+\index{mlpenc.c@{mlpenc.c}!SUBSTREAM\_INFO\_2\_SUBSTREAMS@{SUBSTREAM\_INFO\_2\_SUBSTREAMS}}
+\index{SUBSTREAM\_INFO\_2\_SUBSTREAMS@{SUBSTREAM\_INFO\_2\_SUBSTREAMS}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBSTREAM\_INFO\_2\_SUBSTREAMS}{SUBSTREAM\_INFO\_2\_SUBSTREAMS}}
+{\footnotesize\ttfamily \#define S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+2\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS~0x08}
+
+
+
+Definition at line 222 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a005e38236084f5660e836af4d76f37b6}\label{mlpenc_8c_a005e38236084f5660e836af4d76f37b6}} 
+\index{mlpenc.c@{mlpenc.c}!SUBSTREAM\_INFO\_ALWAYS\_SET@{SUBSTREAM\_INFO\_ALWAYS\_SET}}
+\index{SUBSTREAM\_INFO\_ALWAYS\_SET@{SUBSTREAM\_INFO\_ALWAYS\_SET}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBSTREAM\_INFO\_ALWAYS\_SET}{SUBSTREAM\_INFO\_ALWAYS\_SET}}
+{\footnotesize\ttfamily \#define S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+A\+L\+W\+A\+Y\+S\+\_\+\+S\+ET~0x04}
+
+
+
+Definition at line 221 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_af25623f9cfd114e6a630c73b872c8567}\label{mlpenc_8c_af25623f9cfd114e6a630c73b872c8567}} 
+\index{mlpenc.c@{mlpenc.c}!SUBSTREAM\_INFO\_HIGH\_RATE@{SUBSTREAM\_INFO\_HIGH\_RATE}}
+\index{SUBSTREAM\_INFO\_HIGH\_RATE@{SUBSTREAM\_INFO\_HIGH\_RATE}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBSTREAM\_INFO\_HIGH\_RATE}{SUBSTREAM\_INFO\_HIGH\_RATE}}
+{\footnotesize\ttfamily \#define S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+H\+I\+G\+H\+\_\+\+R\+A\+TE~0x02}
+
+
+
+Definition at line 220 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a2a7c31a8c82231203e4546dee7969199}\label{mlpenc_8c_a2a7c31a8c82231203e4546dee7969199}} 
+\index{mlpenc.c@{mlpenc.c}!SUBSTREAM\_INFO\_MAX\_2\_CHAN@{SUBSTREAM\_INFO\_MAX\_2\_CHAN}}
+\index{SUBSTREAM\_INFO\_MAX\_2\_CHAN@{SUBSTREAM\_INFO\_MAX\_2\_CHAN}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBSTREAM\_INFO\_MAX\_2\_CHAN}{SUBSTREAM\_INFO\_MAX\_2\_CHAN}}
+{\footnotesize\ttfamily \#define S\+U\+B\+S\+T\+R\+E\+A\+M\+\_\+\+I\+N\+F\+O\+\_\+\+M\+A\+X\+\_\+2\+\_\+\+C\+H\+AN~0x01}
+
+
+
+Definition at line 219 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a7c1e9a6b17964df93ebe86a8909ac050}\label{mlpenc_8c_a7c1e9a6b17964df93ebe86a8909ac050}} 
+\index{mlpenc.c@{mlpenc.c}!SYNC\_MAJOR@{SYNC\_MAJOR}}
+\index{SYNC\_MAJOR@{SYNC\_MAJOR}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SYNC\_MAJOR}{SYNC\_MAJOR}}
+{\footnotesize\ttfamily \#define S\+Y\+N\+C\+\_\+\+M\+A\+J\+OR~0xf8726f}
+
+
+
+Definition at line 208 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a9b46ed007a5e12da14737c27a474d2d6}\label{mlpenc_8c_a9b46ed007a5e12da14737c27a474d2d6}} 
+\index{mlpenc.c@{mlpenc.c}!SYNC\_MLP@{SYNC\_MLP}}
+\index{SYNC\_MLP@{SYNC\_MLP}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SYNC\_MLP}{SYNC\_MLP}}
+{\footnotesize\ttfamily \#define S\+Y\+N\+C\+\_\+\+M\+LP~0xbb}
+
+
+
+Definition at line 211 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a618af9203a7a876411cb216cb7f55c7e}\label{mlpenc_8c_a618af9203a7a876411cb216cb7f55c7e}} 
+\index{mlpenc.c@{mlpenc.c}!SYNC\_TRUEHD@{SYNC\_TRUEHD}}
+\index{SYNC\_TRUEHD@{SYNC\_TRUEHD}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{SYNC\_TRUEHD}{SYNC\_TRUEHD}}
+{\footnotesize\ttfamily \#define S\+Y\+N\+C\+\_\+\+T\+R\+U\+E\+HD~0xba}
+
+
+
+Definition at line 212 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a8f9247fbef4e52a89d423a6f29f4b614}\label{mlpenc_8c_a8f9247fbef4e52a89d423a6f29f4b614}} 
+\index{mlpenc.c@{mlpenc.c}!ZERO\_PATH@{ZERO\_PATH}}
+\index{ZERO\_PATH@{ZERO\_PATH}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{ZERO\_PATH}{ZERO\_PATH}}
+{\footnotesize\ttfamily \#define Z\+E\+R\+O\+\_\+\+P\+A\+TH~\textquotesingle{}0\textquotesingle{}}
+
+
+
+Definition at line 1956 of file mlpenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{mlpenc_8c_a4ee3c1db0022c1b921a6f6ca2ee2f8bb}\label{mlpenc_8c_a4ee3c1db0022c1b921a6f6ca2ee2f8bb}} 
+\index{mlpenc.c@{mlpenc.c}!BestOffset@{BestOffset}}
+\index{BestOffset@{BestOffset}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{BestOffset}{BestOffset}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} \mbox{\hyperlink{struct_best_offset}{Best\+Offset}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9e}\label{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9e}} 
+\index{mlpenc.c@{mlpenc.c}!InputBitDepth@{InputBitDepth}}
+\index{InputBitDepth@{InputBitDepth}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{InputBitDepth}{InputBitDepth}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9e}{Input\+Bit\+Depth}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BITS\_16@{BITS\_16}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!BITS\_16@{BITS\_16}}}\mbox{\Hypertarget{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9eabb0eee326b181eb02d5c284fc424ffeb}\label{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9eabb0eee326b181eb02d5c284fc424ffeb}} 
+B\+I\+T\+S\+\_\+16&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BITS\_20@{BITS\_20}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!BITS\_20@{BITS\_20}}}\mbox{\Hypertarget{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea65a9811f1de5cf90bc7739464ec66969}\label{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea65a9811f1de5cf90bc7739464ec66969}} 
+B\+I\+T\+S\+\_\+20&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BITS\_24@{BITS\_24}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!BITS\_24@{BITS\_24}}}\mbox{\Hypertarget{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea275067f048fbba39d65f9245a7ba37b2}\label{mlpenc_8c_af70fbe8560fbddcdf572caea9b674a9ea275067f048fbba39d65f9245a7ba37b2}} 
+B\+I\+T\+S\+\_\+24&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 476 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}\label{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}} 
+\index{mlpenc.c@{mlpenc.c}!MLPChMode@{MLPChMode}}
+\index{MLPChMode@{MLPChMode}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{MLPChMode}{MLPChMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}{M\+L\+P\+Ch\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MLP\_CHMODE\_LEFT\_RIGHT@{MLP\_CHMODE\_LEFT\_RIGHT}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!MLP\_CHMODE\_LEFT\_RIGHT@{MLP\_CHMODE\_LEFT\_RIGHT}}}\mbox{\Hypertarget{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa7512b759cc75eecf08bbcf25a82f28f8}\label{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa7512b759cc75eecf08bbcf25a82f28f8}} 
+M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+R\+I\+G\+HT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MLP\_CHMODE\_LEFT\_SIDE@{MLP\_CHMODE\_LEFT\_SIDE}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!MLP\_CHMODE\_LEFT\_SIDE@{MLP\_CHMODE\_LEFT\_SIDE}}}\mbox{\Hypertarget{mlpenc_8c_a1649889be7896b9b8084a815e82a098faf920cc629016c528b46989421324e149}\label{mlpenc_8c_a1649889be7896b9b8084a815e82a098faf920cc629016c528b46989421324e149}} 
+M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+S\+I\+DE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MLP\_CHMODE\_RIGHT\_SIDE@{MLP\_CHMODE\_RIGHT\_SIDE}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!MLP\_CHMODE\_RIGHT\_SIDE@{MLP\_CHMODE\_RIGHT\_SIDE}}}\mbox{\Hypertarget{mlpenc_8c_a1649889be7896b9b8084a815e82a098fafe65fb47dce77052e08640f37ccd105c}\label{mlpenc_8c_a1649889be7896b9b8084a815e82a098fafe65fb47dce77052e08640f37ccd105c}} 
+M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+R\+I\+G\+H\+T\+\_\+\+S\+I\+DE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MLP\_CHMODE\_MID\_SIDE@{MLP\_CHMODE\_MID\_SIDE}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!MLP\_CHMODE\_MID\_SIDE@{MLP\_CHMODE\_MID\_SIDE}}}\mbox{\Hypertarget{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa4a48695d248cba2542611782180b308b}\label{mlpenc_8c_a1649889be7896b9b8084a815e82a098fa4a48695d248cba2542611782180b308b}} 
+M\+L\+P\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+M\+I\+D\+\_\+\+S\+I\+DE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 1441 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22}} 
+\index{mlpenc.c@{mlpenc.c}!ParamFlags@{ParamFlags}}
+\index{ParamFlags@{ParamFlags}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{ParamFlags}{ParamFlags}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22}{Param\+Flags}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAMS\_DEFAULT@{PARAMS\_DEFAULT}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAMS\_DEFAULT@{PARAMS\_DEFAULT}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2d0d2395974af174b50868a56471c9cf}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2d0d2395974af174b50868a56471c9cf}} 
+P\+A\+R\+A\+M\+S\+\_\+\+D\+E\+F\+A\+U\+LT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_PRESENCE\_FLAGS@{PARAM\_PRESENCE\_FLAGS}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_PRESENCE\_FLAGS@{PARAM\_PRESENCE\_FLAGS}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22afe96eccbd74b7908808dc8e6ae94ae4e}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22afe96eccbd74b7908808dc8e6ae94ae4e}} 
+P\+A\+R\+A\+M\+\_\+\+P\+R\+E\+S\+E\+N\+C\+E\+\_\+\+F\+L\+A\+GS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_BLOCKSIZE@{PARAM\_BLOCKSIZE}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_BLOCKSIZE@{PARAM\_BLOCKSIZE}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a433aa1c895d86df07bbd71860b8c3656}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a433aa1c895d86df07bbd71860b8c3656}} 
+P\+A\+R\+A\+M\+\_\+\+B\+L\+O\+C\+K\+S\+I\+ZE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_MATRIX@{PARAM\_MATRIX}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_MATRIX@{PARAM\_MATRIX}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a037c4c3fb96102d69a8959dcbcf3ba88}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a037c4c3fb96102d69a8959dcbcf3ba88}} 
+P\+A\+R\+A\+M\+\_\+\+M\+A\+T\+R\+IX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_OUTSHIFT@{PARAM\_OUTSHIFT}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_OUTSHIFT@{PARAM\_OUTSHIFT}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22ae15fa2ff9267e219e2a919bcff57c612}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22ae15fa2ff9267e219e2a919bcff57c612}} 
+P\+A\+R\+A\+M\+\_\+\+O\+U\+T\+S\+H\+I\+FT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_QUANTSTEP@{PARAM\_QUANTSTEP}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_QUANTSTEP@{PARAM\_QUANTSTEP}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22aade2a06352a6277e2938af740c0f4c6c}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22aade2a06352a6277e2938af740c0f4c6c}} 
+P\+A\+R\+A\+M\+\_\+\+Q\+U\+A\+N\+T\+S\+T\+EP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_FIR@{PARAM\_FIR}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_FIR@{PARAM\_FIR}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a93a3ea5c878ec0d32654d6f203878744}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a93a3ea5c878ec0d32654d6f203878744}} 
+P\+A\+R\+A\+M\+\_\+\+F\+IR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_IIR@{PARAM\_IIR}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_IIR@{PARAM\_IIR}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a6931030cf0bd9781dc5d69480abb9b88}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a6931030cf0bd9781dc5d69480abb9b88}} 
+P\+A\+R\+A\+M\+\_\+\+I\+IR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_HUFFOFFSET@{PARAM\_HUFFOFFSET}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_HUFFOFFSET@{PARAM\_HUFFOFFSET}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a67c2a68bf2e47e49ffd54fd89853ba3a}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a67c2a68bf2e47e49ffd54fd89853ba3a}} 
+P\+A\+R\+A\+M\+\_\+\+H\+U\+F\+F\+O\+F\+F\+S\+ET&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PARAM\_PRESENT@{PARAM\_PRESENT}!mlpenc.c@{mlpenc.c}}\index{mlpenc.c@{mlpenc.c}!PARAM\_PRESENT@{PARAM\_PRESENT}}}\mbox{\Hypertarget{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2585186da3164e3778930f40ed14f3bd}\label{mlpenc_8c_a2911983e0dc54e95e069d8fc7b632a22a2585186da3164e3778930f40ed14f3bd}} 
+P\+A\+R\+A\+M\+\_\+\+P\+R\+E\+S\+E\+NT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 67 of file mlpenc.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{mlpenc_8c_a12308b3892e048f59ae9ef05b6eb067c}\label{mlpenc_8c_a12308b3892e048f59ae9ef05b6eb067c}} 
+\index{mlpenc.c@{mlpenc.c}!analyze\_sample\_buffer@{analyze\_sample\_buffer}}
+\index{analyze\_sample\_buffer@{analyze\_sample\_buffer}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{analyze\_sample\_buffer()}{analyze\_sample\_buffer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} analyze\+\_\+sample\+\_\+buffer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2146 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a12308b3892e048f59ae9ef05b6eb067c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{mlpenc_8c_a12308b3892e048f59ae9ef05b6eb067c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_aed9d9faeee7b6c517bf9fa8cc7f188cd}\label{mlpenc_8c_aed9d9faeee7b6c517bf9fa8cc7f188cd}} 
+\index{mlpenc.c@{mlpenc.c}!apply\_filter@{apply\_filter}}
+\index{apply\_filter@{apply\_filter}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{apply\_filter()}{apply\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} apply\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Applies the filter to the current samples, and saves the residual back into the samples buffer. If the filter is too bad and overflows the maximum amount of bits allowed (24), the samples buffer is left as is and the function returns -\/1. 
+
+Definition at line 1805 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=244pt]{mlpenc_8c_aed9d9faeee7b6c517bf9fa8cc7f188cd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_aed9d9faeee7b6c517bf9fa8cc7f188cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a54bf14a05a0d97e240e53dfd656e75a9}\label{mlpenc_8c_a54bf14a05a0d97e240e53dfd656e75a9}} 
+\index{mlpenc.c@{mlpenc.c}!apply\_filters@{apply\_filters}}
+\index{apply\_filters@{apply\_filters}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{apply\_filters()}{apply\_filters()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} apply\+\_\+filters (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1877 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a54bf14a05a0d97e240e53dfd656e75a9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a54bf14a05a0d97e240e53dfd656e75a9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a4d0c0ccfe71c8d7d7d14063db680bebd}\label{mlpenc_8c_a4d0c0ccfe71c8d7d7d14063db680bebd}} 
+\index{mlpenc.c@{mlpenc.c}!best\_codebook\_path\_cost@{best\_codebook\_path\_cost}}
+\index{best\_codebook\_path\_cost@{best\_codebook\_path\_cost}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{best\_codebook\_path\_cost()}{best\_codebook\_path\_cost()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} best\+\_\+codebook\+\_\+path\+\_\+cost (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{struct_path_counter}{Path\+Counter}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{cur\+\_\+codebook }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1978 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a4d0c0ccfe71c8d7d7d14063db680bebd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a4d0c0ccfe71c8d7d7d14063db680bebd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a93760b2068a5a21f047cc6778e343316}\label{mlpenc_8c_a93760b2068a5a21f047cc6778e343316}} 
+\index{mlpenc.c@{mlpenc.c}!clear\_channel\_params@{clear\_channel\_params}}
+\index{clear\_channel\_params@{clear\_channel\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{clear\_channel\_params()}{clear\_channel\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} clear\+\_\+channel\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_channel_params}{Channel\+Params}}}]{channel\+\_\+params\mbox{[}\+M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+L\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Clears a \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} struct the way it should be after a restart header. 
+
+Definition at line 422 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{mlpenc_8c_a93760b2068a5a21f047cc6778e343316_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a29c5e6675bc969f90bab35b7c67cc38f}\label{mlpenc_8c_a29c5e6675bc969f90bab35b7c67cc38f}} 
+\index{mlpenc.c@{mlpenc.c}!clear\_decoding\_params@{clear\_decoding\_params}}
+\index{clear\_decoding\_params@{clear\_decoding\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{clear\_decoding\_params()}{clear\_decoding\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} clear\+\_\+decoding\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}}}]{decoding\+\_\+params\mbox{[}\+M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+M\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Clears a \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} struct the way it should be after a restart header. 
+
+Definition at line 406 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a29c5e6675bc969f90bab35b7c67cc38f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a5e15e6fd40bdf2d150837dc144dc58d9}\label{mlpenc_8c_a5e15e6fd40bdf2d150837dc144dc58d9}} 
+\index{mlpenc.c@{mlpenc.c}!clear\_path\_counter@{clear\_path\_counter}}
+\index{clear\_path\_counter@{clear\_path\_counter}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{clear\_path\_counter()}{clear\_path\_counter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} clear\+\_\+path\+\_\+counter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_path_counter}{Path\+Counter}} $\ast$}]{path\+\_\+counter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1959 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a5e15e6fd40bdf2d150837dc144dc58d9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_aa907ef964500d8b2e35c1f3000012ce6}\label{mlpenc_8c_aa907ef964500d8b2e35c1f3000012ce6}} 
+\index{mlpenc.c@{mlpenc.c}!code\_filter\_coeffs@{code\_filter\_coeffs}}
+\index{code\_filter\_coeffs@{code\_filter\_coeffs}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{code\_filter\_coeffs()}{code\_filter\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} code\+\_\+filter\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_filter_params}{Filter\+Params}} $\ast$}]{fp,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{fcoeff }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines the smallest number of bits needed to encode the filter coefficients, and if it\textquotesingle{}s possible to right-\/shift their values without losing any precision. 
+
+Definition at line 1352 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{mlpenc_8c_aa907ef964500d8b2e35c1f3000012ce6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_aa907ef964500d8b2e35c1f3000012ce6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_add9644c0b59a67ba377c659269f69f27}\label{mlpenc_8c_add9644c0b59a67ba377c659269f69f27}} 
+\index{mlpenc.c@{mlpenc.c}!code\_matrix\_coeffs@{code\_matrix\_coeffs}}
+\index{code\_matrix\_coeffs@{code\_matrix\_coeffs}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{code\_matrix\_coeffs()}{code\_matrix\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} code\+\_\+matrix\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines how many fractional bits are needed to encode matrix coefficients. Also shifts the coefficients to fit within 2.\+14 bits. 
+
+Definition at line 1481 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_add9644c0b59a67ba377c659269f69f27_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a474e583de6753549980fb75b59df6ffc}\label{mlpenc_8c_a474e583de6753549980fb75b59df6ffc}} 
+\index{mlpenc.c@{mlpenc.c}!codebook\_bits@{codebook\_bits}}
+\index{codebook\_bits@{codebook\_bits}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{codebook\_bits()}{codebook\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} codebook\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{codebook,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{min,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{max,  }\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{bo,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{direction }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Determines the least amount of bits needed to encode the samples using a given codebook. Searches for the best offset to minimize the bits. 
+
+Definition at line 1693 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{mlpenc_8c_a474e583de6753549980fb75b59df6ffc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a474e583de6753549980fb75b59df6ffc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a828221123790f95ab9a8cf795bfa0506}\label{mlpenc_8c_a828221123790f95ab9a8cf795bfa0506}} 
+\index{mlpenc.c@{mlpenc.c}!codebook\_bits\_offset@{codebook\_bits\_offset}}
+\index{codebook\_bits\_offset@{codebook\_bits\_offset}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{codebook\_bits\_offset()}{codebook\_bits\_offset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} codebook\+\_\+bits\+\_\+offset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{codebook,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{sample\+\_\+min,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{sample\+\_\+max,  }\item[{int16\+\_\+t}]{offset,  }\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{bo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Determines the least amount of bits needed to encode the samples using a given codebook and a given offset. 
+
+Definition at line 1629 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a828221123790f95ab9a8cf795bfa0506_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ab39441a27347996f5c9b9ee235520f65}\label{mlpenc_8c_ab39441a27347996f5c9b9ee235520f65}} 
+\index{mlpenc.c@{mlpenc.c}!compare\_best\_offset@{compare\_best\_offset}}
+\index{compare\_best\_offset@{compare\_best\_offset}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{compare\_best\_offset()}{compare\_best\_offset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compare\+\_\+best\+\_\+offset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{prev,  }\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{cur }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1970 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ab39441a27347996f5c9b9ee235520f65_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a6ef81b53ba7f4448aa1b3486cdbc6120}\label{mlpenc_8c_a6ef81b53ba7f4448aa1b3486cdbc6120}} 
+\index{mlpenc.c@{mlpenc.c}!compare\_decoding\_params@{compare\_decoding\_params}}
+\index{compare\_decoding\_params@{compare\_decoding\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{compare\_decoding\_params()}{compare\_decoding\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compare\+\_\+decoding\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Compares two \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} and \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} structures to decide if a new decoding params header has to be written. 
+
+Definition at line 286 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a6ef81b53ba7f4448aa1b3486cdbc6120_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a6ef81b53ba7f4448aa1b3486cdbc6120_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ac3861755d77e3b51bef8b2052f7182d6}\label{mlpenc_8c_ac3861755d77e3b51bef8b2052f7182d6}} 
+\index{mlpenc.c@{mlpenc.c}!compare\_filter\_params@{compare\_filter\_params}}
+\index{compare\_filter\_params@{compare\_filter\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{compare\_filter\_params()}{compare\_filter\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compare\+\_\+filter\+\_\+params (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$}]{prev\+\_\+cp,  }\item[{const \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$}]{cp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Compares two \mbox{\hyperlink{struct_filter_params}{Filter\+Params}} structures and returns 1 if anything has changed. Returns 0 if they are both equal. 
+
+Definition at line 231 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ac3861755d77e3b51bef8b2052f7182d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_acf9d31c3b5b644148e1abad37999faac}\label{mlpenc_8c_acf9d31c3b5b644148e1abad37999faac}} 
+\index{mlpenc.c@{mlpenc.c}!compare\_matrix\_params@{compare\_matrix\_params}}
+\index{compare\_matrix\_params@{compare\_matrix\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{compare\_matrix\_params()}{compare\_matrix\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compare\+\_\+matrix\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$}]{prev,  }\item[{const \mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$}]{mp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Compare two primitive matrices and returns 1 if anything has changed. Returns 0 if they are both equal. 
+
+Definition at line 256 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_acf9d31c3b5b644148e1abad37999faac_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a33c7002b62ebad30385111b997c84442}\label{mlpenc_8c_a33c7002b62ebad30385111b997c84442}} 
+\index{mlpenc.c@{mlpenc.c}!copy\_filter\_params@{copy\_filter\_params}}
+\index{copy\_filter\_params@{copy\_filter\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{copy\_filter\_params()}{copy\_filter\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} copy\+\_\+filter\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$}]{dst\+\_\+cp,  }\item[{\mbox{\hyperlink{struct_channel_params}{Channel\+Params}} $\ast$}]{src\+\_\+cp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 340 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a33c7002b62ebad30385111b997c84442_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ae792a23f86ad46a37876a00e3d270a47}\label{mlpenc_8c_ae792a23f86ad46a37876a00e3d270a47}} 
+\index{mlpenc.c@{mlpenc.c}!copy\_matrix\_params@{copy\_matrix\_params}}
+\index{copy\_matrix\_params@{copy\_matrix\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{copy\_matrix\_params()}{copy\_matrix\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} copy\+\_\+matrix\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{struct_matrix_params}{Matrix\+Params}} $\ast$}]{src }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 359 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ae792a23f86ad46a37876a00e3d270a47_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ac8a43d5b1b486c831ca3365a298b2547}\label{mlpenc_8c_ac8a43d5b1b486c831ca3365a298b2547}} 
+\index{mlpenc.c@{mlpenc.c}!copy\_restart\_frame\_params@{copy\_restart\_frame\_params}}
+\index{copy\_restart\_frame\_params@{copy\_restart\_frame\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{copy\_restart\_frame\_params()}{copy\_restart\_frame\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} copy\+\_\+restart\+\_\+frame\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{substr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 380 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{mlpenc_8c_ac8a43d5b1b486c831ca3365a298b2547_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ac8a43d5b1b486c831ca3365a298b2547_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a4a3f1d9fde15404017f479023dc6dbbb}\label{mlpenc_8c_a4a3f1d9fde15404017f479023dc6dbbb}} 
+\index{mlpenc.c@{mlpenc.c}!default\_decoding\_params@{default\_decoding\_params}}
+\index{default\_decoding\_params@{default\_decoding\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{default\_decoding\_params()}{default\_decoding\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} default\+\_\+decoding\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}}}]{decoding\+\_\+params\mbox{[}\+M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+M\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Sets default vales in our encoder for a \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} struct. 
+
+Definition at line 439 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a4a3f1d9fde15404017f479023dc6dbbb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=341pt]{mlpenc_8c_a4a3f1d9fde15404017f479023dc6dbbb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a61ad8d034e9f6a4a3244042fb7fb7c35}\label{mlpenc_8c_a61ad8d034e9f6a4a3244042fb7fb7c35}} 
+\index{mlpenc.c@{mlpenc.c}!determine\_bits@{determine\_bits}}
+\index{determine\_bits@{determine\_bits}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{determine\_bits()}{determine\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} determine\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines the least amount of bits needed to encode the samples using any or no codebook. 
+
+Definition at line 1733 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a61ad8d034e9f6a4a3244042fb7fb7c35_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a61ad8d034e9f6a4a3244042fb7fb7c35_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a31cfc66499b51b48cc47149b51f9db7f}\label{mlpenc_8c_a31cfc66499b51b48cc47149b51f9db7f}} 
+\index{mlpenc.c@{mlpenc.c}!determine\_filters@{determine\_filters}}
+\index{determine\_filters@{determine\_filters}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{determine\_filters()}{determine\_filters()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} determine\+\_\+filters (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Tries to determine a good prediction filter, and applies it to the samples buffer if the filter is good enough. Sets the filter data to be cleared if no good filter was found. 
+
+Definition at line 1430 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a31cfc66499b51b48cc47149b51f9db7f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a5362e7d64eae9cd9b684410fd26f7d46}\label{mlpenc_8c_a5362e7d64eae9cd9b684410fd26f7d46}} 
+\index{mlpenc.c@{mlpenc.c}!determine\_quant\_step\_size@{determine\_quant\_step\_size}}
+\index{determine\_quant\_step\_size@{determine\_quant\_step\_size}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{determine\_quant\_step\_size()}{determine\_quant\_step\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} determine\+\_\+quant\+\_\+step\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines how many bits are zero at the end of all samples so they can be shifted out. 
+
+Definition at line 1325 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a5362e7d64eae9cd9b684410fd26f7d46_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a5362e7d64eae9cd9b684410fd26f7d46_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a3328047d009b31ffc5e7c36d15d4a3d7}\label{mlpenc_8c_a3328047d009b31ffc5e7c36d15d4a3d7}} 
+\index{mlpenc.c@{mlpenc.c}!estimate\_stereo\_mode@{estimate\_stereo\_mode}}
+\index{estimate\_stereo\_mode@{estimate\_stereo\_mode}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{estimate\_stereo\_mode()}{estimate\_stereo\_mode()}}
+{\footnotesize\ttfamily static enum \mbox{\hyperlink{mlpenc_8c_a1649889be7896b9b8084a815e82a098f}{M\+L\+P\+Ch\+Mode}} estimate\+\_\+stereo\+\_\+mode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1430 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a3328047d009b31ffc5e7c36d15d4a3d7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a3328047d009b31ffc5e7c36d15d4a3d7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a4bf2f10aa4e74e31cc746d8f47cca19e}\label{mlpenc_8c_a4bf2f10aa4e74e31cc746d8f47cca19e}} 
+\index{mlpenc.c@{mlpenc.c}!generate\_2\_noise\_channels@{generate\_2\_noise\_channels}}
+\index{generate\_2\_noise\_channels@{generate\_2\_noise\_channels}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{generate\_2\_noise\_channels()}{generate\_2\_noise\_channels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} generate\+\_\+2\+\_\+noise\+\_\+channels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generates two noise channels worth of data. 
+
+Definition at line 1894 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a4bf2f10aa4e74e31cc746d8f47cca19e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a9a371bcc72d6998885cffaf64a0ad0d2}\label{mlpenc_8c_a9a371bcc72d6998885cffaf64a0ad0d2}} 
+\index{mlpenc.c@{mlpenc.c}!input\_data@{input\_data}}
+\index{input\_data@{input\_data}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{input\_data()}{input\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} input\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Wrapper function for inputting data in two different bit-\/depths. 
+
+Definition at line 1276 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a9a371bcc72d6998885cffaf64a0ad0d2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a9a371bcc72d6998885cffaf64a0ad0d2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a38265e628e7a134a88f22d49234d381d}\label{mlpenc_8c_a38265e628e7a134a88f22d49234d381d}} 
+\index{mlpenc.c@{mlpenc.c}!input\_data\_internal@{input\_data\_internal}}
+\index{input\_data\_internal@{input\_data\_internal}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{input\_data\_internal()}{input\_data\_internal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} input\+\_\+data\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is24 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Inputs data from the samples passed by lavc into the context, shifts them appropriately depending on the bit-\/depth, and calculates the lossless\+\_\+check\+\_\+data that will be written to the restart header. 
+
+Definition at line 1232 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{mlpenc_8c_a38265e628e7a134a88f22d49234d381d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a38265e628e7a134a88f22d49234d381d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_af7491232c46fa2942962cfb737ceef02}\label{mlpenc_8c_af7491232c46fa2942962cfb737ceef02}} 
+\index{mlpenc.c@{mlpenc.c}!input\_to\_sample\_buffer@{input\_to\_sample\_buffer}}
+\index{input\_to\_sample\_buffer@{input\_to\_sample\_buffer}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{input\_to\_sample\_buffer()}{input\_to\_sample\_buffer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} input\+\_\+to\+\_\+sample\+\_\+buffer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1284 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{mlpenc_8c_af7491232c46fa2942962cfb737ceef02_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{mlpenc_8c_af7491232c46fa2942962cfb737ceef02_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a8c76be3ae2a595e8666a90231a74b47c}\label{mlpenc_8c_a8c76be3ae2a595e8666a90231a74b47c}} 
+\index{mlpenc.c@{mlpenc.c}!lossless\_matrix\_coeffs@{lossless\_matrix\_coeffs}}
+\index{lossless\_matrix\_coeffs@{lossless\_matrix\_coeffs}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{lossless\_matrix\_coeffs()}{lossless\_matrix\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lossless\+\_\+matrix\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines best coefficients to use for the lossless matrix. 
+
+Definition at line 1500 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a8c76be3ae2a595e8666a90231a74b47c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a8c76be3ae2a595e8666a90231a74b47c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a471fb8b2a4c82a0acba71c33d4893bfb}\label{mlpenc_8c_a471fb8b2a4c82a0acba71c33d4893bfb}} 
+\index{mlpenc.c@{mlpenc.c}!mlp\_encode\_close@{mlp\_encode\_close}}
+\index{mlp\_encode\_close@{mlp\_encode\_close}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{mlp\_encode\_close()}{mlp\_encode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mlp\+\_\+encode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2361 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{mlpenc_8c_a471fb8b2a4c82a0acba71c33d4893bfb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a070fc2b0de3c6e5cdf23a6324f4a27e5}\label{mlpenc_8c_a070fc2b0de3c6e5cdf23a6324f4a27e5}} 
+\index{mlpenc.c@{mlpenc.c}!mlp\_encode\_frame@{mlp\_encode\_frame}}
+\index{mlp\_encode\_frame@{mlp\_encode\_frame}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{mlp\_encode\_frame()}{mlp\_encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mlp\+\_\+encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2219 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a070fc2b0de3c6e5cdf23a6324f4a27e5_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a9aa2838f63989346b3cef049c12016eb}\label{mlpenc_8c_a9aa2838f63989346b3cef049c12016eb}} 
+\index{mlpenc.c@{mlpenc.c}!mlp\_encode\_init@{mlp\_encode\_init}}
+\index{mlp\_encode\_init@{mlp\_encode\_init}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{mlp\_encode\_init()}{mlp\_encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mlp\+\_\+encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 487 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a9aa2838f63989346b3cef049c12016eb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a7b6477a38ffb31ed091542cb8db1a3f0}\label{mlpenc_8c_a7b6477a38ffb31ed091542cb8db1a3f0}} 
+\index{mlpenc.c@{mlpenc.c}!mlp\_peak\_bitrate@{mlp\_peak\_bitrate}}
+\index{mlp\_peak\_bitrate@{mlp\_peak\_bitrate}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{mlp\_peak\_bitrate()}{mlp\_peak\_bitrate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mlp\+\_\+peak\+\_\+bitrate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{peak\+\_\+bitrate,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sample\+\_\+rate }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 482 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{mlpenc_8c_a7b6477a38ffb31ed091542cb8db1a3f0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_acfb4d06c9ddaa70de0b63b0fc5f97d7d}\label{mlpenc_8c_acfb4d06c9ddaa70de0b63b0fc5f97d7d}} 
+\index{mlpenc.c@{mlpenc.c}!no\_codebook\_bits@{no\_codebook\_bits}}
+\index{no\_codebook\_bits@{no\_codebook\_bits}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{no\_codebook\_bits()}{no\_codebook\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} no\+\_\+codebook\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{min,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{max,  }\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{bo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines the least amount of bits needed to encode the samples using no codebooks. 
+
+Definition at line 1589 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{mlpenc_8c_acfb4d06c9ddaa70de0b63b0fc5f97d7d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_acfb4d06c9ddaa70de0b63b0fc5f97d7d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ab489ca191d6a45ed1a07db8d2c008b10}\label{mlpenc_8c_ab489ca191d6a45ed1a07db8d2c008b10}} 
+\index{mlpenc.c@{mlpenc.c}!no\_codebook\_bits\_offset@{no\_codebook\_bits\_offset}}
+\index{no\_codebook\_bits\_offset@{no\_codebook\_bits\_offset}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{no\_codebook\_bits\_offset()}{no\_codebook\_bits\_offset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} no\+\_\+codebook\+\_\+bits\+\_\+offset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{int16\+\_\+t}]{offset,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{min,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{max,  }\item[{\mbox{\hyperlink{struct_best_offset}{Best\+Offset}} $\ast$}]{bo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines the amount of bits needed to encode the samples using no codebooks and a specified offset. 
+
+Definition at line 1560 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{mlpenc_8c_ab489ca191d6a45ed1a07db8d2c008b10_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ab489ca191d6a45ed1a07db8d2c008b10_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_aaf83396c069f74107e1b254bba5d54f0}\label{mlpenc_8c_aaf83396c069f74107e1b254bba5d54f0}} 
+\index{mlpenc.c@{mlpenc.c}!number\_sbits@{number\_sbits}}
+\index{number\_sbits@{number\_sbits}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{number\_sbits()}{number\_sbits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} number\+\_\+sbits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{number }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Calculates the smallest number of bits it takes to encode a given signed value in two\textquotesingle{}s complement. 
+
+Definition at line 468 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_aaf83396c069f74107e1b254bba5d54f0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a79c9862ac9afdf80c94abb68382b5943}\label{mlpenc_8c_a79c9862ac9afdf80c94abb68382b5943}} 
+\index{mlpenc.c@{mlpenc.c}!number\_trailing\_zeroes@{number\_trailing\_zeroes}}
+\index{number\_trailing\_zeroes@{number\_trailing\_zeroes}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{number\_trailing\_zeroes()}{number\_trailing\_zeroes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} number\+\_\+trailing\+\_\+zeroes (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{sample }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Counts the number of trailing zeroes in a value 
+
+Definition at line 1308 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a79c9862ac9afdf80c94abb68382b5943_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a48c02f76d428485e78783357e000df46}\label{mlpenc_8c_a48c02f76d428485e78783357e000df46}} 
+\index{mlpenc.c@{mlpenc.c}!process\_major\_frame@{process\_major\_frame}}
+\index{process\_major\_frame@{process\_major\_frame}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{process\_major\_frame()}{process\_major\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} process\+\_\+major\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2194 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a48c02f76d428485e78783357e000df46_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{mlpenc_8c_a48c02f76d428485e78783357e000df46_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a1ab9d630a973ed550825c6e59b8a5a4f}\label{mlpenc_8c_a1ab9d630a973ed550825c6e59b8a5a4f}} 
+\index{mlpenc.c@{mlpenc.c}!rematrix\_channels@{rematrix\_channels}}
+\index{rematrix\_channels@{rematrix\_channels}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{rematrix\_channels()}{rematrix\_channels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} rematrix\+\_\+channels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Rematrixes all channels using chosen coefficients. 
+
+Definition at line 1915 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a1ab9d630a973ed550825c6e59b8a5a4f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_aef79725c7264ddfdc9a9823ae6df9058}\label{mlpenc_8c_aef79725c7264ddfdc9a9823ae6df9058}} 
+\index{mlpenc.c@{mlpenc.c}!set\_best\_codebook@{set\_best\_codebook}}
+\index{set\_best\_codebook@{set\_best\_codebook}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_best\_codebook()}{set\_best\_codebook()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+best\+\_\+codebook (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2003 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_aef79725c7264ddfdc9a9823ae6df9058_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_aef79725c7264ddfdc9a9823ae6df9058_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a2491da7e93d67801fa8efcf5a2ec3f62}\label{mlpenc_8c_a2491da7e93d67801fa8efcf5a2ec3f62}} 
+\index{mlpenc.c@{mlpenc.c}!set\_filter\_params@{set\_filter\_params}}
+\index{set\_filter\_params@{set\_filter\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_filter\_params()}{set\_filter\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+filter\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{clear\+\_\+filter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Determines the best filter parameters for the given data and writes the necessary information to the context. T\+O\+DO Add I\+IR filter predictor! 
+
+Definition at line 1382 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a2491da7e93d67801fa8efcf5a2ec3f62_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a2491da7e93d67801fa8efcf5a2ec3f62_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_af3d7e175eec3b5581b9d38616c71efb5}\label{mlpenc_8c_af3d7e175eec3b5581b9d38616c71efb5}} 
+\index{mlpenc.c@{mlpenc.c}!set\_major\_params@{set\_major\_params}}
+\index{set\_major\_params@{set\_major\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_major\_params()}{set\_major\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} set\+\_\+major\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Analyzes all collected bitcounts and selects the best parameters for each individual access unit. T\+O\+DO This is just a stub! 
+
+Definition at line 2086 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_af3d7e175eec3b5581b9d38616c71efb5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=311pt]{mlpenc_8c_af3d7e175eec3b5581b9d38616c71efb5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_adf283efe75a88d83df17b0262662387e}\label{mlpenc_8c_adf283efe75a88d83df17b0262662387e}} 
+\index{mlpenc.c@{mlpenc.c}!write\_access\_unit@{write\_access\_unit}}
+\index{write\_access\_unit@{write\_access\_unit}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_access\_unit()}{write\_access\_unit()}}
+{\footnotesize\ttfamily static unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+access\+\_\+unit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{restart\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes an entire access unit to the bitstream. 
+
+Definition at line 1184 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_adf283efe75a88d83df17b0262662387e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{mlpenc_8c_adf283efe75a88d83df17b0262662387e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a2859c5fea361645734e04235ea1f6bf9}\label{mlpenc_8c_a2859c5fea361645734e04235ea1f6bf9}} 
+\index{mlpenc.c@{mlpenc.c}!write\_block\_data@{write\_block\_data}}
+\index{write\_block\_data@{write\_block\_data}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_block\_data()}{write\_block\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+block\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes the residuals to the bitstream. That is, the \mbox{\hyperlink{struct_v_l_c}{V\+LC}} codes from the codebooks (if any is used), and then the residual. 
+
+Definition at line 1005 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a2859c5fea361645734e04235ea1f6bf9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a2859c5fea361645734e04235ea1f6bf9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ac7bdaf490635f61491d4cb6b48f28947}\label{mlpenc_8c_ac7bdaf490635f61491d4cb6b48f28947}} 
+\index{mlpenc.c@{mlpenc.c}!write\_decoding\_params@{write\_decoding\_params}}
+\index{write\_decoding\_params@{write\_decoding\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_decoding\_params()}{write\_decoding\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+decoding\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{params\+\_\+changed }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes decoding parameters to the bitstream. These change very often, usually at almost every frame. 
+
+Definition at line 904 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ac7bdaf490635f61491d4cb6b48f28947_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ac7bdaf490635f61491d4cb6b48f28947_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a58ece851e05194956d1d650ec5fa9595}\label{mlpenc_8c_a58ece851e05194956d1d650ec5fa9595}} 
+\index{mlpenc.c@{mlpenc.c}!write\_filter\_params@{write\_filter\_params}}
+\index{write\_filter\_params@{write\_filter\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_filter\_params()}{write\_filter\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+filter\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{filter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes filter parameters for one filter to the bitstream. 
+
+Definition at line 877 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a58ece851e05194956d1d650ec5fa9595_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a58ece851e05194956d1d650ec5fa9595_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a5c914266af51e04ce8d75e774225efa6}\label{mlpenc_8c_a5c914266af51e04ce8d75e774225efa6}} 
+\index{mlpenc.c@{mlpenc.c}!write\_frame\_headers@{write\_frame\_headers}}
+\index{write\_frame\_headers@{write\_frame\_headers}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_frame\_headers()}{write\_frame\_headers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+frame\+\_\+headers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{frame\+\_\+header,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{substream\+\_\+headers,  }\item[{unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{restart\+\_\+frame,  }\item[{uint16\+\_\+t}]{substream\+\_\+data\+\_\+len\mbox{[}\+M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+M\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes the access unit and substream headers to the bitstream. 
+
+Definition at line 1145 of file mlpenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a5c914266af51e04ce8d75e774225efa6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a1af5a78db98bafdf78cded47e960876c}\label{mlpenc_8c_a1af5a78db98bafdf78cded47e960876c}} 
+\index{mlpenc.c@{mlpenc.c}!write\_major\_sync@{write\_major\_sync}}
+\index{write\_major\_sync@{write\_major\_sync}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_major\_sync()}{write\_major\_sync()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+major\+\_\+sync (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes a major sync header to the bitstream. 
+
+Definition at line 749 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a1af5a78db98bafdf78cded47e960876c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a1af5a78db98bafdf78cded47e960876c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a06c8af2ad9394715e9c53c5b45c8be11}\label{mlpenc_8c_a06c8af2ad9394715e9c53c5b45c8be11}} 
+\index{mlpenc.c@{mlpenc.c}!write\_matrix\_params@{write\_matrix\_params}}
+\index{write\_matrix\_params@{write\_matrix\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_matrix\_params()}{write\_matrix\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+matrix\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes matrix params for all primitive matrices to the bitstream. 
+
+Definition at line 845 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a06c8af2ad9394715e9c53c5b45c8be11_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a06c8af2ad9394715e9c53c5b45c8be11_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_ad39494079aad3a12ee4a98f5194bcf6a}\label{mlpenc_8c_ad39494079aad3a12ee4a98f5194bcf6a}} 
+\index{mlpenc.c@{mlpenc.c}!write\_restart\_header@{write\_restart\_header}}
+\index{write\_restart\_header@{write\_restart\_header}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_restart\_header()}{write\_restart\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+restart\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes a restart header to the bitstream. Damaged streams can start being decoded losslessly again after such a header and the subsequent decoding params header. 
+
+Definition at line 808 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ad39494079aad3a12ee4a98f5194bcf6a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_ad39494079aad3a12ee4a98f5194bcf6a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{mlpenc_8c_a3248db0583651f3fcc879a96814a824f}\label{mlpenc_8c_a3248db0583651f3fcc879a96814a824f}} 
+\index{mlpenc.c@{mlpenc.c}!write\_substrs@{write\_substrs}}
+\index{write\_substrs@{write\_substrs}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_substrs()}{write\_substrs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}$\ast$ write\+\_\+substrs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_m_l_p_encode_context}{M\+L\+P\+Encode\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{restart\+\_\+frame,  }\item[{uint16\+\_\+t}]{substream\+\_\+data\+\_\+len\mbox{[}\+M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+M\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Writes the substreams data to the bitstream. 
+
+Definition at line 1053 of file mlpenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a3248db0583651f3fcc879a96814a824f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{mlpenc_8c_a3248db0583651f3fcc879a96814a824f_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{mlpenc_8c_a0d0d38a28b9ebbbbeb8caeb0a32a0350}\label{mlpenc_8c_a0d0d38a28b9ebbbbeb8caeb0a32a0350}} 
+\index{mlpenc.c@{mlpenc.c}!codebook\_extremes@{codebook\_extremes}}
+\index{codebook\_extremes@{codebook\_extremes}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{codebook\_extremes}{codebook\_extremes}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} codebook\+\_\+extremes\mbox{[}3\mbox{]}\mbox{[}2\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{-\/9, 8\}, \{-\/8, 7\}, \{-\/15, 14\},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Min and max values that can be encoded with each codebook. The values for the third codebook take into account the fact that the sign shift for this codebook is outside the coded value, so it has one more bit of precision. It should actually be -\/7 -\/$>$ 7, shifted down by 0.\+5. 
+
+Definition at line 1553 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ad4155f3a4ad78af2660d09a8e7137d93}\label{mlpenc_8c_ad4155f3a4ad78af2660d09a8e7137d93}} 
+\index{mlpenc.c@{mlpenc.c}!path\_counter\_codebook@{path\_counter\_codebook}}
+\index{path\_counter\_codebook@{path\_counter\_codebook}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{path\_counter\_codebook}{path\_counter\_codebook}}
+{\footnotesize\ttfamily const char$\ast$ path\+\_\+counter\+\_\+codebook\mbox{[}$\,$\mbox{]} = \{ \char`\"{}0\char`\"{}, \char`\"{}1\char`\"{}, \char`\"{}2\char`\"{}, \char`\"{}3\char`\"{}, \}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1954 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a6cf2c9926e18b30818f62b5248ce804b}\label{mlpenc_8c_a6cf2c9926e18b30818f62b5248ce804b}} 
+\index{mlpenc.c@{mlpenc.c}!restart\_best\_offset@{restart\_best\_offset}}
+\index{restart\_best\_offset@{restart\_best\_offset}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{restart\_best\_offset}{restart\_best\_offset}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_best_offset}{Best\+Offset}} restart\+\_\+best\+\_\+offset\mbox{[}\mbox{\hyperlink{mlpenc_8c_ac28df43a2f1e754da232c7d6a642190f}{N\+U\+M\+\_\+\+C\+O\+D\+E\+B\+O\+O\+KS}}\mbox{]} = \{\{0\}\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 206 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_ac19a300afd930e864b35e1a3e4e24e9b}\label{mlpenc_8c_ac19a300afd930e864b35e1a3e4e24e9b}} 
+\index{mlpenc.c@{mlpenc.c}!restart\_channel\_params@{restart\_channel\_params}}
+\index{restart\_channel\_params@{restart\_channel\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{restart\_channel\_params}{restart\_channel\_params}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_channel_params}{Channel\+Params}} restart\+\_\+channel\+\_\+params\mbox{[}\mbox{\hyperlink{tests_2checkasm_2flacdsp_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 204 of file mlpenc.\+c.
+
+\mbox{\Hypertarget{mlpenc_8c_a7aaba87cd747f76d39080abd328255cc}\label{mlpenc_8c_a7aaba87cd747f76d39080abd328255cc}} 
+\index{mlpenc.c@{mlpenc.c}!restart\_decoding\_params@{restart\_decoding\_params}}
+\index{restart\_decoding\_params@{restart\_decoding\_params}!mlpenc.c@{mlpenc.c}}
+\doxysubsubsection{\texorpdfstring{restart\_decoding\_params}{restart\_decoding\_params}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_decoding_params}{Decoding\+Params}} restart\+\_\+decoding\+\_\+params\mbox{[}\mbox{\hyperlink{mlp_8h_a05ad0f170f4e5e950829493d231f41b2}{M\+A\+X\+\_\+\+S\+U\+B\+S\+T\+R\+E\+A\+MS}}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 205 of file mlpenc.\+c.
+

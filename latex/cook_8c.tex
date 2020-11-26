@@ -1,0 +1,1146 @@
+\hypertarget{cook_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/cook.c File Reference}
+\label{cook_8c}\index{E:/github/ffmpeg/libavcodec/cook.c@{E:/github/ffmpeg/libavcodec/cook.c}}
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/lfg.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audiodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sinewin.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}unary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cookdata.\+h\char`\"{}}\newline
+Include dependency graph for cook.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}}
+\item 
+struct \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}}
+\item 
+struct \mbox{\hyperlink{structcook}{cook}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{cook_8c_ab26685c8000c5700081bbfc0a6299a22}{M\+O\+NO}}~0x1000001
+\item 
+\#define \mbox{\hyperlink{cook_8c_a5f1590d4ac46cd4c58167f767d284ef7}{S\+T\+E\+R\+EO}}~0x1000002
+\item 
+\#define \mbox{\hyperlink{cook_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}{J\+O\+I\+N\+T\+\_\+\+S\+T\+E\+R\+EO}}~0x1000003
+\item 
+\#define \mbox{\hyperlink{cook_8c_a9e2ab668fa5194dab3a8ba816e9e4283}{M\+C\+\_\+\+C\+O\+OK}}~0x2000000
+\item 
+\#define \mbox{\hyperlink{cook_8c_a47a806e107b180190c3772b3f2638aae}{S\+U\+B\+B\+A\+N\+D\+\_\+\+S\+I\+ZE}}~20
+\item 
+\#define \mbox{\hyperlink{cook_8c_acd875d1bdff31977e59eee4e7b81b507}{M\+A\+X\+\_\+\+S\+U\+B\+P\+A\+C\+K\+E\+TS}}~5
+\item 
+\#define \mbox{\hyperlink{cook_8c_aade17a0301929c2a4f9f166e4ce72b3e}{D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D1}}(bytes)~(3 -\/ ((bytes) + 3) \% 4)
+\item 
+\#define \mbox{\hyperlink{cook_8c_aea90be893e6c4dce9c3ec0075bb49f4a}{D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D2}}(bytes)~((bytes) \% 4 + \mbox{\hyperlink{cook_8c_aade17a0301929c2a4f9f166e4ce72b3e}{D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D1}}(2 $\ast$ (bytes)))
+\item 
+\#define \mbox{\hyperlink{cook_8c_a93793dbefd4e399ba38a1fa9daf79cb5}{P\+R\+I\+NT}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~\mbox{\hyperlink{libavutil_2internal_8h_ad3b85ba26b74c53eee9016343ab8b94a}{ff\+\_\+dlog}}(q-\/$>$avctx, \char`\"{} \%s = \%d\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} \mbox{\hyperlink{cook_8c_af36c0ea9d0904e8c60715e753621a901}{cook\+\_\+gains}}
+\item 
+typedef struct \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} \mbox{\hyperlink{cook_8c_ab48b335fda1a1bca840c1cca345a999e}{C\+O\+O\+K\+Subpacket}}
+\item 
+typedef struct \mbox{\hyperlink{structcook}{cook}} \mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a7c2dd19ede4d5f6cbf46bc066b7aeb2f}{init\+\_\+pow2table}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ac1ae09a34fd52c2fdb3022e53592fd37}{init\+\_\+gain\+\_\+table}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_af2115e59d5606e438b5024d614f06958}{init\+\_\+cook\+\_\+vlc\+\_\+tables}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_acd3f5f2aa1ecf5b2d3a7bde092580e51}{init\+\_\+cook\+\_\+mlt}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a91399f98c2e5d7f987149c32882314c9}{init\+\_\+cplscales\+\_\+table}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_a01e2663781cfac0ea92f898c5cfaaca9}{decode\+\_\+bytes}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$inbuffer, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytes)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_af43f2c80f0e777db4c3ad7eca19cb0a0}{cook\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ac4331ba7a69e867a55a85e61efa5e2f8}{decode\+\_\+gain\+\_\+info}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$gaininfo)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_a225ace7e20bcc582314aa77e7f1c630d}{decode\+\_\+envelope}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$quant\+\_\+index\+\_\+table)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a48499d11c8d7de86d63f347b38247a9d}{categorize}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$quant\+\_\+index\+\_\+table, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$category\+\_\+index)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_aaf7163795fed32b3748bb20133be3a2d}{expand\+\_\+category}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$category\+\_\+index)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ab383b64189790ea3ec5688aa33ea807b}{scalar\+\_\+dequant\+\_\+float}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} quant\+\_\+index, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$subband\+\_\+coef\+\_\+index, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$subband\+\_\+coef\+\_\+sign, float $\ast$mlt\+\_\+p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_aa779354cb3634c08274c2d4fb22c813a}{unpack\+\_\+\+S\+Q\+VH}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$subband\+\_\+coef\+\_\+index, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$subband\+\_\+coef\+\_\+sign)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ae3b383765e3195cc78b2ef3b6fd20070}{decode\+\_\+vectors}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$\mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$quant\+\_\+index\+\_\+table, float $\ast$mlt\+\_\+buffer)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_aaff76ec842c44a2c4049bc59ca999fa7}{mono\+\_\+decode}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, float $\ast$mlt\+\_\+buffer)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a4ad874a74c231f86eec3f8841074a9cd}{interpolate\+\_\+float}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, float $\ast$\mbox{\hyperlink{seek_8c_a5819dbc2d305e99e930c734a0d28bc3b}{buffer}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gain\+\_\+index, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gain\+\_\+index\+\_\+next)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a849e34ea5c681f0ea000d4df2c90e298}{imlt\+\_\+window\+\_\+float}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, float $\ast$inbuffer, \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$gains\+\_\+ptr, float $\ast$previous\+\_\+buffer)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a1f154ef6569c3e09affe8857efd4bcca}{imlt\+\_\+gain}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, float $\ast$inbuffer, \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$gains\+\_\+ptr, float $\ast$previous\+\_\+buffer)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_a517a3941f7e25bf0e63758afbcba1f0f}{decouple\+\_\+info}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$decouple\+\_\+tab)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a7fc3fe319bccf53b862d0532f64b3919}{decouple\+\_\+float}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subband, float f1, float f2, float $\ast$decode\+\_\+buffer, float $\ast$mlt\+\_\+buffer1, float $\ast$mlt\+\_\+buffer2)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_a313e70d2e9d2ca76e76aec7e6623f7e3}{joint\+\_\+decode}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, float $\ast$mlt\+\_\+buffer\+\_\+left, float $\ast$mlt\+\_\+buffer\+\_\+right)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ae1ad6d9bc8c14d773db38e451a80c072}{decode\+\_\+bytes\+\_\+and\+\_\+gain}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$inbuffer, \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$gains\+\_\+ptr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a28fb6550b5b68f9a7a4ff7da34294911}{saturate\+\_\+output\+\_\+float}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_ae4a4e53fa9c6f32aee84e6d5c4f1a309}{mlt\+\_\+compensate\+\_\+output}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, float $\ast$decode\+\_\+buffer, \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$gains\+\_\+ptr, float $\ast$previous\+\_\+buffer, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_aaab6c359d133e0530d567e2c17f6ee00}{decode\+\_\+subpacket}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q, \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$inbuffer, float $\ast$$\ast$outbuffer)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_a6f8a4bed35fd7ca13bec8e5c7b2d3522}{cook\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{cook_8c_a3748f97779518689391bd3b2f5ff97c2}{dump\+\_\+cook\+\_\+context}} (\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$q)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cook_8c_aefbcf8ce4adc4438d0297733794008b9}{cook\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static float \mbox{\hyperlink{cook_8c_af216a4710081bdfa5c601c45615949b4}{pow2tab}} \mbox{[}127\mbox{]}
+\item 
+static float \mbox{\hyperlink{cook_8c_a84c9e4fde9e7ddf54f4aa4265607166d}{rootpow2tab}} \mbox{[}127\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{cook_8c_a8f3d165e19395d309ce8c924e052e13c}{ff\+\_\+cook\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Cook compatible decoder. Bastardization of the G.\+722.\+1 standard. This decoder handles Real\+Networks, Real\+Audio G2 data. Cook is identified by the codec name cook in RM files.
+
+To use this decoder, a calling application must supply the extradata bytes provided from the RM container; 8+ bytes for mono streams and 16+ for stereo streams (maybe more).
+
+Codec technicalities (all this assume a buffer length of 1024)\+: Cook works with several different techniques to achieve its compression. In the timedomain the buffer is divided into 8 pieces and quantized. If two neighboring pieces have different quantization index a smooth quantization curve is used to get a smooth overlap between the different pieces. To get to the transformdomain Cook uses a modulated lapped transform. The transform domain has 50 subbands with 20 elements each. This means only a maximum of 50$\ast$20=1000 coefficients are used out of the 1024 available. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{cook_8c_aade17a0301929c2a4f9f166e4ce72b3e}\label{cook_8c_aade17a0301929c2a4f9f166e4ce72b3e}} 
+\index{cook.c@{cook.c}!DECODE\_BYTES\_PAD1@{DECODE\_BYTES\_PAD1}}
+\index{DECODE\_BYTES\_PAD1@{DECODE\_BYTES\_PAD1}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{DECODE\_BYTES\_PAD1}{DECODE\_BYTES\_PAD1}}
+{\footnotesize\ttfamily \#define D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D1(\begin{DoxyParamCaption}\item[{}]{bytes }\end{DoxyParamCaption})~(3 -\/ ((bytes) + 3) \% 4)}
+
+
+
+Definition at line 258 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_aea90be893e6c4dce9c3ec0075bb49f4a}\label{cook_8c_aea90be893e6c4dce9c3ec0075bb49f4a}} 
+\index{cook.c@{cook.c}!DECODE\_BYTES\_PAD2@{DECODE\_BYTES\_PAD2}}
+\index{DECODE\_BYTES\_PAD2@{DECODE\_BYTES\_PAD2}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{DECODE\_BYTES\_PAD2}{DECODE\_BYTES\_PAD2}}
+{\footnotesize\ttfamily \#define D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D2(\begin{DoxyParamCaption}\item[{}]{bytes }\end{DoxyParamCaption})~((bytes) \% 4 + \mbox{\hyperlink{cook_8c_aade17a0301929c2a4f9f166e4ce72b3e}{D\+E\+C\+O\+D\+E\+\_\+\+B\+Y\+T\+E\+S\+\_\+\+P\+A\+D1}}(2 $\ast$ (bytes)))}
+
+
+
+Definition at line 259 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}\label{cook_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}} 
+\index{cook.c@{cook.c}!JOINT\_STEREO@{JOINT\_STEREO}}
+\index{JOINT\_STEREO@{JOINT\_STEREO}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{JOINT\_STEREO}{JOINT\_STEREO}}
+{\footnotesize\ttfamily \#define J\+O\+I\+N\+T\+\_\+\+S\+T\+E\+R\+EO~0x1000003}
+
+
+
+Definition at line 62 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_acd875d1bdff31977e59eee4e7b81b507}\label{cook_8c_acd875d1bdff31977e59eee4e7b81b507}} 
+\index{cook.c@{cook.c}!MAX\_SUBPACKETS@{MAX\_SUBPACKETS}}
+\index{MAX\_SUBPACKETS@{MAX\_SUBPACKETS}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_SUBPACKETS}{MAX\_SUBPACKETS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+S\+U\+B\+P\+A\+C\+K\+E\+TS~5}
+
+
+
+Definition at line 66 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_a9e2ab668fa5194dab3a8ba816e9e4283}\label{cook_8c_a9e2ab668fa5194dab3a8ba816e9e4283}} 
+\index{cook.c@{cook.c}!MC\_COOK@{MC\_COOK}}
+\index{MC\_COOK@{MC\_COOK}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{MC\_COOK}{MC\_COOK}}
+{\footnotesize\ttfamily \#define M\+C\+\_\+\+C\+O\+OK~0x2000000}
+
+
+
+Definition at line 63 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_ab26685c8000c5700081bbfc0a6299a22}\label{cook_8c_ab26685c8000c5700081bbfc0a6299a22}} 
+\index{cook.c@{cook.c}!MONO@{MONO}}
+\index{MONO@{MONO}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{MONO}{MONO}}
+{\footnotesize\ttfamily \#define M\+O\+NO~0x1000001}
+
+
+
+Definition at line 60 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_a93793dbefd4e399ba38a1fa9daf79cb5}\label{cook_8c_a93793dbefd4e399ba38a1fa9daf79cb5}} 
+\index{cook.c@{cook.c}!PRINT@{PRINT}}
+\index{PRINT@{PRINT}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{PRINT}{PRINT}}
+{\footnotesize\ttfamily \#define P\+R\+I\+NT(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~\mbox{\hyperlink{libavutil_2internal_8h_ad3b85ba26b74c53eee9016343ab8b94a}{ff\+\_\+dlog}}(q-\/$>$avctx, \char`\"{} \%s = \%d\textbackslash{}n\char`\"{}, a, \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}});}
+
+\mbox{\Hypertarget{cook_8c_a5f1590d4ac46cd4c58167f767d284ef7}\label{cook_8c_a5f1590d4ac46cd4c58167f767d284ef7}} 
+\index{cook.c@{cook.c}!STEREO@{STEREO}}
+\index{STEREO@{STEREO}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{STEREO}{STEREO}}
+{\footnotesize\ttfamily \#define S\+T\+E\+R\+EO~0x1000002}
+
+
+
+Definition at line 61 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_a47a806e107b180190c3772b3f2638aae}\label{cook_8c_a47a806e107b180190c3772b3f2638aae}} 
+\index{cook.c@{cook.c}!SUBBAND\_SIZE@{SUBBAND\_SIZE}}
+\index{SUBBAND\_SIZE@{SUBBAND\_SIZE}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{SUBBAND\_SIZE}{SUBBAND\_SIZE}}
+{\footnotesize\ttfamily \#define S\+U\+B\+B\+A\+N\+D\+\_\+\+S\+I\+ZE~20}
+
+
+
+Definition at line 65 of file cook.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{cook_8c_af36c0ea9d0904e8c60715e753621a901}\label{cook_8c_af36c0ea9d0904e8c60715e753621a901}} 
+\index{cook.c@{cook.c}!cook\_gains@{cook\_gains}}
+\index{cook\_gains@{cook\_gains}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{cook\_gains}{cook\_gains}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} \mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}}}
+
+\mbox{\Hypertarget{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}\label{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}} 
+\index{cook.c@{cook.c}!COOKContext@{COOKContext}}
+\index{COOKContext@{COOKContext}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{COOKContext}{COOKContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{structcook}{cook}} \mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}}}
+
+\mbox{\Hypertarget{cook_8c_ab48b335fda1a1bca840c1cca345a999e}\label{cook_8c_ab48b335fda1a1bca840c1cca345a999e}} 
+\index{cook.c@{cook.c}!COOKSubpacket@{COOKSubpacket}}
+\index{COOKSubpacket@{COOKSubpacket}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{COOKSubpacket}{COOKSubpacket}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} \mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{cook_8c_a48499d11c8d7de86d63f347b38247a9d}\label{cook_8c_a48499d11c8d7de86d63f347b38247a9d}} 
+\index{cook.c@{cook.c}!categorize@{categorize}}
+\index{categorize@{categorize}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{categorize()}{categorize()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} categorize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{quant\+\_\+index\+\_\+table,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{category,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{category\+\_\+index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Calculate the category and category\+\_\+index vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em quant\+\_\+index\+\_\+table} & pointer to the array \\
+\hline
+{\em category} & pointer to the category array \\
+\hline
+{\em category\+\_\+index} & pointer to the category\+\_\+index array \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 404 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=258pt]{cook_8c_a48499d11c8d7de86d63f347b38247a9d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a48499d11c8d7de86d63f347b38247a9d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_af43f2c80f0e777db4c3ad7eca19cb0a0}\label{cook_8c_af43f2c80f0e777db4c3ad7eca19cb0a0}} 
+\index{cook.c@{cook.c}!cook\_decode\_close@{cook\_decode\_close}}
+\index{cook\_decode\_close@{cook\_decode\_close}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{cook\_decode\_close()}{cook\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cook\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 307 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=278pt]{cook_8c_af43f2c80f0e777db4c3ad7eca19cb0a0_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a6f8a4bed35fd7ca13bec8e5c7b2d3522}\label{cook_8c_a6f8a4bed35fd7ca13bec8e5c7b2d3522}} 
+\index{cook.c@{cook.c}!cook\_decode\_frame@{cook\_decode\_frame}}
+\index{cook\_decode\_frame@{cook\_decode\_frame}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{cook\_decode\_frame()}{cook\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cook\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 960 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a6f8a4bed35fd7ca13bec8e5c7b2d3522_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_aefbcf8ce4adc4438d0297733794008b9}\label{cook_8c_aefbcf8ce4adc4438d0297733794008b9}} 
+\index{cook.c@{cook.c}!cook\_decode\_init@{cook\_decode\_init}}
+\index{cook\_decode\_init@{cook\_decode\_init}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{cook\_decode\_init()}{cook\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cook\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Cook initialization
+
+
+\begin{DoxyParams}{Parameters}
+{\em avctx} & pointer to the \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1053 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aefbcf8ce4adc4438d0297733794008b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a01e2663781cfac0ea92f898c5cfaaca9}\label{cook_8c_a01e2663781cfac0ea92f898c5cfaaca9}} 
+\index{cook.c@{cook.c}!decode\_bytes@{decode\_bytes}}
+\index{decode\_bytes@{decode\_bytes}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_bytes()}{decode\_bytes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+bytes (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{inbuffer,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytes }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Cook indata decoding, every 32 bits are X\+O\+Red with 0x37c511f2. Why? No idea, some checksum/error detection method maybe.
+
+Out buffer size\+: extra bytes are needed to cope with padding/misalignment. Subpackets passed to the decoder can contain two, consecutive half-\/subpackets, of identical but arbitrary size. 1234 1234 1234 1234 extraA extraB Case 1\+: A\+A\+AA B\+B\+BB 0 0 Case 2\+: A\+A\+AA A\+B\+BB BB-- 3 3 Case 3\+: A\+A\+AA A\+A\+BB B\+B\+BB 2 2 Case 4\+: A\+A\+AA A\+A\+AB B\+B\+BB BB-- 1 5
+
+Nice way to waste C\+PU cycles.
+
+
+\begin{DoxyParams}{Parameters}
+{\em inbuffer} & pointer to byte array of indata \\
+\hline
+{\em out} & pointer to byte array of outdata \\
+\hline
+{\em bytes} & number of bytes \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 281 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a01e2663781cfac0ea92f898c5cfaaca9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ae1ad6d9bc8c14d773db38e451a80c072}\label{cook_8c_ae1ad6d9bc8c14d773db38e451a80c072}} 
+\index{cook.c@{cook.c}!decode\_bytes\_and\_gain@{decode\_bytes\_and\_gain}}
+\index{decode\_bytes\_and\_gain@{decode\_bytes\_and\_gain}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_bytes\_and\_gain()}{decode\_bytes\_and\_gain()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+bytes\+\_\+and\+\_\+gain (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{inbuffer,  }\item[{\mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$}]{gains\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+First part of subpacket decoding\+: decode raw stream bytes and read gain info.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em inbuffer} & pointer to raw stream data \\
+\hline
+{\em gains\+\_\+ptr} & array of current/prev gain pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 860 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ae1ad6d9bc8c14d773db38e451a80c072_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ae1ad6d9bc8c14d773db38e451a80c072_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a225ace7e20bcc582314aa77e7f1c630d}\label{cook_8c_a225ace7e20bcc582314aa77e7f1c630d}} 
+\index{cook.c@{cook.c}!decode\_envelope@{decode\_envelope}}
+\index{decode\_envelope@{decode\_envelope}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_envelope()}{decode\_envelope()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+envelope (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{quant\+\_\+index\+\_\+table }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Create the quant index table needed for the envelope.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em quant\+\_\+index\+\_\+table} & pointer to the array \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 363 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a225ace7e20bcc582314aa77e7f1c630d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a225ace7e20bcc582314aa77e7f1c630d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ac4331ba7a69e867a55a85e61efa5e2f8}\label{cook_8c_ac4331ba7a69e867a55a85e61efa5e2f8}} 
+\index{cook.c@{cook.c}!decode\_gain\_info@{decode\_gain\_info}}
+\index{decode\_gain\_info@{decode\_gain\_info}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_gain\_info()}{decode\_gain\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+gain\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{gaininfo }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Fill the gain array for the timedomain quantization.
+
+
+\begin{DoxyParams}{Parameters}
+{\em gb} & pointer to the \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} \\
+\hline
+{\em gaininfo} & array\mbox{[}9\mbox{]} of gain indexes \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 339 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ac4331ba7a69e867a55a85e61efa5e2f8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ac4331ba7a69e867a55a85e61efa5e2f8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_aaab6c359d133e0530d567e2c17f6ee00}\label{cook_8c_aaab6c359d133e0530d567e2c17f6ee00}} 
+\index{cook.c@{cook.c}!decode\_subpacket@{decode\_subpacket}}
+\index{decode\_subpacket@{decode\_subpacket}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_subpacket()}{decode\_subpacket()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+subpacket (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{inbuffer,  }\item[{float $\ast$$\ast$}]{outbuffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Cook subpacket decoding. This function returns one decoded subpacket, usually 1024 samples per channel.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em inbuffer} & pointer to the inbuffer \\
+\hline
+{\em outbuffer} & pointer to the outbuffer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 918 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aaab6c359d133e0530d567e2c17f6ee00_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=318pt]{cook_8c_aaab6c359d133e0530d567e2c17f6ee00_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ae3b383765e3195cc78b2ef3b6fd20070}\label{cook_8c_ae3b383765e3195cc78b2ef3b6fd20070}} 
+\index{cook.c@{cook.c}!decode\_vectors@{decode\_vectors}}
+\index{decode\_vectors@{decode\_vectors}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decode\_vectors()}{decode\_vectors()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+vectors (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{category,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{quant\+\_\+index\+\_\+table,  }\item[{float $\ast$}]{mlt\+\_\+buffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Fill the mlt\+\_\+buffer with mlt coefficients.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em category} & pointer to the category array \\
+\hline
+{\em quant\+\_\+index\+\_\+table} & pointer to the array \\
+\hline
+{\em mlt\+\_\+buffer} & pointer to mlt coefficients \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 596 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ae3b383765e3195cc78b2ef3b6fd20070_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ae3b383765e3195cc78b2ef3b6fd20070_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a7fc3fe319bccf53b862d0532f64b3919}\label{cook_8c_a7fc3fe319bccf53b862d0532f64b3919}} 
+\index{cook.c@{cook.c}!decouple\_float@{decouple\_float}}
+\index{decouple\_float@{decouple\_float}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decouple\_float()}{decouple\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decouple\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subband,  }\item[{float}]{f1,  }\item[{float}]{f2,  }\item[{float $\ast$}]{decode\+\_\+buffer,  }\item[{float $\ast$}]{mlt\+\_\+buffer1,  }\item[{float $\ast$}]{mlt\+\_\+buffer2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+function decouples a pair of signals from a single signal via multiplication.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em subband} & index of the current subband \\
+\hline
+{\em f1} & multiplier for channel 1 extraction \\
+\hline
+{\em f2} & multiplier for channel 2 extraction \\
+\hline
+{\em decode\+\_\+buffer} & input buffer \\
+\hline
+{\em mlt\+\_\+buffer1} & pointer to left channel mlt coefficients \\
+\hline
+{\em mlt\+\_\+buffer2} & pointer to right channel mlt coefficients \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 786 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{cook_8c_a7fc3fe319bccf53b862d0532f64b3919_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a517a3941f7e25bf0e63758afbcba1f0f}\label{cook_8c_a517a3941f7e25bf0e63758afbcba1f0f}} 
+\index{cook.c@{cook.c}!decouple\_info@{decouple\_info}}
+\index{decouple\_info@{decouple\_info}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{decouple\_info()}{decouple\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decouple\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{decouple\+\_\+tab }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+function for getting the jointstereo coupling information
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em decouple\+\_\+tab} & decoupling array \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 747 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a517a3941f7e25bf0e63758afbcba1f0f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a517a3941f7e25bf0e63758afbcba1f0f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a3748f97779518689391bd3b2f5ff97c2}\label{cook_8c_a3748f97779518689391bd3b2f5ff97c2}} 
+\index{cook.c@{cook.c}!dump\_cook\_context@{dump\_cook\_context}}
+\index{dump\_cook\_context@{dump\_cook\_context}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{dump\_cook\_context()}{dump\_cook\_context()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dump\+\_\+cook\+\_\+context (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1026 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{cook_8c_a3748f97779518689391bd3b2f5ff97c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_aaf7163795fed32b3748bb20133be3a2d}\label{cook_8c_aaf7163795fed32b3748bb20133be3a2d}} 
+\index{cook.c@{cook.c}!expand\_category@{expand\_category}}
+\index{expand\_category@{expand\_category}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{expand\_category()}{expand\_category()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} expand\+\_\+category (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{category,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{category\+\_\+index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Expand the category vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em category} & pointer to the category array \\
+\hline
+{\em category\+\_\+index} & pointer to the category\+\_\+index array \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 501 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aaf7163795fed32b3748bb20133be3a2d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a1f154ef6569c3e09affe8857efd4bcca}\label{cook_8c_a1f154ef6569c3e09affe8857efd4bcca}} 
+\index{cook.c@{cook.c}!imlt\_gain@{imlt\_gain}}
+\index{imlt\_gain@{imlt\_gain}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{imlt\_gain()}{imlt\_gain()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} imlt\+\_\+gain (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{float $\ast$}]{inbuffer,  }\item[{\mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$}]{gains\+\_\+ptr,  }\item[{float $\ast$}]{previous\+\_\+buffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+The modulated lapped transform, this takes transform coefficients and transforms them into timedomain samples. Apply transform window, overlap buffers, apply gain profile and buffer management.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em inbuffer} & pointer to the mltcoefficients \\
+\hline
+{\em gains\+\_\+ptr} & current and previous gains \\
+\hline
+{\em previous\+\_\+buffer} & pointer to the previous buffer to be used for overlapping \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 717 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a1f154ef6569c3e09affe8857efd4bcca_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a849e34ea5c681f0ea000d4df2c90e298}\label{cook_8c_a849e34ea5c681f0ea000d4df2c90e298}} 
+\index{cook.c@{cook.c}!imlt\_window\_float@{imlt\_window\_float}}
+\index{imlt\_window\_float@{imlt\_window\_float}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{imlt\_window\_float()}{imlt\_window\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} imlt\+\_\+window\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{float $\ast$}]{inbuffer,  }\item[{\mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$}]{gains\+\_\+ptr,  }\item[{float $\ast$}]{previous\+\_\+buffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Apply transform window, overlap buffers.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em inbuffer} & pointer to the mltcoefficients \\
+\hline
+{\em gains\+\_\+ptr} & current and previous gains \\
+\hline
+{\em previous\+\_\+buffer} & pointer to the previous buffer to be used for overlapping \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 689 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=300pt]{cook_8c_a849e34ea5c681f0ea000d4df2c90e298_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_acd3f5f2aa1ecf5b2d3a7bde092580e51}\label{cook_8c_acd3f5f2aa1ecf5b2d3a7bde092580e51}} 
+\index{cook.c@{cook.c}!init\_cook\_mlt@{init\_cook\_mlt}}
+\index{init\_cook\_mlt@{init\_cook\_mlt}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{init\_cook\_mlt()}{init\_cook\_mlt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+cook\+\_\+mlt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 225 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_acd3f5f2aa1ecf5b2d3a7bde092580e51_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{cook_8c_acd3f5f2aa1ecf5b2d3a7bde092580e51_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_af2115e59d5606e438b5024d614f06958}\label{cook_8c_af2115e59d5606e438b5024d614f06958}} 
+\index{cook.c@{cook.c}!init\_cook\_vlc\_tables@{init\_cook\_vlc\_tables}}
+\index{init\_cook\_vlc\_tables@{init\_cook\_vlc\_tables}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{init\_cook\_vlc\_tables()}{init\_cook\_vlc\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+cook\+\_\+vlc\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 194 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{cook_8c_af2115e59d5606e438b5024d614f06958_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{cook_8c_af2115e59d5606e438b5024d614f06958_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a91399f98c2e5d7f987149c32882314c9}\label{cook_8c_a91399f98c2e5d7f987149c32882314c9}} 
+\index{cook.c@{cook.c}!init\_cplscales\_table@{init\_cplscales\_table}}
+\index{init\_cplscales\_table@{init\_cplscales\_table}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{init\_cplscales\_table()}{init\_cplscales\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+cplscales\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 249 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{cook_8c_a91399f98c2e5d7f987149c32882314c9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ac1ae09a34fd52c2fdb3022e53592fd37}\label{cook_8c_ac1ae09a34fd52c2fdb3022e53592fd37}} 
+\index{cook.c@{cook.c}!init\_gain\_table@{init\_gain\_table}}
+\index{init\_gain\_table@{init\_gain\_table}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{init\_gain\_table()}{init\_gain\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+gain\+\_\+table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 184 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{cook_8c_ac1ae09a34fd52c2fdb3022e53592fd37_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a7c2dd19ede4d5f6cbf46bc066b7aeb2f}\label{cook_8c_a7c2dd19ede4d5f6cbf46bc066b7aeb2f}} 
+\index{cook.c@{cook.c}!init\_pow2table@{init\_pow2table}}
+\index{init\_pow2table@{init\_pow2table}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{init\_pow2table()}{init\_pow2table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+pow2table (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 167 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{cook_8c_a7c2dd19ede4d5f6cbf46bc066b7aeb2f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a4ad874a74c231f86eec3f8841074a9cd}\label{cook_8c_a4ad874a74c231f86eec3f8841074a9cd}} 
+\index{cook.c@{cook.c}!interpolate\_float@{interpolate\_float}}
+\index{interpolate\_float@{interpolate\_float}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_float()}{interpolate\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interpolate\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{float $\ast$}]{buffer,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{gain\+\_\+index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{gain\+\_\+index\+\_\+next }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+the actual requantization of the timedomain samples
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em buffer} & pointer to the timedomain buffer \\
+\hline
+{\em gain\+\_\+index} & index for the block multiplier \\
+\hline
+{\em gain\+\_\+index\+\_\+next} & index for the next block multiplier \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 662 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{cook_8c_a4ad874a74c231f86eec3f8841074a9cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a313e70d2e9d2ca76e76aec7e6623f7e3}\label{cook_8c_a313e70d2e9d2ca76e76aec7e6623f7e3}} 
+\index{cook.c@{cook.c}!joint\_decode@{joint\_decode}}
+\index{joint\_decode@{joint\_decode}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{joint\_decode()}{joint\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} joint\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{float $\ast$}]{mlt\+\_\+buffer\+\_\+left,  }\item[{float $\ast$}]{mlt\+\_\+buffer\+\_\+right }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+function for decoding joint stereo data
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em mlt\+\_\+buffer1} & pointer to left channel mlt coefficients \\
+\hline
+{\em mlt\+\_\+buffer2} & pointer to right channel mlt coefficients \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 808 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a313e70d2e9d2ca76e76aec7e6623f7e3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_a313e70d2e9d2ca76e76aec7e6623f7e3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ae4a4e53fa9c6f32aee84e6d5c4f1a309}\label{cook_8c_ae4a4e53fa9c6f32aee84e6d5c4f1a309}} 
+\index{cook.c@{cook.c}!mlt\_compensate\_output@{mlt\_compensate\_output}}
+\index{mlt\_compensate\_output@{mlt\_compensate\_output}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{mlt\_compensate\_output()}{mlt\_compensate\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mlt\+\_\+compensate\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{float $\ast$}]{decode\+\_\+buffer,  }\item[{\mbox{\hyperlink{structcook__gains}{cook\+\_\+gains}} $\ast$}]{gains\+\_\+ptr,  }\item[{float $\ast$}]{previous\+\_\+buffer,  }\item[{float $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Final part of subpacket decoding\+: Apply modulated lapped transform, gain compensation, clip and convert to integer.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em decode\+\_\+buffer} & pointer to the mlt coefficients \\
+\hline
+{\em gains\+\_\+ptr} & array of current/prev gain pointers \\
+\hline
+{\em previous\+\_\+buffer} & pointer to the previous buffer to be used for overlapping \\
+\hline
+{\em out} & pointer to the output buffer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 900 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{cook_8c_ae4a4e53fa9c6f32aee84e6d5c4f1a309_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_ae4a4e53fa9c6f32aee84e6d5c4f1a309_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_aaff76ec842c44a2c4049bc59ca999fa7}\label{cook_8c_aaff76ec842c44a2c4049bc59ca999fa7}} 
+\index{cook.c@{cook.c}!mono\_decode@{mono\_decode}}
+\index{mono\_decode@{mono\_decode}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{mono\_decode()}{mono\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mono\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{float $\ast$}]{mlt\+\_\+buffer }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 632 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aaff76ec842c44a2c4049bc59ca999fa7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aaff76ec842c44a2c4049bc59ca999fa7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_a28fb6550b5b68f9a7a4ff7da34294911}\label{cook_8c_a28fb6550b5b68f9a7a4ff7da34294911}} 
+\index{cook.c@{cook.c}!saturate\_output\_float@{saturate\_output\_float}}
+\index{saturate\_output\_float@{saturate\_output\_float}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{saturate\_output\_float()}{saturate\_output\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} saturate\+\_\+output\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{float $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Saturate the output signal and interleave.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em out} & pointer to the output vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 882 of file cook.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{cook_8c_a28fb6550b5b68f9a7a4ff7da34294911_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_ab383b64189790ea3ec5688aa33ea807b}\label{cook_8c_ab383b64189790ea3ec5688aa33ea807b}} 
+\index{cook.c@{cook.c}!scalar\_dequant\_float@{scalar\_dequant\_float}}
+\index{scalar\_dequant\_float@{scalar\_dequant\_float}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{scalar\_dequant\_float()}{scalar\_dequant\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} scalar\+\_\+dequant\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{quant\+\_\+index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{subband\+\_\+coef\+\_\+index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{subband\+\_\+coef\+\_\+sign,  }\item[{float $\ast$}]{mlt\+\_\+p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+The real requantization of the mltcoefs
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em index} & index \\
+\hline
+{\em quant\+\_\+index} & quantisation index \\
+\hline
+{\em subband\+\_\+coef\+\_\+index} & array of indexes to quant\+\_\+centroid\+\_\+tab \\
+\hline
+{\em subband\+\_\+coef\+\_\+sign} & signs of coefficients \\
+\hline
+{\em mlt\+\_\+p} & pointer into the mlt buffer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 523 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{cook_8c_ab383b64189790ea3ec5688aa33ea807b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{cook_8c_ab383b64189790ea3ec5688aa33ea807b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cook_8c_aa779354cb3634c08274c2d4fb22c813a}\label{cook_8c_aa779354cb3634c08274c2d4fb22c813a}} 
+\index{cook.c@{cook.c}!unpack\_SQVH@{unpack\_SQVH}}
+\index{unpack\_SQVH@{unpack\_SQVH}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{unpack\_SQVH()}{unpack\_SQVH()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} unpack\+\_\+\+S\+Q\+VH (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{C\+O\+O\+K\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_c_o_o_k_subpacket}{C\+O\+O\+K\+Subpacket}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{category,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{subband\+\_\+coef\+\_\+index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{subband\+\_\+coef\+\_\+sign }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Unpack the subband\+\_\+coef\+\_\+index and subband\+\_\+coef\+\_\+sign vectors.
+
+
+\begin{DoxyParams}{Parameters}
+{\em q} & pointer to the C\+O\+O\+K\+Context \\
+\hline
+{\em category} & pointer to the category array \\
+\hline
+{\em subband\+\_\+coef\+\_\+index} & array of indexes to quant\+\_\+centroid\+\_\+tab \\
+\hline
+{\em subband\+\_\+coef\+\_\+sign} & signs of coefficients \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 552 of file cook.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aa779354cb3634c08274c2d4fb22c813a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{cook_8c_aa779354cb3634c08274c2d4fb22c813a_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{cook_8c_a8f3d165e19395d309ce8c924e052e13c}\label{cook_8c_a8f3d165e19395d309ce8c924e052e13c}} 
+\index{cook.c@{cook.c}!ff\_cook\_decoder@{ff\_cook\_decoder}}
+\index{ff\_cook\_decoder@{ff\_cook\_decoder}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{ff\_cook\_decoder}{ff\_cook\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+cook\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}cook"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Cook / Cooker / Gecko (RealAudio G2)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceaa4652899df5ea4061a1cb7f94fa1d758}{AV\_CODEC\_ID\_COOK}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{cook_8c_a419bf6ab8ef0a30e5375b1e9317da1bf}{COOKContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{cook_8c_aefbcf8ce4adc4438d0297733794008b9}{cook\_decode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{cook_8c_af43f2c80f0e777db4c3ad7eca19cb0a0}{cook\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{cook_8c_a6f8a4bed35fd7ca13bec8e5c7b2d3522}{cook\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .caps\_internal  = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                      \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1275 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_af216a4710081bdfa5c601c45615949b4}\label{cook_8c_af216a4710081bdfa5c601c45615949b4}} 
+\index{cook.c@{cook.c}!pow2tab@{pow2tab}}
+\index{pow2tab@{pow2tab}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{pow2tab}{pow2tab}}
+{\footnotesize\ttfamily float pow2tab\mbox{[}127\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 161 of file cook.\+c.
+
+\mbox{\Hypertarget{cook_8c_a84c9e4fde9e7ddf54f4aa4265607166d}\label{cook_8c_a84c9e4fde9e7ddf54f4aa4265607166d}} 
+\index{cook.c@{cook.c}!rootpow2tab@{rootpow2tab}}
+\index{rootpow2tab@{rootpow2tab}!cook.c@{cook.c}}
+\doxysubsubsection{\texorpdfstring{rootpow2tab}{rootpow2tab}}
+{\footnotesize\ttfamily float rootpow2tab\mbox{[}127\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 162 of file cook.\+c.
+

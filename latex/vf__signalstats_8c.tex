@@ -1,0 +1,969 @@
+\hypertarget{vf__signalstats_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+signalstats.c File Reference}
+\label{vf__signalstats_8c}\index{E:/github/ffmpeg/libavfilter/vf\_signalstats.c@{E:/github/ffmpeg/libavfilter/vf\_signalstats.c}}
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+signalstats.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data_hue_sat_metrics}{Thread\+Data\+Hue\+Sat\+Metrics}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_a1edc8901e1c952f16b9d00915eef1d9e}{F\+I\+L\+T\+ER}}(\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}},  j)
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_ae7a3e6fe53127da76c5c7c997fc285ac}{F\+I\+L\+T\+E\+R3}}(j)~(\mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(-\/1, j) \&\& \mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(0, j) \&\& \mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(1, j))
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_ab817ddcf2d3fe150857dba84d253888c}{V\+R\+E\+P\+\_\+\+S\+T\+A\+RT}}~4
+\item 
+\#define \mbox{\hyperlink{vf__signalstats_8c_a05e2433e6ae9dc0ff71f05f7c81e32ba}{S\+E\+T\+\_\+\+M\+E\+TA}}(\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}},  fmt,  \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} \mbox{\hyperlink{vf__signalstats_8c_ae016ebed32606b1c9a632c881f406b12}{Signalstats\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__signalstats_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data_hue_sat_metrics}{Thread\+Data\+Hue\+Sat\+Metrics}} \mbox{\hyperlink{vf__signalstats_8c_a5e971b500fd3ad9449df3265e85e8f1e}{Thread\+Data\+Hue\+Sat\+Metrics}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083}{Filter\+Mode}} \{ \newline
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083aefd345bea225391736f600da7dfa3c55}{F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+S\+M\+O\+O\+TH}}, 
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083a27165496e4139f025e9f3882262f42ed}{F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+R\+E\+G\+U\+L\+AR}}, 
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083aedd77c012405c6e004269a5bcaed322e}{F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+S\+H\+A\+RP}}, 
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083aaee14116830942a0230e7c0747df9265}{F\+I\+L\+T\+E\+R\+\_\+\+B\+I\+L\+I\+N\+E\+AR}}, 
+\newline
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083acaff799a1322007095cfd25c25e5bafc}{N\+\_\+\+F\+I\+L\+T\+E\+RS}}, 
+\mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083a208853e0f88362383b9d1d5fc11917d0}{F\+I\+L\+T\+E\+R\+\_\+\+S\+W\+I\+T\+C\+H\+A\+B\+LE}} = N\+\_\+\+F\+I\+L\+T\+E\+RS, 
+\mbox{\hyperlink{vf__edgedetect_8c_a36bd51b89b9e0e6e4dbbe565b9155083a4d9d95e028bfc02db914dd5659017e1c}{M\+O\+D\+E\+\_\+\+W\+I\+R\+ES}}, 
+\mbox{\hyperlink{vf__edgedetect_8c_a36bd51b89b9e0e6e4dbbe565b9155083a28ad0750314cdcacdb15149bdea59f97}{M\+O\+D\+E\+\_\+\+C\+O\+L\+O\+R\+M\+IX}}, 
+\newline
+\mbox{\hyperlink{vf__edgedetect_8c_a36bd51b89b9e0e6e4dbbe565b9155083a7cf2f256cd31e89bec92e2689c6bf9b6}{M\+O\+D\+E\+\_\+\+C\+A\+N\+NY}}, 
+\mbox{\hyperlink{vf__edgedetect_8c_a36bd51b89b9e0e6e4dbbe565b9155083ae83e38053288ccecb815d3442af73670}{N\+B\+\_\+\+M\+O\+DE}}, 
+\mbox{\hyperlink{vf__il_8c_a36bd51b89b9e0e6e4dbbe565b9155083a55c50be59001f12b54c48b09e434dced}{M\+O\+D\+E\+\_\+\+N\+O\+NE}}, 
+\mbox{\hyperlink{vf__il_8c_a36bd51b89b9e0e6e4dbbe565b9155083a8afa27acb27bc5bf362b60ed1437a20b}{M\+O\+D\+E\+\_\+\+I\+N\+T\+E\+R\+L\+E\+A\+VE}}, 
+\newline
+\mbox{\hyperlink{vf__il_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa1799b72b16fe3c8c61f47e6d5b6f98c}{M\+O\+D\+E\+\_\+\+D\+E\+I\+N\+T\+E\+R\+L\+E\+A\+VE}}, 
+\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a973228de893dbe6bd7a65d0747c15977}{F\+I\+L\+T\+E\+R\+\_\+\+N\+O\+NE}} = -\/1, 
+\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa9a492355edccbdd017c426c4e2c256e}{F\+I\+L\+T\+E\+R\+\_\+\+T\+O\+UT}}, 
+\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2eadcf7d71d03f3b4298650e9ca1361f}{F\+I\+L\+T\+E\+R\+\_\+\+V\+R\+EP}}, 
+\newline
+\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa11ecb9c943fb7ec7fb93b37dc7e9736}{F\+I\+L\+T\+E\+R\+\_\+\+B\+R\+NG}}, 
+\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2e550dd24770e44b8c7e15bb48a22ff2}{F\+I\+L\+T\+\_\+\+N\+U\+MB}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__signalstats_8c_ab7191b0ac2befc47df5068e2cbc5da13}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (signalstats)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__signalstats_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$ \mbox{\hyperlink{vf__signalstats_8c_ab2e0b867cf5b8abb8587f260639503bc}{alloc\+\_\+frame}} (enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{hwcontext__vulkan_8c_ab482f514ab017799e2ac45d666537564}{pixfmt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__signalstats_8c_a2d388dc07cff25b05badf8e8db903449}{burn\+\_\+frame8}} (const \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__signalstats_8c_ae635e811ded0587b8ff6eff3167a2756}{burn\+\_\+frame16}} (const \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a8f9d3fe1006af89701ce1f7ce2123842}{filter8\+\_\+brng}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_af0a45de0160a903a68ac37e066270b00}{filter16\+\_\+brng}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_ae7c8ed7cdc82b03ada52c8806cde4bf5}{filter\+\_\+tout\+\_\+outlier}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} x, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} y, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} z)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a1e20049ce0d39709cb52af78bb370d2d}{filter8\+\_\+tout}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a8d89da740fbaa4d6e37cdf2599bd17f8}{filter16\+\_\+tout}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a5310b530843e2ddc85eb9c246e8f94ec}{filter8\+\_\+vrep}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a6ca4214d9f902fbc8ce975989a566817}{filter16\+\_\+vrep}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a424d5aef36136423578e0ec29cef4069}{compute\+\_\+sat\+\_\+hue\+\_\+metrics8}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a50ae60c2e9fd236c7d0e94198a0c3812}{compute\+\_\+sat\+\_\+hue\+\_\+metrics16}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static unsigned \mbox{\hyperlink{vf__signalstats_8c_a653af58546f4c3b9e5206e1deb86a96c}{compute\+\_\+bit\+\_\+depth}} (uint16\+\_\+t \mbox{\hyperlink{lzw_8c_a450ea4ae52aeb4ca6e2fabf02c695153}{mask}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_acb409c601c0334c36997393d5f69b1f7}{filter\+\_\+frame8}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_ad2b2febb7472ac00fefd474ac97629d5}{filter\+\_\+frame16}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__signalstats_8c_a507c820aa4475d788435b7c8204df912}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__signalstats_8c_ae6cb45850d3351273d758c16152f707c}{signalstats\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+struct \{\\
+\>double \mbox{\hyperlink{ffprobe_8c_abe26d15b985a069bc10d6d6ce66276ad}{bin\_val}}\\
+\>double \mbox{\hyperlink{ffprobe_8c_a64cbc6a41a9a16a582ac02e1be7aadd0}{dec\_val}}\\
+\>const char $\ast$ \mbox{\hyperlink{ffprobe_8c_abb7465ed8c0c9af5cf6babf5e228fa15}{bin\_str}}\\
+\>const char $\ast$ \mbox{\hyperlink{ffprobe_8c_a817f5961e80633aea76faadb970001df}{dec\_str}}\\
+\>enum \mbox{\hyperlink{group__lavc__core_gaadca229ad2c20e060a14fec08a5cc7ce}{AVCodecID}} \mbox{\hyperlink{extract__extradata__bsf_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{extract__extradata__bsf_8c_a4819ef8cf0c58922189686d5bf7501f2}{extract}} )(\mbox{\hyperlink{struct_a_v_b_s_f_context}{AVBSFContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_packet}{AVPacket}} \\
+\>\>$\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$$\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \\
+\>\>$\ast$\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_a0c72c91b4eaf2193000cf829b6f40da6}{profile\_idc}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_a68ad4713e5ecd0bff200f183b44ddd37}{cpb\_br\_vcl\_factor}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__levels_8c_ac50f07474800177ad232e815f7afb1de}{cpb\_br\_nal\_factor}}\\
+\>\mbox{\hyperlink{ivi_8h_a0f52eab6575b732d837d0ceb4f1ced6a}{InvTransformPtr}} $\ast$ \mbox{\hyperlink{indeo4_8c_a5576960156a6adb85168d4f8542c1b2a}{inv\_trans}}\\
+\>\mbox{\hyperlink{ivi_8h_a1d721d87fb7697c1f77927957f9d7d80}{DCTransformPtr}} $\ast$ \mbox{\hyperlink{indeo4_8c_a884bffe6a90b7febc0b0e3e562169294}{dc\_trans}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{indeo4_8c_a3dfdd5e9c96508f805f8172cf5862c7b}{is\_2d\_trans}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_af9f143e62cdad4afb8a53a21b8b8fcfd}{from}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{libavcodec_2jacosubdec_8c_a06044f95c6f30acd8cd3b80a2381259e}{func}} )(AVBPrint $\ast$dst, const char \\
+\>\>$\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const char $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})\\
+\>EbErrorType \mbox{\hyperlink{libsvtav1_8c_a22cc5391c76d803da807cd5c57e41ea7}{eb\_err}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libsvtav1_8c_ac4c8134fd296a1d68eaefa287757c444}{av\_err}}\\
+\>const char $\ast$ \mbox{\hyperlink{libsvtav1_8c_a710bce51374aba96ab04912897666c35}{desc}}\\
+\>const int16\_t $\ast$ \mbox{\hyperlink{mace_8c_afb970ad3a53d09ce72f74212b0df2290}{tab1}}\\
+\>const int16\_t $\ast$ \mbox{\hyperlink{mace_8c_a69b5f89c093cd81857a090ba08bbbd70}{tab2}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}\\
+\>NVENCSTATUS \mbox{\hyperlink{nvenc_8c_a4e0ddbacaa28d61a8fa4b77cc67a736f}{nverr}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{nvenc_8c_ac504a73146da1c32baabe689e4ca3e1b}{averr}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{qsv_8c_a84309ef44231e7870385e1dff9216d52}{mfx\_iopattern}}\\
+\>mfxU16 \mbox{\hyperlink{qsvenc_8c_aacd2c6f4a09d71ea05bdcc1c2e9d42dd}{profile}}\\
+\>const char $\ast$ \mbox{\hyperlink{qsvenc_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{svq3_8c_aa90bc2b9950a6a9a3144876047f8bee2}{run}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{svq3_8c_abbb6c7c49508c1ac374683f2d1159e08}{level}}\\
+\>float \mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}\\
+\>float \mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2h264__levels_8c_ab4a08f9d64a0d901c25eed4855931c4f}{level\_idc}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{twinvq__data_8h_a58565306e09ffac38bb76952d6e458a9}{tab}}\\
+\>uint32\_t \mbox{\hyperlink{vaapi__decode_8c_aa5d906425500585aa7832161b2a40e1b}{fourcc}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{vaapi__decode_8c_a7331e302ea7bb48e0b605a069576e135}{pix\_fmt}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_a70b5e28b5bc3d1b63a7435c5fe50b837}{dim}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_afed088663f8704004425cdae2120b9b3}{len}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_af89023439276f4960316202c97f210f9}{real\_len}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{vorbis__enc__data_8h_a499938cfcccb89183a9c3d581b78eacb}{clens}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vorbis__enc__data_8h_a26d315c17b27a762085ddd59f4750fb7}{lookup}}\\
+\>float \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}}\\
+\>float \mbox{\hyperlink{vorbis__enc__data_8h_a1ee4a05b54419bfadd66ee351d05812e}{delta}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{vorbis__enc__data_8h_a0ec8e44e0e296a1e3307a1436a0f0fdf}{quant}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{vp3data_8h_ad44119f8ce1676a4dfac55fd4b74d09c}{base}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{vp3data_8h_a46a6da6b1936191571fd30b2a749f38c}{bits}}\\
+\>const char $\ast$ \mbox{\hyperlink{libavcodec_2webvttdec_8c_a5d467a63df9ff99d33d6749038f6f421}{to}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{kmsgrab_8c_ab482f514ab017799e2ac45d666537564}{pixfmt}}\\
+\>uint32\_t \mbox{\hyperlink{kmsgrab_8c_a744ebd08aac4ba26fc2819c067bb2b84}{drm\_format}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a1b5e77b92dea40e646b2e7e196e0b322}{g}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}\\
+\>const char $\ast$ \mbox{\hyperlink{vf__curves_8c_a2a1bf31ff09137e014c839bbaf9453d6}{master}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__signalstats_8c_aca33ab5a09d4b754627c19af2bf99b9f}{process8}} )(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \\
+\>\>$\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\_jobs)\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{vf__signalstats_8c_a399454592cf03313e92d0a8b855edf06}{process16}} )(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \\
+\>\>$\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\_jobs)\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_a4fc3a0c58dfbd1e68224521185cb9384}{id}}\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_ad0eab1042455a2067c812ab8071d5376}{width}}\\
+\>uint16\_t \mbox{\hyperlink{libavformat_2gdv_8c_a81c9f8d0b8c3b49d770be14dbe9f0d37}{height}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{gxfenc_8c_a750b5d744c39a06bfb13e6eb010e35d0}{index}}\\
+\>enum \mbox{\hyperlink{group__lavc__core_gaadca229ad2c20e060a14fec08a5cc7ce}{AVCodecID}} \mbox{\hyperlink{mov__chan_8c_a0fd12851a78b80080e277db30411728d}{codec\_id}}\\
+\>enum \mbox{\hyperlink{mov__chan_8c_a52e7e7770e3a090cf4197d341bd7ea41}{MovChannelLayoutTag}} $\ast$ \mbox{\hyperlink{mov__chan_8c_a0f9e2036e9efff8b06562d17cb0994ad}{layouts}}\\
+\>uint32\_t \mbox{\hyperlink{movenc_8c_a1c50fcd1195659821729f52af8f3bb7d}{tag}}\\
+\>unsigned \mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}}\\
+\>const char \mbox{\hyperlink{mxf_8c_a084824fc871e38157790c99ae1240842}{data}} \mbox{[}16\mbox{]}\\
+\>enum \mbox{\hyperlink{mxfenc_8c_a506a289fddcdf1e290ca22a04d19b488}{ULIndex}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_aa51c0cd81327c3099d0a4d1738c6a45d}{pt}}\\
+\>const char \mbox{\hyperlink{rtp_8c_a5626702170a0a81e3c1f6516c1ed1d0d}{enc\_name}} \mbox{[}6\mbox{]}\\
+\>enum \mbox{\hyperlink{group__lavu__misc_ga9a84bba4713dfced21a1a56163be1f48}{AVMediaType}} \mbox{\hyperlink{rtp_8c_a550d0fd0475cc25c2e1fec3e15acaffb}{codec\_type}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_a9ba9cb271aacdab3589a8a609d8cb1b7}{clock\_rate}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtp_8c_a2002de13feb82533e1d3f85c37d45d35}{audio\_channels}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}\\
+\>const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} $\ast$ \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{channel__layout_8c_ac8404c077a0560a06a73cfec0697c99a}{nb\_channels}}\\
+\>uint64\_t \mbox{\hyperlink{channel__layout_8c_a5fb8d8660239f03323dae7e7c1699f29}{layout}}\\
+\>int8\_t \mbox{\hyperlink{eval_8c_afc05d41e1a0fc024ac21072d11d4f263}{exp}}\\
+\>DXGI\_FORMAT \mbox{\hyperlink{hwcontext__d3d11va_8c_a8510428f69a7ba9040a1f4ef2df86761}{d3d\_format}}\\
+\>D3DFORMAT \mbox{\hyperlink{hwcontext__dxva2_8c_adbbd8b53c1093fb6ada6a22763f416b1}{d3d\_format}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}\\
+\>cl\_platform\_info \mbox{\hyperlink{hwcontext__opencl_8c_a6087c755c95064e4547b2b629d483e41}{name}}\\
+\>mfxHandleType \mbox{\hyperlink{hwcontext__qsv_8c_a3f6f34808101299d4cd094fcb313e919}{handle\_type}}\\
+\>enum \mbox{\hyperlink{hwcontext_8h_acf25724be4b066a51ad86aa9214b0d34}{AVHWDeviceType}} \mbox{\hyperlink{hwcontext__qsv_8c_a7898416aa2fa2f5d58aa4b6f35135205}{device\_type}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__vaapi_8c_af4f3a4e175def195bea03a54bd3e7205}{friendly\_name}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwcontext__vaapi_8c_a33100d8fbce72445b01f88003826d41d}{match\_string}}\\
+\>unsigned \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hwcontext__vaapi_8c_abb72e384863d48f0c521dafc06ec0889}{quirks}}\\
+\>VdpChromaType \mbox{\hyperlink{hwcontext__vdpau_8c_af51599ed3ace16c1f018b0151d0ee55a}{chroma\_type}}\\
+\>enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{hwcontext__vdpau_8c_a96bf5f4a9bc95b67aae7b331c6a89170}{frames\_sw\_format}}\\
+\>const \mbox{\hyperlink{struct_v_d_p_a_u_pix_fmt_map}{VDPAUPixFmtMap}} $\ast$ \mbox{\hyperlink{hwcontext__vdpau_8c_a2996cc16b36e13c9010705bad768e866}{map}}\\
+\>uint32\_t \mbox{\hyperlink{hwcontext__videotoolbox_8c_ac9ab9722e60ae348cbba8c6569f8749d}{cv\_fmt}}\\
+\>bool \mbox{\hyperlink{hwcontext__videotoolbox_8c_a94f15a9c5d773bc54239ae80a9699f0c}{full\_range}}\\
+\>const VkFormat \mbox{\hyperlink{hwcontext__vulkan_8c_a2c95bc38a9d106e007afb65b5fcbb230}{vkfmts}} \mbox{[}3\mbox{]}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2cpu_8c_adf916204820072417ed73a32de1cefcf}{flag}}\\
+\>enum \mbox{\hyperlink{hwcontext_8h_acf25724be4b066a51ad86aa9214b0d34}{AVHWDeviceType}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}\\
+\>const char $\ast$ \mbox{\hyperlink{hwdevice_8c_a2136c4dacaa7a760db910454c32d5070}{possible\_devices}} \mbox{[}5\mbox{]}\\
+\>const char $\ast$ \mbox{\hyperlink{pixdesc__query_8c_a25b40fa77d1c87bbb20af5f6ae7a316f}{class}}\\
+\>\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ \mbox{\hyperlink{pixdesc__query_8c_a26541ac96c02cad2015f8db63b5e703a}{cond}} )(enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}} \mbox{\hyperlink{hwcontext__videotoolbox_8c_a7331e302ea7bb48e0b605a069576e135}{pix\_fmt}})\\
+\>\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ \mbox{\hyperlink{checkasm_8c_a87cc763359903cf60b8a9f1b367476e8}{func}} )(\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_aba9ed0487b0aa23eba534648df8384c0}{w}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}\\
+\>\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\_t}} \mbox{\hyperlink{llviddspenc_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a3378f35ca205fd422d7edb3190867861}{class\_name}} = \char`\"{}libkvazaar\char`\"{}\\
+\>\mbox{\hyperlink{libkvazaar_8c_af35dc833b858a6b99a695329119334a0}{item\_name}} = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a3cfe71f40b244562d3665516c3934c06}{option}} = \mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}\\
+\>\mbox{\hyperlink{libkvazaar_8c_a4c7a521b8f1a0769c09bfa4a1fca7dab}{version}} = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}}\\
+\>\mbox{\hyperlink{openal-dec_8c_a71494cb32e3acaab23cde05f1136df5e}{category}} = \mbox{\hyperlink{log_8h_aeb1c06cc3e47a029ca6afeac782ac8f9aacba77c66d969c8dbd8b9597e9b98869}{AV\_CLASS\_CATEGORY\_DEVICE\_AUDIO\_INPUT}}\\
+\} \mbox{\hyperlink{vf__signalstats_8c_a2c97031583b963745179756932c9dc57}{filters\_def}} \mbox{[}$\,$\mbox{]}\\
+
+\end{tabbing}\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__signalstats_8c_a40d8f4c298bb7f8349dd7106ee9a07a5}{signalstats\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__signalstats_8c_a0de0a24da1adfa9feba1cb9b9fbd5c7d}{signalstats\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__signalstats_8c_a922a9bd3b3ca5db3728e67fe7bb67192}{ff\+\_\+vf\+\_\+signalstats}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__signalstats_8c_a1edc8901e1c952f16b9d00915eef1d9e}\label{vf__signalstats_8c_a1edc8901e1c952f16b9d00915eef1d9e}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER@{FILTER}}
+\index{FILTER@{FILTER}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{FILTER}{FILTER}}
+{\footnotesize\ttfamily \#define F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}},  }\item[{}]{j }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__signalstats_8c_ae7c8ed7cdc82b03ada52c8806cde4bf5}{filter\_tout\_outlier}}(p[(y-\/j) * lw + x + \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}], \(\backslash\)}
+\DoxyCodeLine{                            p[    y * lw + x + \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}], \(\backslash\)}
+\DoxyCodeLine{                            p[(y+j) * lw + x + \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}])}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__signalstats_8c_ae7a3e6fe53127da76c5c7c997fc285ac}\label{vf__signalstats_8c_ae7a3e6fe53127da76c5c7c997fc285ac}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER3@{FILTER3}}
+\index{FILTER3@{FILTER3}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{FILTER3}{FILTER3}}
+{\footnotesize\ttfamily \#define F\+I\+L\+T\+E\+R3(\begin{DoxyParamCaption}\item[{}]{j }\end{DoxyParamCaption})~(\mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(-\/1, j) \&\& \mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(0, j) \&\& \mbox{\hyperlink{vf__yadif_8c_a97fc905f7a8f07fdbd0b44ccd615e13c}{F\+I\+L\+T\+ER}}(1, j))}
+
+\mbox{\Hypertarget{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 71 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}}, x)}
+
+
+
+Definition at line 70 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a05e2433e6ae9dc0ff71f05f7c81e32ba}\label{vf__signalstats_8c_a05e2433e6ae9dc0ff71f05f7c81e32ba}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!SET\_META@{SET\_META}}
+\index{SET\_META@{SET\_META}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{SET\_META}{SET\_META}}
+{\footnotesize\ttfamily \#define S\+E\+T\+\_\+\+M\+E\+TA(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}},  }\item[{}]{fmt,  }\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    \textcolor{keywordflow}{do} \{                                \(\backslash\)}
+\DoxyCodeLine{    snprintf(metabuf, \textcolor{keyword}{sizeof}(metabuf), fmt, \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}});                   \(\backslash\)}
+\DoxyCodeLine{    av\_dict\_set(\&\mbox{\hyperlink{tests_2movenc_8c_a1277960b5f2b37137fe9b0b5a1ea0beb}{out}}-\/>metadata, \textcolor{stringliteral}{"{}lavfi.signalstats."{}} \mbox{\hyperlink{hwcontext__opencl_8c_acd3d88da3c0e0313c3645ff34f62f542}{key}}, metabuf, 0);   \(\backslash\)}
+\DoxyCodeLine{\} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__signalstats_8c_ab817ddcf2d3fe150857dba84d253888c}\label{vf__signalstats_8c_ab817ddcf2d3fe150857dba84d253888c}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!VREP\_START@{VREP\_START}}
+\index{VREP\_START@{VREP\_START}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{VREP\_START}{VREP\_START}}
+{\footnotesize\ttfamily \#define V\+R\+E\+P\+\_\+\+S\+T\+A\+RT~4}
+
+
+
+Definition at line 383 of file vf\+\_\+signalstats.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__signalstats_8c_ae016ebed32606b1c9a632c881f406b12}\label{vf__signalstats_8c_ae016ebed32606b1c9a632c881f406b12}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!SignalstatsContext@{SignalstatsContext}}
+\index{SignalstatsContext@{SignalstatsContext}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{SignalstatsContext}{SignalstatsContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}}}
+
+\mbox{\Hypertarget{vf__signalstats_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__signalstats_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+\mbox{\Hypertarget{vf__signalstats_8c_a5e971b500fd3ad9449df3265e85e8f1e}\label{vf__signalstats_8c_a5e971b500fd3ad9449df3265e85e8f1e}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!ThreadDataHueSatMetrics@{ThreadDataHueSatMetrics}}
+\index{ThreadDataHueSatMetrics@{ThreadDataHueSatMetrics}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{ThreadDataHueSatMetrics}{ThreadDataHueSatMetrics}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data_hue_sat_metrics}{Thread\+Data\+Hue\+Sat\+Metrics}} \mbox{\hyperlink{struct_thread_data_hue_sat_metrics}{Thread\+Data\+Hue\+Sat\+Metrics}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!FilterMode@{FilterMode}}
+\index{FilterMode@{FilterMode}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{FilterMode}{FilterMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vp9_8h_a36bd51b89b9e0e6e4dbbe565b9155083}{Filter\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_8TAP\_SMOOTH@{FILTER\_8TAP\_SMOOTH}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_8TAP\_SMOOTH@{FILTER\_8TAP\_SMOOTH}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aefd345bea225391736f600da7dfa3c55}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aefd345bea225391736f600da7dfa3c55}} 
+F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+S\+M\+O\+O\+TH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_8TAP\_REGULAR@{FILTER\_8TAP\_REGULAR}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_8TAP\_REGULAR@{FILTER\_8TAP\_REGULAR}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a27165496e4139f025e9f3882262f42ed}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a27165496e4139f025e9f3882262f42ed}} 
+F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+R\+E\+G\+U\+L\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_8TAP\_SHARP@{FILTER\_8TAP\_SHARP}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_8TAP\_SHARP@{FILTER\_8TAP\_SHARP}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aedd77c012405c6e004269a5bcaed322e}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aedd77c012405c6e004269a5bcaed322e}} 
+F\+I\+L\+T\+E\+R\+\_\+8\+T\+A\+P\+\_\+\+S\+H\+A\+RP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_BILINEAR@{FILTER\_BILINEAR}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_BILINEAR@{FILTER\_BILINEAR}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aaee14116830942a0230e7c0747df9265}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aaee14116830942a0230e7c0747df9265}} 
+F\+I\+L\+T\+E\+R\+\_\+\+B\+I\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{N\_FILTERS@{N\_FILTERS}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!N\_FILTERS@{N\_FILTERS}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083acaff799a1322007095cfd25c25e5bafc}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083acaff799a1322007095cfd25c25e5bafc}} 
+N\+\_\+\+F\+I\+L\+T\+E\+RS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_SWITCHABLE@{FILTER\_SWITCHABLE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_SWITCHABLE@{FILTER\_SWITCHABLE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a208853e0f88362383b9d1d5fc11917d0}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a208853e0f88362383b9d1d5fc11917d0}} 
+F\+I\+L\+T\+E\+R\+\_\+\+S\+W\+I\+T\+C\+H\+A\+B\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_WIRES@{MODE\_WIRES}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_WIRES@{MODE\_WIRES}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a4d9d95e028bfc02db914dd5659017e1c}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a4d9d95e028bfc02db914dd5659017e1c}} 
+M\+O\+D\+E\+\_\+\+W\+I\+R\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_COLORMIX@{MODE\_COLORMIX}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_COLORMIX@{MODE\_COLORMIX}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a28ad0750314cdcacdb15149bdea59f97}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a28ad0750314cdcacdb15149bdea59f97}} 
+M\+O\+D\+E\+\_\+\+C\+O\+L\+O\+R\+M\+IX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_CANNY@{MODE\_CANNY}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_CANNY@{MODE\_CANNY}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a7cf2f256cd31e89bec92e2689c6bf9b6}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a7cf2f256cd31e89bec92e2689c6bf9b6}} 
+M\+O\+D\+E\+\_\+\+C\+A\+N\+NY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_MODE@{NB\_MODE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!NB\_MODE@{NB\_MODE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083ae83e38053288ccecb815d3442af73670}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083ae83e38053288ccecb815d3442af73670}} 
+N\+B\+\_\+\+M\+O\+DE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_NONE@{MODE\_NONE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_NONE@{MODE\_NONE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a55c50be59001f12b54c48b09e434dced}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a55c50be59001f12b54c48b09e434dced}} 
+M\+O\+D\+E\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_INTERLEAVE@{MODE\_INTERLEAVE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_INTERLEAVE@{MODE\_INTERLEAVE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a8afa27acb27bc5bf362b60ed1437a20b}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a8afa27acb27bc5bf362b60ed1437a20b}} 
+M\+O\+D\+E\+\_\+\+I\+N\+T\+E\+R\+L\+E\+A\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MODE\_DEINTERLEAVE@{MODE\_DEINTERLEAVE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!MODE\_DEINTERLEAVE@{MODE\_DEINTERLEAVE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa1799b72b16fe3c8c61f47e6d5b6f98c}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa1799b72b16fe3c8c61f47e6d5b6f98c}} 
+M\+O\+D\+E\+\_\+\+D\+E\+I\+N\+T\+E\+R\+L\+E\+A\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_NONE@{FILTER\_NONE}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_NONE@{FILTER\_NONE}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a973228de893dbe6bd7a65d0747c15977}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a973228de893dbe6bd7a65d0747c15977}} 
+F\+I\+L\+T\+E\+R\+\_\+\+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_TOUT@{FILTER\_TOUT}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_TOUT@{FILTER\_TOUT}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa9a492355edccbdd017c426c4e2c256e}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa9a492355edccbdd017c426c4e2c256e}} 
+F\+I\+L\+T\+E\+R\+\_\+\+T\+O\+UT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_VREP@{FILTER\_VREP}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_VREP@{FILTER\_VREP}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2eadcf7d71d03f3b4298650e9ca1361f}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2eadcf7d71d03f3b4298650e9ca1361f}} 
+F\+I\+L\+T\+E\+R\+\_\+\+V\+R\+EP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILTER\_BRNG@{FILTER\_BRNG}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILTER\_BRNG@{FILTER\_BRNG}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa11ecb9c943fb7ec7fb93b37dc7e9736}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa11ecb9c943fb7ec7fb93b37dc7e9736}} 
+F\+I\+L\+T\+E\+R\+\_\+\+B\+R\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FILT\_NUMB@{FILT\_NUMB}!vf\_signalstats.c@{vf\_signalstats.c}}\index{vf\_signalstats.c@{vf\_signalstats.c}!FILT\_NUMB@{FILT\_NUMB}}}\mbox{\Hypertarget{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2e550dd24770e44b8c7e15bb48a22ff2}\label{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2e550dd24770e44b8c7e15bb48a22ff2}} 
+F\+I\+L\+T\+\_\+\+N\+U\+MB&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 28 of file vf\+\_\+signalstats.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__signalstats_8c_ab2e0b867cf5b8abb8587f260639503bc}\label{vf__signalstats_8c_ab2e0b867cf5b8abb8587f260639503bc}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!alloc\_frame@{alloc\_frame}}
+\index{alloc\_frame@{alloc\_frame}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_frame()}{alloc\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}}$\ast$ alloc\+\_\+frame (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}}}]{pixfmt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{w,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 143 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_ab2e0b867cf5b8abb8587f260639503bc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{vf__signalstats_8c_ab2e0b867cf5b8abb8587f260639503bc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_ab7191b0ac2befc47df5068e2cbc5da13}\label{vf__signalstats_8c_ab7191b0ac2befc47df5068e2cbc5da13}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{signalstats}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__signalstats_8c_ae635e811ded0587b8ff6eff3167a2756}\label{vf__signalstats_8c_ae635e811ded0587b8ff6eff3167a2756}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!burn\_frame16@{burn\_frame16}}
+\index{burn\_frame16@{burn\_frame16}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{burn\_frame16()}{burn\_frame16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} burn\+\_\+frame16 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 210 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=226pt]{vf__signalstats_8c_ae635e811ded0587b8ff6eff3167a2756_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=260pt]{vf__signalstats_8c_ae635e811ded0587b8ff6eff3167a2756_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a2d388dc07cff25b05badf8e8db903449}\label{vf__signalstats_8c_a2d388dc07cff25b05badf8e8db903449}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!burn\_frame8@{burn\_frame8}}
+\index{burn\_frame8@{burn\_frame8}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{burn\_frame8()}{burn\_frame8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} burn\+\_\+frame8 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_signalstats_context}{Signalstats\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{f,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 201 of file vf\+\_\+signalstats.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=250pt]{vf__signalstats_8c_a2d388dc07cff25b05badf8e8db903449_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a653af58546f4c3b9e5206e1deb86a96c}\label{vf__signalstats_8c_a653af58546f4c3b9e5206e1deb86a96c}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!compute\_bit\_depth@{compute\_bit\_depth}}
+\index{compute\_bit\_depth@{compute\_bit\_depth}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{compute\_bit\_depth()}{compute\_bit\_depth()}}
+{\footnotesize\ttfamily static unsigned compute\+\_\+bit\+\_\+depth (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{mask }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 542 of file vf\+\_\+signalstats.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a653af58546f4c3b9e5206e1deb86a96c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a50ae60c2e9fd236c7d0e94198a0c3812}\label{vf__signalstats_8c_a50ae60c2e9fd236c7d0e94198a0c3812}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!compute\_sat\_hue\_metrics16@{compute\_sat\_hue\_metrics16}}
+\index{compute\_sat\_hue\_metrics16@{compute\_sat\_hue\_metrics16}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{compute\_sat\_hue\_metrics16()}{compute\_sat\_hue\_metrics16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compute\+\_\+sat\+\_\+hue\+\_\+metrics16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 503 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a50ae60c2e9fd236c7d0e94198a0c3812_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a50ae60c2e9fd236c7d0e94198a0c3812_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a424d5aef36136423578e0ec29cef4069}\label{vf__signalstats_8c_a424d5aef36136423578e0ec29cef4069}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!compute\_sat\_hue\_metrics8@{compute\_sat\_hue\_metrics8}}
+\index{compute\_sat\_hue\_metrics8@{compute\_sat\_hue\_metrics8}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{compute\_sat\_hue\_metrics8()}{compute\_sat\_hue\_metrics8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} compute\+\_\+sat\+\_\+hue\+\_\+metrics8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 465 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a424d5aef36136423578e0ec29cef4069_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a424d5aef36136423578e0ec29cef4069_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__signalstats_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 161 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_af0a45de0160a903a68ac37e066270b00}\label{vf__signalstats_8c_af0a45de0160a903a68ac37e066270b00}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter16\_brng@{filter16\_brng}}
+\index{filter16\_brng@{filter16\_brng}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter16\_brng()}{filter16\_brng()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter16\+\_\+brng (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 254 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_af0a45de0160a903a68ac37e066270b00_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a8d89da740fbaa4d6e37cdf2599bd17f8}\label{vf__signalstats_8c_a8d89da740fbaa4d6e37cdf2599bd17f8}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter16\_tout@{filter16\_tout}}
+\index{filter16\_tout@{filter16\_tout}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter16\_tout()}{filter16\_tout()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter16\+\_\+tout (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 342 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a8d89da740fbaa4d6e37cdf2599bd17f8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a6ca4214d9f902fbc8ce975989a566817}\label{vf__signalstats_8c_a6ca4214d9f902fbc8ce975989a566817}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter16\_vrep@{filter16\_vrep}}
+\index{filter16\_vrep@{filter16\_vrep}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter16\_vrep()}{filter16\_vrep()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter16\+\_\+vrep (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 419 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a6ca4214d9f902fbc8ce975989a566817_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a8f9d3fe1006af89701ce1f7ce2123842}\label{vf__signalstats_8c_a8f9d3fe1006af89701ce1f7ce2123842}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter8\_brng@{filter8\_brng}}
+\index{filter8\_brng@{filter8\_brng}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter8\_brng()}{filter8\_brng()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter8\+\_\+brng (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 220 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a8f9d3fe1006af89701ce1f7ce2123842_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a1e20049ce0d39709cb52af78bb370d2d}\label{vf__signalstats_8c_a1e20049ce0d39709cb52af78bb370d2d}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter8\_tout@{filter8\_tout}}
+\index{filter8\_tout@{filter8\_tout}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter8\_tout()}{filter8\_tout()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter8\+\_\+tout (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 294 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a1e20049ce0d39709cb52af78bb370d2d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a5310b530843e2ddc85eb9c246e8f94ec}\label{vf__signalstats_8c_a5310b530843e2ddc85eb9c246e8f94ec}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter8\_vrep@{filter8\_vrep}}
+\index{filter8\_vrep@{filter8\_vrep}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter8\_vrep()}{filter8\_vrep()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter8\+\_\+vrep (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 385 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a5310b530843e2ddc85eb9c246e8f94ec_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_a507c820aa4475d788435b7c8204df912}\label{vf__signalstats_8c_a507c820aa4475d788435b7c8204df912}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 986 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_a507c820aa4475d788435b7c8204df912_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_ad2b2febb7472ac00fefd474ac97629d5}\label{vf__signalstats_8c_ad2b2febb7472ac00fefd474ac97629d5}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter\_frame16@{filter\_frame16}}
+\index{filter\_frame16@{filter\_frame16}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame16()}{filter\_frame16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 769 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_ad2b2febb7472ac00fefd474ac97629d5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=254pt]{vf__signalstats_8c_ad2b2febb7472ac00fefd474ac97629d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_acb409c601c0334c36997393d5f69b1f7}\label{vf__signalstats_8c_acb409c601c0334c36997393d5f69b1f7}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter\_frame8@{filter\_frame8}}
+\index{filter\_frame8@{filter\_frame8}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame8()}{filter\_frame8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame8 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 547 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_acb409c601c0334c36997393d5f69b1f7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{vf__signalstats_8c_acb409c601c0334c36997393d5f69b1f7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_ae7c8ed7cdc82b03ada52c8806cde4bf5}\label{vf__signalstats_8c_ae7c8ed7cdc82b03ada52c8806cde4bf5}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filter\_tout\_outlier@{filter\_tout\_outlier}}
+\index{filter\_tout\_outlier@{filter\_tout\_outlier}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filter\_tout\_outlier()}{filter\_tout\_outlier()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+tout\+\_\+outlier (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{x,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{y,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{z }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 289 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__signalstats_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!init@{init}}
+\index{init@{init}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 89 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__signalstats_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 119 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__signalstats_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__signalstats_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__signalstats_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 106 of file vf\+\_\+signalstats.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__signalstats_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__signalstats_8c_a922a9bd3b3ca5db3728e67fe7bb67192}\label{vf__signalstats_8c_a922a9bd3b3ca5db3728e67fe7bb67192}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!ff\_vf\_signalstats@{ff\_vf\_signalstats}}
+\index{ff\_vf\_signalstats@{ff\_vf\_signalstats}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_signalstats}{ff\_vf\_signalstats}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+signalstats}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}signalstats"{}},}
+\DoxyCodeLine{    .description   = \textcolor{stringliteral}{"{}Generate statistics from video analysis."{}},}
+\DoxyCodeLine{    .init          = \mbox{\hyperlink{vf__signalstats_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .uninit        = \mbox{\hyperlink{vf__signalstats_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .query\_formats = \mbox{\hyperlink{vf__signalstats_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__signalstats_8c_ae016ebed32606b1c9a632c881f406b12}{SignalstatsContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{vf__signalstats_8c_a40d8f4c298bb7f8349dd7106ee9a07a5}{signalstats\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__signalstats_8c_a0de0a24da1adfa9feba1cb9b9fbd5c7d}{signalstats\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&signalstats\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1015 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a2c97031583b963745179756932c9dc57}\label{vf__signalstats_8c_a2c97031583b963745179756932c9dc57}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!filters\_def@{filters\_def}}
+\index{filters\_def@{filters\_def}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{filters\_def}{filters\_def}}
+{\footnotesize\ttfamily const \{ ... \}  filters\+\_\+def\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}TOUT"{}}, \mbox{\hyperlink{vf__signalstats_8c_a1e20049ce0d39709cb52af78bb370d2d}{filter8\_tout}}, \mbox{\hyperlink{vf__signalstats_8c_a8d89da740fbaa4d6e37cdf2599bd17f8}{filter16\_tout}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}VREP"{}}, \mbox{\hyperlink{vf__signalstats_8c_a5310b530843e2ddc85eb9c246e8f94ec}{filter8\_vrep}}, \mbox{\hyperlink{vf__signalstats_8c_a6ca4214d9f902fbc8ce975989a566817}{filter16\_vrep}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}BRNG"{}}, \mbox{\hyperlink{vf__signalstats_8c_a8f9d3fe1006af89701ce1f7ce2123842}{filter8\_brng}}, \mbox{\hyperlink{vf__signalstats_8c_af0a45de0160a903a68ac37e066270b00}{filter16\_brng}}\},}
+\DoxyCodeLine{    \{\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{vf__signalstats_8c_a8f8f80d37794cde9472343e4487ba3eb}\label{vf__signalstats_8c_a8f8f80d37794cde9472343e4487ba3eb}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!name@{name}}
+\index{name@{name}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{name}{name}}
+{\footnotesize\ttfamily const char$\ast$ name}
+
+
+
+Definition at line 455 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a399454592cf03313e92d0a8b855edf06}\label{vf__signalstats_8c_a399454592cf03313e92d0a8b855edf06}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!process16@{process16}}
+\index{process16@{process16}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{process16}{process16}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ process16) (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)}
+
+
+
+Definition at line 457 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_aca33ab5a09d4b754627c19af2bf99b9f}\label{vf__signalstats_8c_aca33ab5a09d4b754627c19af2bf99b9f}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!process8@{process8}}
+\index{process8@{process8}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{process8}{process8}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}($\ast$ process8) (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)}
+
+
+
+Definition at line 456 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a40d8f4c298bb7f8349dd7106ee9a07a5}\label{vf__signalstats_8c_a40d8f4c298bb7f8349dd7106ee9a07a5}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!signalstats\_inputs@{signalstats\_inputs}}
+\index{signalstats\_inputs@{signalstats\_inputs}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{signalstats\_inputs}{signalstats\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} signalstats\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name           = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .filter\_frame   = \mbox{\hyperlink{vf__signalstats_8c_a507c820aa4475d788435b7c8204df912}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 997 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_ae6cb45850d3351273d758c16152f707c}\label{vf__signalstats_8c_ae6cb45850d3351273d758c16152f707c}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!signalstats\_options@{signalstats\_options}}
+\index{signalstats\_options@{signalstats\_options}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{signalstats\_options}{signalstats\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} signalstats\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}stat"{}}, \textcolor{stringliteral}{"{}set statistics filters"{}}, \mbox{\hyperlink{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{postprocess_8c_a457779b8d619cd5eb74d6d737a37e820}{filters}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a7aaeee142b88a3078ddc57c644b49a7e}{AV\_OPT\_TYPE\_FLAGS}}, \{.i64=0\}, 0, INT\_MAX, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}filters"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}tout"{}}, \textcolor{stringliteral}{"{}analyze pixels for temporal outliers"{}},                0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=1<<\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa9a492355edccbdd017c426c4e2c256e}{FILTER\_TOUT}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}filters"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}vrep"{}}, \textcolor{stringliteral}{"{}analyze video lines for vertical line repetition"{}},    0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=1<<\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2eadcf7d71d03f3b4298650e9ca1361f}{FILTER\_VREP}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}filters"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}brng"{}}, \textcolor{stringliteral}{"{}analyze for pixels outside of broadcast range"{}},       0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=1<<\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa11ecb9c943fb7ec7fb93b37dc7e9736}{FILTER\_BRNG}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}filters"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}out"{}}, \textcolor{stringliteral}{"{}set video filter"{}}, \mbox{\hyperlink{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(outfilter), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a973228de893dbe6bd7a65d0747c15977}{FILTER\_NONE}}\}, -\/1, \mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2e550dd24770e44b8c7e15bb48a22ff2}{FILT\_NUMB}}-\/1, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}out"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}tout"{}}, \textcolor{stringliteral}{"{}highlight pixels that depict temporal outliers"{}},              0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa9a492355edccbdd017c426c4e2c256e}{FILTER\_TOUT}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}out"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}vrep"{}}, \textcolor{stringliteral}{"{}highlight video lines that depict vertical line repetition"{}},  0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083a2eadcf7d71d03f3b4298650e9ca1361f}{FILTER\_VREP}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}out"{}}\},}
+\DoxyCodeLine{        \{\textcolor{stringliteral}{"{}brng"{}}, \textcolor{stringliteral}{"{}highlight pixels that are outside of broadcast range"{}},        0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__signalstats_8c_a36bd51b89b9e0e6e4dbbe565b9155083aa11ecb9c943fb7ec7fb93b37dc7e9736}{FILTER\_BRNG}}\}, 0, 0, \mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}out"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}c"{}},     \textcolor{stringliteral}{"{}set highlight color"{}}, \mbox{\hyperlink{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(rgba\_color), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afdcd13cbd184901b05e27595e647fadc}{AV\_OPT\_TYPE\_COLOR}}, \{.str=\textcolor{stringliteral}{"{}yellow"{}}\}, .flags=\mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}color"{}}, \textcolor{stringliteral}{"{}set highlight color"{}}, \mbox{\hyperlink{vf__signalstats_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(rgba\_color), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afdcd13cbd184901b05e27595e647fadc}{AV\_OPT\_TYPE\_COLOR}}, \{.str=\textcolor{stringliteral}{"{}yellow"{}}\}, .flags=\mbox{\hyperlink{vf__signalstats_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}\},}
+\DoxyCodeLine{    \{\mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}\}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 73 of file vf\+\_\+signalstats.\+c.
+
+\mbox{\Hypertarget{vf__signalstats_8c_a0de0a24da1adfa9feba1cb9b9fbd5c7d}\label{vf__signalstats_8c_a0de0a24da1adfa9feba1cb9b9fbd5c7d}} 
+\index{vf\_signalstats.c@{vf\_signalstats.c}!signalstats\_outputs@{signalstats\_outputs}}
+\index{signalstats\_outputs@{signalstats\_outputs}!vf\_signalstats.c@{vf\_signalstats.c}}
+\doxysubsubsection{\texorpdfstring{signalstats\_outputs}{signalstats\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} signalstats\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name           = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .config\_props   = \mbox{\hyperlink{vf__signalstats_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{        .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1006 of file vf\+\_\+signalstats.\+c.
+

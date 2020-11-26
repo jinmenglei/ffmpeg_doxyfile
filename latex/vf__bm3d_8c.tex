@@ -1,0 +1,853 @@
+\hypertarget{vf__bm3d_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+bm3d.c File Reference}
+\label{vf__bm3d_8c}\index{E:/github/ffmpeg/libavfilter/vf\_bm3d.c@{E:/github/ffmpeg/libavfilter/vf\_bm3d.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/avfft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}framesync.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+bm3d.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\item 
+struct \mbox{\hyperlink{struct_pos_code}{Pos\+Code}}
+\item 
+struct \mbox{\hyperlink{struct_pos_pair_code}{Pos\+Pair\+Code}}
+\item 
+struct \mbox{\hyperlink{struct_slice_context}{Slice\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__bm3d_8c_a4ed5505d8a295ee7868d89a349db930e}{M\+A\+X\+\_\+\+N\+B\+\_\+\+T\+H\+R\+E\+A\+DS}}~32
+\item 
+\#define \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{vf__bm3d_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}{S\+QR}}(x)~((x) $\ast$ (x))
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{vf__bm3d_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} \mbox{\hyperlink{vf__bm3d_8c_ad0e2f72438bca580b1d9c28928eea90f}{Pos\+Code}}
+\item 
+typedef struct \mbox{\hyperlink{struct_pos_pair_code}{Pos\+Pair\+Code}} \mbox{\hyperlink{vf__bm3d_8c_a5b1fdffd380cb8d7f9ec58fddf42e149}{Pos\+Pair\+Code}}
+\item 
+typedef struct \mbox{\hyperlink{struct_slice_context}{Slice\+Context}} \mbox{\hyperlink{vf__bm3d_8c_a9691d71b0c25082d865f29ff475191f8}{Slice\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} \mbox{\hyperlink{vf__bm3d_8c_ab2deea61a00e90138b11018434128acf}{B\+M3\+D\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8}{Filter\+Modes}} \{ \mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a13c45196813cb44e6e81e9c48a5ec1b4}{B\+A\+S\+IC}}, 
+\mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8afb43b8264ea4d3dd9957ba1b3fd3f3d5}{F\+I\+N\+AL}}, 
+\mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a6f9d58c7dfd73d1d34b945c1a1d8c18a}{N\+B\+\_\+\+M\+O\+D\+ES}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vf__bm3d_8c_a156899c5a0264054d88c3f00801e31f4}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (bm3d)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a19b95ec2588672f9eb538b793ec6107b}{do\+\_\+search\+\_\+boundary}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane\+\_\+boundary, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+range, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+step)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_af8f500e7083efccf313e498d8ec5bc10}{search\+\_\+boundary}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane\+\_\+boundary, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+range, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+step, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vertical, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a353c8013457d3d129b2e2a7e2bac0364}{cmp\+\_\+scores}} (const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static double \mbox{\hyperlink{vf__bm3d_8c_a9a83469eb5c4155d8fc8b6107460d4a4}{do\+\_\+block\+\_\+ssd}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+stride, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+x)
+\item 
+static double \mbox{\hyperlink{vf__bm3d_8c_acb3e2c400d2faba6012f914a817f601a}{do\+\_\+block\+\_\+ssd16}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$\mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+stride, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+x)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_a71e880e8781ab6188a99bd133b022eaa}{do\+\_\+block\+\_\+matching\+\_\+multi}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+stride, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+range, const \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$search\+\_\+pos, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+size, float th\+\_\+mse, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} r\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_a1a0dc9f1b10ef2ca2de0816fa6d4c621}{block\+\_\+matching\+\_\+multi}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ref\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} exclude\+\_\+cur\+\_\+pos, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_a9b57221dda7172a47ebabf00ce283dc8}{block\+\_\+matching}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ref\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} j, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_ab224f382b2f6e2da5de24a023765c0f7}{get\+\_\+block\+\_\+row}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$srcp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+size, float $\ast$dst)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_aafa4b8022276def96aa953baf609a124}{get\+\_\+block\+\_\+row16}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$srcp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} block\+\_\+size, float $\ast$dst)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_a87b4d90d59bd18b8db108a2e85770cc3}{basic\+\_\+block\+\_\+filtering}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+linesize, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ref\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_acdba6dd16ac3acf5c9a29ea109930b5c}{final\+\_\+block\+\_\+filtering}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+linesize, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ref\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_ab91779694d21237fb72942619c51c831}{do\+\_\+output}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dst\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_aea5afee459c7d1e7cbc17310d185cd6c}{do\+\_\+output16}} (\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dst\+\_\+linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a0fbb22a110fb726a8cecad69e873af91}{filter\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a7d9ee8410808997fb3809e80d1e003d0}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$$\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_af6e24f1147c8b7141329fd04f2b830ff}{process\+\_\+frame}} (\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$\mbox{\hyperlink{cbs__vp9_8c_af257cad12c4d046a131f33cf6cce2c48}{fs}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__bm3d_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__bm3d_8c_ab38a11f15e1b9354b9ece3cc7fc130d0}{bm3d\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__bm3d_8c_ace560c2c96f00ba16ff220bda4bd79db}{bm3d\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__bm3d_8c_aef209d084226160204dea56f4d59be6e}{ff\+\_\+vf\+\_\+bm3d}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 131 of file vf\+\_\+bm3d.\+c.
+
+\mbox{\Hypertarget{vf__bm3d_8c_a4ed5505d8a295ee7868d89a349db930e}\label{vf__bm3d_8c_a4ed5505d8a295ee7868d89a349db930e}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!MAX\_NB\_THREADS@{MAX\_NB\_THREADS}}
+\index{MAX\_NB\_THREADS@{MAX\_NB\_THREADS}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_NB\_THREADS}{MAX\_NB\_THREADS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+N\+B\+\_\+\+T\+H\+R\+E\+A\+DS~32}
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000023}{Todo}}]
+\begin{DoxyItemize}
+\item non-\/power of 2 D\+CT
+\item opponent color space
+\item temporal support 
+\end{DoxyItemize}\end{DoxyRefDesc}
+
+
+Definition at line 47 of file vf\+\_\+bm3d.\+c.
+
+\mbox{\Hypertarget{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}}, x)}
+
+
+
+Definition at line 130 of file vf\+\_\+bm3d.\+c.
+
+\mbox{\Hypertarget{vf__bm3d_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}\label{vf__bm3d_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!SQR@{SQR}}
+\index{SQR@{SQR}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{SQR}{SQR}}
+{\footnotesize\ttfamily \#define S\+QR(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x) $\ast$ (x))}
+
+
+
+Definition at line 778 of file vf\+\_\+bm3d.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__bm3d_8c_ab2deea61a00e90138b11018434128acf}\label{vf__bm3d_8c_ab2deea61a00e90138b11018434128acf}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!BM3DContext@{BM3DContext}}
+\index{BM3DContext@{BM3DContext}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{BM3DContext}{BM3DContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} \mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}}}
+
+\mbox{\Hypertarget{vf__bm3d_8c_ad0e2f72438bca580b1d9c28928eea90f}\label{vf__bm3d_8c_ad0e2f72438bca580b1d9c28928eea90f}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!PosCode@{PosCode}}
+\index{PosCode@{PosCode}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{PosCode}{PosCode}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} \mbox{\hyperlink{struct_pos_code}{Pos\+Code}}}
+
+\mbox{\Hypertarget{vf__bm3d_8c_a5b1fdffd380cb8d7f9ec58fddf42e149}\label{vf__bm3d_8c_a5b1fdffd380cb8d7f9ec58fddf42e149}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!PosPairCode@{PosPairCode}}
+\index{PosPairCode@{PosPairCode}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{PosPairCode}{PosPairCode}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_pos_pair_code}{Pos\+Pair\+Code}} \mbox{\hyperlink{struct_pos_pair_code}{Pos\+Pair\+Code}}}
+
+\mbox{\Hypertarget{vf__bm3d_8c_a9691d71b0c25082d865f29ff475191f8}\label{vf__bm3d_8c_a9691d71b0c25082d865f29ff475191f8}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!SliceContext@{SliceContext}}
+\index{SliceContext@{SliceContext}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{SliceContext}{SliceContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_slice_context}{Slice\+Context}} \mbox{\hyperlink{struct_slice_context}{Slice\+Context}}}
+
+\mbox{\Hypertarget{vf__bm3d_8c_a5d1975e203ce6f822538d556409ccf6a}\label{vf__bm3d_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8}\label{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!FilterModes@{FilterModes}}
+\index{FilterModes@{FilterModes}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{FilterModes}{FilterModes}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8}{Filter\+Modes}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BASIC@{BASIC}!vf\_bm3d.c@{vf\_bm3d.c}}\index{vf\_bm3d.c@{vf\_bm3d.c}!BASIC@{BASIC}}}\mbox{\Hypertarget{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a13c45196813cb44e6e81e9c48a5ec1b4}\label{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a13c45196813cb44e6e81e9c48a5ec1b4}} 
+B\+A\+S\+IC&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FINAL@{FINAL}!vf\_bm3d.c@{vf\_bm3d.c}}\index{vf\_bm3d.c@{vf\_bm3d.c}!FINAL@{FINAL}}}\mbox{\Hypertarget{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8afb43b8264ea4d3dd9957ba1b3fd3f3d5}\label{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8afb43b8264ea4d3dd9957ba1b3fd3f3d5}} 
+F\+I\+N\+AL&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_MODES@{NB\_MODES}!vf\_bm3d.c@{vf\_bm3d.c}}\index{vf\_bm3d.c@{vf\_bm3d.c}!NB\_MODES@{NB\_MODES}}}\mbox{\Hypertarget{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a6f9d58c7dfd73d1d34b945c1a1d8c18a}\label{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a6f9d58c7dfd73d1d34b945c1a1d8c18a}} 
+N\+B\+\_\+\+M\+O\+D\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 49 of file vf\+\_\+bm3d.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac}\label{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!activate@{activate}}
+\index{activate@{activate}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 854 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a156899c5a0264054d88c3f00801e31f4}\label{vf__bm3d_8c_a156899c5a0264054d88c3f00801e31f4}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{bm3d}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__bm3d_8c_a87b4d90d59bd18b8db108a2e85770cc3}\label{vf__bm3d_8c_a87b4d90d59bd18b8db108a2e85770cc3}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!basic\_block\_filtering@{basic\_block\_filtering}}
+\index{basic\_block\_filtering@{basic\_block\_filtering}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{basic\_block\_filtering()}{basic\_block\_filtering()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} basic\+\_\+block\+\_\+filtering (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+linesize,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 394 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{vf__bm3d_8c_a87b4d90d59bd18b8db108a2e85770cc3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{vf__bm3d_8c_a87b4d90d59bd18b8db108a2e85770cc3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a9b57221dda7172a47ebabf00ce283dc8}\label{vf__bm3d_8c_a9b57221dda7172a47ebabf00ce283dc8}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!block\_matching@{block\_matching}}
+\index{block\_matching@{block\_matching}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{block\_matching()}{block\_matching()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} block\+\_\+matching (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{j,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 355 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a9b57221dda7172a47ebabf00ce283dc8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a9b57221dda7172a47ebabf00ce283dc8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a1a0dc9f1b10ef2ca2de0816fa6d4c621}\label{vf__bm3d_8c_a1a0dc9f1b10ef2ca2de0816fa6d4c621}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!block\_matching\_multi@{block\_matching\_multi}}
+\index{block\_matching\_multi@{block\_matching\_multi}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{block\_matching\_multi()}{block\_matching\_multi()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} block\+\_\+matching\+\_\+multi (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{exclude\+\_\+cur\+\_\+pos,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 315 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a1a0dc9f1b10ef2ca2de0816fa6d4c621_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a1a0dc9f1b10ef2ca2de0816fa6d4c621_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a353c8013457d3d129b2e2a7e2bac0364}\label{vf__bm3d_8c_a353c8013457d3d129b2e2a7e2bac0364}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!cmp\_scores@{cmp\_scores}}
+\index{cmp\_scores@{cmp\_scores}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{cmp\_scores()}{cmp\_scores()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cmp\+\_\+scores (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{a,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 228 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a353c8013457d3d129b2e2a7e2bac0364_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{vf__bm3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 780 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=213pt]{vf__bm3d_8c_a6349dbef489cb1be3b41b8aeffdd2a21_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_ad21a4e672440f6072991b632efe70c1b}\label{vf__bm3d_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 963 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a71e880e8781ab6188a99bd133b022eaa}\label{vf__bm3d_8c_a71e880e8781ab6188a99bd133b022eaa}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_block\_matching\_multi@{do\_block\_matching\_multi}}
+\index{do\_block\_matching\_multi@{do\_block\_matching\_multi}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_block\_matching\_multi()}{do\_block\_matching\_multi()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} do\+\_\+block\+\_\+matching\+\_\+multi (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+range,  }\item[{const \mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$}]{search\+\_\+pos,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{search\+\_\+size,  }\item[{float}]{th\+\_\+mse,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 277 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=313pt]{vf__bm3d_8c_a71e880e8781ab6188a99bd133b022eaa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a71e880e8781ab6188a99bd133b022eaa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a9a83469eb5c4155d8fc8b6107460d4a4}\label{vf__bm3d_8c_a9a83469eb5c4155d8fc8b6107460d4a4}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_block\_ssd@{do\_block\_ssd}}
+\index{do\_block\_ssd@{do\_block\_ssd}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_block\_ssd()}{do\_block\_ssd()}}
+{\footnotesize\ttfamily static double do\+\_\+block\+\_\+ssd (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$}]{pos,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 235 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=326pt]{vf__bm3d_8c_a9a83469eb5c4155d8fc8b6107460d4a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_acb3e2c400d2faba6012f914a817f601a}\label{vf__bm3d_8c_acb3e2c400d2faba6012f914a817f601a}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_block\_ssd16@{do\_block\_ssd16}}
+\index{do\_block\_ssd16@{do\_block\_ssd16}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_block\_ssd16()}{do\_block\_ssd16()}}
+{\footnotesize\ttfamily static double do\+\_\+block\+\_\+ssd16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_pos_code}{Pos\+Code}} $\ast$}]{pos,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{r\+\_\+x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 256 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{vf__bm3d_8c_acb3e2c400d2faba6012f914a817f601a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_ab91779694d21237fb72942619c51c831}\label{vf__bm3d_8c_ab91779694d21237fb72942619c51c831}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_output@{do\_output}}
+\index{do\_output@{do\_output}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_output()}{do\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} do\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dst\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 645 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{vf__bm3d_8c_ab91779694d21237fb72942619c51c831_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_aea5afee459c7d1e7cbc17310d185cd6c}\label{vf__bm3d_8c_aea5afee459c7d1e7cbc17310d185cd6c}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_output16@{do\_output16}}
+\index{do\_output16@{do\_output16}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_output16()}{do\_output16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} do\+\_\+output16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dst\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 672 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{vf__bm3d_8c_aea5afee459c7d1e7cbc17310d185cd6c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{vf__bm3d_8c_aea5afee459c7d1e7cbc17310d185cd6c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a19b95ec2588672f9eb538b793ec6107b}\label{vf__bm3d_8c_a19b95ec2588672f9eb538b793ec6107b}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!do\_search\_boundary@{do\_search\_boundary}}
+\index{do\_search\_boundary@{do\_search\_boundary}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{do\_search\_boundary()}{do\_search\_boundary()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} do\+\_\+search\+\_\+boundary (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pos,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane\+\_\+boundary,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{search\+\_\+range,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{search\+\_\+step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 198 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__bm3d_8c_a19b95ec2588672f9eb538b793ec6107b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a19b95ec2588672f9eb538b793ec6107b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a7d9ee8410808997fb3809e80d1e003d0}\label{vf__bm3d_8c_a7d9ee8410808997fb3809e80d1e003d0}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$$\ast$}]{out,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{ref }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 743 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a7d9ee8410808997fb3809e80d1e003d0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a7d9ee8410808997fb3809e80d1e003d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a0fbb22a110fb726a8cecad69e873af91}\label{vf__bm3d_8c_a0fbb22a110fb726a8cecad69e873af91}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!filter\_slice@{filter\_slice}}
+\index{filter\_slice@{filter\_slice}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{filter\_slice()}{filter\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 700 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a0fbb22a110fb726a8cecad69e873af91_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_a0fbb22a110fb726a8cecad69e873af91_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_acdba6dd16ac3acf5c9a29ea109930b5c}\label{vf__bm3d_8c_acdba6dd16ac3acf5c9a29ea109930b5c}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!final\_block\_filtering@{final\_block\_filtering}}
+\index{final\_block\_filtering@{final\_block\_filtering}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{final\_block\_filtering()}{final\_block\_filtering()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} final\+\_\+block\+\_\+filtering (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_b_m3_d_context}{B\+M3\+D\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+linesize,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{ref,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ref\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 513 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{vf__bm3d_8c_acdba6dd16ac3acf5c9a29ea109930b5c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{vf__bm3d_8c_acdba6dd16ac3acf5c9a29ea109930b5c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_ab224f382b2f6e2da5de24a023765c0f7}\label{vf__bm3d_8c_ab224f382b2f6e2da5de24a023765c0f7}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!get\_block\_row@{get\_block\_row}}
+\index{get\_block\_row@{get\_block\_row}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{get\_block\_row()}{get\_block\_row()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+block\+\_\+row (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{srcp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{block\+\_\+size,  }\item[{float $\ast$}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 372 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{vf__bm3d_8c_ab224f382b2f6e2da5de24a023765c0f7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_aafa4b8022276def96aa953baf609a124}\label{vf__bm3d_8c_aafa4b8022276def96aa953baf609a124}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!get\_block\_row16@{get\_block\_row16}}
+\index{get\_block\_row16@{get\_block\_row16}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{get\_block\_row16()}{get\_block\_row16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+block\+\_\+row16 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{srcp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{block\+\_\+size,  }\item[{float $\ast$}]{dst }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 383 of file vf\+\_\+bm3d.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=338pt]{vf__bm3d_8c_aafa4b8022276def96aa953baf609a124_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!init@{init}}
+\index{init@{init}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 908 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_af6e24f1147c8b7141329fd04f2b830ff}\label{vf__bm3d_8c_af6e24f1147c8b7141329fd04f2b830ff}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!process\_frame@{process\_frame}}
+\index{process\_frame@{process\_frame}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{process\_frame()}{process\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} process\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_f_f_frame_sync}{F\+F\+Frame\+Sync}} $\ast$}]{fs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 888 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_af6e24f1147c8b7141329fd04f2b830ff_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{vf__bm3d_8c_af6e24f1147c8b7141329fd04f2b830ff_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 164 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_af8f500e7083efccf313e498d8ec5bc10}\label{vf__bm3d_8c_af8f500e7083efccf313e498d8ec5bc10}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!search\_boundary@{search\_boundary}}
+\index{search\_boundary@{search\_boundary}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{search\_boundary()}{search\_boundary()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} search\+\_\+boundary (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{plane\+\_\+boundary,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{search\+\_\+range,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{search\+\_\+step,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vertical,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 223 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{vf__bm3d_8c_af8f500e7083efccf313e498d8ec5bc10_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_af8f500e7083efccf313e498d8ec5bc10_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6}\label{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!uninit@{uninit}}
+\index{uninit@{uninit}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1017 of file vf\+\_\+bm3d.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__bm3d_8c_ab38a11f15e1b9354b9ece3cc7fc130d0}\label{vf__bm3d_8c_ab38a11f15e1b9354b9ece3cc7fc130d0}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!bm3d\_options@{bm3d\_options}}
+\index{bm3d\_options@{bm3d\_options}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{bm3d\_options}{bm3d\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} bm3d\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}sigma"{}},  \textcolor{stringliteral}{"{}set denoising strength"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(sigma),          \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=1\},     0,      99999.9, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}block"{}},  \textcolor{stringliteral}{"{}set log2(size) of local patch"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(block\_size),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=4\},     4,            6, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}bstep"{}},  \textcolor{stringliteral}{"{}set sliding step for processing blocks"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(block\_step),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=4\},     1,           64, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}group"{}},  \textcolor{stringliteral}{"{}set maximal number of similar blocks"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(group\_size),     \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=1\},     1,          256, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}range"{}},  \textcolor{stringliteral}{"{}set block matching range"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(bm\_range),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=9\},     1,    INT32\_MAX, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}mstep"{}},  \textcolor{stringliteral}{"{}set step for block matching"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(bm\_step),        \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=1\},     1,           64, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}thmse"{}},  \textcolor{stringliteral}{"{}set threshold of mean square error for block matching"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(th\_mse),         \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=0\},     0,    INT32\_MAX, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}hdthr"{}},  \textcolor{stringliteral}{"{}set hard threshold for 3D transfer domain"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(hard\_threshold), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl=2.7\},   0,    INT32\_MAX, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}estim"{}},  \textcolor{stringliteral}{"{}set filtering estimation mode"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}),           \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=\mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a13c45196813cb44e6e81e9c48a5ec1b4}{BASIC}}\}, 0,   \mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a6f9d58c7dfd73d1d34b945c1a1d8c18a}{NB\_MODES}}-\/1, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}basic"{}},  \textcolor{stringliteral}{"{}basic estimate"{}},}
+\DoxyCodeLine{        0,                      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8a13c45196813cb44e6e81e9c48a5ec1b4}{BASIC}}\}, 0,            0, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}final"{}},  \textcolor{stringliteral}{"{}final estimate"{}},}
+\DoxyCodeLine{        0,                      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64=\mbox{\hyperlink{vf__bm3d_8c_a41d960f599eb8eea73222dde6a55cab8afb43b8264ea4d3dd9957ba1b3fd3f3d5}{FINAL}}\}, 0,            0, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}, \textcolor{stringliteral}{"{}mode"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}ref"{}},    \textcolor{stringliteral}{"{}have reference stream"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{tests_2jpeg2000dwt_8c_a5cabdd8be5af41f675fed06498e094b7}{ref}}),            \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}},  \{.i64=0\},     0,            1, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}planes"{}}, \textcolor{stringliteral}{"{}set planes to filter"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__bm3d_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{llviddspenc_8c_a39de7029a33bc3271ae437de0a38c343}{planes}}),         \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},   \{.i64=7\},     0,           15, \mbox{\hyperlink{vf__bm3d_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 132 of file vf\+\_\+bm3d.\+c.
+
+\mbox{\Hypertarget{vf__bm3d_8c_ace560c2c96f00ba16ff220bda4bd79db}\label{vf__bm3d_8c_ace560c2c96f00ba16ff220bda4bd79db}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!bm3d\_outputs@{bm3d\_outputs}}
+\index{bm3d\_outputs@{bm3d\_outputs}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{bm3d\_outputs}{bm3d\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} bm3d\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{vf__bm3d_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1049 of file vf\+\_\+bm3d.\+c.
+
+\mbox{\Hypertarget{vf__bm3d_8c_aef209d084226160204dea56f4d59be6e}\label{vf__bm3d_8c_aef209d084226160204dea56f4d59be6e}} 
+\index{vf\_bm3d.c@{vf\_bm3d.c}!ff\_vf\_bm3d@{ff\_vf\_bm3d}}
+\index{ff\_vf\_bm3d@{ff\_vf\_bm3d}!vf\_bm3d.c@{vf\_bm3d.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_bm3d}{ff\_vf\_bm3d}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+bm3d}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}bm3d"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Block-\/Matching 3D denoiser."{}}),}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__bm3d_8c_ab2deea61a00e90138b11018434128acf}{BM3DContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = \mbox{\hyperlink{vf__bm3d_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{vf__bm3d_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac}{activate}}      = \mbox{\hyperlink{vf__bm3d_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{vf__bm3d_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{vf__bm3d_8c_ace560c2c96f00ba16ff220bda4bd79db}{bm3d\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&bm3d\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gae225339ad292450a5832296f58f0d424}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_INTERNAL}} |}
+\DoxyCodeLine{                     \mbox{\hyperlink{group__lavfi_gae6ed6c10a03508829bdf17560e3e10e5}{AVFILTER\_FLAG\_DYNAMIC\_INPUTS}} |}
+\DoxyCodeLine{                     \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1058 of file vf\+\_\+bm3d.\+c.
+

@@ -1,0 +1,765 @@
+\hypertarget{libzvbi-teletextdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/libzvbi-\/teletextdec.c File Reference}
+\label{libzvbi-teletextdec_8c}\index{E:/github/ffmpeg/libavcodec/libzvbi-\/teletextdec.c@{E:/github/ffmpeg/libavcodec/libzvbi-\/teletextdec.c}}
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/ass.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavcodec/dvbtxt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/log.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$libzvbi.\+h$>$}\newline
+Include dependency graph for libzvbi-\/teletextdec.c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_teletext_page}{Teletext\+Page}}
+\item 
+struct \mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_ab665d6b14a83faf90d9637c179694c77}{T\+E\+X\+T\+\_\+\+M\+A\+X\+SZ}}~(25 $\ast$ (56 + 1) $\ast$ 4 + 2)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a76fac93c7e4b8e26f8bba37438b8a867}{V\+B\+I\+\_\+\+N\+B\+\_\+\+C\+O\+L\+O\+RS}}~40
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a74a15fbaf88283e68a11eddc5b24bfd0}{V\+B\+I\+\_\+\+T\+R\+A\+N\+S\+P\+A\+R\+E\+N\+T\+\_\+\+B\+L\+A\+CK}}~8
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_aba32782053c6a2b01e3706d632d77895}{R\+G\+BA}}(\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}},  \mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $<$$<$ 24) $\vert$ ((\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $<$$<$ 16) $\vert$ ((\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) $<$$<$ 8) $\vert$ (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}))
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a9995dc981fddc3f4d490cb6e67e086e0}{V\+B\+I\+\_\+R}}(rgba)~(((rgba) $>$$>$ 0) \& 0x\+FF)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_afc6d0e02ca8957b791fb3f3449e0f9c6}{V\+B\+I\+\_\+G}}(rgba)~(((rgba) $>$$>$ 8) \& 0x\+FF)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a9d7df06847a2b1867257c0dd9e7df13b}{V\+B\+I\+\_\+B}}(rgba)~(((rgba) $>$$>$ 16) \& 0x\+FF)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_ae4184b2783f70a7b94a05ffb54fbee09}{V\+B\+I\+\_\+A}}(rgba)~(((rgba) $>$$>$ 24) \& 0x\+FF)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a28ef9b75bb85f31529516f35e97379af}{M\+A\+X\+\_\+\+B\+U\+F\+F\+E\+R\+E\+D\+\_\+\+P\+A\+G\+ES}}~25
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a53f19a7700bf856c221b733d1fa2fcf3}{B\+I\+T\+M\+A\+P\+\_\+\+C\+H\+A\+R\+\_\+\+W\+I\+D\+TH}}~12
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a89676c0e3e3c3b84c6b7f20f1c171cad}{B\+I\+T\+M\+A\+P\+\_\+\+C\+H\+A\+R\+\_\+\+H\+E\+I\+G\+HT}}~10
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_ad826826fe755da59dcff55bf092c9ed8}{M\+A\+X\+\_\+\+S\+L\+I\+C\+ES}}~64
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_acd1d8c525cc07be48be3f90e91b833e5}{I\+S\+\_\+\+T\+X\+T\+\_\+\+S\+P\+A\+CE}}(ch)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}~\mbox{\hyperlink{opt_8h_ad27ec6a75c8a2c21329e443b15b368c3}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+S\+U\+B\+T\+I\+T\+L\+E\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_teletext_page}{Teletext\+Page}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a7ac8df47d376315b05a6aaacdd615938}{Teletext\+Page}}
+\item 
+typedef struct \mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a91cf6d95c64ae702e49002d0e889e36c}{Teletext\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f50a36a192a4622ec63c87a38bffcd0}{my\+\_\+ass\+\_\+subtitle\+\_\+header}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a8f9a4d255d830ecc711f7a9573a36462}{chop\+\_\+spaces\+\_\+utf8}} (const unsigned char $\ast$t, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a78025974a8045ad0aae3806df4ce7131}{subtitle\+\_\+rect\+\_\+free}} (\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$$\ast$sub\+\_\+rect)
+\item 
+static char $\ast$ \mbox{\hyperlink{libzvbi-teletextdec_8c_ae9a7c9fe41875efde9f7f07cc4efb387}{create\+\_\+ass\+\_\+text}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$text)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_ab5757b662607b68a62b47a76e4ca876e}{gen\+\_\+sub\+\_\+text}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$sub\+\_\+rect, vbi\+\_\+page $\ast$page, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} chop\+\_\+top)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a6eaf623495231343c445178f6de26ab3}{bprint\+\_\+color}} (const char $\ast$\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}, A\+V\+B\+Print $\ast$buf, vbi\+\_\+page $\ast$page, unsigned ci)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a3b67ad1aa7a8e531dbf63aef9bfe59fe}{get\+\_\+trim\+\_\+info}} (vbi\+\_\+page $\ast$page, vbi\+\_\+char $\ast$row, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$leading, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$trailing, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$olen)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a3d7058049ae915ed330b4fb7ba610bfa}{decode\+\_\+string}} (vbi\+\_\+page $\ast$page, vbi\+\_\+char $\ast$row, A\+V\+B\+Print $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}}, vbi\+\_\+color $\ast$cur\+\_\+color, vbi\+\_\+color $\ast$cur\+\_\+back\+\_\+color)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a45b16ea66f9fc1bf03c303410ddbade1}{gen\+\_\+sub\+\_\+ass}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$sub\+\_\+rect, vbi\+\_\+page $\ast$page, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} chop\+\_\+top)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a129b02ef3eb9e48605d74b5de3f80d2d}{fix\+\_\+transparency}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$sub\+\_\+rect, vbi\+\_\+page $\ast$page, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} chop\+\_\+top, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} resx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} resy)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a208f00a738b2cc2c020515ce6dce97f5}{gen\+\_\+sub\+\_\+bitmap}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$sub\+\_\+rect, vbi\+\_\+page $\ast$page, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} chop\+\_\+top)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_af2cdb546e12c62dec4813da99e849769}{handler}} (vbi\+\_\+event $\ast$ev, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{cbs__mpeg2__syntax__template_8c_a1782c46926cfea213509f4fc0f7fd555}{user\+\_\+data}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a9b9e6a5e8caa092a2646badeb4cce174}{slice\+\_\+to\+\_\+vbi\+\_\+lines}} (\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a20a8d1362b23c243dadb680f07a542bd}{teletext\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+sub\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_ab5ccec2b4cd1156f8ba0dac7ea939a63}{teletext\+\_\+init\+\_\+decoder}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3}{teletext\+\_\+close\+\_\+decoder}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a27799bffe3a7b789ecdb3f79c1958c0c}{teletext\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a8160e3272a784d9c8f0321ab442638db}{teletext\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f118624d6bbead95848a7db06efacb2}{ff\+\_\+libzvbi\+\_\+teletext\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a89676c0e3e3c3b84c6b7f20f1c171cad}\label{libzvbi-teletextdec_8c_a89676c0e3e3c3b84c6b7f20f1c171cad}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!BITMAP\_CHAR\_HEIGHT@{BITMAP\_CHAR\_HEIGHT}}
+\index{BITMAP\_CHAR\_HEIGHT@{BITMAP\_CHAR\_HEIGHT}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{BITMAP\_CHAR\_HEIGHT}{BITMAP\_CHAR\_HEIGHT}}
+{\footnotesize\ttfamily \#define B\+I\+T\+M\+A\+P\+\_\+\+C\+H\+A\+R\+\_\+\+H\+E\+I\+G\+HT~10}
+
+
+
+Definition at line 43 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a53f19a7700bf856c221b733d1fa2fcf3}\label{libzvbi-teletextdec_8c_a53f19a7700bf856c221b733d1fa2fcf3}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!BITMAP\_CHAR\_WIDTH@{BITMAP\_CHAR\_WIDTH}}
+\index{BITMAP\_CHAR\_WIDTH@{BITMAP\_CHAR\_WIDTH}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{BITMAP\_CHAR\_WIDTH}{BITMAP\_CHAR\_WIDTH}}
+{\footnotesize\ttfamily \#define B\+I\+T\+M\+A\+P\+\_\+\+C\+H\+A\+R\+\_\+\+W\+I\+D\+TH~12}
+
+
+
+Definition at line 42 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_acd1d8c525cc07be48be3f90e91b833e5}\label{libzvbi-teletextdec_8c_acd1d8c525cc07be48be3f90e91b833e5}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!IS\_TXT\_SPACE@{IS\_TXT\_SPACE}}
+\index{IS\_TXT\_SPACE@{IS\_TXT\_SPACE}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{IS\_TXT\_SPACE}{IS\_TXT\_SPACE}}
+{\footnotesize\ttfamily \#define I\+S\+\_\+\+T\+X\+T\+\_\+\+S\+P\+A\+CE(\begin{DoxyParamCaption}\item[{}]{ch }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{                          ((ch).unicode < 0x0020 || (ch).unicode >= 0xe000 || (ch).unicode == 0x00a0 ||\(\backslash\)}
+\DoxyCodeLine{                          (ch).size > VBI\_DOUBLE\_SIZE || (ch).opacity == VBI\_TRANSPARENT\_SPACE)}
+
+\end{DoxyCode}
+
+
+Definition at line 241 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a28ef9b75bb85f31529516f35e97379af}\label{libzvbi-teletextdec_8c_a28ef9b75bb85f31529516f35e97379af}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!MAX\_BUFFERED\_PAGES@{MAX\_BUFFERED\_PAGES}}
+\index{MAX\_BUFFERED\_PAGES@{MAX\_BUFFERED\_PAGES}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_BUFFERED\_PAGES}{MAX\_BUFFERED\_PAGES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+B\+U\+F\+F\+E\+R\+E\+D\+\_\+\+P\+A\+G\+ES~25}
+
+
+
+Definition at line 41 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ad826826fe755da59dcff55bf092c9ed8}\label{libzvbi-teletextdec_8c_ad826826fe755da59dcff55bf092c9ed8}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!MAX\_SLICES@{MAX\_SLICES}}
+\index{MAX\_SLICES@{MAX\_SLICES}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_SLICES}{MAX\_SLICES}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+S\+L\+I\+C\+ES~64}
+
+
+
+Definition at line 44 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}}, x)}
+
+
+
+Definition at line 796 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_aba32782053c6a2b01e3706d632d77895}\label{libzvbi-teletextdec_8c_aba32782053c6a2b01e3706d632d77895}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!RGBA@{RGBA}}
+\index{RGBA@{RGBA}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{RGBA}{RGBA}}
+{\footnotesize\ttfamily \#define R\+G\+BA(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}},  }\item[{}]{\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  }\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $<$$<$ 24) $\vert$ ((\mbox{\hyperlink{vf__curves_8c_a33ac7b8ce37a3a60855883424fcf8b62}{r}}) $<$$<$ 16) $\vert$ ((\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}}) $<$$<$ 8) $\vert$ (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}))}
+
+
+
+Definition at line 36 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}\label{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!SD@{SD}}
+\index{SD@{SD}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{SD}{SD}}
+{\footnotesize\ttfamily \#define SD~\mbox{\hyperlink{opt_8h_ad27ec6a75c8a2c21329e443b15b368c3}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+S\+U\+B\+T\+I\+T\+L\+E\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 797 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ab665d6b14a83faf90d9637c179694c77}\label{libzvbi-teletextdec_8c_ab665d6b14a83faf90d9637c179694c77}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!TEXT\_MAXSZ@{TEXT\_MAXSZ}}
+\index{TEXT\_MAXSZ@{TEXT\_MAXSZ}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{TEXT\_MAXSZ}{TEXT\_MAXSZ}}
+{\footnotesize\ttfamily \#define T\+E\+X\+T\+\_\+\+M\+A\+X\+SZ~(25 $\ast$ (56 + 1) $\ast$ 4 + 2)}
+
+
+
+Definition at line 33 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ae4184b2783f70a7b94a05ffb54fbee09}\label{libzvbi-teletextdec_8c_ae4184b2783f70a7b94a05ffb54fbee09}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_A@{VBI\_A}}
+\index{VBI\_A@{VBI\_A}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_A}{VBI\_A}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+A(\begin{DoxyParamCaption}\item[{}]{rgba }\end{DoxyParamCaption})~(((rgba) $>$$>$ 24) \& 0x\+FF)}
+
+
+
+Definition at line 40 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9d7df06847a2b1867257c0dd9e7df13b}\label{libzvbi-teletextdec_8c_a9d7df06847a2b1867257c0dd9e7df13b}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_B@{VBI\_B}}
+\index{VBI\_B@{VBI\_B}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_B}{VBI\_B}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+B(\begin{DoxyParamCaption}\item[{}]{rgba }\end{DoxyParamCaption})~(((rgba) $>$$>$ 16) \& 0x\+FF)}
+
+
+
+Definition at line 39 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_afc6d0e02ca8957b791fb3f3449e0f9c6}\label{libzvbi-teletextdec_8c_afc6d0e02ca8957b791fb3f3449e0f9c6}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_G@{VBI\_G}}
+\index{VBI\_G@{VBI\_G}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_G}{VBI\_G}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+G(\begin{DoxyParamCaption}\item[{}]{rgba }\end{DoxyParamCaption})~(((rgba) $>$$>$ 8) \& 0x\+FF)}
+
+
+
+Definition at line 38 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a76fac93c7e4b8e26f8bba37438b8a867}\label{libzvbi-teletextdec_8c_a76fac93c7e4b8e26f8bba37438b8a867}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_NB\_COLORS@{VBI\_NB\_COLORS}}
+\index{VBI\_NB\_COLORS@{VBI\_NB\_COLORS}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_NB\_COLORS}{VBI\_NB\_COLORS}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+\+N\+B\+\_\+\+C\+O\+L\+O\+RS~40}
+
+
+
+Definition at line 34 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9995dc981fddc3f4d490cb6e67e086e0}\label{libzvbi-teletextdec_8c_a9995dc981fddc3f4d490cb6e67e086e0}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_R@{VBI\_R}}
+\index{VBI\_R@{VBI\_R}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_R}{VBI\_R}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+R(\begin{DoxyParamCaption}\item[{}]{rgba }\end{DoxyParamCaption})~(((rgba) $>$$>$ 0) \& 0x\+FF)}
+
+
+
+Definition at line 37 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a74a15fbaf88283e68a11eddc5b24bfd0}\label{libzvbi-teletextdec_8c_a74a15fbaf88283e68a11eddc5b24bfd0}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!VBI\_TRANSPARENT\_BLACK@{VBI\_TRANSPARENT\_BLACK}}
+\index{VBI\_TRANSPARENT\_BLACK@{VBI\_TRANSPARENT\_BLACK}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{VBI\_TRANSPARENT\_BLACK}{VBI\_TRANSPARENT\_BLACK}}
+{\footnotesize\ttfamily \#define V\+B\+I\+\_\+\+T\+R\+A\+N\+S\+P\+A\+R\+E\+N\+T\+\_\+\+B\+L\+A\+CK~8}
+
+
+
+Definition at line 35 of file libzvbi-\/teletextdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a91cf6d95c64ae702e49002d0e889e36c}\label{libzvbi-teletextdec_8c_a91cf6d95c64ae702e49002d0e889e36c}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!TeletextContext@{TeletextContext}}
+\index{TeletextContext@{TeletextContext}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{TeletextContext}{TeletextContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} \mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}}}
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a7ac8df47d376315b05a6aaacdd615938}\label{libzvbi-teletextdec_8c_a7ac8df47d376315b05a6aaacdd615938}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!TeletextPage@{TeletextPage}}
+\index{TeletextPage@{TeletextPage}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{TeletextPage}{TeletextPage}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_teletext_page}{Teletext\+Page}} \mbox{\hyperlink{struct_teletext_page}{Teletext\+Page}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a6eaf623495231343c445178f6de26ab3}\label{libzvbi-teletextdec_8c_a6eaf623495231343c445178f6de26ab3}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!bprint\_color@{bprint\_color}}
+\index{bprint\_color@{bprint\_color}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{bprint\_color()}{bprint\_color()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bprint\+\_\+color (\begin{DoxyParamCaption}\item[{const char $\ast$}]{type,  }\item[{A\+V\+B\+Print $\ast$}]{buf,  }\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{unsigned}]{ci }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 233 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a6eaf623495231343c445178f6de26ab3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a6eaf623495231343c445178f6de26ab3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a8f9a4d255d830ecc711f7a9573a36462}\label{libzvbi-teletextdec_8c_a8f9a4d255d830ecc711f7a9573a36462}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!chop\_spaces\_utf8@{chop\_spaces\_utf8}}
+\index{chop\_spaces\_utf8@{chop\_spaces\_utf8}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{chop\_spaces\_utf8()}{chop\_spaces\_utf8()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} chop\+\_\+spaces\+\_\+utf8 (\begin{DoxyParamCaption}\item[{const unsigned char $\ast$}]{t,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 130 of file libzvbi-\/teletextdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a8f9a4d255d830ecc711f7a9573a36462_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ae9a7c9fe41875efde9f7f07cc4efb387}\label{libzvbi-teletextdec_8c_ae9a7c9fe41875efde9f7f07cc4efb387}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!create\_ass\_text@{create\_ass\_text}}
+\index{create\_ass\_text@{create\_ass\_text}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{create\_ass\_text()}{create\_ass\_text()}}
+{\footnotesize\ttfamily static char$\ast$ create\+\_\+ass\+\_\+text (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{text }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 149 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_ae9a7c9fe41875efde9f7f07cc4efb387_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_ae9a7c9fe41875efde9f7f07cc4efb387_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a3d7058049ae915ed330b4fb7ba610bfa}\label{libzvbi-teletextdec_8c_a3d7058049ae915ed330b4fb7ba610bfa}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!decode\_string@{decode\_string}}
+\index{decode\_string@{decode\_string}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_string()}{decode\_string()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+string (\begin{DoxyParamCaption}\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{vbi\+\_\+char $\ast$}]{row,  }\item[{A\+V\+B\+Print $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{end,  }\item[{vbi\+\_\+color $\ast$}]{cur\+\_\+color,  }\item[{vbi\+\_\+color $\ast$}]{cur\+\_\+back\+\_\+color }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 264 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a3d7058049ae915ed330b4fb7ba610bfa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a3d7058049ae915ed330b4fb7ba610bfa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a129b02ef3eb9e48605d74b5de3f80d2d}\label{libzvbi-teletextdec_8c_a129b02ef3eb9e48605d74b5de3f80d2d}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!fix\_transparency@{fix\_transparency}}
+\index{fix\_transparency@{fix\_transparency}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{fix\_transparency()}{fix\_transparency()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fix\+\_\+transparency (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$}]{sub\+\_\+rect,  }\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chop\+\_\+top,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{resx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{resy }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 411 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=233pt]{libzvbi-teletextdec_8c_a129b02ef3eb9e48605d74b5de3f80d2d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a129b02ef3eb9e48605d74b5de3f80d2d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a45b16ea66f9fc1bf03c303410ddbade1}\label{libzvbi-teletextdec_8c_a45b16ea66f9fc1bf03c303410ddbade1}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!gen\_sub\_ass@{gen\_sub\_ass}}
+\index{gen\_sub\_ass@{gen\_sub\_ass}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{gen\_sub\_ass()}{gen\_sub\_ass()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+sub\+\_\+ass (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$}]{sub\+\_\+rect,  }\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chop\+\_\+top }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 294 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a45b16ea66f9fc1bf03c303410ddbade1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a45b16ea66f9fc1bf03c303410ddbade1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a208f00a738b2cc2c020515ce6dce97f5}\label{libzvbi-teletextdec_8c_a208f00a738b2cc2c020515ce6dce97f5}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!gen\_sub\_bitmap@{gen\_sub\_bitmap}}
+\index{gen\_sub\_bitmap@{gen\_sub\_bitmap}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{gen\_sub\_bitmap()}{gen\_sub\_bitmap()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+sub\+\_\+bitmap (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$}]{sub\+\_\+rect,  }\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chop\+\_\+top }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 450 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a208f00a738b2cc2c020515ce6dce97f5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a208f00a738b2cc2c020515ce6dce97f5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ab5757b662607b68a62b47a76e4ca876e}\label{libzvbi-teletextdec_8c_ab5757b662607b68a62b47a76e4ca876e}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!gen\_sub\_text@{gen\_sub\_text}}
+\index{gen\_sub\_text@{gen\_sub\_text}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{gen\_sub\_text()}{gen\_sub\_text()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+sub\+\_\+text (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$}]{sub\+\_\+rect,  }\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chop\+\_\+top }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 166 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_ab5757b662607b68a62b47a76e4ca876e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_ab5757b662607b68a62b47a76e4ca876e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a3b67ad1aa7a8e531dbf63aef9bfe59fe}\label{libzvbi-teletextdec_8c_a3b67ad1aa7a8e531dbf63aef9bfe59fe}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!get\_trim\_info@{get\_trim\_info}}
+\index{get\_trim\_info@{get\_trim\_info}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_trim\_info()}{get\_trim\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+trim\+\_\+info (\begin{DoxyParamCaption}\item[{vbi\+\_\+page $\ast$}]{page,  }\item[{vbi\+\_\+char $\ast$}]{row,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{leading,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{trailing,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{olen }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 244 of file libzvbi-\/teletextdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a3b67ad1aa7a8e531dbf63aef9bfe59fe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_af2cdb546e12c62dec4813da99e849769}\label{libzvbi-teletextdec_8c_af2cdb546e12c62dec4813da99e849769}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!handler@{handler}}
+\index{handler@{handler}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{handler()}{handler()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handler (\begin{DoxyParamCaption}\item[{vbi\+\_\+event $\ast$}]{ev,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{user\+\_\+data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 507 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_af2cdb546e12c62dec4813da99e849769_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_af2cdb546e12c62dec4813da99e849769_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9f50a36a192a4622ec63c87a38bffcd0}\label{libzvbi-teletextdec_8c_a9f50a36a192a4622ec63c87a38bffcd0}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!my\_ass\_subtitle\_header@{my\_ass\_subtitle\_header}}
+\index{my\_ass\_subtitle\_header@{my\_ass\_subtitle\_header}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{my\_ass\_subtitle\_header()}{my\_ass\_subtitle\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} my\+\_\+ass\+\_\+subtitle\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 84 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a9f50a36a192a4622ec63c87a38bffcd0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=345pt]{libzvbi-teletextdec_8c_a9f50a36a192a4622ec63c87a38bffcd0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9b9e6a5e8caa092a2646badeb4cce174}\label{libzvbi-teletextdec_8c_a9b9e6a5e8caa092a2646badeb4cce174}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!slice\_to\_vbi\_lines@{slice\_to\_vbi\_lines}}
+\index{slice\_to\_vbi\_lines@{slice\_to\_vbi\_lines}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{slice\_to\_vbi\_lines()}{slice\_to\_vbi\_lines()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} slice\+\_\+to\+\_\+vbi\+\_\+lines (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_teletext_context}{Teletext\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 583 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=300pt]{libzvbi-teletextdec_8c_a9b9e6a5e8caa092a2646badeb4cce174_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{libzvbi-teletextdec_8c_a9b9e6a5e8caa092a2646badeb4cce174_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a78025974a8045ad0aae3806df4ce7131}\label{libzvbi-teletextdec_8c_a78025974a8045ad0aae3806df4ce7131}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!subtitle\_rect\_free@{subtitle\_rect\_free}}
+\index{subtitle\_rect\_free@{subtitle\_rect\_free}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{subtitle\_rect\_free()}{subtitle\_rect\_free()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subtitle\+\_\+rect\+\_\+free (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_subtitle_rect}{A\+V\+Subtitle\+Rect}} $\ast$$\ast$}]{sub\+\_\+rect }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 141 of file libzvbi-\/teletextdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a78025974a8045ad0aae3806df4ce7131_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3}\label{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!teletext\_close\_decoder@{teletext\_close\_decoder}}
+\index{teletext\_close\_decoder@{teletext\_close\_decoder}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{teletext\_close\_decoder()}{teletext\_close\_decoder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} teletext\+\_\+close\+\_\+decoder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 771 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=307pt]{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a20a8d1362b23c243dadb680f07a542bd}\label{libzvbi-teletextdec_8c_a20a8d1362b23c243dadb680f07a542bd}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!teletext\_decode\_frame@{teletext\_decode\_frame}}
+\index{teletext\_decode\_frame@{teletext\_decode\_frame}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{teletext\_decode\_frame()}{teletext\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} teletext\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+sub\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 639 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a20a8d1362b23c243dadb680f07a542bd_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a27799bffe3a7b789ecdb3f79c1958c0c}\label{libzvbi-teletextdec_8c_a27799bffe3a7b789ecdb3f79c1958c0c}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!teletext\_flush@{teletext\_flush}}
+\index{teletext\_flush@{teletext\_flush}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{teletext\_flush()}{teletext\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} teletext\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 791 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_a27799bffe3a7b789ecdb3f79c1958c0c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_ab5ccec2b4cd1156f8ba0dac7ea939a63}\label{libzvbi-teletextdec_8c_ab5ccec2b4cd1156f8ba0dac7ea939a63}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!teletext\_init\_decoder@{teletext\_init\_decoder}}
+\index{teletext\_init\_decoder@{teletext\_init\_decoder}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{teletext\_init\_decoder()}{teletext\_init\_decoder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} teletext\+\_\+init\+\_\+decoder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 734 of file libzvbi-\/teletextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libzvbi-teletextdec_8c_ab5ccec2b4cd1156f8ba0dac7ea939a63_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a9f118624d6bbead95848a7db06efacb2}\label{libzvbi-teletextdec_8c_a9f118624d6bbead95848a7db06efacb2}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!ff\_libzvbi\_teletext\_decoder@{ff\_libzvbi\_teletext\_decoder}}
+\index{ff\_libzvbi\_teletext\_decoder@{ff\_libzvbi\_teletext\_decoder}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_libzvbi\_teletext\_decoder}{ff\_libzvbi\_teletext\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+libzvbi\+\_\+teletext\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name      = \textcolor{stringliteral}{"{}libzvbi\_teletextdec"{}},}
+\DoxyCodeLine{    .long\_name = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Libzvbi DVB teletext decoder"{}}),}
+\DoxyCodeLine{    .type      = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48aa64a67386a9c53360744b86e4707b831}{AVMEDIA\_TYPE\_SUBTITLE}},}
+\DoxyCodeLine{    .id        = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceacefff4578427aea42f7bae17f6a5a0a4}{AV\_CODEC\_ID\_DVB\_TELETEXT}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{libzvbi-teletextdec_8c_a91cf6d95c64ae702e49002d0e889e36c}{TeletextContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}      = \mbox{\hyperlink{libzvbi-teletextdec_8c_ab5ccec2b4cd1156f8ba0dac7ea939a63}{teletext\_init\_decoder}},}
+\DoxyCodeLine{    .close     = \mbox{\hyperlink{libzvbi-teletextdec_8c_aab0a1ef9c22c9d011587228a94b53cf3}{teletext\_close\_decoder}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}    = \mbox{\hyperlink{libzvbi-teletextdec_8c_a20a8d1362b23c243dadb680f07a542bd}{teletext\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities = \mbox{\hyperlink{group__lavc__core_ga3f55f5bcfbb12e06c7cb1195028855e6}{AV\_CODEC\_CAP\_DELAY}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}     = \mbox{\hyperlink{libzvbi-teletextdec_8c_a27799bffe3a7b789ecdb3f79c1958c0c}{teletext\_flush}},}
+\DoxyCodeLine{    .priv\_class= \&\mbox{\hyperlink{libzvbi-teletextdec_8c_a8160e3272a784d9c8f0321ab442638db}{teletext\_class}},}
+\DoxyCodeLine{    .wrapper\_name = \textcolor{stringliteral}{"{}libzvbi"{}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 822 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{libzvbi-teletextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!options@{options}}
+\index{options@{options}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_page"{}},        \textcolor{stringliteral}{"{}page numbers to decode, subtitle for subtitles, * for all"{}}, \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(pgno),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \textcolor{stringliteral}{"{}*"{}}\},      0, 0,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_default\_region"{}}, \textcolor{stringliteral}{"{}default G0 character set used for decoding"{}},     \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(default\_region), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = -\/1\},      -\/1, 87,       \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_chop\_top"{}},    \textcolor{stringliteral}{"{}discards the top teletext line"{}},                    \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(chop\_top),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 1\},        0, 1,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_format"{}},      \textcolor{stringliteral}{"{}format of the subtitles (bitmap or text or ass)"{}},   \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(format\_id),      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 0\},        0, 2,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}},  \textcolor{stringliteral}{"{}txt\_format"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}bitmap"{}},          \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},                                                0,                      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64 = 0\},        0, 0,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}},  \textcolor{stringliteral}{"{}txt\_format"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}text"{}},            \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},                                                0,                      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64 = 1\},        0, 0,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}},  \textcolor{stringliteral}{"{}txt\_format"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}ass"{}},             \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},                                                0,                      \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64 = 2\},        0, 0,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}},  \textcolor{stringliteral}{"{}txt\_format"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_left"{}},        \textcolor{stringliteral}{"{}x offset of generated bitmaps"{}},                     \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(x\_offset),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 0\},        0, 65535,    \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_top"{}},         \textcolor{stringliteral}{"{}y offset of generated bitmaps"{}},                     \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(y\_offset),       \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 0\},        0, 65535,    \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_chop\_spaces"{}}, \textcolor{stringliteral}{"{}chops leading and trailing spaces from text"{}},       \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(chop\_spaces),    \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 1\},        0, 1,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_duration"{}},    \textcolor{stringliteral}{"{}display duration of teletext pages in msecs"{}},       \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(sub\_duration),   \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = -\/1\},      -\/1, 86400000, \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_transparent"{}}, \textcolor{stringliteral}{"{}force transparent background of the teletext"{}},      \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(transparent\_bg), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = 0\},        0, 1,        \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}txt\_opacity"{}},     \textcolor{stringliteral}{"{}set opacity of the transparent background"{}},         \mbox{\hyperlink{libzvbi-teletextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(opacity),        \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64 = -\/1\},      -\/1, 255,      \mbox{\hyperlink{libzvbi-teletextdec_8c_a9f5064fb4edd1381305163ee726f8ca5}{SD}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 798 of file libzvbi-\/teletextdec.\+c.
+
+\mbox{\Hypertarget{libzvbi-teletextdec_8c_a8160e3272a784d9c8f0321ab442638db}\label{libzvbi-teletextdec_8c_a8160e3272a784d9c8f0321ab442638db}} 
+\index{libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}!teletext\_class@{teletext\_class}}
+\index{teletext\_class@{teletext\_class}!libzvbi-\/teletextdec.c@{libzvbi-\/teletextdec.c}}
+\doxysubsubsection{\texorpdfstring{teletext\_class}{teletext\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} teletext\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}libzvbi\_teletextdec"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{libzvbi-teletextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 815 of file libzvbi-\/teletextdec.\+c.
+

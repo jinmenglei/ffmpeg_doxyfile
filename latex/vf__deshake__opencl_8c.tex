@@ -1,0 +1,1110 @@
+\hypertarget{vf__deshake__opencl_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/vf\+\_\+deshake\+\_\+opencl.c File Reference}
+\label{vf__deshake__opencl_8c}\index{E:/github/ffmpeg/libavfilter/vf\_deshake\_opencl.c@{E:/github/ffmpeg/libavfilter/vf\_deshake\_opencl.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include $<$libavutil/lfg.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mem.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/fifo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixfmt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}framequeue.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}transform.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencl.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencl\+\_\+source.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+Include dependency graph for vf\+\_\+deshake\+\_\+opencl.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_point_pair}{Point\+Pair}}
+\item 
+struct \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}}
+\item 
+struct \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}}
+\item 
+struct \mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}}
+\item 
+struct \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}}
+\item 
+struct \mbox{\hyperlink{struct_similarity_matrix}{Similarity\+Matrix}}
+\item 
+struct \mbox{\hyperlink{struct_crop_info}{Crop\+Info}}
+\item 
+struct \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}}
+\item 
+struct \mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_aa906eb01e76896e3890b54fecddc8ffc}{B\+R\+E\+I\+FN}}~512
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_a2270d971760bf2ab09a7e6d7965e1c42}{B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+ZE}}~31
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_a07687e6cde9d1396ff2004e76d37d473}{B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+Z\+E\+\_\+\+H\+A\+LF}}~(\mbox{\hyperlink{vf__deshake__opencl_8c_a2270d971760bf2ab09a7e6d7965e1c42}{B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+ZE}} / 2)
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_a204a81d3183522f258d69d430fe4122e}{M\+A\+T\+C\+H\+E\+S\+\_\+\+C\+O\+N\+T\+I\+G\+\_\+\+S\+I\+ZE}}~2000
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_a85ec8441a811e55d823408e0b8d5bfd0}{R\+O\+U\+N\+D\+E\+D\+\_\+\+U\+P\+\_\+\+D\+IV}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}} + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} -\/ 1)) / \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_point_pair}{Point\+Pair}} \mbox{\hyperlink{vf__deshake__opencl_8c_abc57895720c42e4d87775275b391a9f8}{Point\+Pair}}
+\item 
+typedef struct \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} \mbox{\hyperlink{vf__deshake__opencl_8c_ae9687f8b93a6b320cd8c7ab4b5bf5dab}{Motion\+Vector}}
+\item 
+typedef struct \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} \mbox{\hyperlink{vf__deshake__opencl_8c_a303d52aeabfba761c6e331861983fb82}{Debug\+Matches}}
+\item 
+typedef struct \mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}} \mbox{\hyperlink{vf__deshake__opencl_8c_adadd946e759c992e1c18f108285f09a6}{Absolute\+Frame\+Motion}}
+\item 
+typedef struct \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}} \mbox{\hyperlink{vf__deshake__opencl_8c_aced7f52e0aab311d0b7138336653a536}{Frame\+Delta}}
+\item 
+typedef struct \mbox{\hyperlink{struct_similarity_matrix}{Similarity\+Matrix}} \mbox{\hyperlink{vf__deshake__opencl_8c_a1ed197b9ba0435de2e69f24203e2c75a}{Similarity\+Matrix}}
+\item 
+typedef struct \mbox{\hyperlink{struct_crop_info}{Crop\+Info}} \mbox{\hyperlink{vf__deshake__opencl_8c_a8e8a6f5abd69302d0de8fd00be2ece98}{Crop\+Info}}
+\item 
+typedef struct \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}} \mbox{\hyperlink{vf__deshake__opencl_8c_a3e5ef8037d7bb11051e90e3922aa3697}{Iter\+Indices}}
+\item 
+typedef struct \mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} \mbox{\hyperlink{vf__deshake__opencl_8c_a1e2fb9d8afcc831ea361958b31cc3eb2}{Deshake\+Open\+C\+L\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5}{Ringbuffer\+Indices}} \{ \newline
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5ad4065c2ecefa3f3486ff44e2e409008d}{RingbufX}}, 
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a647afa6f628f3817a6923cfcafe6779a}{RingbufY}}, 
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a7071a06d4f6642fd037c82dd101a3321}{Ringbuf\+Rot}}, 
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a3271fdb76ac77fd9c6a61011c51e6f8e}{Ringbuf\+ScaleX}}, 
+\newline
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5aad52f91fb41da1ce46b0b832f1c5a04b}{Ringbuf\+ScaleY}}, 
+\mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a9113457a0b099555ded29c2f6a521cb7}{Ringbuf\+Count}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_adc33dfb26baa854c039955d7439fe8c0}{free\+\_\+debug\+\_\+matches}} (\mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}} $\ast$afm)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a4ddbb86b2eab99c51940e4ea6bdc5af4}{rand\+\_\+in}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} low, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} high, \mbox{\hyperlink{struct_a_v_l_f_g}{A\+V\+L\+FG}} $\ast$alfg)
+\item 
+static double \mbox{\hyperlink{vf__deshake__opencl_8c_a842030a6e61b33e1dfebf260817e112a}{averaged\+\_\+event\+\_\+time\+\_\+ms}} (unsigned long long total\+\_\+time, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+frames)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a30cc92ce8ade04802bd88bb82bb0405d}{run\+\_\+estimate\+\_\+kernel}} (const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$point\+\_\+pairs, double $\ast$model)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a6a14a9679af60a3b5b6c9ac778290864}{points\+\_\+not\+\_\+collinear}} (const cl\+\_\+float2 $\ast$$\ast$points)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a8ddfbb6d84d415a436ea86ae840b81fd}{check\+\_\+subset}} (const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$pairs\+\_\+subset)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_acbbb850b53fb0195ed72a25734e1609f}{get\+\_\+subset}} (\mbox{\hyperlink{struct_a_v_l_f_g}{A\+V\+L\+FG}} $\ast$alfg, const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$point\+\_\+pairs, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+point\+\_\+pairs, \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$pairs\+\_\+subset, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+attempts)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a36f9cda70f2c32011a7370118a8a3877}{compute\+\_\+error}} (const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$point\+\_\+pairs, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+point\+\_\+pairs, const double $\ast$model, float $\ast$err)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_af57797dd476bb0971eb7a7444d67e4e1}{find\+\_\+inliers}} (\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$point\+\_\+pairs, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+point\+\_\+pairs, const double $\ast$model, float $\ast$err, double thresh)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a9a86aeb5adfa66197a646bf68cc17346}{ransac\+\_\+update\+\_\+num\+\_\+iters}} (double confidence, double num\+\_\+outliers, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+iters)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_aac759b3a3a896f0967ba64248283d22b}{estimate\+\_\+affine\+\_\+2d}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$point\+\_\+pairs, \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} $\ast$debug\+\_\+matches, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+point\+\_\+pairs, double $\ast$model\+\_\+out, const double threshold, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+iters, const double confidence)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a00885c773e3a47ac0abf8ada377685dc}{optimize\+\_\+model}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$best\+\_\+pairs, \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$inliers, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+inliers, float best\+\_\+err, double $\ast$model\+\_\+out)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a478b505dff6bf71827cc70437b0515b0}{minimize\+\_\+error}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$inliers, \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} $\ast$debug\+\_\+matches, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+inliers, double $\ast$model\+\_\+out, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} max\+\_\+iters)
+\item 
+static \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}} \mbox{\hyperlink{vf__deshake__opencl_8c_a29f077a9126bf10d4893bb1750c36c91}{decompose\+\_\+transform}} (double $\ast$model)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a6f2f1655956e19d07d703031b77393bd}{make\+\_\+vectors\+\_\+contig}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} size\+\_\+y, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} size\+\_\+x)
+\item 
+static float \mbox{\hyperlink{vf__deshake__opencl_8c_a21d8250cfd99b8b03c3e7798fc86ff94}{gaussian\+\_\+for}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, float sigma)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_ad194e43933f3a2b31606a3152198eae4}{make\+\_\+gauss\+\_\+kernel}} (float $\ast$gauss\+\_\+kernel, float length, float sigma)
+\item 
+static \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}} \mbox{\hyperlink{vf__deshake__opencl_8c_aaf257d81ebf7bdf695dc018cffba2da7}{start\+\_\+end\+\_\+for}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a4ed190bdc1f71da7f7bf78aaec510882}{ringbuf\+\_\+float\+\_\+at}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, \mbox{\hyperlink{struct_a_v_fifo_buffer}{A\+V\+Fifo\+Buffer}} $\ast$\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}}, float $\ast$\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+static float \mbox{\hyperlink{vf__deshake__opencl_8c_a32fee6ebcc3bc066f425852915a5bed6}{smooth}} (\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$deshake\+\_\+ctx, float $\ast$gauss\+\_\+kernel, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length, float max\+\_\+val, \mbox{\hyperlink{struct_a_v_fifo_buffer}{A\+V\+Fifo\+Buffer}} $\ast$\mbox{\hyperlink{filter__design_8txt_ad283c679febe22c5a4d36e3764daf32b}{values}})
+\item 
+static cl\+\_\+float2 \mbox{\hyperlink{vf__deshake__opencl_8c_af0745919fd99886bb935d32cc2c8dbb8}{transformed\+\_\+point}} (float x, float y, float $\ast$\mbox{\hyperlink{dolby__e_8c_a99d0f17f52a6c39570b613497c5c7813}{transform}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a9163aad0cd348b8b75c90b4ee5b675d5}{transform\+\_\+center\+\_\+scale}} (float x\+\_\+shift, float y\+\_\+shift, float angle, float scale\+\_\+x, float scale\+\_\+y, float center\+\_\+w, float center\+\_\+h, float $\ast$matrix)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_aaeed07069929ebdb0d7ad7af57290562}{update\+\_\+needed\+\_\+crop}} (\mbox{\hyperlink{struct_crop_info}{Crop\+Info}} $\ast$crop, float $\ast$\mbox{\hyperlink{dolby__e_8c_a99d0f17f52a6c39570b613497c5c7813}{transform}}, float frame\+\_\+width, float frame\+\_\+height)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_a8a3ec369b17de7aad4fa5b00f8270411}{deshake\+\_\+opencl\+\_\+uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a129d88019af4c9f6579da1bb0b2aab3d}{deshake\+\_\+opencl\+\_\+init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{vf__deshake__opencl_8c_ae0e802e85b29e3ce507e66df45884676}{transform\+\_\+debug}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$avctx, float $\ast$new\+\_\+vals, float $\ast$old\+\_\+vals, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} curr\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a38f6bd6727ead1dc7a8c6abf741dc413}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$input\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_a4a2c3e7952056207a49b44440a141977}{queue\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a11a6a594845d2b9bf51b9ccc8a83c83d}{link}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$input\+\_\+frame)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+\mbox{\hyperlink{vf__deshake__opencl_8c_aa02e7bfd9e5b6abc19ae39804c7c7fbe}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (deshake\+\_\+opencl)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__deshake__opencl_8c_ac60905ad96d6077cf7a6469dbbf4f775}{deshake\+\_\+opencl\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{vf__deshake__opencl_8c_a33a9c7758d9d8ac84f56b42bf1205b12}{deshake\+\_\+opencl\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{vf__deshake__opencl_8c_a705710e10ca1ee7f8e8160ffed51f5ba}{deshake\+\_\+opencl\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{vf__deshake__opencl_8c_abd3951fc06f51de0aefb0ef72cc3aa4a}{ff\+\_\+vf\+\_\+deshake\+\_\+opencl}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aa906eb01e76896e3890b54fecddc8ffc}\label{vf__deshake__opencl_8c_aa906eb01e76896e3890b54fecddc8ffc}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!BREIFN@{BREIFN}}
+\index{BREIFN@{BREIFN}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{BREIFN}{BREIFN}}
+{\footnotesize\ttfamily \#define B\+R\+E\+I\+FN~512}
+
+
+
+Definition at line 87 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a2270d971760bf2ab09a7e6d7965e1c42}\label{vf__deshake__opencl_8c_a2270d971760bf2ab09a7e6d7965e1c42}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!BRIEF\_PATCH\_SIZE@{BRIEF\_PATCH\_SIZE}}
+\index{BRIEF\_PATCH\_SIZE@{BRIEF\_PATCH\_SIZE}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{BRIEF\_PATCH\_SIZE}{BRIEF\_PATCH\_SIZE}}
+{\footnotesize\ttfamily \#define B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+ZE~31}
+
+
+
+Definition at line 90 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a07687e6cde9d1396ff2004e76d37d473}\label{vf__deshake__opencl_8c_a07687e6cde9d1396ff2004e76d37d473}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!BRIEF\_PATCH\_SIZE\_HALF@{BRIEF\_PATCH\_SIZE\_HALF}}
+\index{BRIEF\_PATCH\_SIZE\_HALF@{BRIEF\_PATCH\_SIZE\_HALF}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{BRIEF\_PATCH\_SIZE\_HALF}{BRIEF\_PATCH\_SIZE\_HALF}}
+{\footnotesize\ttfamily \#define B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+Z\+E\+\_\+\+H\+A\+LF~(\mbox{\hyperlink{vf__deshake__opencl_8c_a2270d971760bf2ab09a7e6d7965e1c42}{B\+R\+I\+E\+F\+\_\+\+P\+A\+T\+C\+H\+\_\+\+S\+I\+ZE}} / 2)}
+
+
+
+Definition at line 91 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 2157 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a204a81d3183522f258d69d430fe4122e}\label{vf__deshake__opencl_8c_a204a81d3183522f258d69d430fe4122e}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!MATCHES\_CONTIG\_SIZE@{MATCHES\_CONTIG\_SIZE}}
+\index{MATCHES\_CONTIG\_SIZE@{MATCHES\_CONTIG\_SIZE}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{MATCHES\_CONTIG\_SIZE}{MATCHES\_CONTIG\_SIZE}}
+{\footnotesize\ttfamily \#define M\+A\+T\+C\+H\+E\+S\+\_\+\+C\+O\+N\+T\+I\+G\+\_\+\+S\+I\+ZE~2000}
+
+
+
+Definition at line 93 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}}, x)}
+
+
+
+Definition at line 2156 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a85ec8441a811e55d823408e0b8d5bfd0}\label{vf__deshake__opencl_8c_a85ec8441a811e55d823408e0b8d5bfd0}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!ROUNDED\_UP\_DIV@{ROUNDED\_UP\_DIV}}
+\index{ROUNDED\_UP\_DIV@{ROUNDED\_UP\_DIV}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{ROUNDED\_UP\_DIV}{ROUNDED\_UP\_DIV}}
+{\footnotesize\ttfamily \#define R\+O\+U\+N\+D\+E\+D\+\_\+\+U\+P\+\_\+\+D\+IV(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}} + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} -\/ 1)) / \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})}
+
+
+
+Definition at line 95 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_adadd946e759c992e1c18f108285f09a6}\label{vf__deshake__opencl_8c_adadd946e759c992e1c18f108285f09a6}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!AbsoluteFrameMotion@{AbsoluteFrameMotion}}
+\index{AbsoluteFrameMotion@{AbsoluteFrameMotion}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{AbsoluteFrameMotion}{AbsoluteFrameMotion}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}} \mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a8e8a6f5abd69302d0de8fd00be2ece98}\label{vf__deshake__opencl_8c_a8e8a6f5abd69302d0de8fd00be2ece98}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!CropInfo@{CropInfo}}
+\index{CropInfo@{CropInfo}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{CropInfo}{CropInfo}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_crop_info}{Crop\+Info}} \mbox{\hyperlink{struct_crop_info}{Crop\+Info}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a303d52aeabfba761c6e331861983fb82}\label{vf__deshake__opencl_8c_a303d52aeabfba761c6e331861983fb82}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!DebugMatches@{DebugMatches}}
+\index{DebugMatches@{DebugMatches}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{DebugMatches}{DebugMatches}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} \mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a1e2fb9d8afcc831ea361958b31cc3eb2}\label{vf__deshake__opencl_8c_a1e2fb9d8afcc831ea361958b31cc3eb2}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!DeshakeOpenCLContext@{DeshakeOpenCLContext}}
+\index{DeshakeOpenCLContext@{DeshakeOpenCLContext}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{DeshakeOpenCLContext}{DeshakeOpenCLContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} \mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aced7f52e0aab311d0b7138336653a536}\label{vf__deshake__opencl_8c_aced7f52e0aab311d0b7138336653a536}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!FrameDelta@{FrameDelta}}
+\index{FrameDelta@{FrameDelta}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{FrameDelta}{FrameDelta}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}} \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a3e5ef8037d7bb11051e90e3922aa3697}\label{vf__deshake__opencl_8c_a3e5ef8037d7bb11051e90e3922aa3697}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!IterIndices@{IterIndices}}
+\index{IterIndices@{IterIndices}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{IterIndices}{IterIndices}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}} \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ae9687f8b93a6b320cd8c7ab4b5bf5dab}\label{vf__deshake__opencl_8c_ae9687f8b93a6b320cd8c7ab4b5bf5dab}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!MotionVector@{MotionVector}}
+\index{MotionVector@{MotionVector}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{MotionVector}{MotionVector}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_abc57895720c42e4d87775275b391a9f8}\label{vf__deshake__opencl_8c_abc57895720c42e4d87775275b391a9f8}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!PointPair@{PointPair}}
+\index{PointPair@{PointPair}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{PointPair}{PointPair}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_point_pair}{Point\+Pair}} \mbox{\hyperlink{struct_point_pair}{Point\+Pair}}}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a1ed197b9ba0435de2e69f24203e2c75a}\label{vf__deshake__opencl_8c_a1ed197b9ba0435de2e69f24203e2c75a}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!SimilarityMatrix@{SimilarityMatrix}}
+\index{SimilarityMatrix@{SimilarityMatrix}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{SimilarityMatrix}{SimilarityMatrix}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_similarity_matrix}{Similarity\+Matrix}} \mbox{\hyperlink{struct_similarity_matrix}{Similarity\+Matrix}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufferIndices@{RingbufferIndices}}
+\index{RingbufferIndices@{RingbufferIndices}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{RingbufferIndices}{RingbufferIndices}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5}{Ringbuffer\+Indices}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufX@{RingbufX}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufX@{RingbufX}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5ad4065c2ecefa3f3486ff44e2e409008d}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5ad4065c2ecefa3f3486ff44e2e409008d}} 
+RingbufX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufY@{RingbufY}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufY@{RingbufY}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a647afa6f628f3817a6923cfcafe6779a}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a647afa6f628f3817a6923cfcafe6779a}} 
+RingbufY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufRot@{RingbufRot}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufRot@{RingbufRot}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a7071a06d4f6642fd037c82dd101a3321}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a7071a06d4f6642fd037c82dd101a3321}} 
+Ringbuf\+Rot&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufScaleX@{RingbufScaleX}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufScaleX@{RingbufScaleX}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a3271fdb76ac77fd9c6a61011c51e6f8e}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a3271fdb76ac77fd9c6a61011c51e6f8e}} 
+Ringbuf\+ScaleX&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufScaleY@{RingbufScaleY}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufScaleY@{RingbufScaleY}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5aad52f91fb41da1ce46b0b832f1c5a04b}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5aad52f91fb41da1ce46b0b832f1c5a04b}} 
+Ringbuf\+ScaleY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RingbufCount@{RingbufCount}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!RingbufCount@{RingbufCount}}}\mbox{\Hypertarget{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a9113457a0b099555ded29c2f6a521cb7}\label{vf__deshake__opencl_8c_a1579ea8319abda6b1f90db17716333b5a9113457a0b099555ded29c2f6a521cb7}} 
+Ringbuf\+Count&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 111 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac}\label{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!activate@{activate}}
+\index{activate@{activate}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2039 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a842030a6e61b33e1dfebf260817e112a}\label{vf__deshake__opencl_8c_a842030a6e61b33e1dfebf260817e112a}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!averaged\_event\_time\_ms@{averaged\_event\_time\_ms}}
+\index{averaged\_event\_time\_ms@{averaged\_event\_time\_ms}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{averaged\_event\_time\_ms()}{averaged\_event\_time\_ms()}}
+{\footnotesize\ttfamily static double averaged\+\_\+event\+\_\+time\+\_\+ms (\begin{DoxyParamCaption}\item[{unsigned long long}]{total\+\_\+time,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+frames }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 319 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{vf__deshake__opencl_8c_a842030a6e61b33e1dfebf260817e112a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aa02e7bfd9e5b6abc19ae39804c7c7fbe}\label{vf__deshake__opencl_8c_aa02e7bfd9e5b6abc19ae39804c7c7fbe}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{deshake\+\_\+opencl}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a8ddfbb6d84d415a436ea86ae840b81fd}\label{vf__deshake__opencl_8c_a8ddfbb6d84d415a436ea86ae840b81fd}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!check\_subset@{check\_subset}}
+\index{check\_subset@{check\_subset}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{check\_subset()}{check\_subset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check\+\_\+subset (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{pairs\+\_\+subset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 385 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a8ddfbb6d84d415a436ea86ae840b81fd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a8ddfbb6d84d415a436ea86ae840b81fd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a36f9cda70f2c32011a7370118a8a3877}\label{vf__deshake__opencl_8c_a36f9cda70f2c32011a7370118a8a3877}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!compute\_error@{compute\_error}}
+\index{compute\_error@{compute\_error}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{compute\_error()}{compute\_error()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} compute\+\_\+error (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{point\+\_\+pairs,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+point\+\_\+pairs,  }\item[{const double $\ast$}]{model,  }\item[{float $\ast$}]{err }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 445 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a36f9cda70f2c32011a7370118a8a3877_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a29f077a9126bf10d4893bb1750c36c91}\label{vf__deshake__opencl_8c_a29f077a9126bf10d4893bb1750c36c91}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!decompose\_transform@{decompose\_transform}}
+\index{decompose\_transform@{decompose\_transform}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{decompose\_transform()}{decompose\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_frame_delta}{Frame\+Delta}} decompose\+\_\+transform (\begin{DoxyParamCaption}\item[{double $\ast$}]{model }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 747 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a29f077a9126bf10d4893bb1750c36c91_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a129d88019af4c9f6579da1bb0b2aab3d}\label{vf__deshake__opencl_8c_a129d88019af4c9f6579da1bb0b2aab3d}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!deshake\_opencl\_init@{deshake\_opencl\_init}}
+\index{deshake\_opencl\_init@{deshake\_opencl\_init}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{deshake\_opencl\_init()}{deshake\_opencl\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} deshake\+\_\+opencl\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1125 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a129d88019af4c9f6579da1bb0b2aab3d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=271pt]{vf__deshake__opencl_8c_a129d88019af4c9f6579da1bb0b2aab3d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a8a3ec369b17de7aad4fa5b00f8270411}\label{vf__deshake__opencl_8c_a8a3ec369b17de7aad4fa5b00f8270411}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!deshake\_opencl\_uninit@{deshake\_opencl\_uninit}}
+\index{deshake\_opencl\_uninit@{deshake\_opencl\_uninit}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{deshake\_opencl\_uninit()}{deshake\_opencl\_uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} deshake\+\_\+opencl\+\_\+uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1066 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a8a3ec369b17de7aad4fa5b00f8270411_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aac759b3a3a896f0967ba64248283d22b}\label{vf__deshake__opencl_8c_aac759b3a3a896f0967ba64248283d22b}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!estimate\_affine\_2d@{estimate\_affine\_2d}}
+\index{estimate\_affine\_2d@{estimate\_affine\_2d}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{estimate\_affine\_2d()}{estimate\_affine\_2d()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} estimate\+\_\+affine\+\_\+2d (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{point\+\_\+pairs,  }\item[{\mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} $\ast$}]{debug\+\_\+matches,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+point\+\_\+pairs,  }\item[{double $\ast$}]{model\+\_\+out,  }\item[{const double}]{threshold,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+iters,  }\item[{const double}]{confidence }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 527 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_aac759b3a3a896f0967ba64248283d22b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a38f6bd6727ead1dc7a8c6abf741dc413}\label{vf__deshake__opencl_8c_a38f6bd6727ead1dc7a8c6abf741dc413}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{input\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1385 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a38f6bd6727ead1dc7a8c6abf741dc413_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{vf__deshake__opencl_8c_a38f6bd6727ead1dc7a8c6abf741dc413_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_af57797dd476bb0971eb7a7444d67e4e1}\label{vf__deshake__opencl_8c_af57797dd476bb0971eb7a7444d67e4e1}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!find\_inliers@{find\_inliers}}
+\index{find\_inliers@{find\_inliers}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{find\_inliers()}{find\_inliers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+inliers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{point\+\_\+pairs,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+point\+\_\+pairs,  }\item[{const double $\ast$}]{model,  }\item[{float $\ast$}]{err,  }\item[{double}]{thresh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 469 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=257pt]{vf__deshake__opencl_8c_af57797dd476bb0971eb7a7444d67e4e1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{vf__deshake__opencl_8c_af57797dd476bb0971eb7a7444d67e4e1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_adc33dfb26baa854c039955d7439fe8c0}\label{vf__deshake__opencl_8c_adc33dfb26baa854c039955d7439fe8c0}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!free\_debug\_matches@{free\_debug\_matches}}
+\index{free\_debug\_matches@{free\_debug\_matches}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{free\_debug\_matches()}{free\_debug\_matches()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+debug\+\_\+matches (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_absolute_frame_motion}{Absolute\+Frame\+Motion}} $\ast$}]{afm }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 152 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_adc33dfb26baa854c039955d7439fe8c0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{vf__deshake__opencl_8c_adc33dfb26baa854c039955d7439fe8c0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a21d8250cfd99b8b03c3e7798fc86ff94}\label{vf__deshake__opencl_8c_a21d8250cfd99b8b03c3e7798fc86ff94}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!gaussian\_for@{gaussian\_for}}
+\index{gaussian\_for@{gaussian\_for}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{gaussian\_for()}{gaussian\_for()}}
+{\footnotesize\ttfamily static float gaussian\+\_\+for (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{float}]{sigma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 813 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a21d8250cfd99b8b03c3e7798fc86ff94_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_acbbb850b53fb0195ed72a25734e1609f}\label{vf__deshake__opencl_8c_acbbb850b53fb0195ed72a25734e1609f}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!get\_subset@{get\_subset}}
+\index{get\_subset@{get\_subset}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{get\_subset()}{get\_subset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+subset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_l_f_g}{A\+V\+L\+FG}} $\ast$}]{alfg,  }\item[{const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{point\+\_\+pairs,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+point\+\_\+pairs,  }\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{pairs\+\_\+subset,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+attempts }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 403 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_acbbb850b53fb0195ed72a25734e1609f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{vf__deshake__opencl_8c_acbbb850b53fb0195ed72a25734e1609f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ad194e43933f3a2b31606a3152198eae4}\label{vf__deshake__opencl_8c_ad194e43933f3a2b31606a3152198eae4}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!make\_gauss\_kernel@{make\_gauss\_kernel}}
+\index{make\_gauss\_kernel@{make\_gauss\_kernel}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{make\_gauss\_kernel()}{make\_gauss\_kernel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} make\+\_\+gauss\+\_\+kernel (\begin{DoxyParamCaption}\item[{float $\ast$}]{gauss\+\_\+kernel,  }\item[{float}]{length,  }\item[{float}]{sigma }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 819 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{vf__deshake__opencl_8c_ad194e43933f3a2b31606a3152198eae4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_ad194e43933f3a2b31606a3152198eae4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a6f2f1655956e19d07d703031b77393bd}\label{vf__deshake__opencl_8c_a6f2f1655956e19d07d703031b77393bd}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!make\_vectors\_contig@{make\_vectors\_contig}}
+\index{make\_vectors\_contig@{make\_vectors\_contig}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{make\_vectors\_contig()}{make\_vectors\_contig()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} make\+\_\+vectors\+\_\+contig (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size\+\_\+y,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size\+\_\+x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 787 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a478b505dff6bf71827cc70437b0515b0}\label{vf__deshake__opencl_8c_a478b505dff6bf71827cc70437b0515b0}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!minimize\_error@{minimize\_error}}
+\index{minimize\_error@{minimize\_error}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{minimize\_error()}{minimize\_error()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} minimize\+\_\+error (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{inliers,  }\item[{\mbox{\hyperlink{struct_debug_matches}{Debug\+Matches}} $\ast$}]{debug\+\_\+matches,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+inliers,  }\item[{double $\ast$}]{model\+\_\+out,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+iters }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 683 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a478b505dff6bf71827cc70437b0515b0_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a00885c773e3a47ac0abf8ada377685dc}\label{vf__deshake__opencl_8c_a00885c773e3a47ac0abf8ada377685dc}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!optimize\_model@{optimize\_model}}
+\index{optimize\_model@{optimize\_model}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{optimize\_model()}{optimize\_model()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} optimize\+\_\+model (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{best\+\_\+pairs,  }\item[{\mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{inliers,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+inliers,  }\item[{float}]{best\+\_\+err,  }\item[{double $\ast$}]{model\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 610 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=305pt]{vf__deshake__opencl_8c_a00885c773e3a47ac0abf8ada377685dc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{vf__deshake__opencl_8c_a00885c773e3a47ac0abf8ada377685dc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a6a14a9679af60a3b5b6c9ac778290864}\label{vf__deshake__opencl_8c_a6a14a9679af60a3b5b6c9ac778290864}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!points\_not\_collinear@{points\_not\_collinear}}
+\index{points\_not\_collinear@{points\_not\_collinear}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{points\_not\_collinear()}{points\_not\_collinear()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} points\+\_\+not\+\_\+collinear (\begin{DoxyParamCaption}\item[{const cl\+\_\+float2 $\ast$$\ast$}]{points }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 359 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=254pt]{vf__deshake__opencl_8c_a6a14a9679af60a3b5b6c9ac778290864_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a6a14a9679af60a3b5b6c9ac778290864_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a4a2c3e7952056207a49b44440a141977}\label{vf__deshake__opencl_8c_a4a2c3e7952056207a49b44440a141977}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!queue\_frame@{queue\_frame}}
+\index{queue\_frame@{queue\_frame}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{queue\_frame()}{queue\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} queue\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{link,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{input\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1749 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a4a2c3e7952056207a49b44440a141977_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=238pt]{vf__deshake__opencl_8c_a4a2c3e7952056207a49b44440a141977_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a4ddbb86b2eab99c51940e4ea6bdc5af4}\label{vf__deshake__opencl_8c_a4ddbb86b2eab99c51940e4ea6bdc5af4}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!rand\_in@{rand\_in}}
+\index{rand\_in@{rand\_in}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{rand\_in()}{rand\_in()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rand\+\_\+in (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{low,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{high,  }\item[{\mbox{\hyperlink{struct_a_v_l_f_g}{A\+V\+L\+FG}} $\ast$}]{alfg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 313 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=223pt]{vf__deshake__opencl_8c_a4ddbb86b2eab99c51940e4ea6bdc5af4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a4ddbb86b2eab99c51940e4ea6bdc5af4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a9a86aeb5adfa66197a646bf68cc17346}\label{vf__deshake__opencl_8c_a9a86aeb5adfa66197a646bf68cc17346}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!ransac\_update\_num\_iters@{ransac\_update\_num\_iters}}
+\index{ransac\_update\_num\_iters@{ransac\_update\_num\_iters}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{ransac\_update\_num\_iters()}{ransac\_update\_num\_iters()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ransac\+\_\+update\+\_\+num\+\_\+iters (\begin{DoxyParamCaption}\item[{double}]{confidence,  }\item[{double}]{num\+\_\+outliers,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{max\+\_\+iters }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 505 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a9a86aeb5adfa66197a646bf68cc17346_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=342pt]{vf__deshake__opencl_8c_a9a86aeb5adfa66197a646bf68cc17346_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a4ed190bdc1f71da7f7bf78aaec510882}\label{vf__deshake__opencl_8c_a4ed190bdc1f71da7f7bf78aaec510882}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!ringbuf\_float\_at@{ringbuf\_float\_at}}
+\index{ringbuf\_float\_at@{ringbuf\_float\_at}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{ringbuf\_float\_at()}{ringbuf\_float\_at()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ringbuf\+\_\+float\+\_\+at (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{struct_a_v_fifo_buffer}{A\+V\+Fifo\+Buffer}} $\ast$}]{values,  }\item[{float $\ast$}]{val,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 854 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a4ed190bdc1f71da7f7bf78aaec510882_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a4ed190bdc1f71da7f7bf78aaec510882_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a30cc92ce8ade04802bd88bb82bb0405d}\label{vf__deshake__opencl_8c_a30cc92ce8ade04802bd88bb82bb0405d}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!run\_estimate\_kernel@{run\_estimate\_kernel}}
+\index{run\_estimate\_kernel@{run\_estimate\_kernel}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{run\_estimate\_kernel()}{run\_estimate\_kernel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} run\+\_\+estimate\+\_\+kernel (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_motion_vector}{Motion\+Vector}} $\ast$}]{point\+\_\+pairs,  }\item[{double $\ast$}]{model }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 329 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a30cc92ce8ade04802bd88bb82bb0405d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a32fee6ebcc3bc066f425852915a5bed6}\label{vf__deshake__opencl_8c_a32fee6ebcc3bc066f425852915a5bed6}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!smooth@{smooth}}
+\index{smooth@{smooth}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{smooth()}{smooth()}}
+{\footnotesize\ttfamily static float smooth (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{float $\ast$}]{gauss\+\_\+kernel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length,  }\item[{float}]{max\+\_\+val,  }\item[{\mbox{\hyperlink{struct_a_v_fifo_buffer}{A\+V\+Fifo\+Buffer}} $\ast$}]{values }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 903 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a32fee6ebcc3bc066f425852915a5bed6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a32fee6ebcc3bc066f425852915a5bed6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aaf257d81ebf7bdf695dc018cffba2da7}\label{vf__deshake__opencl_8c_aaf257d81ebf7bdf695dc018cffba2da7}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!start\_end\_for@{start\_end\_for}}
+\index{start\_end\_for@{start\_end\_for}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{start\_end\_for()}{start\_end\_for()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{struct_iter_indices}{Iter\+Indices}} start\+\_\+end\+\_\+for (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_deshake_open_c_l_context}{Deshake\+Open\+C\+L\+Context}} $\ast$}]{deshake\+\_\+ctx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 843 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_aaf257d81ebf7bdf695dc018cffba2da7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a9163aad0cd348b8b75c90b4ee5b675d5}\label{vf__deshake__opencl_8c_a9163aad0cd348b8b75c90b4ee5b675d5}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!transform\_center\_scale@{transform\_center\_scale}}
+\index{transform\_center\_scale@{transform\_center\_scale}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{transform\_center\_scale()}{transform\_center\_scale()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} transform\+\_\+center\+\_\+scale (\begin{DoxyParamCaption}\item[{float}]{x\+\_\+shift,  }\item[{float}]{y\+\_\+shift,  }\item[{float}]{angle,  }\item[{float}]{scale\+\_\+x,  }\item[{float}]{scale\+\_\+y,  }\item[{float}]{center\+\_\+w,  }\item[{float}]{center\+\_\+h,  }\item[{float $\ast$}]{matrix }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 967 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{vf__deshake__opencl_8c_a9163aad0cd348b8b75c90b4ee5b675d5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_a9163aad0cd348b8b75c90b4ee5b675d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ae0e802e85b29e3ce507e66df45884676}\label{vf__deshake__opencl_8c_ae0e802e85b29e3ce507e66df45884676}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!transform\_debug@{transform\_debug}}
+\index{transform\_debug@{transform\_debug}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{transform\_debug()}{transform\_debug()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} transform\+\_\+debug (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{avctx,  }\item[{float $\ast$}]{new\+\_\+vals,  }\item[{float $\ast$}]{old\+\_\+vals,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{curr\+\_\+frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1357 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_ae0e802e85b29e3ce507e66df45884676_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_af0745919fd99886bb935d32cc2c8dbb8}\label{vf__deshake__opencl_8c_af0745919fd99886bb935d32cc2c8dbb8}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!transformed\_point@{transformed\_point}}
+\index{transformed\_point@{transformed\_point}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{transformed\_point()}{transformed\_point()}}
+{\footnotesize\ttfamily static cl\+\_\+float2 transformed\+\_\+point (\begin{DoxyParamCaption}\item[{float}]{x,  }\item[{float}]{y,  }\item[{float $\ast$}]{transform }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 957 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_af0745919fd99886bb935d32cc2c8dbb8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_aaeed07069929ebdb0d7ad7af57290562}\label{vf__deshake__opencl_8c_aaeed07069929ebdb0d7ad7af57290562}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!update\_needed\_crop@{update\_needed\_crop}}
+\index{update\_needed\_crop@{update\_needed\_crop}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{update\_needed\_crop()}{update\_needed\_crop()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+needed\+\_\+crop (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_crop_info}{Crop\+Info}} $\ast$}]{crop,  }\item[{float $\ast$}]{transform,  }\item[{float}]{frame\+\_\+width,  }\item[{float}]{frame\+\_\+height }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1005 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{vf__deshake__opencl_8c_aaeed07069929ebdb0d7ad7af57290562_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{vf__deshake__opencl_8c_aaeed07069929ebdb0d7ad7af57290562_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{vf__deshake__opencl_8c_ac60905ad96d6077cf7a6469dbbf4f775}\label{vf__deshake__opencl_8c_ac60905ad96d6077cf7a6469dbbf4f775}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!deshake\_opencl\_inputs@{deshake\_opencl\_inputs}}
+\index{deshake\_opencl\_inputs@{deshake\_opencl\_inputs}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{deshake\_opencl\_inputs}{deshake\_opencl\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} deshake\+\_\+opencl\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \&\mbox{\hyperlink{opencl_8c_a5fae8f981f497850faaf71344969efe3}{ff\_opencl\_filter\_config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2138 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a705710e10ca1ee7f8e8160ffed51f5ba}\label{vf__deshake__opencl_8c_a705710e10ca1ee7f8e8160ffed51f5ba}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!deshake\_opencl\_options@{deshake\_opencl\_options}}
+\index{deshake\_opencl\_options@{deshake\_opencl\_options}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{deshake\_opencl\_options}{deshake\_opencl\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} deshake\+\_\+opencl\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}tripod"{}}, \textcolor{stringliteral}{"{}simulates a tripod by preventing any camera movement whatsoever "{}}}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}from the original frame"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(tripod\_mode), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}debug"{}}, \textcolor{stringliteral}{"{}turn on additional debugging information"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(debug\_on), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}adaptive\_crop"{}}, \textcolor{stringliteral}{"{}attempt to subtly crop borders to reduce mirrored content"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(should\_crop), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 1\}, 0, 1, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}refine\_features"{}}, \textcolor{stringliteral}{"{}refine feature point locations at a sub-\/pixel level"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(refine\_features), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 1\}, 0, 1, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}smooth\_strength"{}}, \textcolor{stringliteral}{"{}smoothing strength (0 attempts to adaptively determine optimal strength)"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(smooth\_percent), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl = 0.0f\}, 0.0f, 1.0f, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        \textcolor{stringliteral}{"{}smooth\_window\_multiplier"{}}, \textcolor{stringliteral}{"{}multiplier for number of frames to buffer for motion data"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{vf__deshake__opencl_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(smooth\_window\_multiplier), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae91d3f6cbac4a4de2a6e880ac2a52d1a}{AV\_OPT\_TYPE\_FLOAT}}, \{.dbl = 2.0\}, 0.1, 10.0, \mbox{\hyperlink{vf__deshake__opencl_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}}}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2159 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_a33a9c7758d9d8ac84f56b42bf1205b12}\label{vf__deshake__opencl_8c_a33a9c7758d9d8ac84f56b42bf1205b12}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!deshake\_opencl\_outputs@{deshake\_opencl\_outputs}}
+\index{deshake\_opencl\_outputs@{deshake\_opencl\_outputs}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{deshake\_opencl\_outputs}{deshake\_opencl\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} deshake\+\_\+opencl\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props = \&\mbox{\hyperlink{opencl_8c_aca05daad3ec60d3cff401c6dedc80836}{ff\_opencl\_filter\_config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2147 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+
+\mbox{\Hypertarget{vf__deshake__opencl_8c_abd3951fc06f51de0aefb0ef72cc3aa4a}\label{vf__deshake__opencl_8c_abd3951fc06f51de0aefb0ef72cc3aa4a}} 
+\index{vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}!ff\_vf\_deshake\_opencl@{ff\_vf\_deshake\_opencl}}
+\index{ff\_vf\_deshake\_opencl@{ff\_vf\_deshake\_opencl}!vf\_deshake\_opencl.c@{vf\_deshake\_opencl.c}}
+\doxysubsubsection{\texorpdfstring{ff\_vf\_deshake\_opencl}{ff\_vf\_deshake\_opencl}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+vf\+\_\+deshake\+\_\+opencl}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}deshake\_opencl"{}},}
+\DoxyCodeLine{    .description    = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Feature-\/point based video stabilization filter"{}}),}
+\DoxyCodeLine{    .priv\_size      = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{vf__deshake__opencl_8c_a1e2fb9d8afcc831ea361958b31cc3eb2}{DeshakeOpenCLContext}}),}
+\DoxyCodeLine{    .priv\_class     = \&deshake\_opencl\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \&\mbox{\hyperlink{opencl_8c_a78e70e71221ecf678d4c3f2756f5682b}{ff\_opencl\_filter\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{crystalhd_8c_a47e28e6ea289d3f83ad1883ddde5a422}{uninit}}         = \&\mbox{\hyperlink{vf__deshake__opencl_8c_a8a3ec369b17de7aad4fa5b00f8270411}{deshake\_opencl\_uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aeval_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}}  = \&\mbox{\hyperlink{opencl_8c_ad0424e96c8176309c6743fd1a8b84bdc}{ff\_opencl\_filter\_query\_formats}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac}{activate}}       = \mbox{\hyperlink{vf__deshake__opencl_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}         = \mbox{\hyperlink{vf__deshake__opencl_8c_ac60905ad96d6077cf7a6469dbbf4f775}{deshake\_opencl\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}        = \mbox{\hyperlink{vf__deshake__opencl_8c_a33a9c7758d9d8ac84f56b42bf1205b12}{deshake\_opencl\_outputs}},}
+\DoxyCodeLine{    .flags\_internal = \mbox{\hyperlink{libavfilter_2internal_8h_a58d239fb5092965f79256de6e903ed8a}{FF\_FILTER\_FLAG\_HWFRAME\_AWARE}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2190 of file vf\+\_\+deshake\+\_\+opencl.\+c.
+

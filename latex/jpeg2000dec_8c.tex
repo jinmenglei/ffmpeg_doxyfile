@@ -1,0 +1,1667 @@
+\hypertarget{jpeg2000dec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/jpeg2000dec.c File Reference}
+\label{jpeg2000dec_8c}\index{E:/github/ffmpeg/libavcodec/jpeg2000dec.c@{E:/github/ffmpeg/libavcodec/jpeg2000dec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/attributes.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/pixdesc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}jpeg2000.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}jpeg2000dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}profiles.\+h\char`\"{}}\newline
+Include dependency graph for jpeg2000dec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_jpeg2000_p_o_c_entry}{Jpeg2000\+P\+O\+C\+Entry}}
+\item 
+struct \mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}}
+\item 
+struct \mbox{\hyperlink{struct_jpeg2000_tile_part}{Jpeg2000\+Tile\+Part}}
+\item 
+struct \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}}
+\item 
+struct \mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a17c50c33fb1086a65e71471d19a67184}{J\+P2\+\_\+\+S\+I\+G\+\_\+\+T\+Y\+PE}}~0x6\+A502020
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_ae38441bc74c37fcc6c6ff2a9f984fb9e}{J\+P2\+\_\+\+S\+I\+G\+\_\+\+V\+A\+L\+UE}}~0x0\+D0\+A870A
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_ab76763daa7a398a65678dd60c14964d9}{J\+P2\+\_\+\+C\+O\+D\+E\+S\+T\+R\+E\+AM}}~0x6\+A703263
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a140f0c7cf4c8967cedf274ef7aefddc3}{J\+P2\+\_\+\+H\+E\+A\+D\+ER}}~0x6\+A703268
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a6e90af99977da17e738cbbeeed5748f4}{H\+A\+D\+\_\+\+C\+OC}}~0x01
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_afbd6f946e2e71031110ee63525d87bea}{H\+A\+D\+\_\+\+Q\+CC}}~0x02
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a9aa16ad2e95768b6d195a97f7e3b9039}{M\+A\+X\+\_\+\+P\+O\+CS}}~32
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a880b2b44dac2c43364a2b92e2409114e}{R\+G\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}~\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5acb2d8caa4e82b70f1bbe4d83f137f8c8}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+P\+A\+L8}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a107eadfcfe8c9fc751289eeb7744a6d3}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B24}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a7ffbd399b88a48196e3cba416eec4dac}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+BA}},\mbox{\hyperlink{pixfmt_8h_a8aa3ddf224cba014fb9eac404498046a}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B48}},\mbox{\hyperlink{pixfmt_8h_a79f0cce2e796a9e51f75fea1695c9160}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B\+A64}}
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}{G\+R\+A\+Y\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}~\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a4616a6eaaf5419e2aa7dcb03031d500e}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y8}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a3c1bce55e2ee040a7b4534ed763c22bf}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y8A}},\mbox{\hyperlink{pixfmt_8h_ace4d36d981b86af5f0dc2d6429701684}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y16}},\mbox{\hyperlink{pixfmt_8h_a4dcbb0b9258e4a1257b8601b521eecbb}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+Y\+A16}}
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a6786225afb7c3e183b498e841678af7b}{Y\+U\+V\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_adfb95c655a88732148969db88c396b64}{X\+Y\+Z\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}~\mbox{\hyperlink{pixfmt_8h_a57d4742788f6c0860dc4d1f20b528558}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+X\+Y\+Z12}}
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_a0b61c05181a92d2d2e4327044624460b}{W\+R\+I\+T\+E\+\_\+\+F\+R\+A\+ME}}(\mbox{\hyperlink{rematrix__init_8c_a8af890148d3dfc649c6f2a805563f8b0}{D}},  \mbox{\hyperlink{transform_8c_a943ace7d892ef7f3b7c965d386f7166e}{P\+I\+X\+EL}})
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{jpeg2000dec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_jpeg2000_p_o_c_entry}{Jpeg2000\+P\+O\+C\+Entry}} \mbox{\hyperlink{jpeg2000dec_8c_aaa534bf857607d9ca3266bfda98bbdf5}{Jpeg2000\+P\+O\+C\+Entry}}
+\item 
+typedef struct \mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}} \mbox{\hyperlink{jpeg2000dec_8c_a7bad74ddaa2ec60fb5cc377b1605937d}{Jpeg2000\+P\+OC}}
+\item 
+typedef struct \mbox{\hyperlink{struct_jpeg2000_tile_part}{Jpeg2000\+Tile\+Part}} \mbox{\hyperlink{jpeg2000dec_8c_a523793ceb2799ef529958b20a103b741}{Jpeg2000\+Tile\+Part}}
+\item 
+typedef struct \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} \mbox{\hyperlink{jpeg2000dec_8c_a700591974e01bad17cbc53e4627fb870}{Jpeg2000\+Tile}}
+\item 
+typedef struct \mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} \mbox{\hyperlink{jpeg2000dec_8c_a873cd470cac232aa257bf8c1bc9eaaa4}{Jpeg2000\+Decoder\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_aeb21fdd4fc76349f1ec36656cb3c3352}{get\+\_\+bits}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a53c1f92e6360c5b8f60b89cbbd343fe3}{jpeg2000\+\_\+flush}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ac080aa3d2188477c9278ae13dad24768}{tag\+\_\+tree\+\_\+decode}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tgt_node}{Jpeg2000\+Tgt\+Node}} $\ast$node, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} threshold)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a43a0c88368b8379349924030be1737a0}{pix\+\_\+fmt\+\_\+match}} (enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{hwcontext__videotoolbox_8c_a7331e302ea7bb48e0b605a069576e135}{pix\+\_\+fmt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} components, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bpc, uint32\+\_\+t log2\+\_\+chroma\+\_\+wh, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pal8)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a5f2850cae25630717ed87b4397103d1a}{get\+\_\+siz}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a29aa0dddb0203797823b992724ea59f8}{get\+\_\+cox}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ab69afcd8b24864516f004ba1baf1594b}{get\+\_\+cod}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$properties)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_afe0a4f5f6683249435f53f151c6dfab9}{get\+\_\+coc}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$properties)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_aea1603eae0c34d8075f8c1f1fae3e0e9}{get\+\_\+rgn}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a7c95b2cc927f35017de729d326ef5ef8}{get\+\_\+qcx}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$q)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_afe44313d1d4442ea118e60d00a76e0bd}{get\+\_\+qcd}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$q, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$properties)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a64b1ee9b1d03bdde72052047a16c3017}{get\+\_\+qcc}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n, \mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$q, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$properties)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a722e065b55b66adf95a91798371d4234}{get\+\_\+poc}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}, \mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}} $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_aba6e16da60757358cfd5060de9788f6c}{get\+\_\+sot}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ae05d60db02eec57f83312f027ac759b9}{read\+\_\+crg}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a2813dd6f432e46143146ee230b8cab97}{get\+\_\+tlm}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_afdc0f930b056a75cc93eda53bc0c0851}{get\+\_\+plt}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ae3621d95466b02d1e5a30631b577f9b3}{get\+\_\+ppm}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ae00953747a61fc7f3222e76e0783ba65}{get\+\_\+ppt}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ab22f0a3a1be35ac8ef82aaca827ba213}{init\+\_\+tile}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tileno)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a4f45b7921fdd64a8827d79a344fb3da6}{getnpasses}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a2ac685c4974239ca1350c9bace3550db}{getlblockinc}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a49c6af2ad205919105a72a8679e78117}{select\+\_\+header}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$tp\+\_\+index)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_ab2f80ca3298c02764718a5b4e3cfbe46}{select\+\_\+stream}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$tp\+\_\+index, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$codsty)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a0751a33c931bfaa36e94efce77534efd}{jpeg2000\+\_\+decode\+\_\+packet}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$tp\+\_\+index, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$codsty, \mbox{\hyperlink{struct_jpeg2000_res_level}{Jpeg2000\+Res\+Level}} $\ast$rlevel, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} precno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} layno, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$expn, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} numgbits)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_aaab7496df5bb17d31dac20720b215bea}{jpeg2000\+\_\+decode\+\_\+packets\+\_\+po\+\_\+iteration}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} R\+Spoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+Spoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} L\+Y\+Epoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} R\+Epoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} C\+Epoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} Ppoc, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$tp\+\_\+index)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_adf8e4fe492588b2c45475da844d2dbce}{jpeg2000\+\_\+decode\+\_\+packets}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a6203f68e1886ce38e24eddccb700966e}{decode\+\_\+sigpass}} (\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bpno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bandno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a36530a932b1d568a771f1e8760f4d62e}{decode\+\_\+refpass}} (\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bpno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a8760643118b0839c8e691b3b3595bfd6}{decode\+\_\+clnpass}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bpno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bandno, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} seg\+\_\+symbols, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ac2cd58ad2b8ba0af65eaa4015724ec6f}{decode\+\_\+cblk}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$codsty, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$cblk, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bandpos, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} roi\+\_\+shift)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ab4fd2996e7661082e1cd3a40afb948b7}{roi\+\_\+shift\+\_\+param}} (\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} quan\+\_\+parameter)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a4396c261b34acf32f8a014a794295a58}{dequantization\+\_\+float}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$cblk, \mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$band)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a990b1b832c77cb0cafdd40592709131c}{dequantization\+\_\+int}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$cblk, \mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$band)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_aa4f3192d6f5500befce1489f09b79b64}{dequantization\+\_\+int\+\_\+97}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$cblk, \mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}}, \mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$band)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a04cf6d4cdf7170370c87faa86708cfc0}{mct\+\_\+decode}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a06d56cd79a54080bfb2bb52bd73240ed}{roi\+\_\+scale\+\_\+cblk}} (\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$cblk, \mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$\mbox{\hyperlink{eamad_8c_a1bd38494185c28133622c86bcc95d650}{comp}}, \mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$\mbox{\hyperlink{regdef_8h_a65f7891fccbfcf7d08964555630773b3}{t1}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a988930618c9c6216d9c1b2403231a847}{tile\+\_\+codeblocks}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$tile)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a874909d55799e979bd8fa190b8fd7a6e}{jpeg2000\+\_\+decode\+\_\+tile}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{regdef_8h_ab2c359e6c325062d33a4152752d8a820}{td}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} threadnr)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a6a830b30c63d53432d0856dd09483671}{jpeg2000\+\_\+dec\+\_\+cleanup}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_ad1571dab998416e94cf254e482f3c1a7}{jpeg2000\+\_\+read\+\_\+main\+\_\+headers}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_af00d6ce82ea8af29ab93da39a444aadd}{jpeg2000\+\_\+read\+\_\+bitstream\+\_\+packets}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_acd41c1fa610e10aec8d438d95ea4a481}{jp2\+\_\+find\+\_\+codestream}} (\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{jpeg2000dec_8c_a6cae63678bd13356f2840b1d6972badc}{jpeg2000\+\_\+init\+\_\+static\+\_\+data}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_aa130d2e2dc73a74965cf6538f9a8552c}{jpeg2000\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{jpeg2000dec_8c_a74d0c52ab34e790d526328c7bd1a2c97}{jpeg2000\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{jpeg2000dec_8c_a55fb7f727c06e19ec5dd89297cf499db}{rgb\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a880b2b44dac2c43364a2b92e2409114e}{R\+G\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{jpeg2000dec_8c_acdcb09b852df254cad041c23b9ff30e0}{gray\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}{G\+R\+A\+Y\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{jpeg2000dec_8c_af3658d5633a0ac50c6ff2c0c908c4bed}{yuv\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a6786225afb7c3e183b498e841678af7b}{Y\+U\+V\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{jpeg2000dec_8c_a0c43b8c2e6e162901b26ad79d7e730ad}{xyz\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]}
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{jpeg2000dec_8c_a046bafb073da626933b4a41612d48628}{all\+\_\+pix\+\_\+fmts}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{jpeg2000dec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{jpeg2000dec_8c_aa0fe2c518e1da3ff176b3be3952270cf}{jpeg2000\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{jpeg2000dec_8c_af244be461a53094efcd9ee2cd011d985}{ff\+\_\+jpeg2000\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+J\+P\+EG 2000 image decoder 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{jpeg2000dec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}\label{jpeg2000dec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!GRAY\_PIXEL\_FORMATS@{GRAY\_PIXEL\_FORMATS}}
+\index{GRAY\_PIXEL\_FORMATS@{GRAY\_PIXEL\_FORMATS}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{GRAY\_PIXEL\_FORMATS}{GRAY\_PIXEL\_FORMATS}}
+{\footnotesize\ttfamily \#define G\+R\+A\+Y\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS~\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a4616a6eaaf5419e2aa7dcb03031d500e}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y8}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a3c1bce55e2ee040a7b4534ed763c22bf}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y8A}},\mbox{\hyperlink{pixfmt_8h_ace4d36d981b86af5f0dc2d6429701684}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+G\+R\+A\+Y16}},\mbox{\hyperlink{pixfmt_8h_a4dcbb0b9258e4a1257b8601b521eecbb}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+Y\+A16}}}
+
+
+
+Definition at line 246 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a6e90af99977da17e738cbbeeed5748f4}\label{jpeg2000dec_8c_a6e90af99977da17e738cbbeeed5748f4}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!HAD\_COC@{HAD\_COC}}
+\index{HAD\_COC@{HAD\_COC}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{HAD\_COC}{HAD\_COC}}
+{\footnotesize\ttfamily \#define H\+A\+D\+\_\+\+C\+OC~0x01}
+
+
+
+Definition at line 51 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_afbd6f946e2e71031110ee63525d87bea}\label{jpeg2000dec_8c_afbd6f946e2e71031110ee63525d87bea}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!HAD\_QCC@{HAD\_QCC}}
+\index{HAD\_QCC@{HAD\_QCC}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{HAD\_QCC}{HAD\_QCC}}
+{\footnotesize\ttfamily \#define H\+A\+D\+\_\+\+Q\+CC~0x02}
+
+
+
+Definition at line 52 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_ab76763daa7a398a65678dd60c14964d9}\label{jpeg2000dec_8c_ab76763daa7a398a65678dd60c14964d9}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!JP2\_CODESTREAM@{JP2\_CODESTREAM}}
+\index{JP2\_CODESTREAM@{JP2\_CODESTREAM}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{JP2\_CODESTREAM}{JP2\_CODESTREAM}}
+{\footnotesize\ttfamily \#define J\+P2\+\_\+\+C\+O\+D\+E\+S\+T\+R\+E\+AM~0x6\+A703263}
+
+
+
+Definition at line 48 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a140f0c7cf4c8967cedf274ef7aefddc3}\label{jpeg2000dec_8c_a140f0c7cf4c8967cedf274ef7aefddc3}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!JP2\_HEADER@{JP2\_HEADER}}
+\index{JP2\_HEADER@{JP2\_HEADER}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{JP2\_HEADER}{JP2\_HEADER}}
+{\footnotesize\ttfamily \#define J\+P2\+\_\+\+H\+E\+A\+D\+ER~0x6\+A703268}
+
+
+
+Definition at line 49 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a17c50c33fb1086a65e71471d19a67184}\label{jpeg2000dec_8c_a17c50c33fb1086a65e71471d19a67184}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!JP2\_SIG\_TYPE@{JP2\_SIG\_TYPE}}
+\index{JP2\_SIG\_TYPE@{JP2\_SIG\_TYPE}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{JP2\_SIG\_TYPE}{JP2\_SIG\_TYPE}}
+{\footnotesize\ttfamily \#define J\+P2\+\_\+\+S\+I\+G\+\_\+\+T\+Y\+PE~0x6\+A502020}
+
+
+
+Definition at line 46 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_ae38441bc74c37fcc6c6ff2a9f984fb9e}\label{jpeg2000dec_8c_ae38441bc74c37fcc6c6ff2a9f984fb9e}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!JP2\_SIG\_VALUE@{JP2\_SIG\_VALUE}}
+\index{JP2\_SIG\_VALUE@{JP2\_SIG\_VALUE}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{JP2\_SIG\_VALUE}{JP2\_SIG\_VALUE}}
+{\footnotesize\ttfamily \#define J\+P2\+\_\+\+S\+I\+G\+\_\+\+V\+A\+L\+UE~0x0\+D0\+A870A}
+
+
+
+Definition at line 47 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a9aa16ad2e95768b6d195a97f7e3b9039}\label{jpeg2000dec_8c_a9aa16ad2e95768b6d195a97f7e3b9039}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!MAX\_POCS@{MAX\_POCS}}
+\index{MAX\_POCS@{MAX\_POCS}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_POCS}{MAX\_POCS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+P\+O\+CS~32}
+
+
+
+Definition at line 54 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{jpeg2000dec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}}, x)}
+
+
+
+Definition at line 2561 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a880b2b44dac2c43364a2b92e2409114e}\label{jpeg2000dec_8c_a880b2b44dac2c43364a2b92e2409114e}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!RGB\_PIXEL\_FORMATS@{RGB\_PIXEL\_FORMATS}}
+\index{RGB\_PIXEL\_FORMATS@{RGB\_PIXEL\_FORMATS}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{RGB\_PIXEL\_FORMATS}{RGB\_PIXEL\_FORMATS}}
+{\footnotesize\ttfamily \#define R\+G\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS~\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5acb2d8caa4e82b70f1bbe4d83f137f8c8}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+P\+A\+L8}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a107eadfcfe8c9fc751289eeb7744a6d3}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B24}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a7ffbd399b88a48196e3cba416eec4dac}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+BA}},\mbox{\hyperlink{pixfmt_8h_a8aa3ddf224cba014fb9eac404498046a}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B48}},\mbox{\hyperlink{pixfmt_8h_a79f0cce2e796a9e51f75fea1695c9160}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+R\+G\+B\+A64}}}
+
+
+
+Definition at line 245 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_aa786055ad8b70c06fcd3fb7c848bc390}\label{jpeg2000dec_8c_aa786055ad8b70c06fcd3fb7c848bc390}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!VD@{VD}}
+\index{VD@{VD}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{VD}{VD}}
+{\footnotesize\ttfamily \#define VD~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 2562 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a0b61c05181a92d2d2e4327044624460b}\label{jpeg2000dec_8c_a0b61c05181a92d2d2e4327044624460b}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!WRITE\_FRAME@{WRITE\_FRAME}}
+\index{WRITE\_FRAME@{WRITE\_FRAME}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{WRITE\_FRAME}{WRITE\_FRAME}}
+{\footnotesize\ttfamily \#define W\+R\+I\+T\+E\+\_\+\+F\+R\+A\+ME(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{rematrix__init_8c_a8af890148d3dfc649c6f2a805563f8b0}{D}},  }\item[{}]{\mbox{\hyperlink{transform_8c_a943ace7d892ef7f3b7c965d386f7166e}{P\+I\+X\+EL}} }\end{DoxyParamCaption})}
+
+
+
+Definition at line 2011 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_adfb95c655a88732148969db88c396b64}\label{jpeg2000dec_8c_adfb95c655a88732148969db88c396b64}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!XYZ\_PIXEL\_FORMATS@{XYZ\_PIXEL\_FORMATS}}
+\index{XYZ\_PIXEL\_FORMATS@{XYZ\_PIXEL\_FORMATS}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{XYZ\_PIXEL\_FORMATS}{XYZ\_PIXEL\_FORMATS}}
+{\footnotesize\ttfamily \#define X\+Y\+Z\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS~\mbox{\hyperlink{pixfmt_8h_a57d4742788f6c0860dc4d1f20b528558}{A\+V\+\_\+\+P\+I\+X\+\_\+\+F\+M\+T\+\_\+\+X\+Y\+Z12}}}
+
+
+
+Definition at line 258 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a6786225afb7c3e183b498e841678af7b}\label{jpeg2000dec_8c_a6786225afb7c3e183b498e841678af7b}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!YUV\_PIXEL\_FORMATS@{YUV\_PIXEL\_FORMATS}}
+\index{YUV\_PIXEL\_FORMATS@{YUV\_PIXEL\_FORMATS}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{YUV\_PIXEL\_FORMATS}{YUV\_PIXEL\_FORMATS}}
+{\footnotesize\ttfamily \#define Y\+U\+V\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{                            \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a60dd6b14fd159176a59e20be30e355c5}{AV\_PIX\_FMT\_YUV410P}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a69f441408075b0c5fea6e82439d74b06}{AV\_PIX\_FMT\_YUV411P}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a52aa2e647c6da371a09dc1c61c083967}{AV\_PIX\_FMT\_YUVA420P}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P,\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a332444d991855c9667b786f6f7bb6051}{AV\_PIX\_FMT\_YUV422P}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5abac3b5820be74e6e2691a0c69dbbb5f6}{AV\_PIX\_FMT\_YUVA422P}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV440P,\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a82034006e681cddbb7b1d5cb7045626a}{AV\_PIX\_FMT\_YUV444P}},\mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a85a861aa12deb3345d2d36a3ad49e15d}{AV\_PIX\_FMT\_YUVA444P}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P9,\mbox{\hyperlink{pixfmt_8h_a39097263283e4f4448321880d9b28d08}{AV\_PIX\_FMT\_YUV422P9}},\mbox{\hyperlink{pixfmt_8h_a1455e5fb4ec9fc402e3fa8a65211bacd}{AV\_PIX\_FMT\_YUV444P9}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUVA420P9,\mbox{\hyperlink{pixfmt_8h_a5460ebc6989e18387a30d1795cfcadd5}{AV\_PIX\_FMT\_YUVA422P9}},\mbox{\hyperlink{pixfmt_8h_adc07ea00348b3d347161890fa014c7d4}{AV\_PIX\_FMT\_YUVA444P9}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P10,\mbox{\hyperlink{pixfmt_8h_a66e08cc645d119c6383c994529f5dff4}{AV\_PIX\_FMT\_YUV422P10}},\mbox{\hyperlink{pixfmt_8h_aff612e03cf2a557ac25e8e2032e37d9a}{AV\_PIX\_FMT\_YUV444P10}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUVA420P10,\mbox{\hyperlink{pixfmt_8h_a8de1575ea712a5893a75d1c3e29ee4ac}{AV\_PIX\_FMT\_YUVA422P10}},\mbox{\hyperlink{pixfmt_8h_a42ca8176e5b066f5d81b924d3aaf8b15}{AV\_PIX\_FMT\_YUVA444P10}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P12,\mbox{\hyperlink{pixfmt_8h_a570adc38d3ba623b3c4e07a6d22abfa8}{AV\_PIX\_FMT\_YUV422P12}},\mbox{\hyperlink{pixfmt_8h_a143cd27f91e2f9f4517781dfbf5c6bc1}{AV\_PIX\_FMT\_YUV444P12}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P14,\mbox{\hyperlink{pixfmt_8h_a9d7af54227476bc448d263b395d8df35}{AV\_PIX\_FMT\_YUV422P14}},\mbox{\hyperlink{pixfmt_8h_ada8c97e7cb5dde4ac4cb7924693b8a66}{AV\_PIX\_FMT\_YUV444P14}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUV420P16,\mbox{\hyperlink{pixfmt_8h_ac9e00af924c2f96085b44642b1fbc076}{AV\_PIX\_FMT\_YUV422P16}},\mbox{\hyperlink{pixfmt_8h_ae7920607c5cf9a219cc94b5c7efc457d}{AV\_PIX\_FMT\_YUV444P16}}, \(\backslash\)}
+\DoxyCodeLine{                            AV\_PIX\_FMT\_YUVA420P16,\mbox{\hyperlink{pixfmt_8h_ad79d715c15a4d0685b803382bd4aa075}{AV\_PIX\_FMT\_YUVA422P16}},\mbox{\hyperlink{pixfmt_8h_ad6546e3d54b3e8fd8e5a79c0a34013c7}{AV\_PIX\_FMT\_YUVA444P16}}}
+
+\end{DoxyCode}
+
+
+Definition at line 247 of file jpeg2000dec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{jpeg2000dec_8c_a873cd470cac232aa257bf8c1bc9eaaa4}\label{jpeg2000dec_8c_a873cd470cac232aa257bf8c1bc9eaaa4}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!Jpeg2000DecoderContext@{Jpeg2000DecoderContext}}
+\index{Jpeg2000DecoderContext@{Jpeg2000DecoderContext}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{Jpeg2000DecoderContext}{Jpeg2000DecoderContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} \mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}}}
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a7bad74ddaa2ec60fb5cc377b1605937d}\label{jpeg2000dec_8c_a7bad74ddaa2ec60fb5cc377b1605937d}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!Jpeg2000POC@{Jpeg2000POC}}
+\index{Jpeg2000POC@{Jpeg2000POC}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{Jpeg2000POC}{Jpeg2000POC}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}} \mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}}}
+
+\mbox{\Hypertarget{jpeg2000dec_8c_aaa534bf857607d9ca3266bfda98bbdf5}\label{jpeg2000dec_8c_aaa534bf857607d9ca3266bfda98bbdf5}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!Jpeg2000POCEntry@{Jpeg2000POCEntry}}
+\index{Jpeg2000POCEntry@{Jpeg2000POCEntry}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{Jpeg2000POCEntry}{Jpeg2000POCEntry}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_jpeg2000_p_o_c_entry}{Jpeg2000\+P\+O\+C\+Entry}} \mbox{\hyperlink{struct_jpeg2000_p_o_c_entry}{Jpeg2000\+P\+O\+C\+Entry}}}
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a700591974e01bad17cbc53e4627fb870}\label{jpeg2000dec_8c_a700591974e01bad17cbc53e4627fb870}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!Jpeg2000Tile@{Jpeg2000Tile}}
+\index{Jpeg2000Tile@{Jpeg2000Tile}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{Jpeg2000Tile}{Jpeg2000Tile}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} \mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}}}
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a523793ceb2799ef529958b20a103b741}\label{jpeg2000dec_8c_a523793ceb2799ef529958b20a103b741}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!Jpeg2000TilePart@{Jpeg2000TilePart}}
+\index{Jpeg2000TilePart@{Jpeg2000TilePart}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{Jpeg2000TilePart}{Jpeg2000TilePart}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_jpeg2000_tile_part}{Jpeg2000\+Tile\+Part}} \mbox{\hyperlink{struct_jpeg2000_tile_part}{Jpeg2000\+Tile\+Part}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{jpeg2000dec_8c_ac2cd58ad2b8ba0af65eaa4015724ec6f}\label{jpeg2000dec_8c_ac2cd58ad2b8ba0af65eaa4015724ec6f}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!decode\_cblk@{decode\_cblk}}
+\index{decode\_cblk@{decode\_cblk}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_cblk()}{decode\_cblk()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+cblk (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{codsty,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$}]{cblk,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bandpos,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{roi\+\_\+shift }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1748 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ac2cd58ad2b8ba0af65eaa4015724ec6f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ac2cd58ad2b8ba0af65eaa4015724ec6f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a8760643118b0839c8e691b3b3595bfd6}\label{jpeg2000dec_8c_a8760643118b0839c8e691b3b3595bfd6}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!decode\_clnpass@{decode\_clnpass}}
+\index{decode\_clnpass@{decode\_clnpass}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_clnpass()}{decode\_clnpass()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+clnpass (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bpno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bandno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{seg\+\_\+symbols,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1682 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a8760643118b0839c8e691b3b3595bfd6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a8760643118b0839c8e691b3b3595bfd6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a36530a932b1d568a771f1e8760f4d62e}\label{jpeg2000dec_8c_a36530a932b1d568a771f1e8760f4d62e}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!decode\_refpass@{decode\_refpass}}
+\index{decode\_refpass@{decode\_refpass}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_refpass()}{decode\_refpass()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+refpass (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bpno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1658 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a36530a932b1d568a771f1e8760f4d62e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a36530a932b1d568a771f1e8760f4d62e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a6203f68e1886ce38e24eddccb700966e}\label{jpeg2000dec_8c_a6203f68e1886ce38e24eddccb700966e}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!decode\_sigpass@{decode\_sigpass}}
+\index{decode\_sigpass@{decode\_sigpass}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_sigpass()}{decode\_sigpass()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+sigpass (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{width,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bpno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bandno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{vert\+\_\+causal\+\_\+ctx\+\_\+csty\+\_\+symbol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1628 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6203f68e1886ce38e24eddccb700966e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6203f68e1886ce38e24eddccb700966e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a4396c261b34acf32f8a014a794295a58}\label{jpeg2000dec_8c_a4396c261b34acf32f8a014a794295a58}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!dequantization\_float@{dequantization\_float}}
+\index{dequantization\_float@{dequantization\_float}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{dequantization\_float()}{dequantization\_float()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dequantization\+\_\+float (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$}]{cblk,  }\item[{\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$}]{comp,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$}]{band }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1850 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{jpeg2000dec_8c_a4396c261b34acf32f8a014a794295a58_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a4396c261b34acf32f8a014a794295a58_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a990b1b832c77cb0cafdd40592709131c}\label{jpeg2000dec_8c_a990b1b832c77cb0cafdd40592709131c}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!dequantization\_int@{dequantization\_int}}
+\index{dequantization\_int@{dequantization\_int}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{dequantization\_int()}{dequantization\_int()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dequantization\+\_\+int (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$}]{cblk,  }\item[{\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$}]{comp,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$}]{band }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1865 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{jpeg2000dec_8c_a990b1b832c77cb0cafdd40592709131c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a990b1b832c77cb0cafdd40592709131c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aa4f3192d6f5500befce1489f09b79b64}\label{jpeg2000dec_8c_aa4f3192d6f5500befce1489f09b79b64}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!dequantization\_int\_97@{dequantization\_int\_97}}
+\index{dequantization\_int\_97@{dequantization\_int\_97}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{dequantization\_int\_97()}{dequantization\_int\_97()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} dequantization\+\_\+int\+\_\+97 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$}]{cblk,  }\item[{\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$}]{comp,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1,  }\item[{\mbox{\hyperlink{struct_jpeg2000_band}{Jpeg2000\+Band}} $\ast$}]{band }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1885 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{jpeg2000dec_8c_aa4f3192d6f5500befce1489f09b79b64_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aa4f3192d6f5500befce1489f09b79b64_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aeb21fdd4fc76349f1ec36656cb3c3352}\label{jpeg2000dec_8c_aeb21fdd4fc76349f1ec36656cb3c3352}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_bits@{get\_bits}}
+\index{get\_bits@{get\_bits}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_bits()}{get\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 145 of file jpeg2000dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aeb21fdd4fc76349f1ec36656cb3c3352_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_afe0a4f5f6683249435f53f151c6dfab9}\label{jpeg2000dec_8c_afe0a4f5f6683249435f53f151c6dfab9}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_coc@{get\_coc}}
+\index{get\_coc@{get\_coc}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_coc()}{get\_coc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+coc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{properties }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 595 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_afe0a4f5f6683249435f53f151c6dfab9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_afe0a4f5f6683249435f53f151c6dfab9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ab69afcd8b24864516f004ba1baf1594b}\label{jpeg2000dec_8c_ab69afcd8b24864516f004ba1baf1594b}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_cod@{get\_cod}}
+\index{get\_cod@{get\_cod}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_cod()}{get\_cod()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+cod (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{properties }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 558 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab69afcd8b24864516f004ba1baf1594b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab69afcd8b24864516f004ba1baf1594b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a29aa0dddb0203797823b992724ea59f8}\label{jpeg2000dec_8c_a29aa0dddb0203797823b992724ea59f8}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_cox@{get\_cox}}
+\index{get\_cox@{get\_cox}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_cox()}{get\_cox()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+cox (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 483 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{jpeg2000dec_8c_a29aa0dddb0203797823b992724ea59f8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a29aa0dddb0203797823b992724ea59f8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_afdc0f930b056a75cc93eda53bc0c0851}\label{jpeg2000dec_8c_afdc0f930b056a75cc93eda53bc0c0851}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_plt@{get\_plt}}
+\index{get\_plt@{get\_plt}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_plt()}{get\_plt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+plt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 917 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{jpeg2000dec_8c_afdc0f930b056a75cc93eda53bc0c0851_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_afdc0f930b056a75cc93eda53bc0c0851_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a722e065b55b66adf95a91798371d4234}\label{jpeg2000dec_8c_a722e065b55b66adf95a91798371d4234}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_poc@{get\_poc}}
+\index{get\_poc@{get\_poc}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_poc()}{get\_poc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+poc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size,  }\item[{\mbox{\hyperlink{struct_jpeg2000_p_o_c}{Jpeg2000\+P\+OC}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 747 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{jpeg2000dec_8c_a722e065b55b66adf95a91798371d4234_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a722e065b55b66adf95a91798371d4234_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ae3621d95466b02d1e5a30631b577f9b3}\label{jpeg2000dec_8c_ae3621d95466b02d1e5a30631b577f9b3}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_ppm@{get\_ppm}}
+\index{get\_ppm@{get\_ppm}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_ppm()}{get\_ppm()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+ppm (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 939 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{jpeg2000dec_8c_ae3621d95466b02d1e5a30631b577f9b3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ae3621d95466b02d1e5a30631b577f9b3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ae00953747a61fc7f3222e76e0783ba65}\label{jpeg2000dec_8c_ae00953747a61fc7f3222e76e0783ba65}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_ppt@{get\_ppt}}
+\index{get\_ppt@{get\_ppt}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_ppt()}{get\_ppt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+ppt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 963 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{jpeg2000dec_8c_ae00953747a61fc7f3222e76e0783ba65_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ae00953747a61fc7f3222e76e0783ba65_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a64b1ee9b1d03bdde72052047a16c3017}\label{jpeg2000dec_8c_a64b1ee9b1d03bdde72052047a16c3017}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_qcc@{get\_qcc}}
+\index{get\_qcc@{get\_qcc}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_qcc()}{get\_qcc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+qcc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{properties }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 726 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a64b1ee9b1d03bdde72052047a16c3017_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a64b1ee9b1d03bdde72052047a16c3017_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_afe44313d1d4442ea118e60d00a76e0bd}\label{jpeg2000dec_8c_afe44313d1d4442ea118e60d00a76e0bd}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_qcd@{get\_qcd}}
+\index{get\_qcd@{get\_qcd}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_qcd()}{get\_qcd()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+qcd (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{properties }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 708 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_afe44313d1d4442ea118e60d00a76e0bd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_afe44313d1d4442ea118e60d00a76e0bd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a7c95b2cc927f35017de729d326ef5ef8}\label{jpeg2000dec_8c_a7c95b2cc927f35017de729d326ef5ef8}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_qcx@{get\_qcx}}
+\index{get\_qcx@{get\_qcx}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_qcx()}{get\_qcx()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+qcx (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n,  }\item[{\mbox{\hyperlink{struct_jpeg2000_quant_style}{Jpeg2000\+Quant\+Style}} $\ast$}]{q }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 663 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{jpeg2000dec_8c_a7c95b2cc927f35017de729d326ef5ef8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a7c95b2cc927f35017de729d326ef5ef8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aea1603eae0c34d8075f8c1f1fae3e0e9}\label{jpeg2000dec_8c_aea1603eae0c34d8075f8c1f1fae3e0e9}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_rgn@{get\_rgn}}
+\index{get\_rgn@{get\_rgn}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_rgn()}{get\_rgn()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+rgn (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 630 of file jpeg2000dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aea1603eae0c34d8075f8c1f1fae3e0e9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a5f2850cae25630717ed87b4397103d1a}\label{jpeg2000dec_8c_a5f2850cae25630717ed87b4397103d1a}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_siz@{get\_siz}}
+\index{get\_siz@{get\_siz}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_siz()}{get\_siz()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+siz (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 272 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a5f2850cae25630717ed87b4397103d1a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a5f2850cae25630717ed87b4397103d1a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aba6e16da60757358cfd5060de9788f6c}\label{jpeg2000dec_8c_aba6e16da60757358cfd5060de9788f6c}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_sot@{get\_sot}}
+\index{get\_sot@{get\_sot}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_sot()}{get\_sot()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+sot (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 809 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=302pt]{jpeg2000dec_8c_aba6e16da60757358cfd5060de9788f6c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aba6e16da60757358cfd5060de9788f6c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a2813dd6f432e46143146ee230b8cab97}\label{jpeg2000dec_8c_a2813dd6f432e46143146ee230b8cab97}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!get\_tlm@{get\_tlm}}
+\index{get\_tlm@{get\_tlm}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{get\_tlm()}{get\_tlm()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+tlm (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 879 of file jpeg2000dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a2813dd6f432e46143146ee230b8cab97_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a2ac685c4974239ca1350c9bace3550db}\label{jpeg2000dec_8c_a2ac685c4974239ca1350c9bace3550db}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!getlblockinc@{getlblockinc}}
+\index{getlblockinc@{getlblockinc}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{getlblockinc()}{getlblockinc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} getlblockinc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1063 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=235pt]{jpeg2000dec_8c_a2ac685c4974239ca1350c9bace3550db_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a2ac685c4974239ca1350c9bace3550db_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a4f45b7921fdd64a8827d79a344fb3da6}\label{jpeg2000dec_8c_a4f45b7921fdd64a8827d79a344fb3da6}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!getnpasses@{getnpasses}}
+\index{getnpasses@{getnpasses}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{getnpasses()}{getnpasses()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} getnpasses (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1048 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=234pt]{jpeg2000dec_8c_a4f45b7921fdd64a8827d79a344fb3da6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a4f45b7921fdd64a8827d79a344fb3da6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ab22f0a3a1be35ac8ef82aaca827ba213}\label{jpeg2000dec_8c_ab22f0a3a1be35ac8ef82aaca827ba213}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!init\_tile@{init\_tile}}
+\index{init\_tile@{init\_tile}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{init\_tile()}{init\_tile()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+tile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{tileno }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 999 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab22f0a3a1be35ac8ef82aaca827ba213_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab22f0a3a1be35ac8ef82aaca827ba213_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_acd41c1fa610e10aec8d438d95ea4a481}\label{jpeg2000dec_8c_acd41c1fa610e10aec8d438d95ea4a481}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jp2\_find\_codestream@{jp2\_find\_codestream}}
+\index{jp2\_find\_codestream@{jp2\_find\_codestream}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jp2\_find\_codestream()}{jp2\_find\_codestream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jp2\+\_\+find\+\_\+codestream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2329 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_acd41c1fa610e10aec8d438d95ea4a481_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{jpeg2000dec_8c_acd41c1fa610e10aec8d438d95ea4a481_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a6a830b30c63d53432d0856dd09483671}\label{jpeg2000dec_8c_a6a830b30c63d53432d0856dd09483671}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_dec\_cleanup@{jpeg2000\_dec\_cleanup}}
+\index{jpeg2000\_dec\_cleanup@{jpeg2000\_dec\_cleanup}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_dec\_cleanup()}{jpeg2000\_dec\_cleanup()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} jpeg2000\+\_\+dec\+\_\+cleanup (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2117 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6a830b30c63d53432d0856dd09483671_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6a830b30c63d53432d0856dd09483671_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a74d0c52ab34e790d526328c7bd1a2c97}\label{jpeg2000dec_8c_a74d0c52ab34e790d526328c7bd1a2c97}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_frame@{jpeg2000\_decode\_frame}}
+\index{jpeg2000\_decode\_frame@{jpeg2000\_decode\_frame}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_frame()}{jpeg2000\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2489 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{jpeg2000dec_8c_a74d0c52ab34e790d526328c7bd1a2c97_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aa130d2e2dc73a74965cf6538f9a8552c}\label{jpeg2000dec_8c_aa130d2e2dc73a74965cf6538f9a8552c}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_init@{jpeg2000\_decode\_init}}
+\index{jpeg2000\_decode\_init@{jpeg2000\_decode\_init}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_init()}{jpeg2000\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2478 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aa130d2e2dc73a74965cf6538f9a8552c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a0751a33c931bfaa36e94efce77534efd}\label{jpeg2000dec_8c_a0751a33c931bfaa36e94efce77534efd}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_packet@{jpeg2000\_decode\_packet}}
+\index{jpeg2000\_decode\_packet@{jpeg2000\_decode\_packet}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_packet()}{jpeg2000\_decode\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{tp\+\_\+index,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{codsty,  }\item[{\mbox{\hyperlink{struct_jpeg2000_res_level}{Jpeg2000\+Res\+Level}} $\ast$}]{rlevel,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{precno,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{layno,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{expn,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{numgbits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1102 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a0751a33c931bfaa36e94efce77534efd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a0751a33c931bfaa36e94efce77534efd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_adf8e4fe492588b2c45475da844d2dbce}\label{jpeg2000dec_8c_adf8e4fe492588b2c45475da844d2dbce}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_packets@{jpeg2000\_decode\_packets}}
+\index{jpeg2000\_decode\_packets@{jpeg2000\_decode\_packets}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_packets()}{jpeg2000\_decode\_packets()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+packets (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1591 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_adf8e4fe492588b2c45475da844d2dbce_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_adf8e4fe492588b2c45475da844d2dbce_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_aaab7496df5bb17d31dac20720b215bea}\label{jpeg2000dec_8c_aaab7496df5bb17d31dac20720b215bea}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_packets\_po\_iteration@{jpeg2000\_decode\_packets\_po\_iteration}}
+\index{jpeg2000\_decode\_packets\_po\_iteration@{jpeg2000\_decode\_packets\_po\_iteration}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_packets\_po\_iteration()}{jpeg2000\_decode\_packets\_po\_iteration()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+packets\+\_\+po\+\_\+iteration (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{R\+Spoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{C\+Spoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{L\+Y\+Epoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{R\+Epoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{C\+Epoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{Ppoc,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{tp\+\_\+index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1300 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aaab7496df5bb17d31dac20720b215bea_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_aaab7496df5bb17d31dac20720b215bea_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a874909d55799e979bd8fa190b8fd7a6e}\label{jpeg2000dec_8c_a874909d55799e979bd8fa190b8fd7a6e}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_decode\_tile@{jpeg2000\_decode\_tile}}
+\index{jpeg2000\_decode\_tile@{jpeg2000\_decode\_tile}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_decode\_tile()}{jpeg2000\_decode\_tile()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+decode\+\_\+tile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{td,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{threadnr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2078 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a874909d55799e979bd8fa190b8fd7a6e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=348pt]{jpeg2000dec_8c_a874909d55799e979bd8fa190b8fd7a6e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a53c1f92e6360c5b8f60b89cbbd343fe3}\label{jpeg2000dec_8c_a53c1f92e6360c5b8f60b89cbbd343fe3}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_flush@{jpeg2000\_flush}}
+\index{jpeg2000\_flush@{jpeg2000\_flush}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_flush()}{jpeg2000\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} jpeg2000\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 160 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{jpeg2000dec_8c_a53c1f92e6360c5b8f60b89cbbd343fe3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a53c1f92e6360c5b8f60b89cbbd343fe3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a6cae63678bd13356f2840b1d6972badc}\label{jpeg2000dec_8c_a6cae63678bd13356f2840b1d6972badc}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_init\_static\_data@{jpeg2000\_init\_static\_data}}
+\index{jpeg2000\_init\_static\_data@{jpeg2000\_init\_static\_data}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_init\_static\_data()}{jpeg2000\_init\_static\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} jpeg2000\+\_\+init\+\_\+static\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2472 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6cae63678bd13356f2840b1d6972badc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a6cae63678bd13356f2840b1d6972badc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_af00d6ce82ea8af29ab93da39a444aadd}\label{jpeg2000dec_8c_af00d6ce82ea8af29ab93da39a444aadd}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_read\_bitstream\_packets@{jpeg2000\_read\_bitstream\_packets}}
+\index{jpeg2000\_read\_bitstream\_packets@{jpeg2000\_read\_bitstream\_packets}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_read\_bitstream\_packets()}{jpeg2000\_read\_bitstream\_packets()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+read\+\_\+bitstream\+\_\+packets (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2311 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_af00d6ce82ea8af29ab93da39a444aadd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_af00d6ce82ea8af29ab93da39a444aadd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ad1571dab998416e94cf254e482f3c1a7}\label{jpeg2000dec_8c_ad1571dab998416e94cf254e482f3c1a7}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_read\_main\_headers@{jpeg2000\_read\_main\_headers}}
+\index{jpeg2000\_read\_main\_headers@{jpeg2000\_read\_main\_headers}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_read\_main\_headers()}{jpeg2000\_read\_main\_headers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jpeg2000\+\_\+read\+\_\+main\+\_\+headers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2145 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ad1571dab998416e94cf254e482f3c1a7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{jpeg2000dec_8c_ad1571dab998416e94cf254e482f3c1a7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a04cf6d4cdf7170370c87faa86708cfc0}\label{jpeg2000dec_8c_a04cf6d4cdf7170370c87faa86708cfc0}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!mct\_decode@{mct\_decode}}
+\index{mct\_decode@{mct\_decode}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{mct\_decode()}{mct\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mct\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1899 of file jpeg2000dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a04cf6d4cdf7170370c87faa86708cfc0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a43a0c88368b8379349924030be1737a0}\label{jpeg2000dec_8c_a43a0c88368b8379349924030be1737a0}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!pix\_fmt\_match@{pix\_fmt\_match}}
+\index{pix\_fmt\_match@{pix\_fmt\_match}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{pix\_fmt\_match()}{pix\_fmt\_match()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pix\+\_\+fmt\+\_\+match (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}}}]{pix\+\_\+fmt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{components,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bpc,  }\item[{uint32\+\_\+t}]{log2\+\_\+chroma\+\_\+wh,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pal8 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a43a0c88368b8379349924030be1737a0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ae05d60db02eec57f83312f027ac759b9}\label{jpeg2000dec_8c_ae05d60db02eec57f83312f027ac759b9}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!read\_crg@{read\_crg}}
+\index{read\_crg@{read\_crg}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{read\_crg()}{read\_crg()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+crg (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 862 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{jpeg2000dec_8c_ae05d60db02eec57f83312f027ac759b9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ae05d60db02eec57f83312f027ac759b9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a06d56cd79a54080bfb2bb52bd73240ed}\label{jpeg2000dec_8c_a06d56cd79a54080bfb2bb52bd73240ed}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!roi\_scale\_cblk@{roi\_scale\_cblk}}
+\index{roi\_scale\_cblk@{roi\_scale\_cblk}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{roi\_scale\_cblk()}{roi\_scale\_cblk()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} roi\+\_\+scale\+\_\+cblk (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_cblk}{Jpeg2000\+Cblk}} $\ast$}]{cblk,  }\item[{\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$}]{comp,  }\item[{\mbox{\hyperlink{struct_jpeg2000_t1_context}{Jpeg2000\+T1\+Context}} $\ast$}]{t1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1927 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a06d56cd79a54080bfb2bb52bd73240ed_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a06d56cd79a54080bfb2bb52bd73240ed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ab4fd2996e7661082e1cd3a40afb948b7}\label{jpeg2000dec_8c_ab4fd2996e7661082e1cd3a40afb948b7}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!roi\_shift\_param@{roi\_shift\_param}}
+\index{roi\_shift\_param@{roi\_shift\_param}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{roi\_shift\_param()}{roi\_shift\_param()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} roi\+\_\+shift\+\_\+param (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_component}{Jpeg2000\+Component}} $\ast$}]{comp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{quan\+\_\+parameter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1830 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{jpeg2000dec_8c_ab4fd2996e7661082e1cd3a40afb948b7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab4fd2996e7661082e1cd3a40afb948b7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a49c6af2ad205919105a72a8679e78117}\label{jpeg2000dec_8c_a49c6af2ad205919105a72a8679e78117}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!select\_header@{select\_header}}
+\index{select\_header@{select\_header}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{select\_header()}{select\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} select\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{tp\+\_\+index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1074 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{jpeg2000dec_8c_a49c6af2ad205919105a72a8679e78117_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a49c6af2ad205919105a72a8679e78117_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ab2f80ca3298c02764718a5b4e3cfbe46}\label{jpeg2000dec_8c_ab2f80ca3298c02764718a5b4e3cfbe46}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!select\_stream@{select\_stream}}
+\index{select\_stream@{select\_stream}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{select\_stream()}{select\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} select\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{tp\+\_\+index,  }\item[{\mbox{\hyperlink{struct_jpeg2000_coding_style}{Jpeg2000\+Coding\+Style}} $\ast$}]{codsty }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1085 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=331pt]{jpeg2000dec_8c_ab2f80ca3298c02764718a5b4e3cfbe46_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ab2f80ca3298c02764718a5b4e3cfbe46_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_ac080aa3d2188477c9278ae13dad24768}\label{jpeg2000dec_8c_ac080aa3d2188477c9278ae13dad24768}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!tag\_tree\_decode@{tag\_tree\_decode}}
+\index{tag\_tree\_decode@{tag\_tree\_decode}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{tag\_tree\_decode()}{tag\_tree\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} tag\+\_\+tree\+\_\+decode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tgt_node}{Jpeg2000\+Tgt\+Node}} $\ast$}]{node,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{threshold }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 168 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{jpeg2000dec_8c_ac080aa3d2188477c9278ae13dad24768_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_ac080aa3d2188477c9278ae13dad24768_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{jpeg2000dec_8c_a988930618c9c6216d9c1b2403231a847}\label{jpeg2000dec_8c_a988930618c9c6216d9c1b2403231a847}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!tile\_codeblocks@{tile\_codeblocks}}
+\index{tile\_codeblocks@{tile\_codeblocks}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{tile\_codeblocks()}{tile\_codeblocks()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} tile\+\_\+codeblocks (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_jpeg2000_decoder_context}{Jpeg2000\+Decoder\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_jpeg2000_tile}{Jpeg2000\+Tile}} $\ast$}]{tile }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1940 of file jpeg2000dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a988930618c9c6216d9c1b2403231a847_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{jpeg2000dec_8c_a988930618c9c6216d9c1b2403231a847_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{jpeg2000dec_8c_a046bafb073da626933b4a41612d48628}\label{jpeg2000dec_8c_a046bafb073da626933b4a41612d48628}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!all\_pix\_fmts@{all\_pix\_fmts}}
+\index{all\_pix\_fmts@{all\_pix\_fmts}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{all\_pix\_fmts}{all\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} all\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{\mbox{\hyperlink{jpeg2000dec_8c_a880b2b44dac2c43364a2b92e2409114e}{RGB\_PIXEL\_FORMATS}},}
+\DoxyCodeLine{                                                   \mbox{\hyperlink{jpeg2000dec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}{GRAY\_PIXEL\_FORMATS}},}
+\DoxyCodeLine{                                                   \mbox{\hyperlink{jpeg2000dec_8c_a6786225afb7c3e183b498e841678af7b}{YUV\_PIXEL\_FORMATS}},}
+\DoxyCodeLine{                                                   \mbox{\hyperlink{jpeg2000dec_8c_adfb95c655a88732148969db88c396b64}{XYZ\_PIXEL\_FORMATS}}\}}
+
+\end{DoxyCode}
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_af244be461a53094efcd9ee2cd011d985}\label{jpeg2000dec_8c_af244be461a53094efcd9ee2cd011d985}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!ff\_jpeg2000\_decoder@{ff\_jpeg2000\_decoder}}
+\index{ff\_jpeg2000\_decoder@{ff\_jpeg2000\_decoder}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_jpeg2000\_decoder}{ff\_jpeg2000\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+jpeg2000\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name             = \textcolor{stringliteral}{"{}jpeg2000"{}},}
+\DoxyCodeLine{    .long\_name        = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}JPEG 2000"{}}),}
+\DoxyCodeLine{    .type             = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id               = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea4ff1478f2b0f3bc728f6cce39d44b9f0}{AV\_CODEC\_ID\_JPEG2000}},}
+\DoxyCodeLine{    .capabilities     = \mbox{\hyperlink{group__lavc__core_ga7c4f386d1d6df0214eb35f2be1c82779}{AV\_CODEC\_CAP\_SLICE\_THREADS}} | \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .priv\_data\_size   = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{jpeg2000dec_8c_a873cd470cac232aa257bf8c1bc9eaaa4}{Jpeg2000DecoderContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}             = \mbox{\hyperlink{jpeg2000dec_8c_aa130d2e2dc73a74965cf6538f9a8552c}{jpeg2000\_decode\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}           = \mbox{\hyperlink{jpeg2000dec_8c_a74d0c52ab34e790d526328c7bd1a2c97}{jpeg2000\_decode\_frame}},}
+\DoxyCodeLine{    .priv\_class       = \&\mbox{\hyperlink{jpeg2000dec_8c_aa0fe2c518e1da3ff176b3be3952270cf}{jpeg2000\_class}},}
+\DoxyCodeLine{    .max\_lowres       = 5,}
+\DoxyCodeLine{    .\mbox{\hyperlink{libfdk-aacenc_8c_a3e3649a3e3978bfb8c6e13c4e91c5e6b}{profiles}}         = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\mbox{\hyperlink{profiles_8c_a38d320b526d55c12d4e3b96f44aff039}{ff\_jpeg2000\_profiles}})}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2577 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_acdcb09b852df254cad041c23b9ff30e0}\label{jpeg2000dec_8c_acdcb09b852df254cad041c23b9ff30e0}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!gray\_pix\_fmts@{gray\_pix\_fmts}}
+\index{gray\_pix\_fmts@{gray\_pix\_fmts}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{gray\_pix\_fmts}{gray\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} gray\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a3fef6078a5e92a16c9dd72dd77daaacb}{G\+R\+A\+Y\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_aa0fe2c518e1da3ff176b3be3952270cf}\label{jpeg2000dec_8c_aa0fe2c518e1da3ff176b3be3952270cf}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!jpeg2000\_class@{jpeg2000\_class}}
+\index{jpeg2000\_class@{jpeg2000\_class}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{jpeg2000\_class}{jpeg2000\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} jpeg2000\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}jpeg2000"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{jpeg2000dec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2570 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{jpeg2000dec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!options@{options}}
+\index{options@{options}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}lowres"{}},  \textcolor{stringliteral}{"{}Lower the decoding resolution by a power of two"{}},}
+\DoxyCodeLine{        \mbox{\hyperlink{jpeg2000dec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(reduction\_factor), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = 0 \}, 0, \mbox{\hyperlink{jpeg2000_8h_a1336424842b4df2f798c256739e16dec}{JPEG2000\_MAX\_RESLEVELS}} -\/ 1, \mbox{\hyperlink{jpeg2000dec_8c_aa786055ad8b70c06fcd3fb7c848bc390}{VD}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 2564 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a55fb7f727c06e19ec5dd89297cf499db}\label{jpeg2000dec_8c_a55fb7f727c06e19ec5dd89297cf499db}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!rgb\_pix\_fmts@{rgb\_pix\_fmts}}
+\index{rgb\_pix\_fmts@{rgb\_pix\_fmts}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{rgb\_pix\_fmts}{rgb\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} rgb\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a880b2b44dac2c43364a2b92e2409114e}{R\+G\+B\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_a0c43b8c2e6e162901b26ad79d7e730ad}\label{jpeg2000dec_8c_a0c43b8c2e6e162901b26ad79d7e730ad}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!xyz\_pix\_fmts@{xyz\_pix\_fmts}}
+\index{xyz\_pix\_fmts@{xyz\_pix\_fmts}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{xyz\_pix\_fmts}{xyz\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} xyz\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{\mbox{\hyperlink{jpeg2000dec_8c_adfb95c655a88732148969db88c396b64}{XYZ\_PIXEL\_FORMATS}},}
+\DoxyCodeLine{                                                   \mbox{\hyperlink{jpeg2000dec_8c_a6786225afb7c3e183b498e841678af7b}{YUV\_PIXEL\_FORMATS}}\}}
+
+\end{DoxyCode}
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+
+\mbox{\Hypertarget{jpeg2000dec_8c_af3658d5633a0ac50c6ff2c0c908c4bed}\label{jpeg2000dec_8c_af3658d5633a0ac50c6ff2c0c908c4bed}} 
+\index{jpeg2000dec.c@{jpeg2000dec.c}!yuv\_pix\_fmts@{yuv\_pix\_fmts}}
+\index{yuv\_pix\_fmts@{yuv\_pix\_fmts}!jpeg2000dec.c@{jpeg2000dec.c}}
+\doxysubsubsection{\texorpdfstring{yuv\_pix\_fmts}{yuv\_pix\_fmts}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} yuv\+\_\+pix\+\_\+fmts\mbox{[}$\,$\mbox{]} = \{\mbox{\hyperlink{libopenjpegdec_8c_a6786225afb7c3e183b498e841678af7b}{Y\+U\+V\+\_\+\+P\+I\+X\+E\+L\+\_\+\+F\+O\+R\+M\+A\+TS}}\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 208 of file jpeg2000dec.\+c.
+

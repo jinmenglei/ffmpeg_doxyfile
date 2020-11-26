@@ -1,0 +1,996 @@
+\hypertarget{proresenc__anatoliy_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/proresenc\+\_\+anatoliy.c File Reference}
+\label{proresenc__anatoliy_8c}\index{E:/github/ffmpeg/libavcodec/proresenc\_anatoliy.c@{E:/github/ffmpeg/libavcodec/proresenc\_anatoliy.c}}
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dct.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}profiles.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}proresdata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fdctdsp.\+h\char`\"{}}\newline
+Include dependency graph for proresenc\+\_\+anatoliy.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_prores_context}{Prores\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a23964173906e792f9cb8fb3243ba01c2}{D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+L\+I\+C\+E\+\_\+\+M\+B\+\_\+\+W\+I\+D\+TH}}~8
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a43b06850747d9b5ccc1d86e7d8818798}{Q\+S\+C\+A\+LE}}(qmat,  ind,  \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})~((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) / ((qmat)\mbox{[}ind\mbox{]}))
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a353df7c701456ec3e12e4b548ff34f73}{T\+O\+\_\+\+G\+O\+L\+O\+MB}}(\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})~(((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $\ast$ 2) $^\wedge$ ((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31))
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a3012a0efa07b5d435bf75544bff00b7d}{D\+I\+F\+F\+\_\+\+S\+I\+GN}}(\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  sign)~(((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31) $^\wedge$ (sign))
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a3dc773c364b12d7b7e54f0889e546fc7}{I\+S\+\_\+\+N\+E\+G\+A\+T\+I\+VE}}(\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})~((((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31) $^\wedge$ -\/1) + 1)
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_aa23b6527c3bf78e87ae3d3a50c5a3c36}{T\+O\+\_\+\+G\+O\+L\+O\+M\+B2}}(\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  sign)~((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})==0 ? 0 \+: ((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $<$$<$ 1) + (sign))
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a48b8e4e2a8e6a2f322b40004f9e68293}{F\+I\+R\+S\+T\+\_\+\+D\+C\+\_\+\+CB}}~0x\+B8
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_prores_context}{Prores\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{proresenc__anatoliy_8c_a3dcf4acb9f7d9c57f43802a9a1ac4ee6}{VE}}~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_ae458a1d3a4a833645a68dace071b7537}{encode\+\_\+codeword}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{cfhdenc_8c_a10b2ef2302ea7c1ef22b811f9d07678a}{codebook}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_ad1a1b91606b97f7b19c711725dcd8a9e}{get\+\_\+level}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a2a64f153584f5428a71af2fb36d3ff39}{encode\+\_\+dc\+\_\+coeffs}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, int16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blocks\+\_\+per\+\_\+slice, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$qmat)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a6b73a73cf391e5a65bba8b950967d841}{encode\+\_\+ac\+\_\+coeffs}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, int16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} blocks\+\_\+per\+\_\+slice, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$qmat, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} ff\+\_\+prores\+\_\+scan\mbox{[}64\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_afd063743f86ed12cf4e90c2f5ce744ab}{get}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$pixels, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, int16\+\_\+t $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_acb3367b0f20c112c4689d4ee763e0e38}{fdct\+\_\+get}} (\mbox{\hyperlink{struct_f_d_c_t_d_s_p_context}{F\+D\+C\+T\+D\+S\+P\+Context}} $\ast$fdsp, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$pixels, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, int16\+\_\+t $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a6f14973da66cf5da59fc5e3fb169dd6b}{calc\+\_\+plane\+\_\+dct}} (\mbox{\hyperlink{struct_f_d_c_t_d_s_p_context}{F\+D\+C\+T\+D\+S\+P\+Context}} $\ast$fdsp, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, int16\+\_\+t $\ast$blocks, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} src\+\_\+stride, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__waveform_8c_a155491a071a66a7795f49f3a5e079fac}{chroma}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+422)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_af7d43466db8539cd6ce899c67aa0295b}{encode\+\_\+slice\+\_\+plane}} (int16\+\_\+t $\ast$blocks, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+count, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, unsigned buf\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$qmat, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sub\+\_\+sample\+\_\+chroma, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} ff\+\_\+prores\+\_\+scan\mbox{[}64\mbox{]})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} unsigned \mbox{\hyperlink{proresenc__anatoliy_8c_a365c355fe6c6eb65c8eb6bcb9cc6ec0a}{encode\+\_\+slice\+\_\+data}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, int16\+\_\+t $\ast$blocks\+\_\+y, int16\+\_\+t $\ast$blocks\+\_\+u, int16\+\_\+t $\ast$blocks\+\_\+v, unsigned mb\+\_\+count, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, unsigned data\+\_\+size, unsigned $\ast$y\+\_\+data\+\_\+size, unsigned $\ast$u\+\_\+data\+\_\+size, unsigned $\ast$v\+\_\+data\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} qp)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_ae9bdc89096ece6def08e3ae97321ac45}{put\+\_\+alpha\+\_\+diff}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cur, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prev)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a777ceed7640eb7700517c083ac384074}{put\+\_\+alpha\+\_\+run}} (\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$pb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{svq3_8c_aa90bc2b9950a6a9a3144876047f8bee2}{run}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_ad308c4c2e9d929140258764182dbd713}{encode\+\_\+alpha\+\_\+slice\+\_\+data}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, int8\+\_\+t $\ast$src\+\_\+a, unsigned mb\+\_\+count, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, unsigned data\+\_\+size, unsigned $\ast$a\+\_\+data\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_ae67d925c3c38bfc1afc64b399a14261f}{subimage\+\_\+with\+\_\+fill\+\_\+template}} (uint16\+\_\+t $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, unsigned x, unsigned y, unsigned \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, unsigned \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, unsigned \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, uint16\+\_\+t $\ast$dst, unsigned dst\+\_\+width, unsigned dst\+\_\+height, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+alpha\+\_\+plane, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+interlaced, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+top\+\_\+field)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_ae7f46612c47a71193b395697942ea8a2}{subimage\+\_\+with\+\_\+fill}} (uint16\+\_\+t $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, unsigned x, unsigned y, unsigned \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, unsigned \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, unsigned \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, uint16\+\_\+t $\ast$dst, unsigned dst\+\_\+width, unsigned dst\+\_\+height, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+interlaced, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+top\+\_\+field)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a2b7047c21a7140edad80a74696aef744}{subimage\+\_\+alpha\+\_\+with\+\_\+fill}} (uint16\+\_\+t $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, unsigned x, unsigned y, unsigned \mbox{\hyperlink{mace_8c_a08f66a6870d87afcd5dc1b60d1019692}{stride}}, unsigned \mbox{\hyperlink{tests_2utils_8c_a2474a5474cbff19523a51eb1de01cda4}{width}}, unsigned \mbox{\hyperlink{tests_2utils_8c_ad12fc34ce789bce6c8a05d8a17138534}{height}}, uint16\+\_\+t $\ast$dst, unsigned dst\+\_\+width, unsigned dst\+\_\+height, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+interlaced, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+top\+\_\+field)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a841fabff4d978b33eee6c3adec02bde9}{encode\+\_\+slice}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$pic, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+y, unsigned mb\+\_\+count, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, unsigned data\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} unsafe, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$qp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+interlaced, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+top\+\_\+field)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_aa7f9631f4e38b536e784c1d7e4dbe196}{prores\+\_\+encode\+\_\+picture}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$pic, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} picture\+\_\+index, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} is\+\_\+top\+\_\+field)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82}{prores\+\_\+encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$pict, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{proresenc__anatoliy_8c_a748da401cb932f80e3c370bb63843d0a}{scale\+\_\+mat}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$dst, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} scale)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13}{prores\+\_\+encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a8161ed43510ff55149919d3fc263ef36}{prores\+\_\+encode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_profile}{A\+V\+Profile}} \mbox{\hyperlink{proresenc__anatoliy_8c_a3e3649a3e3978bfb8c6e13c4e91c5e6b}{profiles}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a867e16b14943e8db938e6b312a253fc8}{qp\+\_\+start\+\_\+table}} \mbox{[}$\,$\mbox{]} = \{ 8, 3, 2, 1, 1, 1\}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_ade64467b8f6ceb93632cc04577b3fb5d}{qp\+\_\+end\+\_\+table}} \mbox{[}$\,$\mbox{]} = \{ 13, 9, 6, 6, 5, 4\}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a59d802cfcf220cb768e07fd070d06ab8}{bitrate\+\_\+table}} \mbox{[}$\,$\mbox{]} = \{ 1000, 2100, 3500, 5400, 7000, 10000\}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a67e70277ce7b104c19c55e10c2815f68}{valid\+\_\+primaries}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a5f29782babb8e34a12a9f4564d3aee5d}{valid\+\_\+trc}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{proresenc__anatoliy_8c_a118b5398fe5ed2d8633ddabb4650917a}{valid\+\_\+colorspace}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{proresenc__anatoliy_8c_a124964fbc857533de79ffa9f8d3d1aaa}{Q\+M\+A\+T\+\_\+\+L\+U\+MA}} \mbox{[}6\mbox{]}\mbox{[}64\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{proresenc__anatoliy_8c_ab79912edac90c263a81b938ee9569bdc}{Q\+M\+A\+T\+\_\+\+C\+H\+R\+O\+MA}} \mbox{[}6\mbox{]}\mbox{[}64\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{proresenc__anatoliy_8c_a8ef9e311cdba8f9bdf9ce1ffa09555ec}{dc\+\_\+codebook}} \mbox{[}7\mbox{]} = \{ 0x04, 0x28, 0x28, 0x4D, 0x4D, 0x70, 0x70\}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{proresenc__anatoliy_8c_a583e6bef2aff815ca24e63faee1ad981}{run\+\_\+to\+\_\+cb}} \mbox{[}16\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{proresenc__anatoliy_8c_ac1f3c172f1a635090f6cfad91c40999e}{lev\+\_\+to\+\_\+cb}} \mbox{[}10\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{proresenc__anatoliy_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{proresenc__anatoliy_8c_ae7367ea94ffa8b74bf434fece942a721}{proresaw\+\_\+enc\+\_\+class}}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{proresenc__anatoliy_8c_a51a17043714b59bcaec69d20aa400ed0}{prores\+\_\+enc\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{proresenc__anatoliy_8c_a6167c4a407c62e64556e6aba4f828a9c}{ff\+\_\+prores\+\_\+aw\+\_\+encoder}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{proresenc__anatoliy_8c_a35711fffae8b40098d9dfeccb309fd01}{ff\+\_\+prores\+\_\+encoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Apple Pro\+Res encoder (Anatoliy Wasserman version) Known F\+O\+U\+R\+C\+Cs\+: \textquotesingle{}ap4h\textquotesingle{} (444), \textquotesingle{}apch\textquotesingle{} (HQ), \textquotesingle{}apcn\textquotesingle{} (422), \textquotesingle{}apcs\textquotesingle{} (LT), \textquotesingle{}acpo\textquotesingle{} (Proxy) 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a23964173906e792f9cb8fb3243ba01c2}\label{proresenc__anatoliy_8c_a23964173906e792f9cb8fb3243ba01c2}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!DEFAULT\_SLICE\_MB\_WIDTH@{DEFAULT\_SLICE\_MB\_WIDTH}}
+\index{DEFAULT\_SLICE\_MB\_WIDTH@{DEFAULT\_SLICE\_MB\_WIDTH}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_SLICE\_MB\_WIDTH}{DEFAULT\_SLICE\_MB\_WIDTH}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+L\+I\+C\+E\+\_\+\+M\+B\+\_\+\+W\+I\+D\+TH~8}
+
+
+
+Definition at line 40 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a3012a0efa07b5d435bf75544bff00b7d}\label{proresenc__anatoliy_8c_a3012a0efa07b5d435bf75544bff00b7d}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!DIFF\_SIGN@{DIFF\_SIGN}}
+\index{DIFF\_SIGN@{DIFF\_SIGN}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{DIFF\_SIGN}{DIFF\_SIGN}}
+{\footnotesize\ttfamily \#define D\+I\+F\+F\+\_\+\+S\+I\+GN(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  }\item[{}]{sign }\end{DoxyParamCaption})~(((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31) $^\wedge$ (sign))}
+
+
+
+Definition at line 229 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a48b8e4e2a8e6a2f322b40004f9e68293}\label{proresenc__anatoliy_8c_a48b8e4e2a8e6a2f322b40004f9e68293}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!FIRST\_DC\_CB@{FIRST\_DC\_CB}}
+\index{FIRST\_DC\_CB@{FIRST\_DC\_CB}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{FIRST\_DC\_CB}{FIRST\_DC\_CB}}
+{\footnotesize\ttfamily \#define F\+I\+R\+S\+T\+\_\+\+D\+C\+\_\+\+CB~0x\+B8}
+
+
+
+Definition at line 239 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a3dc773c364b12d7b7e54f0889e546fc7}\label{proresenc__anatoliy_8c_a3dc773c364b12d7b7e54f0889e546fc7}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!IS\_NEGATIVE@{IS\_NEGATIVE}}
+\index{IS\_NEGATIVE@{IS\_NEGATIVE}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{IS\_NEGATIVE}{IS\_NEGATIVE}}
+{\footnotesize\ttfamily \#define I\+S\+\_\+\+N\+E\+G\+A\+T\+I\+VE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}} }\end{DoxyParamCaption})~((((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31) $^\wedge$ -\/1) + 1)}
+
+
+
+Definition at line 230 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{proresenc__anatoliy_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_prores_context}{Prores\+Context}}, x)}
+
+
+
+Definition at line 924 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a43b06850747d9b5ccc1d86e7d8818798}\label{proresenc__anatoliy_8c_a43b06850747d9b5ccc1d86e7d8818798}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!QSCALE@{QSCALE}}
+\index{QSCALE@{QSCALE}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{QSCALE}{QSCALE}}
+{\footnotesize\ttfamily \#define Q\+S\+C\+A\+LE(\begin{DoxyParamCaption}\item[{}]{qmat,  }\item[{}]{ind,  }\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}} }\end{DoxyParamCaption})~((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) / ((qmat)\mbox{[}ind\mbox{]}))}
+
+
+
+Definition at line 227 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a353df7c701456ec3e12e4b548ff34f73}\label{proresenc__anatoliy_8c_a353df7c701456ec3e12e4b548ff34f73}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!TO\_GOLOMB@{TO\_GOLOMB}}
+\index{TO\_GOLOMB@{TO\_GOLOMB}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{TO\_GOLOMB}{TO\_GOLOMB}}
+{\footnotesize\ttfamily \#define T\+O\+\_\+\+G\+O\+L\+O\+MB(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $\ast$ 2) $^\wedge$ ((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $>$$>$ 31))}
+
+
+
+Definition at line 228 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_aa23b6527c3bf78e87ae3d3a50c5a3c36}\label{proresenc__anatoliy_8c_aa23b6527c3bf78e87ae3d3a50c5a3c36}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!TO\_GOLOMB2@{TO\_GOLOMB2}}
+\index{TO\_GOLOMB2@{TO\_GOLOMB2}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{TO\_GOLOMB2}{TO\_GOLOMB2}}
+{\footnotesize\ttfamily \#define T\+O\+\_\+\+G\+O\+L\+O\+M\+B2(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}},  }\item[{}]{sign }\end{DoxyParamCaption})~((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}})==0 ? 0 \+: ((\mbox{\hyperlink{aeval_8c_a16aca557f352132b55bbc3c4769daa8b}{val}}) $<$$<$ 1) + (sign))}
+
+
+
+Definition at line 231 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a3dcf4acb9f7d9c57f43802a9a1ac4ee6}\label{proresenc__anatoliy_8c_a3dcf4acb9f7d9c57f43802a9a1ac4ee6}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!VE@{VE}}
+\index{VE@{VE}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{VE}{VE}}
+{\footnotesize\ttfamily \#define VE~\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 925 of file proresenc\+\_\+anatoliy.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a6f14973da66cf5da59fc5e3fb169dd6b}\label{proresenc__anatoliy_8c_a6f14973da66cf5da59fc5e3fb169dd6b}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!calc\_plane\_dct@{calc\_plane\_dct}}
+\index{calc\_plane\_dct@{calc\_plane\_dct}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{calc\_plane\_dct()}{calc\_plane\_dct()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+plane\+\_\+dct (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_f_d_c_t_d_s_p_context}{F\+D\+C\+T\+D\+S\+P\+Context}} $\ast$}]{fdsp,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{int16\+\_\+t $\ast$}]{blocks,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{src\+\_\+stride,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{chroma,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+422 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 323 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=331pt]{proresenc__anatoliy_8c_a6f14973da66cf5da59fc5e3fb169dd6b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a6f14973da66cf5da59fc5e3fb169dd6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a6b73a73cf391e5a65bba8b950967d841}\label{proresenc__anatoliy_8c_a6b73a73cf391e5a65bba8b950967d841}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_ac\_coeffs@{encode\_ac\_coeffs}}
+\index{encode\_ac\_coeffs@{encode\_ac\_coeffs}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_ac\_coeffs()}{encode\_ac\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} encode\+\_\+ac\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{int16\+\_\+t $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blocks\+\_\+per\+\_\+slice,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{qmat,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{ff\+\_\+prores\+\_\+scan\mbox{[}64\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 274 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a6b73a73cf391e5a65bba8b950967d841_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a6b73a73cf391e5a65bba8b950967d841_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ad308c4c2e9d929140258764182dbd713}\label{proresenc__anatoliy_8c_ad308c4c2e9d929140258764182dbd713}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_alpha\_slice\_data@{encode\_alpha\_slice\_data}}
+\index{encode\_alpha\_slice\_data@{encode\_alpha\_slice\_data}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_alpha\_slice\_data()}{encode\_alpha\_slice\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+alpha\+\_\+slice\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{int8\+\_\+t $\ast$}]{src\+\_\+a,  }\item[{unsigned}]{mb\+\_\+count,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{unsigned}]{data\+\_\+size,  }\item[{unsigned $\ast$}]{a\+\_\+data\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 432 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ad308c4c2e9d929140258764182dbd713_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ad308c4c2e9d929140258764182dbd713_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ae458a1d3a4a833645a68dace071b7537}\label{proresenc__anatoliy_8c_ae458a1d3a4a833645a68dace071b7537}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_codeword@{encode\_codeword}}
+\index{encode\_codeword@{encode\_codeword}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_codeword()}{encode\_codeword()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} encode\+\_\+codeword (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{val,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{codebook }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 199 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ae458a1d3a4a833645a68dace071b7537_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ae458a1d3a4a833645a68dace071b7537_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a2a64f153584f5428a71af2fb36d3ff39}\label{proresenc__anatoliy_8c_a2a64f153584f5428a71af2fb36d3ff39}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_dc\_coeffs@{encode\_dc\_coeffs}}
+\index{encode\_dc\_coeffs@{encode\_dc\_coeffs}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_dc\_coeffs()}{encode\_dc\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} encode\+\_\+dc\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{int16\+\_\+t $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{blocks\+\_\+per\+\_\+slice,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{qmat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 243 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a2a64f153584f5428a71af2fb36d3ff39_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a2a64f153584f5428a71af2fb36d3ff39_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a841fabff4d978b33eee6c3adec02bde9}\label{proresenc__anatoliy_8c_a841fabff4d978b33eee6c3adec02bde9}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_slice@{encode\_slice}}
+\index{encode\_slice@{encode\_slice}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_slice()}{encode\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{pic,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+y,  }\item[{unsigned}]{mb\+\_\+count,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{unsigned}]{data\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{unsafe,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{qp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+interlaced,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+top\+\_\+field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 536 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a841fabff4d978b33eee6c3adec02bde9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a841fabff4d978b33eee6c3adec02bde9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a365c355fe6c6eb65c8eb6bcb9cc6ec0a}\label{proresenc__anatoliy_8c_a365c355fe6c6eb65c8eb6bcb9cc6ec0a}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_slice\_data@{encode\_slice\_data}}
+\index{encode\_slice\_data@{encode\_slice\_data}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_slice\_data()}{encode\_slice\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} unsigned encode\+\_\+slice\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{int16\+\_\+t $\ast$}]{blocks\+\_\+y,  }\item[{int16\+\_\+t $\ast$}]{blocks\+\_\+u,  }\item[{int16\+\_\+t $\ast$}]{blocks\+\_\+v,  }\item[{unsigned}]{mb\+\_\+count,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{unsigned}]{data\+\_\+size,  }\item[{unsigned $\ast$}]{y\+\_\+data\+\_\+size,  }\item[{unsigned $\ast$}]{u\+\_\+data\+\_\+size,  }\item[{unsigned $\ast$}]{v\+\_\+data\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{qp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 376 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a365c355fe6c6eb65c8eb6bcb9cc6ec0a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a365c355fe6c6eb65c8eb6bcb9cc6ec0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_af7d43466db8539cd6ce899c67aa0295b}\label{proresenc__anatoliy_8c_af7d43466db8539cd6ce899c67aa0295b}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!encode\_slice\_plane@{encode\_slice\_plane}}
+\index{encode\_slice\_plane@{encode\_slice\_plane}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{encode\_slice\_plane()}{encode\_slice\_plane()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+slice\+\_\+plane (\begin{DoxyParamCaption}\item[{int16\+\_\+t $\ast$}]{blocks,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+count,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{unsigned}]{buf\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{qmat,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sub\+\_\+sample\+\_\+chroma,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{ff\+\_\+prores\+\_\+scan\mbox{[}64\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 360 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_af7d43466db8539cd6ce899c67aa0295b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_af7d43466db8539cd6ce899c67aa0295b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_acb3367b0f20c112c4689d4ee763e0e38}\label{proresenc__anatoliy_8c_acb3367b0f20c112c4689d4ee763e0e38}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!fdct\_get@{fdct\_get}}
+\index{fdct\_get@{fdct\_get}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{fdct\_get()}{fdct\_get()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fdct\+\_\+get (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_f_d_c_t_d_s_p_context}{F\+D\+C\+T\+D\+S\+P\+Context}} $\ast$}]{fdsp,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{pixels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{int16\+\_\+t $\ast$}]{block }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 317 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=197pt]{proresenc__anatoliy_8c_acb3367b0f20c112c4689d4ee763e0e38_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_acb3367b0f20c112c4689d4ee763e0e38_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_afd063743f86ed12cf4e90c2f5ce744ab}\label{proresenc__anatoliy_8c_afd063743f86ed12cf4e90c2f5ce744ab}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!get@{get}}
+\index{get@{get}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{pixels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stride,  }\item[{int16\+\_\+t $\ast$}]{block }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 305 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_afd063743f86ed12cf4e90c2f5ce744ab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ad1a1b91606b97f7b19c711725dcd8a9e}\label{proresenc__anatoliy_8c_ad1a1b91606b97f7b19c711725dcd8a9e}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!get\_level@{get\_level}}
+\index{get\_level@{get\_level}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{get\_level()}{get\_level()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+level (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 233 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=199pt]{proresenc__anatoliy_8c_ad1a1b91606b97f7b19c711725dcd8a9e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ad1a1b91606b97f7b19c711725dcd8a9e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a8161ed43510ff55149919d3fc263ef36}\label{proresenc__anatoliy_8c_a8161ed43510ff55149919d3fc263ef36}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!prores\_encode\_close@{prores\_encode\_close}}
+\index{prores\_encode\_close@{prores\_encode\_close}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{prores\_encode\_close()}{prores\_encode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prores\+\_\+encode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 915 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82}\label{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!prores\_encode\_frame@{prores\_encode\_frame}}
+\index{prores\_encode\_frame@{prores\_encode\_frame}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{prores\_encode\_frame()}{prores\_encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prores\+\_\+encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{pict,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 718 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13}\label{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!prores\_encode\_init@{prores\_encode\_init}}
+\index{prores\_encode\_init@{prores\_encode\_init}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{prores\_encode\_init()}{prores\_encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prores\+\_\+encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 810 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_aa7f9631f4e38b536e784c1d7e4dbe196}\label{proresenc__anatoliy_8c_aa7f9631f4e38b536e784c1d7e4dbe196}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!prores\_encode\_picture@{prores\_encode\_picture}}
+\index{prores\_encode\_picture@{prores\_encode\_picture}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{prores\_encode\_picture()}{prores\_encode\_picture()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prores\+\_\+encode\+\_\+picture (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{pic,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{picture\+\_\+index,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+top\+\_\+field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 654 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_aa7f9631f4e38b536e784c1d7e4dbe196_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=341pt]{proresenc__anatoliy_8c_aa7f9631f4e38b536e784c1d7e4dbe196_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ae9bdc89096ece6def08e3ae97321ac45}\label{proresenc__anatoliy_8c_ae9bdc89096ece6def08e3ae97321ac45}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!put\_alpha\_diff@{put\_alpha\_diff}}
+\index{put\_alpha\_diff@{put\_alpha\_diff}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{put\_alpha\_diff()}{put\_alpha\_diff()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+alpha\+\_\+diff (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{cur,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{prev }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 399 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{proresenc__anatoliy_8c_ae9bdc89096ece6def08e3ae97321ac45_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ae9bdc89096ece6def08e3ae97321ac45_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a777ceed7640eb7700517c083ac384074}\label{proresenc__anatoliy_8c_a777ceed7640eb7700517c083ac384074}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!put\_alpha\_run@{put\_alpha\_run}}
+\index{put\_alpha\_run@{put\_alpha\_run}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{put\_alpha\_run()}{put\_alpha\_run()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+alpha\+\_\+run (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_put_bit_context}{Put\+Bit\+Context}} $\ast$}]{pb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{run }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 419 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{proresenc__anatoliy_8c_a777ceed7640eb7700517c083ac384074_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a777ceed7640eb7700517c083ac384074_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a748da401cb932f80e3c370bb63843d0a}\label{proresenc__anatoliy_8c_a748da401cb932f80e3c370bb63843d0a}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!scale\_mat@{scale\_mat}}
+\index{scale\_mat@{scale\_mat}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{scale\_mat()}{scale\_mat()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} scale\+\_\+mat (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{dst,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{scale }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 803 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{proresenc__anatoliy_8c_a748da401cb932f80e3c370bb63843d0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a2b7047c21a7140edad80a74696aef744}\label{proresenc__anatoliy_8c_a2b7047c21a7140edad80a74696aef744}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!subimage\_alpha\_with\_fill@{subimage\_alpha\_with\_fill}}
+\index{subimage\_alpha\_with\_fill@{subimage\_alpha\_with\_fill}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{subimage\_alpha\_with\_fill()}{subimage\_alpha\_with\_fill()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subimage\+\_\+alpha\+\_\+with\+\_\+fill (\begin{DoxyParamCaption}\item[{uint16\+\_\+t $\ast$}]{src,  }\item[{unsigned}]{x,  }\item[{unsigned}]{y,  }\item[{unsigned}]{stride,  }\item[{unsigned}]{width,  }\item[{unsigned}]{height,  }\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{unsigned}]{dst\+\_\+width,  }\item[{unsigned}]{dst\+\_\+height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+interlaced,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+top\+\_\+field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 529 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=335pt]{proresenc__anatoliy_8c_a2b7047c21a7140edad80a74696aef744_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_a2b7047c21a7140edad80a74696aef744_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ae7f46612c47a71193b395697942ea8a2}\label{proresenc__anatoliy_8c_ae7f46612c47a71193b395697942ea8a2}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!subimage\_with\_fill@{subimage\_with\_fill}}
+\index{subimage\_with\_fill@{subimage\_with\_fill}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{subimage\_with\_fill()}{subimage\_with\_fill()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subimage\+\_\+with\+\_\+fill (\begin{DoxyParamCaption}\item[{uint16\+\_\+t $\ast$}]{src,  }\item[{unsigned}]{x,  }\item[{unsigned}]{y,  }\item[{unsigned}]{stride,  }\item[{unsigned}]{width,  }\item[{unsigned}]{height,  }\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{unsigned}]{dst\+\_\+width,  }\item[{unsigned}]{dst\+\_\+height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+interlaced,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+top\+\_\+field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 521 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{proresenc__anatoliy_8c_ae7f46612c47a71193b395697942ea8a2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ae7f46612c47a71193b395697942ea8a2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ae67d925c3c38bfc1afc64b399a14261f}\label{proresenc__anatoliy_8c_ae67d925c3c38bfc1afc64b399a14261f}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!subimage\_with\_fill\_template@{subimage\_with\_fill\_template}}
+\index{subimage\_with\_fill\_template@{subimage\_with\_fill\_template}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{subimage\_with\_fill\_template()}{subimage\_with\_fill\_template()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subimage\+\_\+with\+\_\+fill\+\_\+template (\begin{DoxyParamCaption}\item[{uint16\+\_\+t $\ast$}]{src,  }\item[{unsigned}]{x,  }\item[{unsigned}]{y,  }\item[{unsigned}]{stride,  }\item[{unsigned}]{width,  }\item[{unsigned}]{height,  }\item[{uint16\+\_\+t $\ast$}]{dst,  }\item[{unsigned}]{dst\+\_\+width,  }\item[{unsigned}]{dst\+\_\+height,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+alpha\+\_\+plane,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+interlaced,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{is\+\_\+top\+\_\+field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 473 of file proresenc\+\_\+anatoliy.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{proresenc__anatoliy_8c_ae67d925c3c38bfc1afc64b399a14261f_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a59d802cfcf220cb768e07fd070d06ab8}\label{proresenc__anatoliy_8c_a59d802cfcf220cb768e07fd070d06ab8}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!bitrate\_table@{bitrate\_table}}
+\index{bitrate\_table@{bitrate\_table}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{bitrate\_table}{bitrate\_table}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bitrate\+\_\+table\mbox{[}$\,$\mbox{]} = \{ 1000, 2100, 3500, 5400, 7000, 10000\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 54 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a8ef9e311cdba8f9bdf9ce1ffa09555ec}\label{proresenc__anatoliy_8c_a8ef9e311cdba8f9bdf9ce1ffa09555ec}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!dc\_codebook@{dc\_codebook}}
+\index{dc\_codebook@{dc\_codebook}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{dc\_codebook}{dc\_codebook}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} dc\+\_\+codebook\mbox{[}7\mbox{]} = \{ 0x04, 0x28, 0x28, 0x4D, 0x4D, 0x70, 0x70\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 241 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a6167c4a407c62e64556e6aba4f828a9c}\label{proresenc__anatoliy_8c_a6167c4a407c62e64556e6aba4f828a9c}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!ff\_prores\_aw\_encoder@{ff\_prores\_aw\_encoder}}
+\index{ff\_prores\_aw\_encoder@{ff\_prores\_aw\_encoder}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{ff\_prores\_aw\_encoder}{ff\_prores\_aw\_encoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+prores\+\_\+aw\+\_\+encoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}prores\_aw"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apple ProRes"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceab140360bd655d8add22265dbe45b581c}{AV\_CODEC\_ID\_PRORES}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{proresenc__kostya_8c_aed0587aefc675b9a26fff212eb8367de}{ProresContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13}{prores\_encode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{proresenc__anatoliy_8c_a8161ed43510ff55149919d3fc263ef36}{prores\_encode\_close}},}
+\DoxyCodeLine{    .encode2        = \mbox{\hyperlink{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82}{prores\_encode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libkvazaar_8c_aa1219ee396a270ba57fd4f2306b64c6e}{pix\_fmts}}       = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}}[])\{\mbox{\hyperlink{pixfmt_8h_a66e08cc645d119c6383c994529f5dff4}{AV\_PIX\_FMT\_YUV422P10}}, \mbox{\hyperlink{pixfmt_8h_aff612e03cf2a557ac25e8e2032e37d9a}{AV\_PIX\_FMT\_YUV444P10}}, \mbox{\hyperlink{pixfmt_8h_a42ca8176e5b066f5d81b924d3aaf8b15}{AV\_PIX\_FMT\_YUVA444P10}}, \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a0e08f8a5d0fa21c3e258816a9dcce7c3}{AV\_PIX\_FMT\_NONE}}\},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{proresenc__anatoliy_8c_ae7367ea94ffa8b74bf434fece942a721}{proresaw\_enc\_class}},}
+\DoxyCodeLine{    .profiles       = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\mbox{\hyperlink{profiles_8c_a46fda433b4db7c66af26fd994b1a5be9}{ff\_prores\_profiles}}),}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 946 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a35711fffae8b40098d9dfeccb309fd01}\label{proresenc__anatoliy_8c_a35711fffae8b40098d9dfeccb309fd01}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!ff\_prores\_encoder@{ff\_prores\_encoder}}
+\index{ff\_prores\_encoder@{ff\_prores\_encoder}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{ff\_prores\_encoder}{ff\_prores\_encoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+prores\+\_\+encoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}prores"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Apple ProRes"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceab140360bd655d8add22265dbe45b581c}{AV\_CODEC\_ID\_PRORES}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{proresenc__kostya_8c_aed0587aefc675b9a26fff212eb8367de}{ProresContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{proresenc__anatoliy_8c_a1e79e0f05fd47ce626ddc60bcbe20e13}{prores\_encode\_init}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{proresenc__anatoliy_8c_a8161ed43510ff55149919d3fc263ef36}{prores\_encode\_close}},}
+\DoxyCodeLine{    .encode2        = \mbox{\hyperlink{proresenc__anatoliy_8c_a29a6f7b4e7b613038704699f2a586b82}{prores\_encode\_frame}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{libkvazaar_8c_aa1219ee396a270ba57fd4f2306b64c6e}{pix\_fmts}}       = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{AVPixelFormat}}[])\{\mbox{\hyperlink{pixfmt_8h_a66e08cc645d119c6383c994529f5dff4}{AV\_PIX\_FMT\_YUV422P10}}, \mbox{\hyperlink{pixfmt_8h_aff612e03cf2a557ac25e8e2032e37d9a}{AV\_PIX\_FMT\_YUV444P10}}, \mbox{\hyperlink{pixfmt_8h_a42ca8176e5b066f5d81b924d3aaf8b15}{AV\_PIX\_FMT\_YUVA444P10}}, \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5a0e08f8a5d0fa21c3e258816a9dcce7c3}{AV\_PIX\_FMT\_NONE}}\},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_gae21e6310b40920cd61f54e9c320d8e6c}{AV\_CODEC\_CAP\_FRAME\_THREADS}},}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{proresenc__anatoliy_8c_a51a17043714b59bcaec69d20aa400ed0}{prores\_enc\_class}},}
+\DoxyCodeLine{    .profiles       = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\mbox{\hyperlink{profiles_8c_a46fda433b4db7c66af26fd994b1a5be9}{ff\_prores\_profiles}}),}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 961 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ac1f3c172f1a635090f6cfad91c40999e}\label{proresenc__anatoliy_8c_ac1f3c172f1a635090f6cfad91c40999e}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!lev\_to\_cb@{lev\_to\_cb}}
+\index{lev\_to\_cb@{lev\_to\_cb}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{lev\_to\_cb}{lev\_to\_cb}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} lev\+\_\+to\+\_\+cb\mbox{[}10\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{ 0x04, 0x0A, 0x05, 0x06, 0x04, 0x28,}
+\DoxyCodeLine{        0x28, 0x28, 0x28, 0x4C \}}
+
+\end{DoxyCode}
+
+
+Definition at line 271 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{proresenc__anatoliy_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!options@{options}}
+\index{options@{options}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}vendor"{}}, \textcolor{stringliteral}{"{}vendor ID"{}}, \mbox{\hyperlink{proresenc__anatoliy_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(vendor), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{ .str = \textcolor{stringliteral}{"{}fmpg"{}} \}, 0, 0, \mbox{\hyperlink{proresenc__anatoliy_8c_a3dcf4acb9f7d9c57f43802a9a1ac4ee6}{VE}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 927 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a3e3649a3e3978bfb8c6e13c4e91c5e6b}\label{proresenc__anatoliy_8c_a3e3649a3e3978bfb8c6e13c4e91c5e6b}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!profiles@{profiles}}
+\index{profiles@{profiles}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{profiles}{profiles}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_profile}{A\+V\+Profile}} profiles\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_a5d15733cd3fd22a082354d9804d86731}{FF\_PROFILE\_PRORES\_PROXY}},    \textcolor{stringliteral}{"{}apco"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_a7ade9fc8112b3a28bf19089d0db036c0}{FF\_PROFILE\_PRORES\_LT}},       \textcolor{stringliteral}{"{}apcs"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_a05d6072b2b21e0e89df1d2b5a10217e7}{FF\_PROFILE\_PRORES\_STANDARD}}, \textcolor{stringliteral}{"{}apcn"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_af632eb505c61b1b67924cfe290fc629a}{FF\_PROFILE\_PRORES\_HQ}},       \textcolor{stringliteral}{"{}apch"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_a6f3ddce858390ede422db890eb34b7a6}{FF\_PROFILE\_PRORES\_4444}},     \textcolor{stringliteral}{"{}ap4h"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_adac519593024d0941107aa583e06d9a2}{FF\_PROFILE\_PRORES\_XQ}},       \textcolor{stringliteral}{"{}ap4x"{}}\},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{avcodec_8h_a1d8d03f5be975b8a728574cbdb00c896}{FF\_PROFILE\_UNKNOWN}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 42 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a51a17043714b59bcaec69d20aa400ed0}\label{proresenc__anatoliy_8c_a51a17043714b59bcaec69d20aa400ed0}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!prores\_enc\_class@{prores\_enc\_class}}
+\index{prores\_enc\_class@{prores\_enc\_class}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{prores\_enc\_class}{prores\_enc\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} prores\+\_\+enc\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}ProRes encoder"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{proresenc__anatoliy_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 939 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ae7367ea94ffa8b74bf434fece942a721}\label{proresenc__anatoliy_8c_ae7367ea94ffa8b74bf434fece942a721}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!proresaw\_enc\_class@{proresaw\_enc\_class}}
+\index{proresaw\_enc\_class@{proresaw\_enc\_class}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{proresaw\_enc\_class}{proresaw\_enc\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} proresaw\+\_\+enc\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}ProResAw encoder"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{proresenc__anatoliy_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 932 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ab79912edac90c263a81b938ee9569bdc}\label{proresenc__anatoliy_8c_ab79912edac90c263a81b938ee9569bdc}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!QMAT\_CHROMA@{QMAT\_CHROMA}}
+\index{QMAT\_CHROMA@{QMAT\_CHROMA}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{QMAT\_CHROMA}{QMAT\_CHROMA}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} Q\+M\+A\+T\+\_\+\+C\+H\+R\+O\+MA\mbox{[}6\mbox{]}\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 121 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a124964fbc857533de79ffa9f8d3d1aaa}\label{proresenc__anatoliy_8c_a124964fbc857533de79ffa9f8d3d1aaa}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!QMAT\_LUMA@{QMAT\_LUMA}}
+\index{QMAT\_LUMA@{QMAT\_LUMA}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{QMAT\_LUMA}{QMAT\_LUMA}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} Q\+M\+A\+T\+\_\+\+L\+U\+MA\mbox{[}6\mbox{]}\mbox{[}64\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 63 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_ade64467b8f6ceb93632cc04577b3fb5d}\label{proresenc__anatoliy_8c_ade64467b8f6ceb93632cc04577b3fb5d}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!qp\_end\_table@{qp\_end\_table}}
+\index{qp\_end\_table@{qp\_end\_table}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{qp\_end\_table}{qp\_end\_table}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} qp\+\_\+end\+\_\+table\mbox{[}$\,$\mbox{]} = \{ 13, 9, 6, 6, 5, 4\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 53 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a867e16b14943e8db938e6b312a253fc8}\label{proresenc__anatoliy_8c_a867e16b14943e8db938e6b312a253fc8}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!qp\_start\_table@{qp\_start\_table}}
+\index{qp\_start\_table@{qp\_start\_table}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{qp\_start\_table}{qp\_start\_table}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} qp\+\_\+start\+\_\+table\mbox{[}$\,$\mbox{]} = \{ 8, 3, 2, 1, 1, 1\}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 52 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a583e6bef2aff815ca24e63faee1ad981}\label{proresenc__anatoliy_8c_a583e6bef2aff815ca24e63faee1ad981}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!run\_to\_cb@{run\_to\_cb}}
+\index{run\_to\_cb@{run\_to\_cb}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{run\_to\_cb}{run\_to\_cb}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} run\+\_\+to\+\_\+cb\mbox{[}16\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{ 0x06, 0x06, 0x05, 0x05, 0x04, 0x29,}
+\DoxyCodeLine{        0x29, 0x29, 0x29, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x4C \}}
+
+\end{DoxyCode}
+
+
+Definition at line 269 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a118b5398fe5ed2d8633ddabb4650917a}\label{proresenc__anatoliy_8c_a118b5398fe5ed2d8633ddabb4650917a}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!valid\_colorspace@{valid\_colorspace}}
+\index{valid\_colorspace@{valid\_colorspace}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{valid\_colorspace}{valid\_colorspace}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} valid\+\_\+colorspace\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{ \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a23e7d1012e354bbfcb62642e537d33cb}{AVCOL\_SPC\_BT709}}, \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8111716eff3b3fd95a197993d30b8ec2}{AVCOL\_SPC\_UNSPECIFIED}}, \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a8a3f2b5ebbb2d5734435fe23837cd20c}{AVCOL\_SPC\_SMPTE170M}},}
+\DoxyCodeLine{                                        \mbox{\hyperlink{pixfmt_8h_aff71a069509a1ad3ff54d53a1c894c85a766a63c9ca065ba454f1d83161350055}{AVCOL\_SPC\_BT2020\_NCL}}, INT\_MAX \}}
+
+\end{DoxyCode}
+
+
+Definition at line 60 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a67e70277ce7b104c19c55e10c2815f68}\label{proresenc__anatoliy_8c_a67e70277ce7b104c19c55e10c2815f68}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!valid\_primaries@{valid\_primaries}}
+\index{valid\_primaries@{valid\_primaries}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{valid\_primaries}{valid\_primaries}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} valid\+\_\+primaries\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{ \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7aa36e334f910b30c8dc3cb7e152e6db98}{AVCOL\_PRI\_RESERVED0}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a4f1c38f3e06cd2c49b28046bbf3a4cbd}{AVCOL\_PRI\_BT709}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a868aff08a725fc038a7f37b5e9d01942}{AVCOL\_PRI\_UNSPECIFIED}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a1aeb4f44414c396b28b3f392313e50ae}{AVCOL\_PRI\_BT470BG}},}
+\DoxyCodeLine{                                        \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ad882a69d6c7cf33fa22a5717c63baf19}{AVCOL\_PRI\_SMPTE170M}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7adee9de223d6a8683fd2177b43444404c}{AVCOL\_PRI\_BT2020}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7ac175bef7f6d10cd18ef8d86de4a3303b}{AVCOL\_PRI\_SMPTE431}}, \mbox{\hyperlink{pixfmt_8h_ad384ee5a840bafd73daef08e6d9cafe7a3f3ea1cb18f2bb9e50809d4290eee9c1}{AVCOL\_PRI\_SMPTE432}}, INT\_MAX \}}
+
+\end{DoxyCode}
+
+
+Definition at line 56 of file proresenc\+\_\+anatoliy.\+c.
+
+\mbox{\Hypertarget{proresenc__anatoliy_8c_a5f29782babb8e34a12a9f4564d3aee5d}\label{proresenc__anatoliy_8c_a5f29782babb8e34a12a9f4564d3aee5d}} 
+\index{proresenc\_anatoliy.c@{proresenc\_anatoliy.c}!valid\_trc@{valid\_trc}}
+\index{valid\_trc@{valid\_trc}!proresenc\_anatoliy.c@{proresenc\_anatoliy.c}}
+\doxysubsubsection{\texorpdfstring{valid\_trc}{valid\_trc}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} valid\+\_\+trc\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{ \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afed184b534ed6f548048f7da575b5891}{AVCOL\_TRC\_RESERVED0}}, \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6afd8960c59aa927ce6bee76a9594ffd95}{AVCOL\_TRC\_BT709}}, \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6af707e1f8131d3413ac4fb5b626b075ab}{AVCOL\_TRC\_UNSPECIFIED}}, \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6a39fcb1cb8098f2bfaf355093885e7769}{AVCOL\_TRC\_SMPTE2084}},}
+\DoxyCodeLine{                                        \mbox{\hyperlink{pixfmt_8h_ad4791ea14975f098b649db7fcd731ce6aa21a497d0b7f2d0eab46faf9372c04a3}{AVCOL\_TRC\_ARIB\_STD\_B67}}, INT\_MAX \}}
+
+\end{DoxyCode}
+
+
+Definition at line 58 of file proresenc\+\_\+anatoliy.\+c.
+

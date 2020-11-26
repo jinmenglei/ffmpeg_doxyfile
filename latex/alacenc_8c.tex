@@ -1,0 +1,726 @@
+\hypertarget{alacenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/alacenc.c File Reference}
+\label{alacenc_8c}\index{E:/github/ffmpeg/libavcodec/alacenc.c@{E:/github/ffmpeg/libavcodec/alacenc.c}}
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lpc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}alac\+\_\+data.\+h\char`\"{}}\newline
+Include dependency graph for alacenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_alac_l_p_c_context}{Alac\+L\+P\+C\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_aee6405a4f74939fffcc9b3055af94b3a}{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}}~4096
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_af838eccccc4fca0e4a7f2ce886ed0d31}{A\+L\+A\+C\+\_\+\+E\+X\+T\+R\+A\+D\+A\+T\+A\+\_\+\+S\+I\+ZE}}~36
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_aeddac48a44cc2df22a69a39d9794a48d}{A\+L\+A\+C\+\_\+\+F\+R\+A\+M\+E\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE}}~55
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a24f4a5881020c366296f7b00b316c0e6}{A\+L\+A\+C\+\_\+\+F\+R\+A\+M\+E\+\_\+\+F\+O\+O\+T\+E\+R\+\_\+\+S\+I\+ZE}}~3
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_aff45c3bf6e0623cf0a79cbd0aa1799ce}{A\+L\+A\+C\+\_\+\+E\+S\+C\+A\+P\+E\+\_\+\+C\+O\+DE}}~0x1\+FF
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a29268c846830bea01658d0bfed34fa17}{A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER}}~30
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_ad3bc787c41560774f030e9dcc7c208cf}{D\+E\+F\+A\+U\+L\+T\+\_\+\+M\+A\+X\+\_\+\+P\+R\+E\+D\+\_\+\+O\+R\+D\+ER}}~6
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a7083d6b0f34bc56ee7fe5958c765b8df}{D\+E\+F\+A\+U\+L\+T\+\_\+\+M\+I\+N\+\_\+\+P\+R\+E\+D\+\_\+\+O\+R\+D\+ER}}~4
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_af612bb104e3de0b91836f8a736673e66}{A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+P\+R\+E\+C\+I\+S\+I\+ON}}~9
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_ae341b8621ce02d23b169eabde17362d6}{A\+L\+A\+C\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~0
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_ab8ffbc83a5e15352960af909a839a942}{A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT}}~9
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a0f5a3bd91c07a841d5c805f1b6228889}{A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+R\+I\+G\+HT}}~0
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_ac739f8be87a841ce79ab92a9636e8114}{A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+S\+I\+DE}}~1
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_afab0b7a0683906045861ac77b5f0fbf1}{A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+R\+I\+G\+H\+T\+\_\+\+S\+I\+DE}}~2
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a8dc9754f540a9abb1ff36dad1f21cff7}{A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+M\+I\+D\+\_\+\+S\+I\+DE}}~3
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a1bce90ee019b6299f946627f24f43ec3}{C\+O\+P\+Y\+\_\+\+S\+A\+M\+P\+L\+ES}}(\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}})
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{alacenc_8c_a158b080acb83ee02d2ff57bb9d16b888}{AE}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}} \mbox{\hyperlink{alacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}{Rice\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_alac_l_p_c_context}{Alac\+L\+P\+C\+Context}} \mbox{\hyperlink{alacenc_8c_a087144d915fcb38b0dfd97cba15bd3b6}{Alac\+L\+P\+C\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} \mbox{\hyperlink{alacenc_8c_a4092b008a8fbe1c92034383691875fa5}{Alac\+Encode\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_a75d73d3691cb91d108e903c18eef5da1}{init\+\_\+sample\+\_\+buffers}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}\mbox{[}2\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_ad91ac1e441c1cc7340b972ff5ce6f748}{encode\+\_\+scalar}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} k, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+sample\+\_\+size)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_a9405549e2d27b9e67508d529bce20875}{write\+\_\+element\+\_\+header}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, enum \mbox{\hyperlink{alac__data_8h_a2f9265ae536ee8804c8c4fc477c176fd}{Alac\+Raw\+Data\+Block\+Type}} element, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} instance)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_a687e43edf1ffe3cb6a9502cde5689e75}{calc\+\_\+predictor\+\_\+params}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_a50225f1de9087636662c02636551acdc}{estimate\+\_\+stereo\+\_\+mode}} (\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$left\+\_\+ch, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$right\+\_\+ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} n)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_a8214726ee4be86a7de1ebf439e7e4444}{alac\+\_\+stereo\+\_\+decorrelation}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_ac5379d21af4623282950e258355a3f48}{alac\+\_\+linear\+\_\+predictor}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_ac5bcf3538bdfc493671436e240b217df}{alac\+\_\+entropy\+\_\+coder}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{alacenc_8c_a74e728fe7ca6bc06359c54b97f050415}{write\+\_\+element}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, enum \mbox{\hyperlink{alac__data_8h_a2f9265ae536ee8804c8c4fc477c176fd}{Alac\+Raw\+Data\+Block\+Type}} element, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} instance, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$samples0, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$samples1)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_a4298fe705fa57705179e0348c363e60d}{write\+\_\+frame}} (\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$const $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_a5a5b90912a6bba4b1e73b032bb3fced1}{get\+\_\+max\+\_\+frame\+\_\+size}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__loudnorm_8c_a6e4a4270c808de1ad11dc4b85e36511d}{frame\+\_\+size}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movenc_8c_a274f7fddf13f456309bc20d3fa2b9a80}{bps}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_aa8fd03d50bb1dbceb0098f41283cd5ac}{alac\+\_\+encode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_a6d27180f7288212ff920f6d3ddbca4ad}{alac\+\_\+encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{alacenc_8c_a9103190abe2c38d93ccddd2a4e7f266a}{alac\+\_\+encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet\+\_\+ptr)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{alacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{alacenc_8c_a42e31ee26724d1b3bb7afe7a7583a6b4}{alacenc\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{alacenc_8c_a3124248634e203613d0ffd67505b98e7}{ff\+\_\+alac\+\_\+encoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{alacenc_8c_a158b080acb83ee02d2ff57bb9d16b888}\label{alacenc_8c_a158b080acb83ee02d2ff57bb9d16b888}} 
+\index{alacenc.c@{alacenc.c}!AE@{AE}}
+\index{AE@{AE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{AE}{AE}}
+{\footnotesize\ttfamily \#define AE~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 645 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a0f5a3bd91c07a841d5c805f1b6228889}\label{alacenc_8c_a0f5a3bd91c07a841d5c805f1b6228889}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_CHMODE\_LEFT\_RIGHT@{ALAC\_CHMODE\_LEFT\_RIGHT}}
+\index{ALAC\_CHMODE\_LEFT\_RIGHT@{ALAC\_CHMODE\_LEFT\_RIGHT}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_CHMODE\_LEFT\_RIGHT}{ALAC\_CHMODE\_LEFT\_RIGHT}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+R\+I\+G\+HT~0}
+
+
+
+Definition at line 44 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_ac739f8be87a841ce79ab92a9636e8114}\label{alacenc_8c_ac739f8be87a841ce79ab92a9636e8114}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_CHMODE\_LEFT\_SIDE@{ALAC\_CHMODE\_LEFT\_SIDE}}
+\index{ALAC\_CHMODE\_LEFT\_SIDE@{ALAC\_CHMODE\_LEFT\_SIDE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_CHMODE\_LEFT\_SIDE}{ALAC\_CHMODE\_LEFT\_SIDE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+L\+E\+F\+T\+\_\+\+S\+I\+DE~1}
+
+
+
+Definition at line 45 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a8dc9754f540a9abb1ff36dad1f21cff7}\label{alacenc_8c_a8dc9754f540a9abb1ff36dad1f21cff7}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_CHMODE\_MID\_SIDE@{ALAC\_CHMODE\_MID\_SIDE}}
+\index{ALAC\_CHMODE\_MID\_SIDE@{ALAC\_CHMODE\_MID\_SIDE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_CHMODE\_MID\_SIDE}{ALAC\_CHMODE\_MID\_SIDE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+M\+I\+D\+\_\+\+S\+I\+DE~3}
+
+
+
+Definition at line 47 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_afab0b7a0683906045861ac77b5f0fbf1}\label{alacenc_8c_afab0b7a0683906045861ac77b5f0fbf1}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_CHMODE\_RIGHT\_SIDE@{ALAC\_CHMODE\_RIGHT\_SIDE}}
+\index{ALAC\_CHMODE\_RIGHT\_SIDE@{ALAC\_CHMODE\_RIGHT\_SIDE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_CHMODE\_RIGHT\_SIDE}{ALAC\_CHMODE\_RIGHT\_SIDE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+C\+H\+M\+O\+D\+E\+\_\+\+R\+I\+G\+H\+T\+\_\+\+S\+I\+DE~2}
+
+
+
+Definition at line 46 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_aff45c3bf6e0623cf0a79cbd0aa1799ce}\label{alacenc_8c_aff45c3bf6e0623cf0a79cbd0aa1799ce}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_ESCAPE\_CODE@{ALAC\_ESCAPE\_CODE}}
+\index{ALAC\_ESCAPE\_CODE@{ALAC\_ESCAPE\_CODE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_ESCAPE\_CODE}{ALAC\_ESCAPE\_CODE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+E\+S\+C\+A\+P\+E\+\_\+\+C\+O\+DE~0x1\+FF}
+
+
+
+Definition at line 36 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_af838eccccc4fca0e4a7f2ce886ed0d31}\label{alacenc_8c_af838eccccc4fca0e4a7f2ce886ed0d31}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_EXTRADATA\_SIZE@{ALAC\_EXTRADATA\_SIZE}}
+\index{ALAC\_EXTRADATA\_SIZE@{ALAC\_EXTRADATA\_SIZE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_EXTRADATA\_SIZE}{ALAC\_EXTRADATA\_SIZE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+E\+X\+T\+R\+A\+D\+A\+T\+A\+\_\+\+S\+I\+ZE~36}
+
+
+
+Definition at line 32 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a24f4a5881020c366296f7b00b316c0e6}\label{alacenc_8c_a24f4a5881020c366296f7b00b316c0e6}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_FRAME\_FOOTER\_SIZE@{ALAC\_FRAME\_FOOTER\_SIZE}}
+\index{ALAC\_FRAME\_FOOTER\_SIZE@{ALAC\_FRAME\_FOOTER\_SIZE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_FRAME\_FOOTER\_SIZE}{ALAC\_FRAME\_FOOTER\_SIZE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+F\+R\+A\+M\+E\+\_\+\+F\+O\+O\+T\+E\+R\+\_\+\+S\+I\+ZE~3}
+
+
+
+Definition at line 34 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_aeddac48a44cc2df22a69a39d9794a48d}\label{alacenc_8c_aeddac48a44cc2df22a69a39d9794a48d}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_FRAME\_HEADER\_SIZE@{ALAC\_FRAME\_HEADER\_SIZE}}
+\index{ALAC\_FRAME\_HEADER\_SIZE@{ALAC\_FRAME\_HEADER\_SIZE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_FRAME\_HEADER\_SIZE}{ALAC\_FRAME\_HEADER\_SIZE}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+F\+R\+A\+M\+E\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE~55}
+
+
+
+Definition at line 33 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a29268c846830bea01658d0bfed34fa17}\label{alacenc_8c_a29268c846830bea01658d0bfed34fa17}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_MAX\_LPC\_ORDER@{ALAC\_MAX\_LPC\_ORDER}}
+\index{ALAC\_MAX\_LPC\_ORDER@{ALAC\_MAX\_LPC\_ORDER}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_MAX\_LPC\_ORDER}{ALAC\_MAX\_LPC\_ORDER}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+O\+R\+D\+ER~30}
+
+
+
+Definition at line 37 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_af612bb104e3de0b91836f8a736673e66}\label{alacenc_8c_af612bb104e3de0b91836f8a736673e66}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_MAX\_LPC\_PRECISION@{ALAC\_MAX\_LPC\_PRECISION}}
+\index{ALAC\_MAX\_LPC\_PRECISION@{ALAC\_MAX\_LPC\_PRECISION}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_MAX\_LPC\_PRECISION}{ALAC\_MAX\_LPC\_PRECISION}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+P\+R\+E\+C\+I\+S\+I\+ON~9}
+
+
+
+Definition at line 40 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_ab8ffbc83a5e15352960af909a839a942}\label{alacenc_8c_ab8ffbc83a5e15352960af909a839a942}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_MAX\_LPC\_SHIFT@{ALAC\_MAX\_LPC\_SHIFT}}
+\index{ALAC\_MAX\_LPC\_SHIFT@{ALAC\_MAX\_LPC\_SHIFT}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_MAX\_LPC\_SHIFT}{ALAC\_MAX\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+M\+A\+X\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~9}
+
+
+
+Definition at line 42 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_ae341b8621ce02d23b169eabde17362d6}\label{alacenc_8c_ae341b8621ce02d23b169eabde17362d6}} 
+\index{alacenc.c@{alacenc.c}!ALAC\_MIN\_LPC\_SHIFT@{ALAC\_MIN\_LPC\_SHIFT}}
+\index{ALAC\_MIN\_LPC\_SHIFT@{ALAC\_MIN\_LPC\_SHIFT}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ALAC\_MIN\_LPC\_SHIFT}{ALAC\_MIN\_LPC\_SHIFT}}
+{\footnotesize\ttfamily \#define A\+L\+A\+C\+\_\+\+M\+I\+N\+\_\+\+L\+P\+C\+\_\+\+S\+H\+I\+FT~0}
+
+
+
+Definition at line 41 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a1bce90ee019b6299f946627f24f43ec3}\label{alacenc_8c_a1bce90ee019b6299f946627f24f43ec3}} 
+\index{alacenc.c@{alacenc.c}!COPY\_SAMPLES@{COPY\_SAMPLES}}
+\index{COPY\_SAMPLES@{COPY\_SAMPLES}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{COPY\_SAMPLES}{COPY\_SAMPLES}}
+{\footnotesize\ttfamily \#define C\+O\+P\+Y\+\_\+\+S\+A\+M\+P\+L\+ES(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}} }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{        \textcolor{keywordflow}{do} \{                             \(\backslash\)}
+\DoxyCodeLine{        for (ch = 0; ch < \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}; ch++) \{                 \(\backslash\)}
+\DoxyCodeLine{            int32\_t       *bptr = \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>sample\_buf[ch];        \(\backslash\)}
+\DoxyCodeLine{            const \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *sptr = (\textcolor{keyword}{const} \mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}} *)\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}[ch];   \(\backslash\)}
+\DoxyCodeLine{            for (\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} = 0; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}} < \mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}}-\/>frame\_size; \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}++)             \(\backslash\)}
+\DoxyCodeLine{                bptr[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}] = sptr[\mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}] >> \mbox{\hyperlink{sonic_8c_aee201839e95f7edeff51ad9c8e072bda}{shift}};                 \(\backslash\)}
+\DoxyCodeLine{        \}                                                   \(\backslash\)}
+\DoxyCodeLine{    \} \textcolor{keywordflow}{while} (0)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{alacenc_8c_aee6405a4f74939fffcc9b3055af94b3a}\label{alacenc_8c_aee6405a4f74939fffcc9b3055af94b3a}} 
+\index{alacenc.c@{alacenc.c}!DEFAULT\_FRAME\_SIZE@{DEFAULT\_FRAME\_SIZE}}
+\index{DEFAULT\_FRAME\_SIZE@{DEFAULT\_FRAME\_SIZE}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_FRAME\_SIZE}{DEFAULT\_FRAME\_SIZE}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE~4096}
+
+
+
+Definition at line 31 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_ad3bc787c41560774f030e9dcc7c208cf}\label{alacenc_8c_ad3bc787c41560774f030e9dcc7c208cf}} 
+\index{alacenc.c@{alacenc.c}!DEFAULT\_MAX\_PRED\_ORDER@{DEFAULT\_MAX\_PRED\_ORDER}}
+\index{DEFAULT\_MAX\_PRED\_ORDER@{DEFAULT\_MAX\_PRED\_ORDER}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_MAX\_PRED\_ORDER}{DEFAULT\_MAX\_PRED\_ORDER}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+M\+A\+X\+\_\+\+P\+R\+E\+D\+\_\+\+O\+R\+D\+ER~6}
+
+
+
+Definition at line 38 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a7083d6b0f34bc56ee7fe5958c765b8df}\label{alacenc_8c_a7083d6b0f34bc56ee7fe5958c765b8df}} 
+\index{alacenc.c@{alacenc.c}!DEFAULT\_MIN\_PRED\_ORDER@{DEFAULT\_MIN\_PRED\_ORDER}}
+\index{DEFAULT\_MIN\_PRED\_ORDER@{DEFAULT\_MIN\_PRED\_ORDER}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_MIN\_PRED\_ORDER}{DEFAULT\_MIN\_PRED\_ORDER}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+M\+I\+N\+\_\+\+P\+R\+E\+D\+\_\+\+O\+R\+D\+ER~4}
+
+
+
+Definition at line 39 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{alacenc_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{alacenc.c@{alacenc.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}}, x)}
+
+
+
+Definition at line 644 of file alacenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{alacenc_8c_a4092b008a8fbe1c92034383691875fa5}\label{alacenc_8c_a4092b008a8fbe1c92034383691875fa5}} 
+\index{alacenc.c@{alacenc.c}!AlacEncodeContext@{AlacEncodeContext}}
+\index{AlacEncodeContext@{AlacEncodeContext}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{AlacEncodeContext}{AlacEncodeContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} \mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}}}
+
+\mbox{\Hypertarget{alacenc_8c_a087144d915fcb38b0dfd97cba15bd3b6}\label{alacenc_8c_a087144d915fcb38b0dfd97cba15bd3b6}} 
+\index{alacenc.c@{alacenc.c}!AlacLPCContext@{AlacLPCContext}}
+\index{AlacLPCContext@{AlacLPCContext}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{AlacLPCContext}{AlacLPCContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_alac_l_p_c_context}{Alac\+L\+P\+C\+Context}} \mbox{\hyperlink{struct_alac_l_p_c_context}{Alac\+L\+P\+C\+Context}}}
+
+\mbox{\Hypertarget{alacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}\label{alacenc_8c_affe3a6d26ce9e88571a9cb6ce2901718}} 
+\index{alacenc.c@{alacenc.c}!RiceContext@{RiceContext}}
+\index{RiceContext@{RiceContext}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{RiceContext}{RiceContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_rice_context}{Rice\+Context}} \mbox{\hyperlink{struct_rice_context}{Rice\+Context}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{alacenc_8c_aa8fd03d50bb1dbceb0098f41283cd5ac}\label{alacenc_8c_aa8fd03d50bb1dbceb0098f41283cd5ac}} 
+\index{alacenc.c@{alacenc.c}!alac\_encode\_close@{alac\_encode\_close}}
+\index{alac\_encode\_close@{alac\_encode\_close}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_encode\_close()}{alac\_encode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alac\+\_\+encode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 497 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{alacenc_8c_aa8fd03d50bb1dbceb0098f41283cd5ac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a9103190abe2c38d93ccddd2a4e7f266a}\label{alacenc_8c_a9103190abe2c38d93ccddd2a4e7f266a}} 
+\index{alacenc.c@{alacenc.c}!alac\_encode\_frame@{alac\_encode\_frame}}
+\index{alac\_encode\_frame@{alac\_encode\_frame}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_encode\_frame()}{alac\_encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alac\+\_\+encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 604 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a9103190abe2c38d93ccddd2a4e7f266a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a6d27180f7288212ff920f6d3ddbca4ad}\label{alacenc_8c_a6d27180f7288212ff920f6d3ddbca4ad}} 
+\index{alacenc.c@{alacenc.c}!alac\_encode\_init@{alac\_encode\_init}}
+\index{alac\_encode\_init@{alac\_encode\_init}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_encode\_init()}{alac\_encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alac\+\_\+encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 504 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a6d27180f7288212ff920f6d3ddbca4ad_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_ac5bcf3538bdfc493671436e240b217df}\label{alacenc_8c_ac5bcf3538bdfc493671436e240b217df}} 
+\index{alacenc.c@{alacenc.c}!alac\_entropy\_coder@{alac\_entropy\_coder}}
+\index{alac\_entropy\_coder@{alac\_entropy\_coder}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_entropy\_coder()}{alac\_entropy\_coder()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} alac\+\_\+entropy\+\_\+coder (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 321 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_ac5bcf3538bdfc493671436e240b217df_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_ac5bcf3538bdfc493671436e240b217df_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_ac5379d21af4623282950e258355a3f48}\label{alacenc_8c_ac5379d21af4623282950e258355a3f48}} 
+\index{alacenc.c@{alacenc.c}!alac\_linear\_predictor@{alac\_linear\_predictor}}
+\index{alac\_linear\_predictor@{alac\_linear\_predictor}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_linear\_predictor()}{alac\_linear\_predictor()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} alac\+\_\+linear\+\_\+predictor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 257 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_ac5379d21af4623282950e258355a3f48_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_ac5379d21af4623282950e258355a3f48_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a8214726ee4be86a7de1ebf439e7e4444}\label{alacenc_8c_a8214726ee4be86a7de1ebf439e7e4444}} 
+\index{alacenc.c@{alacenc.c}!alac\_stereo\_decorrelation@{alac\_stereo\_decorrelation}}
+\index{alac\_stereo\_decorrelation@{alac\_stereo\_decorrelation}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alac\_stereo\_decorrelation()}{alac\_stereo\_decorrelation()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} alac\+\_\+stereo\+\_\+decorrelation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 217 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a8214726ee4be86a7de1ebf439e7e4444_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a8214726ee4be86a7de1ebf439e7e4444_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a687e43edf1ffe3cb6a9502cde5689e75}\label{alacenc_8c_a687e43edf1ffe3cb6a9502cde5689e75}} 
+\index{alacenc.c@{alacenc.c}!calc\_predictor\_params@{calc\_predictor\_params}}
+\index{calc\_predictor\_params@{calc\_predictor\_params}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_predictor\_params()}{calc\_predictor\_params()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+predictor\+\_\+params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 153 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a687e43edf1ffe3cb6a9502cde5689e75_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a687e43edf1ffe3cb6a9502cde5689e75_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_ad91ac1e441c1cc7340b972ff5ce6f748}\label{alacenc_8c_ad91ac1e441c1cc7340b972ff5ce6f748}} 
+\index{alacenc.c@{alacenc.c}!encode\_scalar@{encode\_scalar}}
+\index{encode\_scalar@{encode\_scalar}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_scalar()}{encode\_scalar()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} encode\+\_\+scalar (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{k,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{write\+\_\+sample\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 106 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{alacenc_8c_ad91ac1e441c1cc7340b972ff5ce6f748_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_ad91ac1e441c1cc7340b972ff5ce6f748_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a50225f1de9087636662c02636551acdc}\label{alacenc_8c_a50225f1de9087636662c02636551acdc}} 
+\index{alacenc.c@{alacenc.c}!estimate\_stereo\_mode@{estimate\_stereo\_mode}}
+\index{estimate\_stereo\_mode@{estimate\_stereo\_mode}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{estimate\_stereo\_mode()}{estimate\_stereo\_mode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} estimate\+\_\+stereo\+\_\+mode (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{left\+\_\+ch,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{right\+\_\+ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 184 of file alacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a50225f1de9087636662c02636551acdc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a5a5b90912a6bba4b1e73b032bb3fced1}\label{alacenc_8c_a5a5b90912a6bba4b1e73b032bb3fced1}} 
+\index{alacenc.c@{alacenc.c}!get\_max\_frame\_size@{get\_max\_frame\_size}}
+\index{get\_max\_frame\_size@{get\_max\_frame\_size}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_max\_frame\_size()}{get\_max\_frame\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+max\+\_\+frame\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{frame\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bps }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 491 of file alacenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{alacenc_8c_a5a5b90912a6bba4b1e73b032bb3fced1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a75d73d3691cb91d108e903c18eef5da1}\label{alacenc_8c_a75d73d3691cb91d108e903c18eef5da1}} 
+\index{alacenc.c@{alacenc.c}!init\_sample\_buffers@{init\_sample\_buffers}}
+\index{init\_sample\_buffers@{init\_sample\_buffers}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{init\_sample\_buffers()}{init\_sample\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+sample\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{samples\mbox{[}2\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 84 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=345pt]{alacenc_8c_a75d73d3691cb91d108e903c18eef5da1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a75d73d3691cb91d108e903c18eef5da1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a74e728fe7ca6bc06359c54b97f050415}\label{alacenc_8c_a74e728fe7ca6bc06359c54b97f050415}} 
+\index{alacenc.c@{alacenc.c}!write\_element@{write\_element}}
+\index{write\_element@{write\_element}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_element()}{write\_element()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+element (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{enum \mbox{\hyperlink{alac__data_8h_a2f9265ae536ee8804c8c4fc477c176fd}{Alac\+Raw\+Data\+Block\+Type}}}]{element,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{instance,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{samples0,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{samples1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 365 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a74e728fe7ca6bc06359c54b97f050415_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a74e728fe7ca6bc06359c54b97f050415_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a9405549e2d27b9e67508d529bce20875}\label{alacenc_8c_a9405549e2d27b9e67508d529bce20875}} 
+\index{alacenc.c@{alacenc.c}!write\_element\_header@{write\_element\_header}}
+\index{write\_element\_header@{write\_element\_header}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_element\_header()}{write\_element\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} write\+\_\+element\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{enum \mbox{\hyperlink{alac__data_8h_a2f9265ae536ee8804c8c4fc477c176fd}{Alac\+Raw\+Data\+Block\+Type}}}]{element,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{instance }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 134 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a9405549e2d27b9e67508d529bce20875_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a9405549e2d27b9e67508d529bce20875_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{alacenc_8c_a4298fe705fa57705179e0348c363e60d}\label{alacenc_8c_a4298fe705fa57705179e0348c363e60d}} 
+\index{alacenc.c@{alacenc.c}!write\_frame@{write\_frame}}
+\index{write\_frame@{write\_frame}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{write\_frame()}{write\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_alac_encode_context}{Alac\+Encode\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$const $\ast$}]{samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 460 of file alacenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{alacenc_8c_a4298fe705fa57705179e0348c363e60d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{alacenc_8c_a4298fe705fa57705179e0348c363e60d_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{alacenc_8c_a42e31ee26724d1b3bb7afe7a7583a6b4}\label{alacenc_8c_a42e31ee26724d1b3bb7afe7a7583a6b4}} 
+\index{alacenc.c@{alacenc.c}!alacenc\_class@{alacenc\_class}}
+\index{alacenc\_class@{alacenc\_class}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{alacenc\_class}{alacenc\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} alacenc\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}alacenc"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{alacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 653 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a3124248634e203613d0ffd67505b98e7}\label{alacenc_8c_a3124248634e203613d0ffd67505b98e7}} 
+\index{alacenc.c@{alacenc.c}!ff\_alac\_encoder@{ff\_alac\_encoder}}
+\index{ff\_alac\_encoder@{ff\_alac\_encoder}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{ff\_alac\_encoder}{ff\_alac\_encoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+alac\+\_\+encoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}alac"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}ALAC (Apple Lossless Audio Codec)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea81f7bb2a5a480533df028153b1f664c6}{AV\_CODEC\_ID\_ALAC}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{alacenc_8c_a4092b008a8fbe1c92034383691875fa5}{AlacEncodeContext}}),}
+\DoxyCodeLine{    .priv\_class     = \&\mbox{\hyperlink{alacenc_8c_a42e31ee26724d1b3bb7afe7a7583a6b4}{alacenc\_class}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{alacenc_8c_a6d27180f7288212ff920f6d3ddbca4ad}{alac\_encode\_init}},}
+\DoxyCodeLine{    .encode2        = \mbox{\hyperlink{alacenc_8c_a9103190abe2c38d93ccddd2a4e7f266a}{alac\_encode\_frame}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{alacenc_8c_aa8fd03d50bb1dbceb0098f41283cd5ac}{alac\_encode\_close}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_gaded181844ec3ab19897704086dc2ee03}{AV\_CODEC\_CAP\_SMALL\_LAST\_FRAME}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{dca__lbr_8c_a3e70a65f622cd9cd1b7ea3d2a19bca5d}{channel\_layouts}} = \mbox{\hyperlink{alac__data_8c_add84e1524a38137918b138c6bf545305}{ff\_alac\_channel\_layouts}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5aa215d25dfbf927aa362c837fed4b15a8}{AV\_SAMPLE\_FMT\_S32P}},}
+\DoxyCodeLine{                                                     \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a35eaaad9da207aa4e63fa02fd67fae68}{AV\_SAMPLE\_FMT\_S16P}},}
+\DoxyCodeLine{                                                     \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 660 of file alacenc.\+c.
+
+\mbox{\Hypertarget{alacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{alacenc_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{alacenc.c@{alacenc.c}!options@{options}}
+\index{options@{options}!alacenc.c@{alacenc.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}min\_prediction\_order"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, \mbox{\hyperlink{alacenc_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(min\_prediction\_order), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = \mbox{\hyperlink{alacenc_8c_a7083d6b0f34bc56ee7fe5958c765b8df}{DEFAULT\_MIN\_PRED\_ORDER}} \}, \mbox{\hyperlink{lpc_8h_adeb8354fef65e21f5cfe052d2a99265e}{MIN\_LPC\_ORDER}}, \mbox{\hyperlink{alacenc_8c_a29268c846830bea01658d0bfed34fa17}{ALAC\_MAX\_LPC\_ORDER}}, \mbox{\hyperlink{alacenc_8c_a158b080acb83ee02d2ff57bb9d16b888}{AE}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}max\_prediction\_order"{}}, \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}}, \mbox{\hyperlink{alacenc_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(max\_prediction\_order), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{ .i64 = \mbox{\hyperlink{alacenc_8c_ad3bc787c41560774f030e9dcc7c208cf}{DEFAULT\_MAX\_PRED\_ORDER}} \}, \mbox{\hyperlink{lpc_8h_adeb8354fef65e21f5cfe052d2a99265e}{MIN\_LPC\_ORDER}}, \mbox{\hyperlink{alacenc_8c_a29268c846830bea01658d0bfed34fa17}{ALAC\_MAX\_LPC\_ORDER}}, \mbox{\hyperlink{alacenc_8c_a158b080acb83ee02d2ff57bb9d16b888}{AE}} \},}
+\DoxyCodeLine{}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 646 of file alacenc.\+c.
+

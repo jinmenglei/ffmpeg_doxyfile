@@ -1,0 +1,651 @@
+\hypertarget{avf__showfreqs_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/avf\+\_\+showfreqs.c File Reference}
+\label{avf__showfreqs_8c}\index{E:/github/ffmpeg/libavfilter/avf\_showfreqs.c@{E:/github/ffmpeg/libavfilter/avf\_showfreqs.c}}
+{\ttfamily \#include $<$float.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavcodec/avfft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/audio\+\_\+fifo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}video.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}window\+\_\+func.\+h\char`\"{}}\newline
+Include dependency graph for avf\+\_\+showfreqs.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{avf__showfreqs_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{avf__showfreqs_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{avf__showfreqs_8c_a96c05f2e26784d60867bcb376dd34ee3}{RE}}(x,  ch)~\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$fft\+\_\+data\mbox{[}ch\mbox{]}\mbox{[}x\mbox{]}.\mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}
+\item 
+\#define \mbox{\hyperlink{avf__showfreqs_8c_a23f426f377f0bdd482df5ecd168280a0}{IM}}(x,  ch)~\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$fft\+\_\+data\mbox{[}ch\mbox{]}\mbox{[}x\mbox{]}.\mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}
+\item 
+\#define \mbox{\hyperlink{avf__showfreqs_8c_aee024c5945e8ca04515fea3513aeeaaa}{M}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})~(sqrt((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $\ast$ (\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) $\ast$ (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})))
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} \mbox{\hyperlink{avf__showfreqs_8c_ac79e7551af572f076803d142750d0c9b}{Show\+Freqs\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27}{Display\+Mode}} \{ \newline
+\mbox{\hyperlink{avf__ahistogram_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a3388f7110f6f25a54e215eb75d5d7516}{S\+I\+N\+G\+LE}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}{S\+E\+P\+A\+R\+A\+TE}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27add755aec5a201717fddabc2a46d96378}{N\+B\+\_\+\+D\+M\+O\+D\+ES}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27ab023460c84f774a219d46ccf4665994c}{L\+I\+NE}}, 
+\newline
+\mbox{\hyperlink{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a9faad079af5016dadbb1741c852e5295}{B\+AR}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a87fdcd2ffa8f71b49da9e0cfd4fb893f}{D\+OT}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}{N\+B\+\_\+\+M\+O\+D\+ES}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6b1dd0ab5eafcaa2b7355a4b145320ff}{C\+O\+M\+B\+I\+N\+ED}}, 
+\newline
+\mbox{\hyperlink{avf__showspectrum_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}{S\+E\+P\+A\+R\+A\+TE}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}{N\+B\+\_\+\+M\+O\+D\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599}{Channel\+Mode}} \{ \mbox{\hyperlink{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a6b1dd0ab5eafcaa2b7355a4b145320ff}{C\+O\+M\+B\+I\+N\+ED}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a4d5a42a5f8f01bfc06d15428b6c3e643}{S\+E\+P\+A\+R\+A\+TE}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a8dff82be5b23f5bd6845caa8c545668e}{N\+B\+\_\+\+C\+M\+O\+D\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5}{Frequency\+Scale}} \{ \newline
+\mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a794bd01637cdc078afe59467c3a04606}{F\+S\+\_\+\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a20bec9eca3198e3452293a859d38368f}{F\+S\+\_\+\+L\+OG}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5acdd8038a9864af31f58336bc9309a470}{F\+S\+\_\+\+R\+L\+OG}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}{N\+B\+\_\+\+F\+S\+C\+A\+L\+ES}}, 
+\newline
+\mbox{\hyperlink{avf__showspectrum_8c_a65c99f1eb59e9240d559bc4851e774c5a2bccfbe30166ed400b7c8a9e35bb4f46}{F\+\_\+\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a65c99f1eb59e9240d559bc4851e774c5a84ce435214a72966e825383918c1b18f}{F\+\_\+\+L\+OG}}, 
+\mbox{\hyperlink{avf__showspectrum_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}{N\+B\+\_\+\+F\+S\+C\+A\+L\+ES}}
+ \}
+\item 
+enum \mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437}{Amplitude\+Scale}} \{ \newline
+\mbox{\hyperlink{avf__ahistogram_8c_a28e2f56774f0f5dfd323c562a3718437a33c9c644b44eb06983f5bfa1b03c699d}{A\+L\+I\+N\+E\+AR}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a28e2f56774f0f5dfd323c562a3718437afced6c2201d9171a312331da388d6160}{A\+L\+OG}}, 
+\mbox{\hyperlink{avf__ahistogram_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}{N\+B\+\_\+\+A\+S\+C\+A\+L\+ES}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a61d6cf212df553cfdf1913b25cdc37a3}{A\+S\+\_\+\+L\+I\+N\+E\+AR}}, 
+\newline
+\mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a564395c76219b7842ddbdc0e9de9c379}{A\+S\+\_\+\+S\+Q\+RT}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a3fb5e86b86f29f143f9653baa0acbf69}{A\+S\+\_\+\+C\+B\+RT}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a12655b573c86e50afef9ed4ad44f072f}{A\+S\+\_\+\+L\+OG}}, 
+\mbox{\hyperlink{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}{N\+B\+\_\+\+A\+S\+C\+A\+L\+ES}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{avf__showfreqs_8c_a704386030ae311c04eed618d97e37f07}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (showfreqs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{avf__showfreqs_8c_a9e5acdf23b2e75eabbae9cb2e0922b44}{draw\+\_\+dot}} (\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} y, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} fg\mbox{[}4\mbox{]})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_a050ea790c5f9fe1f51528cb8d4254bc4}{get\+\_\+sx}} (\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static float \mbox{\hyperlink{avf__showfreqs_8c_a010e3a71ae875c3383d87be571575ee6}{get\+\_\+bsize}} (\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{avf__showfreqs_8c_aef56c3716300627d5611e9b6edd3ceaf}{plot\+\_\+freq}} (\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch, double \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} fg\mbox{[}4\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$prev\+\_\+y, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_adeb5f51f2056543a90fa9db938fd178e}{plot\+\_\+freqs}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_a75de99f342ac091fd370cf1bcfdae6ef}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac}{activate}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{avf__showfreqs_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{avf__showfreqs_8c_abf803894e4c7e15614db1645570c178a}{showfreqs\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{avf__showfreqs_8c_a1d11d4f2f3744dba220a33741167e337}{showfreqs\+\_\+inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{avf__showfreqs_8c_a1b071b9c3de5702cc8c00a7b6d3ecf7b}{showfreqs\+\_\+outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{avf__showfreqs_8c_ad67d919461db912470d2596ef2e351cf}{ff\+\_\+avf\+\_\+showfreqs}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{avf__showfreqs_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{avf__showfreqs_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_aaf3d0af9d7eca757034486a8eb896246}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+V\+I\+D\+E\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 71 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a23f426f377f0bdd482df5ecd168280a0}\label{avf__showfreqs_8c_a23f426f377f0bdd482df5ecd168280a0}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!IM@{IM}}
+\index{IM@{IM}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{IM}{IM}}
+{\footnotesize\ttfamily \#define IM(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{ch }\end{DoxyParamCaption})~\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$fft\+\_\+data\mbox{[}ch\mbox{]}\mbox{[}x\mbox{]}.\mbox{\hyperlink{fft_8c_a967065f052e06d0e239b9bc56e0cc317}{im}}}
+
+\mbox{\Hypertarget{avf__showfreqs_8c_aee024c5945e8ca04515fea3513aeeaaa}\label{avf__showfreqs_8c_aee024c5945e8ca04515fea3513aeeaaa}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!M@{M}}
+\index{M@{M}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{M}{M}}
+{\footnotesize\ttfamily \#define M(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}} }\end{DoxyParamCaption})~(sqrt((\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $\ast$ (\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) + (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) $\ast$ (\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})))}
+
+\mbox{\Hypertarget{avf__showfreqs_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{avf__showfreqs_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}}, x)}
+
+
+
+Definition at line 70 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a96c05f2e26784d60867bcb376dd34ee3}\label{avf__showfreqs_8c_a96c05f2e26784d60867bcb376dd34ee3}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!RE@{RE}}
+\index{RE@{RE}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{RE}{RE}}
+{\footnotesize\ttfamily \#define RE(\begin{DoxyParamCaption}\item[{}]{x,  }\item[{}]{ch }\end{DoxyParamCaption})~\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}-\/$>$fft\+\_\+data\mbox{[}ch\mbox{]}\mbox{[}x\mbox{]}.\mbox{\hyperlink{fft_8c_aeac685ede53ad58d0e24e6c060feff7a}{re}}}
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{avf__showfreqs_8c_ac79e7551af572f076803d142750d0c9b}\label{avf__showfreqs_8c_ac79e7551af572f076803d142750d0c9b}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!ShowFreqsContext@{ShowFreqsContext}}
+\index{ShowFreqsContext@{ShowFreqsContext}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{ShowFreqsContext}{ShowFreqsContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} \mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AmplitudeScale@{AmplitudeScale}}
+\index{AmplitudeScale@{AmplitudeScale}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{AmplitudeScale}{AmplitudeScale}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__ahistogram_8c_a28e2f56774f0f5dfd323c562a3718437}{Amplitude\+Scale}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALINEAR@{ALINEAR}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!ALINEAR@{ALINEAR}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a33c9c644b44eb06983f5bfa1b03c699d}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a33c9c644b44eb06983f5bfa1b03c699d}} 
+A\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ALOG@{ALOG}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!ALOG@{ALOG}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437afced6c2201d9171a312331da388d6160}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437afced6c2201d9171a312331da388d6160}} 
+A\+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_ASCALES@{NB\_ASCALES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_ASCALES@{NB\_ASCALES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}} 
+N\+B\+\_\+\+A\+S\+C\+A\+L\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AS\_LINEAR@{AS\_LINEAR}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AS\_LINEAR@{AS\_LINEAR}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a61d6cf212df553cfdf1913b25cdc37a3}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a61d6cf212df553cfdf1913b25cdc37a3}} 
+A\+S\+\_\+\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AS\_SQRT@{AS\_SQRT}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AS\_SQRT@{AS\_SQRT}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a564395c76219b7842ddbdc0e9de9c379}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a564395c76219b7842ddbdc0e9de9c379}} 
+A\+S\+\_\+\+S\+Q\+RT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AS\_CBRT@{AS\_CBRT}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AS\_CBRT@{AS\_CBRT}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a3fb5e86b86f29f143f9653baa0acbf69}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a3fb5e86b86f29f143f9653baa0acbf69}} 
+A\+S\+\_\+\+C\+B\+RT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AS\_LOG@{AS\_LOG}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AS\_LOG@{AS\_LOG}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a12655b573c86e50afef9ed4ad44f072f}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a12655b573c86e50afef9ed4ad44f072f}} 
+A\+S\+\_\+\+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_ASCALES@{NB\_ASCALES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_ASCALES@{NB\_ASCALES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}\label{avf__showfreqs_8c_a28e2f56774f0f5dfd323c562a3718437a0d9607b44d3a88b43a1fe2cee7a5d64c}} 
+N\+B\+\_\+\+A\+S\+C\+A\+L\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 42 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599}\label{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!ChannelMode@{ChannelMode}}
+\index{ChannelMode@{ChannelMode}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{ChannelMode}{ChannelMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599}{Channel\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMBINED@{COMBINED}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!COMBINED@{COMBINED}}}\mbox{\Hypertarget{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a6b1dd0ab5eafcaa2b7355a4b145320ff}\label{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a6b1dd0ab5eafcaa2b7355a4b145320ff}} 
+C\+O\+M\+B\+I\+N\+ED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEPARATE@{SEPARATE}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!SEPARATE@{SEPARATE}}}\mbox{\Hypertarget{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a4d5a42a5f8f01bfc06d15428b6c3e643}\label{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a4d5a42a5f8f01bfc06d15428b6c3e643}} 
+S\+E\+P\+A\+R\+A\+TE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_CMODES@{NB\_CMODES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_CMODES@{NB\_CMODES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a8dff82be5b23f5bd6845caa8c545668e}\label{avf__showfreqs_8c_a1896d4a571c398f57955773fce8af599a8dff82be5b23f5bd6845caa8c545668e}} 
+N\+B\+\_\+\+C\+M\+O\+D\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 40 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!DisplayMode@{DisplayMode}}
+\index{DisplayMode@{DisplayMode}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{DisplayMode}{DisplayMode}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__ahistogram_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27}{Display\+Mode}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SINGLE@{SINGLE}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!SINGLE@{SINGLE}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a3388f7110f6f25a54e215eb75d5d7516}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a3388f7110f6f25a54e215eb75d5d7516}} 
+S\+I\+N\+G\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEPARATE@{SEPARATE}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!SEPARATE@{SEPARATE}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}} 
+S\+E\+P\+A\+R\+A\+TE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_DMODES@{NB\_DMODES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_DMODES@{NB\_DMODES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27add755aec5a201717fddabc2a46d96378}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27add755aec5a201717fddabc2a46d96378}} 
+N\+B\+\_\+\+D\+M\+O\+D\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LINE@{LINE}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!LINE@{LINE}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27ab023460c84f774a219d46ccf4665994c}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27ab023460c84f774a219d46ccf4665994c}} 
+L\+I\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BAR@{BAR}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!BAR@{BAR}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a9faad079af5016dadbb1741c852e5295}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a9faad079af5016dadbb1741c852e5295}} 
+B\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DOT@{DOT}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!DOT@{DOT}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a87fdcd2ffa8f71b49da9e0cfd4fb893f}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a87fdcd2ffa8f71b49da9e0cfd4fb893f}} 
+D\+OT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_MODES@{NB\_MODES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_MODES@{NB\_MODES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}} 
+N\+B\+\_\+\+M\+O\+D\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COMBINED@{COMBINED}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!COMBINED@{COMBINED}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6b1dd0ab5eafcaa2b7355a4b145320ff}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6b1dd0ab5eafcaa2b7355a4b145320ff}} 
+C\+O\+M\+B\+I\+N\+ED&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SEPARATE@{SEPARATE}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!SEPARATE@{SEPARATE}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a4d5a42a5f8f01bfc06d15428b6c3e643}} 
+S\+E\+P\+A\+R\+A\+TE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_MODES@{NB\_MODES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_MODES@{NB\_MODES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}\label{avf__showfreqs_8c_a59b40c5838e0a3d2bfbfa64c85d7ca27a6f9d58c7dfd73d1d34b945c1a1d8c18a}} 
+N\+B\+\_\+\+M\+O\+D\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 39 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!FrequencyScale@{FrequencyScale}}
+\index{FrequencyScale@{FrequencyScale}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{FrequencyScale}{FrequencyScale}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5}{Frequency\+Scale}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FS\_LINEAR@{FS\_LINEAR}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!FS\_LINEAR@{FS\_LINEAR}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a794bd01637cdc078afe59467c3a04606}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a794bd01637cdc078afe59467c3a04606}} 
+F\+S\+\_\+\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FS\_LOG@{FS\_LOG}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!FS\_LOG@{FS\_LOG}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a20bec9eca3198e3452293a859d38368f}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a20bec9eca3198e3452293a859d38368f}} 
+F\+S\+\_\+\+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FS\_RLOG@{FS\_RLOG}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!FS\_RLOG@{FS\_RLOG}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5acdd8038a9864af31f58336bc9309a470}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5acdd8038a9864af31f58336bc9309a470}} 
+F\+S\+\_\+\+R\+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_FSCALES@{NB\_FSCALES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_FSCALES@{NB\_FSCALES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}} 
+N\+B\+\_\+\+F\+S\+C\+A\+L\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{F\_LINEAR@{F\_LINEAR}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!F\_LINEAR@{F\_LINEAR}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a2bccfbe30166ed400b7c8a9e35bb4f46}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a2bccfbe30166ed400b7c8a9e35bb4f46}} 
+F\+\_\+\+L\+I\+N\+E\+AR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{F\_LOG@{F\_LOG}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!F\_LOG@{F\_LOG}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a84ce435214a72966e825383918c1b18f}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5a84ce435214a72966e825383918c1b18f}} 
+F\+\_\+\+L\+OG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_FSCALES@{NB\_FSCALES}!avf\_showfreqs.c@{avf\_showfreqs.c}}\index{avf\_showfreqs.c@{avf\_showfreqs.c}!NB\_FSCALES@{NB\_FSCALES}}}\mbox{\Hypertarget{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}\label{avf__showfreqs_8c_a65c99f1eb59e9240d559bc4851e774c5aa39bf3033386495138da1e8a8c96538d}} 
+N\+B\+\_\+\+F\+S\+C\+A\+L\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 41 of file avf\+\_\+showfreqs.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac}\label{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!activate@{activate}}
+\index{activate@{activate}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{activate()}{activate()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} activate (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 460 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a704386030ae311c04eed618d97e37f07}\label{avf__showfreqs_8c_a704386030ae311c04eed618d97e37f07}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{showfreqs}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{avf__showfreqs_8c_ad21a4e672440f6072991b632efe70c1b}\label{avf__showfreqs_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 163 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a9e5acdf23b2e75eabbae9cb2e0922b44}\label{avf__showfreqs_8c_a9e5acdf23b2e75eabbae9cb2e0922b44}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!draw\_dot@{draw\_dot}}
+\index{draw\_dot@{draw\_dot}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{draw\_dot()}{draw\_dot()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} draw\+\_\+dot (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{y,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{fg\mbox{[}4\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 236 of file avf\+\_\+showfreqs.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_a9e5acdf23b2e75eabbae9cb2e0922b44_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a75de99f342ac091fd370cf1bcfdae6ef}\label{avf__showfreqs_8c_a75de99f342ac091fd370cf1bcfdae6ef}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 432 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_a75de99f342ac091fd370cf1bcfdae6ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{avf__showfreqs_8c_a75de99f342ac091fd370cf1bcfdae6ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a010e3a71ae875c3383d87be571575ee6}\label{avf__showfreqs_8c_a010e3a71ae875c3383d87be571575ee6}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!get\_bsize@{get\_bsize}}
+\index{get\_bsize@{get\_bsize}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{get\_bsize()}{get\_bsize()}}
+{\footnotesize\ttfamily static float get\+\_\+bsize (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 261 of file avf\+\_\+showfreqs.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_a010e3a71ae875c3383d87be571575ee6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a050ea790c5f9fe1f51528cb8d4254bc4}\label{avf__showfreqs_8c_a050ea790c5f9fe1f51528cb8d4254bc4}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!get\_sx@{get\_sx}}
+\index{get\_sx@{get\_sx}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{get\_sx()}{get\_sx()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+sx (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 247 of file avf\+\_\+showfreqs.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_a050ea790c5f9fe1f51528cb8d4254bc4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{avf__showfreqs_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!init@{init}}
+\index{init@{init}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 154 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_aef56c3716300627d5611e9b6edd3ceaf}\label{avf__showfreqs_8c_aef56c3716300627d5611e9b6edd3ceaf}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!plot\_freq@{plot\_freq}}
+\index{plot\_freq@{plot\_freq}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{plot\_freq()}{plot\_freq()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} plot\+\_\+freq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_show_freqs_context}{Show\+Freqs\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch,  }\item[{double}]{a,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{fg\mbox{[}4\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{prev\+\_\+y,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 277 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_aef56c3716300627d5611e9b6edd3ceaf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_aef56c3716300627d5611e9b6edd3ceaf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_adeb5f51f2056543a90fa9db938fd178e}\label{avf__showfreqs_8c_adeb5f51f2056543a90fa9db938fd178e}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!plot\_freqs@{plot\_freqs}}
+\index{plot\_freqs@{plot\_freqs}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{plot\_freqs()}{plot\_freqs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} plot\+\_\+freqs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 360 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_adeb5f51f2056543a90fa9db938fd178e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=325pt]{avf__showfreqs_8c_adeb5f51f2056543a90fa9db938fd178e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{avf__showfreqs_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 123 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{avf__showfreqs_8c_abbead6cde1da3e72ce200578c426f1e6}\label{avf__showfreqs_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!uninit@{uninit}}
+\index{uninit@{uninit}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 493 of file avf\+\_\+showfreqs.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{avf__showfreqs_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{avf__showfreqs_8c_ad67d919461db912470d2596ef2e351cf}\label{avf__showfreqs_8c_ad67d919461db912470d2596ef2e351cf}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!ff\_avf\_showfreqs@{ff\_avf\_showfreqs}}
+\index{ff\_avf\_showfreqs@{ff\_avf\_showfreqs}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{ff\_avf\_showfreqs}{ff\_avf\_showfreqs}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+avf\+\_\+showfreqs}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name          = \textcolor{stringliteral}{"{}showfreqs"{}},}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Convert input audio to a frequencies video output."{}}),}
+\DoxyCodeLine{    .init          = \mbox{\hyperlink{avf__showfreqs_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}},}
+\DoxyCodeLine{    .uninit        = \mbox{\hyperlink{avf__showfreqs_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .query\_formats = \mbox{\hyperlink{avf__showfreqs_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{avf__showfreqs_8c_ac79e7551af572f076803d142750d0c9b}{ShowFreqsContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac}{activate}}      = \mbox{\hyperlink{avf__showfreqs_8c_ab5283561721ad2970de4e2d569100dac}{activate}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{filter__design_8txt_a45917ba5e6c8b798c6e2ba6ca7301a5d}{inputs}}        = \mbox{\hyperlink{avf__showfreqs_8c_a1d11d4f2f3744dba220a33741167e337}{showfreqs\_inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__acontrast_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{avf__showfreqs_8c_a1b071b9c3de5702cc8c00a7b6d3ecf7b}{showfreqs\_outputs}},}
+\DoxyCodeLine{    .priv\_class    = \&showfreqs\_class,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 528 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a1d11d4f2f3744dba220a33741167e337}\label{avf__showfreqs_8c_a1d11d4f2f3744dba220a33741167e337}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!showfreqs\_inputs@{showfreqs\_inputs}}
+\index{showfreqs\_inputs@{showfreqs\_inputs}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{showfreqs\_inputs}{showfreqs\_inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} showfreqs\+\_\+inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 511 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_abf803894e4c7e15614db1645570c178a}\label{avf__showfreqs_8c_abf803894e4c7e15614db1645570c178a}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!showfreqs\_options@{showfreqs\_options}}
+\index{showfreqs\_options@{showfreqs\_options}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{showfreqs\_options}{showfreqs\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} showfreqs\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 73 of file avf\+\_\+showfreqs.\+c.
+
+\mbox{\Hypertarget{avf__showfreqs_8c_a1b071b9c3de5702cc8c00a7b6d3ecf7b}\label{avf__showfreqs_8c_a1b071b9c3de5702cc8c00a7b6d3ecf7b}} 
+\index{avf\_showfreqs.c@{avf\_showfreqs.c}!showfreqs\_outputs@{showfreqs\_outputs}}
+\index{showfreqs\_outputs@{showfreqs\_outputs}!avf\_showfreqs.c@{avf\_showfreqs.c}}
+\doxysubsubsection{\texorpdfstring{showfreqs\_outputs}{showfreqs\_outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} showfreqs\+\_\+outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name          = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type          = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48ac1a46f59be5c6c2d3412ab172d6b8cf5}{AVMEDIA\_TYPE\_VIDEO}},}
+\DoxyCodeLine{        .config\_props  = \mbox{\hyperlink{avf__showfreqs_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 519 of file avf\+\_\+showfreqs.\+c.
+

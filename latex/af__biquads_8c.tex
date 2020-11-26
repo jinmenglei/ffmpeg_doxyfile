@@ -1,0 +1,732 @@
+\hypertarget{af__biquads_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+biquads.c File Reference}
+\label{af__biquads_8c}\index{E:/github/ffmpeg/libavfilter/af\_biquads.c@{E:/github/ffmpeg/libavfilter/af\_biquads.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/ffmath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+biquads.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_chan_cache}{Chan\+Cache}}
+\item 
+struct \mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_ad3ffe1a0d0e427afc12243e0b777f2fc}{B\+I\+Q\+U\+A\+D\+\_\+\+F\+I\+L\+T\+ER}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_a9bf86fdfadc44a049b9b41dc7bef185a}{B\+I\+Q\+U\+A\+D\+\_\+\+D\+I\+I\+\_\+\+F\+I\+L\+T\+ER}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_a4ee5bebd725d7af8177487c7196e6f19}{B\+I\+Q\+U\+A\+D\+\_\+\+T\+D\+I\+I\+\_\+\+F\+I\+L\+T\+ER}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_ae44dec66a3796aee33abc4ac43901d66}{B\+I\+Q\+U\+A\+D\+\_\+\+L\+A\+T\+T\+\_\+\+F\+I\+L\+T\+ER}}(\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  \mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  need\+\_\+clipping)
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_a76ba789cde9c36cd57dbb390bdee7661}{AF}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{af__biquads_8c_a4e982a179c0a242f40d3ddf8eca2523a}{D\+E\+F\+I\+N\+E\+\_\+\+B\+I\+Q\+U\+A\+D\+\_\+\+F\+I\+L\+T\+ER}}(name\+\_\+,  description\+\_\+)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_chan_cache}{Chan\+Cache}} \mbox{\hyperlink{af__biquads_8c_ad08128159c257aa61a7074d4359a3f84}{Chan\+Cache}}
+\item 
+typedef struct \mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}} \mbox{\hyperlink{af__biquads_8c_a76549bff8edea3ef243b9330294951f7}{Biquads\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{af__biquads_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94f}{Filter\+Type}} \{ \newline
+\mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94faec36bb67c352e290abb8e0ab7ac9c60d}{D\+C\+\_\+\+T\+Y\+PE}}, 
+\mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94fa054fbc8d81052356d0a5577a7a21d1b6}{A\+C\+\_\+\+T\+Y\+PE}}, 
+\mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94fad415fc08257177b80f02e1c203872614}{S\+Q\+\_\+\+T\+Y\+PE}}, 
+\mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94fa72247e4f69317b044ddd2cd8115d3da5}{P\+S\+\_\+\+T\+Y\+PE}}, 
+\newline
+\mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}{N\+B\+\_\+\+T\+Y\+P\+ES}}, 
+\mbox{\hyperlink{af__anequalizer_8c_a7ef0ab496f57e183b484e62e2053c94fa3f4928ff71994c03e8ec3ea58559ea0a}{B\+U\+T\+T\+E\+R\+W\+O\+R\+TH}}, 
+\mbox{\hyperlink{af__anequalizer_8c_a7ef0ab496f57e183b484e62e2053c94fa48938021dc417056e5cee31c2c0cf6e3}{C\+H\+E\+B\+Y\+S\+H\+E\+V1}}, 
+\mbox{\hyperlink{af__anequalizer_8c_a7ef0ab496f57e183b484e62e2053c94fa50351f037f4c361238117229a2893340}{C\+H\+E\+B\+Y\+S\+H\+E\+V2}}, 
+\newline
+\mbox{\hyperlink{af__anequalizer_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}{N\+B\+\_\+\+T\+Y\+P\+ES}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fadbd456c5e05dc0b775da4b8b93ecd2d8}{biquad}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa124ec7d7949b5e97d515826b50458de9}{equalizer}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa5f9b4e7b76847f663ad64d57e3b64434}{bass}}, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04fa064f5be9c490dd4307131fcfdd86}{treble}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf535e4ad04184eaac9d6df2f5545e7b4}{bandpass}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf0c8d6ff12be0a8a3fa7938e4d4eaa54}{bandreject}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fad58c6718e990b69c3b34e7e14b8dd6b4}{allpass}}, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa3eb3ab40b23ff944b20b5f7e8e96d930}{highpass}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fabeaa8b8238ff0fc9023d1e27d9417d28}{lowpass}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04d2a2cad00b090bfc7a5894344db5f3}{lowshelf}}, 
+\mbox{\hyperlink{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf707d84cb0e5f5b6041c05a62fc122ad}{highshelf}}, 
+\newline
+\mbox{\hyperlink{vf__deblock_8c_a7ef0ab496f57e183b484e62e2053c94fafe4722ca9de2cfd88591a69de2430c0a}{W\+E\+AK}}, 
+\mbox{\hyperlink{vf__deblock_8c_a7ef0ab496f57e183b484e62e2053c94fa32d1a6a9c15f0752303552ffdda0ca2f}{S\+T\+R\+O\+NG}}, 
+\mbox{\hyperlink{vf__deblock_8c_a7ef0ab496f57e183b484e62e2053c94fa176f8d4fdf8f4b8c8e3b174907be7ac1}{N\+B\+\_\+\+F\+I\+L\+T\+ER}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa0f056d1892baa220efdb9afeca443025}{L\+O\+W\+P\+A\+SS}}, 
+\newline
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa0338024d4d0d5bffed604c279f8f5550}{F\+L\+AT}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fae0b1bd5a562b59f2c65b54862de64ddb}{A\+F\+L\+AT}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa45734b23ea60dc857910c83f3b128be3}{C\+H\+R\+O\+MA}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa7a5ecb5193db2d5f258ae1abd33714b9}{C\+O\+L\+OR}}, 
+\newline
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa19a8b96640b648a8846a3a73a9740dc0}{A\+C\+O\+L\+OR}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa322d4a1438c8a59c55fa3749a99c6ff4}{X\+F\+L\+AT}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fac03f63be955df1b5612e06f74530a20b}{Y\+F\+L\+AT}}, 
+\mbox{\hyperlink{vf__waveform_8c_a7ef0ab496f57e183b484e62e2053c94fa5d8e6604f31bb3960f898f7dd8b701a7}{N\+B\+\_\+\+F\+I\+L\+T\+E\+RS}}
+ \}
+\item 
+enum \mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0}{Width\+Type}} \{ \newline
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0ac157bdf0b85a40d2619cbc8bc1ae5fe2}{N\+O\+NE}}, 
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2b65c81040f82876138e37991162eb62}{H\+E\+R\+TZ}}, 
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2f92753ad800d7a02c93188be33f6b53}{O\+C\+T\+A\+VE}}, 
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a3093cf4a054b2a003f614310cdc24ccc}{Q\+F\+A\+C\+T\+OR}}, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a99231f09ee2e40643fa578adc2095194}{S\+L\+O\+PE}}, 
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a157202b8d00dfffedeb0e362187210b8}{K\+H\+E\+R\+TZ}}, 
+\mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a6adef3e5532808921d39b2d9b11f18a2}{N\+B\+\_\+\+W\+T\+Y\+PE}}
+ \}
+\item 
+enum \mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2}{Transform\+Type}} \{ \newline
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}{P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 0, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}{C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 1, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}{S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+G\+R\+E\+EN}} = 2, 
+\mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}{C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+N\+G\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM}} = 3, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}{DI}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}{D\+II}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}{T\+D\+II}}, 
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}{L\+A\+TT}}, 
+\newline
+\mbox{\hyperlink{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}{N\+B\+\_\+\+T\+T\+Y\+PE}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__biquads_8c_a8b8c0060fbf6f1978f9a218acadf98ad}{convert\+\_\+dir2latt}} (\mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_afd01939137fe0c976528973afe5d7d99}{config\+\_\+filter}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} reset)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_ad21a4e672440f6072991b632efe70c1b}{config\+\_\+output}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$outlink)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_acd6c965e7cfdb63c00e2bb335a733539}{filter\+\_\+channel}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d}{process\+\_\+command}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, const char $\ast$cmd, const char $\ast$args, char $\ast$res, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} res\+\_\+len, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__biquads_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__biquads_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__biquads_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__biquads_8c_a76ba789cde9c36cd57dbb390bdee7661}\label{af__biquads_8c_a76ba789cde9c36cd57dbb390bdee7661}} 
+\index{af\_biquads.c@{af\_biquads.c}!AF@{AF}}
+\index{AF@{AF}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{AF}{AF}}
+{\footnotesize\ttfamily \#define AF~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 821 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a9bf86fdfadc44a049b9b41dc7bef185a}\label{af__biquads_8c_a9bf86fdfadc44a049b9b41dc7bef185a}} 
+\index{af\_biquads.c@{af\_biquads.c}!BIQUAD\_DII\_FILTER@{BIQUAD\_DII\_FILTER}}
+\index{BIQUAD\_DII\_FILTER@{BIQUAD\_DII\_FILTER}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{BIQUAD\_DII\_FILTER}{BIQUAD\_DII\_FILTER}}
+{\footnotesize\ttfamily \#define B\+I\+Q\+U\+A\+D\+\_\+\+D\+I\+I\+\_\+\+F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 273 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_ad3ffe1a0d0e427afc12243e0b777f2fc}\label{af__biquads_8c_ad3ffe1a0d0e427afc12243e0b777f2fc}} 
+\index{af\_biquads.c@{af\_biquads.c}!BIQUAD\_FILTER@{BIQUAD\_FILTER}}
+\index{BIQUAD\_FILTER@{BIQUAD\_FILTER}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{BIQUAD\_FILTER}{BIQUAD\_FILTER}}
+{\footnotesize\ttfamily \#define B\+I\+Q\+U\+A\+D\+\_\+\+F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 190 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_ae44dec66a3796aee33abc4ac43901d66}\label{af__biquads_8c_ae44dec66a3796aee33abc4ac43901d66}} 
+\index{af\_biquads.c@{af\_biquads.c}!BIQUAD\_LATT\_FILTER@{BIQUAD\_LATT\_FILTER}}
+\index{BIQUAD\_LATT\_FILTER@{BIQUAD\_LATT\_FILTER}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{BIQUAD\_LATT\_FILTER}{BIQUAD\_LATT\_FILTER}}
+{\footnotesize\ttfamily \#define B\+I\+Q\+U\+A\+D\+\_\+\+L\+A\+T\+T\+\_\+\+F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 368 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a4ee5bebd725d7af8177487c7196e6f19}\label{af__biquads_8c_a4ee5bebd725d7af8177487c7196e6f19}} 
+\index{af\_biquads.c@{af\_biquads.c}!BIQUAD\_TDII\_FILTER@{BIQUAD\_TDII\_FILTER}}
+\index{BIQUAD\_TDII\_FILTER@{BIQUAD\_TDII\_FILTER}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{BIQUAD\_TDII\_FILTER}{BIQUAD\_TDII\_FILTER}}
+{\footnotesize\ttfamily \#define B\+I\+Q\+U\+A\+D\+\_\+\+T\+D\+I\+I\+\_\+\+F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}},  }\item[{}]{\mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}},  }\item[{}]{\mbox{\hyperlink{vorbis__enc__data_8h_ad2e88d75f808e6d4e78d48bceb10c336}{min}},  }\item[{}]{\mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}},  }\item[{}]{need\+\_\+clipping }\end{DoxyParamCaption})}
+
+
+
+Definition at line 321 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a4e982a179c0a242f40d3ddf8eca2523a}\label{af__biquads_8c_a4e982a179c0a242f40d3ddf8eca2523a}} 
+\index{af\_biquads.c@{af\_biquads.c}!DEFINE\_BIQUAD\_FILTER@{DEFINE\_BIQUAD\_FILTER}}
+\index{DEFINE\_BIQUAD\_FILTER@{DEFINE\_BIQUAD\_FILTER}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{DEFINE\_BIQUAD\_FILTER}{DEFINE\_BIQUAD\_FILTER}}
+{\footnotesize\ttfamily \#define D\+E\+F\+I\+N\+E\+\_\+\+B\+I\+Q\+U\+A\+D\+\_\+\+F\+I\+L\+T\+ER(\begin{DoxyParamCaption}\item[{}]{name\+\_\+,  }\item[{}]{description\+\_\+ }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{libavfilter_2internal_8h_ad68a14922712d4b31045282db482f698}{AVFILTER\_DEFINE\_CLASS}}(name\_);                                           \(\backslash\)}
+\DoxyCodeLine{static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\_cold}} \textcolor{keywordtype}{int} name\_\#\#\_init(\mbox{\hyperlink{struct_a_v_filter_context}{AVFilterContext}} *\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}) \(\backslash\)}
+\DoxyCodeLine{\{                                                                       \(\backslash\)}
+\DoxyCodeLine{    BiquadsContext *\mbox{\hyperlink{cbs__vp9_8c_a5950eda76c8ffc67651de936cd8c79ec}{s}} = \mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}-\/>priv;                                      \(\backslash\)}
+\DoxyCodeLine{    s-\/>class = \&name\_\#\#\_class;                                          \(\backslash\)}
+\DoxyCodeLine{    s-\/>filter\_type = name\_;                                             \(\backslash\)}
+\DoxyCodeLine{    return \mbox{\hyperlink{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}(\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}});                                             \(\backslash\)}
+\DoxyCodeLine{\}                                                                       \(\backslash\)}
+\DoxyCodeLine{                                                         \(\backslash\)}
+\DoxyCodeLine{AVFilter ff\_af\_\#\#name\_ = \{                         \(\backslash\)}
+\DoxyCodeLine{    .name          = \#name\_,                             \(\backslash\)}
+\DoxyCodeLine{    .description   = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(description\_), \(\backslash\)}
+\DoxyCodeLine{    .priv\_size     = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__biquads_8c_a76549bff8edea3ef243b9330294951f7}{BiquadsContext}}),             \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8}{init}}          = name\_\#\#\_init,                       \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}        = \mbox{\hyperlink{af__biquads_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},                             \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}} = \mbox{\hyperlink{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},                      \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}        = \mbox{\hyperlink{af__biquads_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},                             \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}       = \mbox{\hyperlink{af__biquads_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},                            \(\backslash\)}
+\DoxyCodeLine{    .priv\_class    = \&name\_\#\#\_class,                     \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d}{process\_command}} = \mbox{\hyperlink{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d}{process\_command}},                  \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}         = \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}} | \mbox{\hyperlink{group__lavfi_gae225339ad292450a5832296f58f0d424}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_INTERNAL}}, \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 823 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{af__biquads_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{af\_biquads.c@{af\_biquads.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 820 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__biquads_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_biquads.c@{af\_biquads.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}}, x)}
+
+
+
+Definition at line 819 of file af\+\_\+biquads.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__biquads_8c_a76549bff8edea3ef243b9330294951f7}\label{af__biquads_8c_a76549bff8edea3ef243b9330294951f7}} 
+\index{af\_biquads.c@{af\_biquads.c}!BiquadsContext@{BiquadsContext}}
+\index{BiquadsContext@{BiquadsContext}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{BiquadsContext}{BiquadsContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}} \mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}}}
+
+\mbox{\Hypertarget{af__biquads_8c_ad08128159c257aa61a7074d4359a3f84}\label{af__biquads_8c_ad08128159c257aa61a7074d4359a3f84}} 
+\index{af\_biquads.c@{af\_biquads.c}!ChanCache@{ChanCache}}
+\index{ChanCache@{ChanCache}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{ChanCache}{ChanCache}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_chan_cache}{Chan\+Cache}} \mbox{\hyperlink{struct_chan_cache}{Chan\+Cache}}}
+
+\mbox{\Hypertarget{af__biquads_8c_a5d1975e203ce6f822538d556409ccf6a}\label{af__biquads_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{af\_biquads.c@{af\_biquads.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94f}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94f}} 
+\index{af\_biquads.c@{af\_biquads.c}!FilterType@{FilterType}}
+\index{FilterType@{FilterType}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{FilterType}{FilterType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__adenorm_8c_a7ef0ab496f57e183b484e62e2053c94f}{Filter\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DC\_TYPE@{DC\_TYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!DC\_TYPE@{DC\_TYPE}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faec36bb67c352e290abb8e0ab7ac9c60d}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faec36bb67c352e290abb8e0ab7ac9c60d}} 
+D\+C\+\_\+\+T\+Y\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AC\_TYPE@{AC\_TYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!AC\_TYPE@{AC\_TYPE}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa054fbc8d81052356d0a5577a7a21d1b6}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa054fbc8d81052356d0a5577a7a21d1b6}} 
+A\+C\+\_\+\+T\+Y\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SQ\_TYPE@{SQ\_TYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!SQ\_TYPE@{SQ\_TYPE}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fad415fc08257177b80f02e1c203872614}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fad415fc08257177b80f02e1c203872614}} 
+S\+Q\+\_\+\+T\+Y\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PS\_TYPE@{PS\_TYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!PS\_TYPE@{PS\_TYPE}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa72247e4f69317b044ddd2cd8115d3da5}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa72247e4f69317b044ddd2cd8115d3da5}} 
+P\+S\+\_\+\+T\+Y\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_TYPES@{NB\_TYPES}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_TYPES@{NB\_TYPES}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}} 
+N\+B\+\_\+\+T\+Y\+P\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BUTTERWORTH@{BUTTERWORTH}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!BUTTERWORTH@{BUTTERWORTH}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa3f4928ff71994c03e8ec3ea58559ea0a}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa3f4928ff71994c03e8ec3ea58559ea0a}} 
+B\+U\+T\+T\+E\+R\+W\+O\+R\+TH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHEBYSHEV1@{CHEBYSHEV1}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!CHEBYSHEV1@{CHEBYSHEV1}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa48938021dc417056e5cee31c2c0cf6e3}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa48938021dc417056e5cee31c2c0cf6e3}} 
+C\+H\+E\+B\+Y\+S\+H\+E\+V1&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHEBYSHEV2@{CHEBYSHEV2}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!CHEBYSHEV2@{CHEBYSHEV2}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa50351f037f4c361238117229a2893340}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa50351f037f4c361238117229a2893340}} 
+C\+H\+E\+B\+Y\+S\+H\+E\+V2&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_TYPES@{NB\_TYPES}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_TYPES@{NB\_TYPES}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf33467022f979a232c973358bb9651fa}} 
+N\+B\+\_\+\+T\+Y\+P\+ES&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{biquad@{biquad}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!biquad@{biquad}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fadbd456c5e05dc0b775da4b8b93ecd2d8}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fadbd456c5e05dc0b775da4b8b93ecd2d8}} 
+biquad&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{equalizer@{equalizer}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!equalizer@{equalizer}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa124ec7d7949b5e97d515826b50458de9}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa124ec7d7949b5e97d515826b50458de9}} 
+equalizer&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{bass@{bass}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!bass@{bass}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa5f9b4e7b76847f663ad64d57e3b64434}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa5f9b4e7b76847f663ad64d57e3b64434}} 
+bass&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{treble@{treble}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!treble@{treble}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04fa064f5be9c490dd4307131fcfdd86}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04fa064f5be9c490dd4307131fcfdd86}} 
+treble&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{bandpass@{bandpass}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!bandpass@{bandpass}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf535e4ad04184eaac9d6df2f5545e7b4}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf535e4ad04184eaac9d6df2f5545e7b4}} 
+bandpass&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{bandreject@{bandreject}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!bandreject@{bandreject}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf0c8d6ff12be0a8a3fa7938e4d4eaa54}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf0c8d6ff12be0a8a3fa7938e4d4eaa54}} 
+bandreject&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{allpass@{allpass}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!allpass@{allpass}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fad58c6718e990b69c3b34e7e14b8dd6b4}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fad58c6718e990b69c3b34e7e14b8dd6b4}} 
+allpass&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{highpass@{highpass}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!highpass@{highpass}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa3eb3ab40b23ff944b20b5f7e8e96d930}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa3eb3ab40b23ff944b20b5f7e8e96d930}} 
+highpass&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{lowpass@{lowpass}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!lowpass@{lowpass}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fabeaa8b8238ff0fc9023d1e27d9417d28}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fabeaa8b8238ff0fc9023d1e27d9417d28}} 
+lowpass&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{lowshelf@{lowshelf}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!lowshelf@{lowshelf}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04d2a2cad00b090bfc7a5894344db5f3}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa04d2a2cad00b090bfc7a5894344db5f3}} 
+lowshelf&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{highshelf@{highshelf}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!highshelf@{highshelf}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf707d84cb0e5f5b6041c05a62fc122ad}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94faf707d84cb0e5f5b6041c05a62fc122ad}} 
+highshelf&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WEAK@{WEAK}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!WEAK@{WEAK}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fafe4722ca9de2cfd88591a69de2430c0a}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fafe4722ca9de2cfd88591a69de2430c0a}} 
+W\+E\+AK&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STRONG@{STRONG}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!STRONG@{STRONG}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa32d1a6a9c15f0752303552ffdda0ca2f}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa32d1a6a9c15f0752303552ffdda0ca2f}} 
+S\+T\+R\+O\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_FILTER@{NB\_FILTER}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_FILTER@{NB\_FILTER}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa176f8d4fdf8f4b8c8e3b174907be7ac1}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa176f8d4fdf8f4b8c8e3b174907be7ac1}} 
+N\+B\+\_\+\+F\+I\+L\+T\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOWPASS@{LOWPASS}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!LOWPASS@{LOWPASS}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa0f056d1892baa220efdb9afeca443025}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa0f056d1892baa220efdb9afeca443025}} 
+L\+O\+W\+P\+A\+SS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FLAT@{FLAT}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!FLAT@{FLAT}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa0338024d4d0d5bffed604c279f8f5550}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa0338024d4d0d5bffed604c279f8f5550}} 
+F\+L\+AT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{AFLAT@{AFLAT}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!AFLAT@{AFLAT}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fae0b1bd5a562b59f2c65b54862de64ddb}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fae0b1bd5a562b59f2c65b54862de64ddb}} 
+A\+F\+L\+AT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHROMA@{CHROMA}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!CHROMA@{CHROMA}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa45734b23ea60dc857910c83f3b128be3}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa45734b23ea60dc857910c83f3b128be3}} 
+C\+H\+R\+O\+MA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR@{COLOR}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!COLOR@{COLOR}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa7a5ecb5193db2d5f258ae1abd33714b9}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa7a5ecb5193db2d5f258ae1abd33714b9}} 
+C\+O\+L\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ACOLOR@{ACOLOR}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!ACOLOR@{ACOLOR}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa19a8b96640b648a8846a3a73a9740dc0}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa19a8b96640b648a8846a3a73a9740dc0}} 
+A\+C\+O\+L\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{XFLAT@{XFLAT}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!XFLAT@{XFLAT}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa322d4a1438c8a59c55fa3749a99c6ff4}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa322d4a1438c8a59c55fa3749a99c6ff4}} 
+X\+F\+L\+AT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YFLAT@{YFLAT}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!YFLAT@{YFLAT}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fac03f63be955df1b5612e06f74530a20b}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fac03f63be955df1b5612e06f74530a20b}} 
+Y\+F\+L\+AT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_FILTERS@{NB\_FILTERS}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_FILTERS@{NB\_FILTERS}}}\mbox{\Hypertarget{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa5d8e6604f31bb3960f898f7dd8b701a7}\label{af__biquads_8c_a7ef0ab496f57e183b484e62e2053c94fa5d8e6604f31bb3960f898f7dd8b701a7}} 
+N\+B\+\_\+\+F\+I\+L\+T\+E\+RS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 72 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2}} 
+\index{af\_biquads.c@{af\_biquads.c}!TransformType@{TransformType}}
+\index{TransformType@{TransformType}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{TransformType}{TransformType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{webp_8c_aa65f3b21a9a92ff022e435a7304126d2}{Transform\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PREDICTOR\_TRANSFORM@{PREDICTOR\_TRANSFORM}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!PREDICTOR\_TRANSFORM@{PREDICTOR\_TRANSFORM}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a44afbb990c1c55a1a042aaaf3c3141be}} 
+P\+R\+E\+D\+I\+C\+T\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_TRANSFORM@{COLOR\_TRANSFORM}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!COLOR\_TRANSFORM@{COLOR\_TRANSFORM}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a14f02b15455672b3ec8b523187cef712}} 
+C\+O\+L\+O\+R\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SUBTRACT\_GREEN@{SUBTRACT\_GREEN}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!SUBTRACT\_GREEN@{SUBTRACT\_GREEN}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a59834222eb2815ad4de50453c44f0165}} 
+S\+U\+B\+T\+R\+A\+C\+T\+\_\+\+G\+R\+E\+EN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{COLOR\_INDEXING\_TRANSFORM@{COLOR\_INDEXING\_TRANSFORM}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!COLOR\_INDEXING\_TRANSFORM@{COLOR\_INDEXING\_TRANSFORM}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a3f38ad5580fd8c33ff09cb72ec2989cc}} 
+C\+O\+L\+O\+R\+\_\+\+I\+N\+D\+E\+X\+I\+N\+G\+\_\+\+T\+R\+A\+N\+S\+F\+O\+RM&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DI@{DI}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!DI@{DI}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a527f7ffe8e4e1d4cd85dd9e61eed9795}} 
+DI&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DII@{DII}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!DII@{DII}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a74633b778954e7d4867410c228540a52}} 
+D\+II&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{TDII@{TDII}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!TDII@{TDII}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2a75cd052a3b2a2fad7896a4f399618f42}} 
+T\+D\+II&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LATT@{LATT}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!LATT@{LATT}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2aca4b4a332a641a97fa8a5216140d4dbd}} 
+L\+A\+TT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_TTYPE@{NB\_TTYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_TTYPE@{NB\_TTYPE}}}\mbox{\Hypertarget{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}\label{af__biquads_8c_aa65f3b21a9a92ff022e435a7304126d2adac7458d3ce6696c2fe6b2a09587be4e}} 
+N\+B\+\_\+\+T\+T\+Y\+PE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 96 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0}} 
+\index{af\_biquads.c@{af\_biquads.c}!WidthType@{WidthType}}
+\index{WidthType@{WidthType}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{WidthType}{WidthType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__biquads_8c_a2d6a65119582505233103358f0ac3be0}{Width\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NONE@{NONE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NONE@{NONE}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0ac157bdf0b85a40d2619cbc8bc1ae5fe2}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0ac157bdf0b85a40d2619cbc8bc1ae5fe2}} 
+N\+O\+NE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HERTZ@{HERTZ}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!HERTZ@{HERTZ}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2b65c81040f82876138e37991162eb62}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2b65c81040f82876138e37991162eb62}} 
+H\+E\+R\+TZ&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{OCTAVE@{OCTAVE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!OCTAVE@{OCTAVE}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2f92753ad800d7a02c93188be33f6b53}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a2f92753ad800d7a02c93188be33f6b53}} 
+O\+C\+T\+A\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{QFACTOR@{QFACTOR}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!QFACTOR@{QFACTOR}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a3093cf4a054b2a003f614310cdc24ccc}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a3093cf4a054b2a003f614310cdc24ccc}} 
+Q\+F\+A\+C\+T\+OR&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SLOPE@{SLOPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!SLOPE@{SLOPE}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a99231f09ee2e40643fa578adc2095194}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a99231f09ee2e40643fa578adc2095194}} 
+S\+L\+O\+PE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{KHERTZ@{KHERTZ}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!KHERTZ@{KHERTZ}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a157202b8d00dfffedeb0e362187210b8}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a157202b8d00dfffedeb0e362187210b8}} 
+K\+H\+E\+R\+TZ&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_WTYPE@{NB\_WTYPE}!af\_biquads.c@{af\_biquads.c}}\index{af\_biquads.c@{af\_biquads.c}!NB\_WTYPE@{NB\_WTYPE}}}\mbox{\Hypertarget{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a6adef3e5532808921d39b2d9b11f18a2}\label{af__biquads_8c_a2d6a65119582505233103358f0ac3be0a6adef3e5532808921d39b2d9b11f18a2}} 
+N\+B\+\_\+\+W\+T\+Y\+PE&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 86 of file af\+\_\+biquads.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__biquads_8c_afd01939137fe0c976528973afe5d7d99}\label{af__biquads_8c_afd01939137fe0c976528973afe5d7d99}} 
+\index{af\_biquads.c@{af\_biquads.c}!config\_filter@{config\_filter}}
+\index{config\_filter@{config\_filter}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{config\_filter()}{config\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+filter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{reset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 442 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{af__biquads_8c_afd01939137fe0c976528973afe5d7d99_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{af__biquads_8c_afd01939137fe0c976528973afe5d7d99_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_ad21a4e672440f6072991b632efe70c1b}\label{af__biquads_8c_ad21a4e672440f6072991b632efe70c1b}} 
+\index{af\_biquads.c@{af\_biquads.c}!config\_output@{config\_output}}
+\index{config\_output@{config\_output}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{config\_output()}{config\_output()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+output (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{outlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 708 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_ad21a4e672440f6072991b632efe70c1b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_a8b8c0060fbf6f1978f9a218acadf98ad}\label{af__biquads_8c_a8b8c0060fbf6f1978f9a218acadf98ad}} 
+\index{af\_biquads.c@{af\_biquads.c}!convert\_dir2latt@{convert\_dir2latt}}
+\index{convert\_dir2latt@{convert\_dir2latt}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{convert\_dir2latt()}{convert\_dir2latt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} convert\+\_\+dir2latt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_biquads_context}{Biquads\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 425 of file af\+\_\+biquads.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_a8b8c0060fbf6f1978f9a218acadf98ad_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_acd6c965e7cfdb63c00e2bb335a733539}\label{af__biquads_8c_acd6c965e7cfdb63c00e2bb335a733539}} 
+\index{af\_biquads.c@{af\_biquads.c}!filter\_channel@{filter\_channel}}
+\index{filter\_channel@{filter\_channel}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{filter\_channel()}{filter\_channel()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+channel (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 717 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_acd6c965e7cfdb63c00e2bb335a733539_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=254pt]{af__biquads_8c_acd6c965e7cfdb63c00e2bb335a733539_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_a766ae16ba4d61eda3bf6f4cde4321f27}\label{af__biquads_8c_a766ae16ba4d61eda3bf6f4cde4321f27}} 
+\index{af\_biquads.c@{af\_biquads.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 744 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_a766ae16ba4d61eda3bf6f4cde4321f27_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8}\label{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8}} 
+\index{af\_biquads.c@{af\_biquads.c}!init@{init}}
+\index{init@{init}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 142 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{af__biquads_8c_ab7cd5b404747a481115ce1d090fd11b8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d}\label{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d}} 
+\index{af\_biquads.c@{af\_biquads.c}!process\_command@{process\_command}}
+\index{process\_command@{process\_command}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{process\_command()}{process\_command()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} process\+\_\+command (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{const char $\ast$}]{cmd,  }\item[{const char $\ast$}]{args,  }\item[{char $\ast$}]{res,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{res\+\_\+len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 781 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_ab523542a3916784efb8a058e6252ce5d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_biquads.c@{af\_biquads.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 157 of file af\+\_\+biquads.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__biquads_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__biquads_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__biquads_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_biquads.c@{af\_biquads.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 794 of file af\+\_\+biquads.\+c.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__biquads_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{af__biquads_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{af\_biquads.c@{af\_biquads.c}!inputs@{inputs}}
+\index{inputs@{inputs}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{af__biquads_8c_a766ae16ba4d61eda3bf6f4cde4321f27}{filter\_frame}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 801 of file af\+\_\+biquads.\+c.
+
+\mbox{\Hypertarget{af__biquads_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{af__biquads_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{af\_biquads.c@{af\_biquads.c}!outputs@{outputs}}
+\index{outputs@{outputs}!af\_biquads.c@{af\_biquads.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{af__biquads_8c_ad21a4e672440f6072991b632efe70c1b}{config\_output}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 810 of file af\+\_\+biquads.\+c.
+

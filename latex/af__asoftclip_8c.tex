@@ -1,0 +1,465 @@
+\hypertarget{af__asoftclip_8c}{}\doxysection{E\+:/github/ffmpeg/libavfilter/af\+\_\+asoftclip.c File Reference}
+\label{af__asoftclip_8c}\index{E:/github/ffmpeg/libavfilter/af\_asoftclip.c@{E:/github/ffmpeg/libavfilter/af\_asoftclip.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libswresample/swresample.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avfilter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audio.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}formats.\+h\char`\"{}}\newline
+Include dependency graph for af\+\_\+asoftclip.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{af__asoftclip_8c_a42257a545daf5b7933d6e8f96adc74f2}{F}}~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{af__asoftclip_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}{S\+QR}}(x)~((x) $\ast$ (x))
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} \mbox{\hyperlink{af__asoftclip_8c_a2e215623d926fd46be5c38883b91e421}{A\+Soft\+Clip\+Context}}
+\item 
+typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{af__asoftclip_8c_a5d1975e203ce6f822538d556409ccf6a}{Thread\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387}{A\+Soft\+Clip\+Types}} \{ \newline
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a05114664c219eeb9ffb26c369a4183c5}{A\+S\+C\+\_\+\+H\+A\+RD}} = -\/1, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a4acc8d0de5459021421c78ec5855cff1}{A\+S\+C\+\_\+\+T\+A\+NH}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a71108c8e1ce0a0a31b07fbdadf5782f5}{A\+S\+C\+\_\+\+A\+T\+AN}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ac2c049a364826ed1990e1213c04b9bab}{A\+S\+C\+\_\+\+C\+U\+B\+IC}}, 
+\newline
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad0792de4b835c8a1f8519bac765cb438}{A\+S\+C\+\_\+\+E\+XP}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a22841ad607ae4a1c69b69906c5d87d60}{A\+S\+C\+\_\+\+A\+LG}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad572af7aaad6e41b25b458050aaa93fc}{A\+S\+C\+\_\+\+Q\+U\+I\+N\+T\+IC}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a23acbbb901384953965be688be82aa13}{A\+S\+C\+\_\+\+S\+IN}}, 
+\newline
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ab3c2f9091f81474f32c96d69d87411f5}{A\+S\+C\+\_\+\+E\+RF}}, 
+\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387af33467022f979a232c973358bb9651fa}{N\+B\+\_\+\+T\+Y\+P\+ES}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{af__asoftclip_8c_ab3861774b597c4c420f3504c36fd8193}{A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS}} (asoftclip)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__asoftclip_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\+\_\+formats}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__asoftclip_8c_a81013425122c9bd493c598be1b20d570}{filter\+\_\+flt}} (\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$dptr, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$sptr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+samples, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__asoftclip_8c_a4050f1d8326a7afb64b22f2dd0004d3a}{filter\+\_\+dbl}} (\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$dptr, const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$sptr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+samples, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{aptx_8h_ac9da8d7a4bd192b8a7dccbc024542709}{channels}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__asoftclip_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\+\_\+input}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__asoftclip_8c_a5e465e22e2ffab4d1ca58e94aa0ad495}{filter\+\_\+channels}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} jobnr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+jobs)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__asoftclip_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$\mbox{\hyperlink{filter__design_8txt_a720b17cc89203cfc793b5d7e17a6ca88}{inlink}}, \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}} (\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{af__asoftclip_8c_a24e8f99ff005f9cf22cee80a0de5f10e}{asoftclip\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__asoftclip_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} \mbox{\hyperlink{af__asoftclip_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} \mbox{\hyperlink{af__asoftclip_8c_abed49912996e790a6fddaf3a003d43e9}{ff\+\_\+af\+\_\+asoftclip}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}\label{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!A@{A}}
+\index{A@{A}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{A}{A}}
+{\footnotesize\ttfamily \#define A~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_ae753a382b986ef00e5991f149808358a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 60 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_a42257a545daf5b7933d6e8f96adc74f2}\label{af__asoftclip_8c_a42257a545daf5b7933d6e8f96adc74f2}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!F@{F}}
+\index{F@{F}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{F}{F}}
+{\footnotesize\ttfamily \#define F~\mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}$\vert$\mbox{\hyperlink{opt_8h_a1fa5f9ced9142668142f316b0aad2cfc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+F\+I\+L\+T\+E\+R\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 61 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}}, x)}
+
+
+
+Definition at line 59 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}\label{af__asoftclip_8c_aa7866fa5e4e0ee9b034e9dab6599a9cc}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!SQR@{SQR}}
+\index{SQR@{SQR}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{SQR}{SQR}}
+{\footnotesize\ttfamily \#define S\+QR(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x) $\ast$ (x))}
+
+
+
+Definition at line 111 of file af\+\_\+asoftclip.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{af__asoftclip_8c_a2e215623d926fd46be5c38883b91e421}\label{af__asoftclip_8c_a2e215623d926fd46be5c38883b91e421}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!ASoftClipContext@{ASoftClipContext}}
+\index{ASoftClipContext@{ASoftClipContext}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{ASoftClipContext}{ASoftClipContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} \mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}}}
+
+\mbox{\Hypertarget{af__asoftclip_8c_a5d1975e203ce6f822538d556409ccf6a}\label{af__asoftclip_8c_a5d1975e203ce6f822538d556409ccf6a}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!ThreadData@{ThreadData}}
+\index{ThreadData@{ThreadData}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{ThreadData}{ThreadData}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_thread_data}{Thread\+Data}} \mbox{\hyperlink{struct_thread_data}{Thread\+Data}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!ASoftClipTypes@{ASoftClipTypes}}
+\index{ASoftClipTypes@{ASoftClipTypes}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{ASoftClipTypes}{ASoftClipTypes}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387}{A\+Soft\+Clip\+Types}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_HARD@{ASC\_HARD}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_HARD@{ASC\_HARD}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387a05114664c219eeb9ffb26c369a4183c5}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387a05114664c219eeb9ffb26c369a4183c5}} 
+A\+S\+C\+\_\+\+H\+A\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_TANH@{ASC\_TANH}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_TANH@{ASC\_TANH}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387a4acc8d0de5459021421c78ec5855cff1}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387a4acc8d0de5459021421c78ec5855cff1}} 
+A\+S\+C\+\_\+\+T\+A\+NH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_ATAN@{ASC\_ATAN}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_ATAN@{ASC\_ATAN}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387a71108c8e1ce0a0a31b07fbdadf5782f5}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387a71108c8e1ce0a0a31b07fbdadf5782f5}} 
+A\+S\+C\+\_\+\+A\+T\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_CUBIC@{ASC\_CUBIC}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_CUBIC@{ASC\_CUBIC}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387ac2c049a364826ed1990e1213c04b9bab}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387ac2c049a364826ed1990e1213c04b9bab}} 
+A\+S\+C\+\_\+\+C\+U\+B\+IC&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_EXP@{ASC\_EXP}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_EXP@{ASC\_EXP}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad0792de4b835c8a1f8519bac765cb438}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad0792de4b835c8a1f8519bac765cb438}} 
+A\+S\+C\+\_\+\+E\+XP&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_ALG@{ASC\_ALG}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_ALG@{ASC\_ALG}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387a22841ad607ae4a1c69b69906c5d87d60}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387a22841ad607ae4a1c69b69906c5d87d60}} 
+A\+S\+C\+\_\+\+A\+LG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_QUINTIC@{ASC\_QUINTIC}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_QUINTIC@{ASC\_QUINTIC}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad572af7aaad6e41b25b458050aaa93fc}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad572af7aaad6e41b25b458050aaa93fc}} 
+A\+S\+C\+\_\+\+Q\+U\+I\+N\+T\+IC&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_SIN@{ASC\_SIN}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_SIN@{ASC\_SIN}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387a23acbbb901384953965be688be82aa13}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387a23acbbb901384953965be688be82aa13}} 
+A\+S\+C\+\_\+\+S\+IN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASC\_ERF@{ASC\_ERF}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!ASC\_ERF@{ASC\_ERF}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387ab3c2f9091f81474f32c96d69d87411f5}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387ab3c2f9091f81474f32c96d69d87411f5}} 
+A\+S\+C\+\_\+\+E\+RF&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NB\_TYPES@{NB\_TYPES}!af\_asoftclip.c@{af\_asoftclip.c}}\index{af\_asoftclip.c@{af\_asoftclip.c}!NB\_TYPES@{NB\_TYPES}}}\mbox{\Hypertarget{af__asoftclip_8c_a655960155f8be4d207bf117957657387af33467022f979a232c973358bb9651fa}\label{af__asoftclip_8c_a655960155f8be4d207bf117957657387af33467022f979a232c973358bb9651fa}} 
+N\+B\+\_\+\+T\+Y\+P\+ES&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 29 of file af\+\_\+asoftclip.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{af__asoftclip_8c_ab3861774b597c4c420f3504c36fd8193}\label{af__asoftclip_8c_ab3861774b597c4c420f3504c36fd8193}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}}
+\index{AVFILTER\_DEFINE\_CLASS@{AVFILTER\_DEFINE\_CLASS}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{AVFILTER\_DEFINE\_CLASS()}{AVFILTER\_DEFINE\_CLASS()}}
+{\footnotesize\ttfamily A\+V\+F\+I\+L\+T\+E\+R\+\_\+\+D\+E\+F\+I\+N\+E\+\_\+\+C\+L\+A\+SS (\begin{DoxyParamCaption}\item[{asoftclip}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{af__asoftclip_8c_a6349dbef489cb1be3b41b8aeffdd2a21}\label{af__asoftclip_8c_a6349dbef489cb1be3b41b8aeffdd2a21}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!config\_input@{config\_input}}
+\index{config\_input@{config\_input}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{config\_input()}{config\_input()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} config\+\_\+input (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 251 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a6349dbef489cb1be3b41b8aeffdd2a21_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_a5e465e22e2ffab4d1ca58e94aa0ad495}\label{af__asoftclip_8c_a5e465e22e2ffab4d1ca58e94aa0ad495}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!filter\_channels@{filter\_channels}}
+\index{filter\_channels@{filter\_channels}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{filter\_channels()}{filter\_channels()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+channels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{jobnr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+jobs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 306 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a5e465e22e2ffab4d1ca58e94aa0ad495_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{af__asoftclip_8c_a5e465e22e2ffab4d1ca58e94aa0ad495_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_a4050f1d8326a7afb64b22f2dd0004d3a}\label{af__asoftclip_8c_a4050f1d8326a7afb64b22f2dd0004d3a}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!filter\_dbl@{filter\_dbl}}
+\index{filter\_dbl@{filter\_dbl}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{filter\_dbl()}{filter\_dbl()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} filter\+\_\+dbl (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$}]{dptr,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$}]{sptr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 182 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a4050f1d8326a7afb64b22f2dd0004d3a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{af__asoftclip_8c_a4050f1d8326a7afb64b22f2dd0004d3a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_a81013425122c9bd493c598be1b20d570}\label{af__asoftclip_8c_a81013425122c9bd493c598be1b20d570}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!filter\_flt@{filter\_flt}}
+\index{filter\_flt@{filter\_flt}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{filter\_flt()}{filter\_flt()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} filter\+\_\+flt (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_soft_clip_context}{A\+Soft\+Clip\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$}]{dptr,  }\item[{const \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$$\ast$}]{sptr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+samples,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channels,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 113 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a81013425122c9bd493c598be1b20d570_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=231pt]{af__asoftclip_8c_a81013425122c9bd493c598be1b20d570_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}\label{af__asoftclip_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!filter\_frame@{filter\_frame}}
+\index{filter\_frame@{filter\_frame}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{filter\_frame()}{filter\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} filter\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_link}{A\+V\+Filter\+Link}} $\ast$}]{inlink,  }\item[{\mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 323 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a9056c701b381ba84a4cebc5eb7c9d5b9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_a5b4e302dfe4b2ee5369f0278621acd5f}\label{af__asoftclip_8c_a5b4e302dfe4b2ee5369f0278621acd5f}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!query\_formats@{query\_formats}}
+\index{query\_formats@{query\_formats}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{query\_formats()}{query\_formats()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} query\+\_\+formats (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 81 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_a5b4e302dfe4b2ee5369f0278621acd5f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6}\label{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!uninit@{uninit}}
+\index{uninit@{uninit}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{uninit()}{uninit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} uninit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_filter_context}{A\+V\+Filter\+Context}} $\ast$}]{ctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 403 of file af\+\_\+asoftclip.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{af__asoftclip_8c_a24e8f99ff005f9cf22cee80a0de5f10e}\label{af__asoftclip_8c_a24e8f99ff005f9cf22cee80a0de5f10e}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!asoftclip\_options@{asoftclip\_options}}
+\index{asoftclip\_options@{asoftclip\_options}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{asoftclip\_options}{asoftclip\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} asoftclip\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}type"{}}, \textcolor{stringliteral}{"{}set softclip type"{}}, \mbox{\hyperlink{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(\mbox{\hyperlink{writing__filters_8txt_a860450fba1f740387dc082792ad89517}{type}}), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}},    \{.i64=0\},         -\/1, \mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387af33467022f979a232c973358bb9651fa}{NB\_TYPES}}-\/1, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}hard"{}},                \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a05114664c219eeb9ffb26c369a4183c5}{ASC\_HARD}}\},   0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}tanh"{}},                \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a4acc8d0de5459021421c78ec5855cff1}{ASC\_TANH}}\},   0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}atan"{}},                \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a71108c8e1ce0a0a31b07fbdadf5782f5}{ASC\_ATAN}}\},   0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}cubic"{}},               \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ac2c049a364826ed1990e1213c04b9bab}{ASC\_CUBIC}}\},  0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}exp"{}},                 \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad0792de4b835c8a1f8519bac765cb438}{ASC\_EXP}}\},    0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}alg"{}},                 \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a22841ad607ae4a1c69b69906c5d87d60}{ASC\_ALG}}\},    0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}quintic"{}},             \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ad572af7aaad6e41b25b458050aaa93fc}{ASC\_QUINTIC}}\},0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}sin"{}},                 \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387a23acbbb901384953965be688be82aa13}{ASC\_SIN}}\},    0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}erf"{}},                 \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}},            0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}},  \{.i64=\mbox{\hyperlink{af__asoftclip_8c_a655960155f8be4d207bf117957657387ab3c2f9091f81474f32c96d69d87411f5}{ASC\_ERF}}\},    0,          0, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}}, \textcolor{stringliteral}{"{}types"{}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}param"{}}, \textcolor{stringliteral}{"{}set softclip parameter"{}}, \mbox{\hyperlink{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(param), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ae0b49ec51847a758ceb46976083da2e5}{AV\_OPT\_TYPE\_DOUBLE}}, \{.dbl=1\}, 0.01,        3, \mbox{\hyperlink{af__asoftclip_8c_a955f504eccf76b4eb2489c0adab03121}{A}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}oversample"{}}, \textcolor{stringliteral}{"{}set oversample factor"{}}, \mbox{\hyperlink{af__asoftclip_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(oversample), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=1\}, 1, 32, \mbox{\hyperlink{af__asoftclip_8c_a42257a545daf5b7933d6e8f96adc74f2}{F}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 63 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_abed49912996e790a6fddaf3a003d43e9}\label{af__asoftclip_8c_abed49912996e790a6fddaf3a003d43e9}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!ff\_af\_asoftclip@{ff\_af\_asoftclip}}
+\index{ff\_af\_asoftclip@{ff\_af\_asoftclip}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{ff\_af\_asoftclip}{ff\_af\_asoftclip}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_filter}{A\+V\+Filter}} ff\+\_\+af\+\_\+asoftclip}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}asoftclip"{}},}
+\DoxyCodeLine{    .description    = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Audio Soft Clipper."{}}),}
+\DoxyCodeLine{    .query\_formats  = \mbox{\hyperlink{af__asoftclip_8c_a5b4e302dfe4b2ee5369f0278621acd5f}{query\_formats}},}
+\DoxyCodeLine{    .priv\_size      = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{af__asoftclip_8c_a2e215623d926fd46be5c38883b91e421}{ASoftClipContext}}),}
+\DoxyCodeLine{    .priv\_class     = \&asoftclip\_class,}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__asoftclip_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}}         = \mbox{\hyperlink{af__asoftclip_8c_a6e04c7ed634034f9b8c1fec9d362ce44}{inputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__asoftclip_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}}        = \mbox{\hyperlink{af__asoftclip_8c_a7ddb0b5ac76101c5bee71e9840bf1698}{outputs}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}}         = \mbox{\hyperlink{af__asoftclip_8c_abbead6cde1da3e72ce200578c426f1e6}{uninit}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{af__adenorm_8c_ab523542a3916784efb8a058e6252ce5d}{process\_command}} = \mbox{\hyperlink{avfilter_8c_a6a85cce734e15b727032257a18f2b624}{ff\_filter\_process\_command}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{group__lavfi_ga00c4b8da7d5d89fa4ddc5dcdf72bffca}{AVFILTER\_FLAG\_SUPPORT\_TIMELINE\_GENERIC}} |}
+\DoxyCodeLine{                      \mbox{\hyperlink{group__lavfi_gacad757479a5b22c367dd37408a9844fd}{AVFILTER\_FLAG\_SLICE\_THREADS}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 429 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_a6e04c7ed634034f9b8c1fec9d362ce44}\label{af__asoftclip_8c_a6e04c7ed634034f9b8c1fec9d362ce44}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!inputs@{inputs}}
+\index{inputs@{inputs}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{inputs}{inputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} inputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name         = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{        .filter\_frame = \mbox{\hyperlink{af__asoftclip_8c_a9056c701b381ba84a4cebc5eb7c9d5b9}{filter\_frame}},}
+\DoxyCodeLine{        .config\_props = \mbox{\hyperlink{af__asoftclip_8c_a6349dbef489cb1be3b41b8aeffdd2a21}{config\_input}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 411 of file af\+\_\+asoftclip.\+c.
+
+\mbox{\Hypertarget{af__asoftclip_8c_a7ddb0b5ac76101c5bee71e9840bf1698}\label{af__asoftclip_8c_a7ddb0b5ac76101c5bee71e9840bf1698}} 
+\index{af\_asoftclip.c@{af\_asoftclip.c}!outputs@{outputs}}
+\index{outputs@{outputs}!af\_asoftclip.c@{af\_asoftclip.c}}
+\doxysubsubsection{\texorpdfstring{outputs}{outputs}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_filter_pad}{A\+V\+Filter\+Pad}} outputs\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{}
+\DoxyCodeLine{        .name = \textcolor{stringliteral}{"{}default"{}},}
+\DoxyCodeLine{        .type = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 421 of file af\+\_\+asoftclip.\+c.
+

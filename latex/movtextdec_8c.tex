@@ -1,0 +1,661 @@
+\hypertarget{movtextdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/movtextdec.c File Reference}
+\label{movtextdec_8c}\index{E:/github/ffmpeg/libavcodec/movtextdec.c@{E:/github/ffmpeg/libavcodec/movtextdec.c}}
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ass.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intreadwrite.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mem.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+Include dependency graph for movtextdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_mov_text_default}{Mov\+Text\+Default}}
+\item 
+struct \mbox{\hyperlink{struct_font_record}{Font\+Record}}
+\item 
+struct \mbox{\hyperlink{struct_style_box}{Style\+Box}}
+\item 
+struct \mbox{\hyperlink{struct_highlight_box}{Highlight\+Box}}
+\item 
+struct \mbox{\hyperlink{struct_hilightcolor_box}{Hilightcolor\+Box}}
+\item 
+struct \mbox{\hyperlink{struct_text_wrap_box}{Text\+Wrap\+Box}}
+\item 
+struct \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_box}{Box}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a8ce1c3f919e90e2d2f1238e24bbbd34c}{S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+B\+O\+LD}}~(1$<$$<$0)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a7d52f7990836f426544707c983667490}{S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+I\+T\+A\+L\+IC}}~(1$<$$<$1)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a117b4271594156da6a8e45082ab5cab9}{S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+U\+N\+D\+E\+R\+L\+I\+NE}}~(1$<$$<$2)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_af21470fadf69e5e8dfbe8a4fa9d8f69b}{B\+O\+X\+\_\+\+S\+I\+Z\+E\+\_\+\+I\+N\+I\+T\+I\+AL}}~40
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_aa3a219d4054f4ba07abc1675c490a074}{S\+T\+Y\+L\+\_\+\+B\+OX}}~(1$<$$<$0)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a41431245d5c33a5ef4f2aec9b990b75d}{H\+L\+I\+T\+\_\+\+B\+OX}}~(1$<$$<$1)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a68f0fb3802be74974897b6306ffab04d}{H\+C\+L\+R\+\_\+\+B\+OX}}~(1$<$$<$2)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_ac9e8694f2b8f7b74c3d0c6c667b42713}{T\+W\+R\+P\+\_\+\+B\+OX}}~(1$<$$<$3)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a85d1ada414f4f1f10df50ef254c79c75}{B\+O\+T\+T\+O\+M\+\_\+\+L\+E\+FT}}~1
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a3346d5c964324490975b3f2784419a2c}{B\+O\+T\+T\+O\+M\+\_\+\+C\+E\+N\+T\+ER}}~2
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a9c05beaff6794473029413f2d78589f1}{B\+O\+T\+T\+O\+M\+\_\+\+R\+I\+G\+HT}}~3
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a2e92fd53ca87762dd9950e9deb1991bf}{M\+I\+D\+D\+L\+E\+\_\+\+L\+E\+FT}}~4
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_aad4fb1d02244b8a613dec33376d9e672}{M\+I\+D\+D\+L\+E\+\_\+\+C\+E\+N\+T\+ER}}~5
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_affb97a86a4f8e77a81c8f8a1689284bb}{M\+I\+D\+D\+L\+E\+\_\+\+R\+I\+G\+HT}}~6
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a1b0c3083ed9973911de4767aa677f673}{T\+O\+P\+\_\+\+L\+E\+FT}}~7
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a18abec35dc8fb223d8a3976e75dde54e}{T\+O\+P\+\_\+\+C\+E\+N\+T\+ER}}~8
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a80473d4f5c5ff853d7342618295ba314}{T\+O\+P\+\_\+\+R\+I\+G\+HT}}~9
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a0452cb331cfb052aba77c68a5ac398b5}{R\+G\+B\+\_\+\+T\+O\+\_\+\+B\+GR}}(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})~(((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) \& 0xff) $<$$<$ 16 $\vert$ ((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) \& 0xff00) $\vert$ (((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) $>$$>$ 16) \& 0xff))
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{movtextdec_8c_a6ccad09b4a2a06ae178418fdccf5940d}{F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_ad27ec6a75c8a2c21329e443b15b368c3}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+S\+U\+B\+T\+I\+T\+L\+E\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{movtextdec_8c_a5fd7f96ce0da28b00aebce772d133317}{mov\+\_\+text\+\_\+cleanup}} (\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{movtextdec_8c_afc6948a62f7b03170b226473e5f10849}{mov\+\_\+text\+\_\+cleanup\+\_\+ftab}} (\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_aae25e5aa638706a0ae6c18a873edbb33}{mov\+\_\+text\+\_\+tx3g}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_ac285af7ae014e3eb9ccb2cfcaaa9c43f}{decode\+\_\+twrp}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$tsmb, \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_a2b86565b4420e1a4a395ef2ca69c3647}{decode\+\_\+hlit}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$tsmb, \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_ac9622753e8adbed9755ad8e7e5572e76}{decode\+\_\+hclr}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$tsmb, \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_ac5d3ddd199954d49aeaf20c3c2dfa2bb}{decode\+\_\+styl}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$tsmb, \mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$m, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_a3be57fea85280b0c23d0e7d0e83ce8c2}{get\+\_\+utf8\+\_\+length\+\_\+at}} (const char $\ast$text, const char $\ast$text\+\_\+end)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_ae52997c09f27410982ba933b12434b05}{text\+\_\+to\+\_\+ass}} (A\+V\+B\+Print $\ast$buf, const char $\ast$text, const char $\ast$text\+\_\+end, \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_ad1a143e87a3df82a31b5aaf1d7a2c83f}{mov\+\_\+text\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_a01092f4ee775707f5c423f43ed9a64de}{mov\+\_\+text\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+sub\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{movtextdec_8c_a17774788f429927c65f7c2f762eb575d}{mov\+\_\+text\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{movtextdec_8c_a7933111c6bd2753dcd285243461fa5cf}{mov\+\_\+text\+\_\+flush}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_box}{Box}} \mbox{\hyperlink{movtextdec_8c_a40a82f68137da33db97824edc9573f40}{box\+\_\+types}} \mbox{[}$\,$\mbox{]}
+\item 
+static const size\+\_\+t \mbox{\hyperlink{movtextdec_8c_aa002a38dcb309573e387c98af2559c5b}{box\+\_\+count}} = \mbox{\hyperlink{libm_8h_a3508a98d3ee7e2c9a4841fe264cf70f7}{F\+F\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+E\+L\+E\+MS}}(\mbox{\hyperlink{movtextenc_8c_a40a82f68137da33db97824edc9573f40}{box\+\_\+types}})
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{movtextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{movtextdec_8c_a30a3ec271463c3098a46ab46e4bab7fa}{mov\+\_\+text\+\_\+decoder\+\_\+class}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{movtextdec_8c_ac29c53018cd304a3504fb4f212aeb0a8}{ff\+\_\+movtext\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{movtextdec_8c_a3346d5c964324490975b3f2784419a2c}\label{movtextdec_8c_a3346d5c964324490975b3f2784419a2c}} 
+\index{movtextdec.c@{movtextdec.c}!BOTTOM\_CENTER@{BOTTOM\_CENTER}}
+\index{BOTTOM\_CENTER@{BOTTOM\_CENTER}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{BOTTOM\_CENTER}{BOTTOM\_CENTER}}
+{\footnotesize\ttfamily \#define B\+O\+T\+T\+O\+M\+\_\+\+C\+E\+N\+T\+ER~2}
+
+
+
+Definition at line 44 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a85d1ada414f4f1f10df50ef254c79c75}\label{movtextdec_8c_a85d1ada414f4f1f10df50ef254c79c75}} 
+\index{movtextdec.c@{movtextdec.c}!BOTTOM\_LEFT@{BOTTOM\_LEFT}}
+\index{BOTTOM\_LEFT@{BOTTOM\_LEFT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{BOTTOM\_LEFT}{BOTTOM\_LEFT}}
+{\footnotesize\ttfamily \#define B\+O\+T\+T\+O\+M\+\_\+\+L\+E\+FT~1}
+
+
+
+Definition at line 43 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a9c05beaff6794473029413f2d78589f1}\label{movtextdec_8c_a9c05beaff6794473029413f2d78589f1}} 
+\index{movtextdec.c@{movtextdec.c}!BOTTOM\_RIGHT@{BOTTOM\_RIGHT}}
+\index{BOTTOM\_RIGHT@{BOTTOM\_RIGHT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{BOTTOM\_RIGHT}{BOTTOM\_RIGHT}}
+{\footnotesize\ttfamily \#define B\+O\+T\+T\+O\+M\+\_\+\+R\+I\+G\+HT~3}
+
+
+
+Definition at line 45 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_af21470fadf69e5e8dfbe8a4fa9d8f69b}\label{movtextdec_8c_af21470fadf69e5e8dfbe8a4fa9d8f69b}} 
+\index{movtextdec.c@{movtextdec.c}!BOX\_SIZE\_INITIAL@{BOX\_SIZE\_INITIAL}}
+\index{BOX\_SIZE\_INITIAL@{BOX\_SIZE\_INITIAL}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{BOX\_SIZE\_INITIAL}{BOX\_SIZE\_INITIAL}}
+{\footnotesize\ttfamily \#define B\+O\+X\+\_\+\+S\+I\+Z\+E\+\_\+\+I\+N\+I\+T\+I\+AL~40}
+
+
+
+Definition at line 36 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a6ccad09b4a2a06ae178418fdccf5940d}\label{movtextdec_8c_a6ccad09b4a2a06ae178418fdccf5940d}} 
+\index{movtextdec.c@{movtextdec.c}!FLAGS@{FLAGS}}
+\index{FLAGS@{FLAGS}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{FLAGS}{FLAGS}}
+{\footnotesize\ttfamily \#define F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_ad27ec6a75c8a2c21329e443b15b368c3}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+S\+U\+B\+T\+I\+T\+L\+E\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 571 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a68f0fb3802be74974897b6306ffab04d}\label{movtextdec_8c_a68f0fb3802be74974897b6306ffab04d}} 
+\index{movtextdec.c@{movtextdec.c}!HCLR\_BOX@{HCLR\_BOX}}
+\index{HCLR\_BOX@{HCLR\_BOX}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{HCLR\_BOX}{HCLR\_BOX}}
+{\footnotesize\ttfamily \#define H\+C\+L\+R\+\_\+\+B\+OX~(1$<$$<$2)}
+
+
+
+Definition at line 40 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a41431245d5c33a5ef4f2aec9b990b75d}\label{movtextdec_8c_a41431245d5c33a5ef4f2aec9b990b75d}} 
+\index{movtextdec.c@{movtextdec.c}!HLIT\_BOX@{HLIT\_BOX}}
+\index{HLIT\_BOX@{HLIT\_BOX}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{HLIT\_BOX}{HLIT\_BOX}}
+{\footnotesize\ttfamily \#define H\+L\+I\+T\+\_\+\+B\+OX~(1$<$$<$1)}
+
+
+
+Definition at line 39 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_aad4fb1d02244b8a613dec33376d9e672}\label{movtextdec_8c_aad4fb1d02244b8a613dec33376d9e672}} 
+\index{movtextdec.c@{movtextdec.c}!MIDDLE\_CENTER@{MIDDLE\_CENTER}}
+\index{MIDDLE\_CENTER@{MIDDLE\_CENTER}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{MIDDLE\_CENTER}{MIDDLE\_CENTER}}
+{\footnotesize\ttfamily \#define M\+I\+D\+D\+L\+E\+\_\+\+C\+E\+N\+T\+ER~5}
+
+
+
+Definition at line 47 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a2e92fd53ca87762dd9950e9deb1991bf}\label{movtextdec_8c_a2e92fd53ca87762dd9950e9deb1991bf}} 
+\index{movtextdec.c@{movtextdec.c}!MIDDLE\_LEFT@{MIDDLE\_LEFT}}
+\index{MIDDLE\_LEFT@{MIDDLE\_LEFT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{MIDDLE\_LEFT}{MIDDLE\_LEFT}}
+{\footnotesize\ttfamily \#define M\+I\+D\+D\+L\+E\+\_\+\+L\+E\+FT~4}
+
+
+
+Definition at line 46 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_affb97a86a4f8e77a81c8f8a1689284bb}\label{movtextdec_8c_affb97a86a4f8e77a81c8f8a1689284bb}} 
+\index{movtextdec.c@{movtextdec.c}!MIDDLE\_RIGHT@{MIDDLE\_RIGHT}}
+\index{MIDDLE\_RIGHT@{MIDDLE\_RIGHT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{MIDDLE\_RIGHT}{MIDDLE\_RIGHT}}
+{\footnotesize\ttfamily \#define M\+I\+D\+D\+L\+E\+\_\+\+R\+I\+G\+HT~6}
+
+
+
+Definition at line 48 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{movtextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{movtextdec.c@{movtextdec.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}}, x)}
+
+
+
+Definition at line 570 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a0452cb331cfb052aba77c68a5ac398b5}\label{movtextdec_8c_a0452cb331cfb052aba77c68a5ac398b5}} 
+\index{movtextdec.c@{movtextdec.c}!RGB\_TO\_BGR@{RGB\_TO\_BGR}}
+\index{RGB\_TO\_BGR@{RGB\_TO\_BGR}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{RGB\_TO\_BGR}{RGB\_TO\_BGR}}
+{\footnotesize\ttfamily \#define R\+G\+B\+\_\+\+T\+O\+\_\+\+B\+GR(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) \& 0xff) $<$$<$ 16 $\vert$ ((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) \& 0xff00) $\vert$ (((\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}) $>$$>$ 16) \& 0xff))}
+
+
+
+Definition at line 53 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_aa3a219d4054f4ba07abc1675c490a074}\label{movtextdec_8c_aa3a219d4054f4ba07abc1675c490a074}} 
+\index{movtextdec.c@{movtextdec.c}!STYL\_BOX@{STYL\_BOX}}
+\index{STYL\_BOX@{STYL\_BOX}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{STYL\_BOX}{STYL\_BOX}}
+{\footnotesize\ttfamily \#define S\+T\+Y\+L\+\_\+\+B\+OX~(1$<$$<$0)}
+
+
+
+Definition at line 38 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a8ce1c3f919e90e2d2f1238e24bbbd34c}\label{movtextdec_8c_a8ce1c3f919e90e2d2f1238e24bbbd34c}} 
+\index{movtextdec.c@{movtextdec.c}!STYLE\_FLAG\_BOLD@{STYLE\_FLAG\_BOLD}}
+\index{STYLE\_FLAG\_BOLD@{STYLE\_FLAG\_BOLD}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{STYLE\_FLAG\_BOLD}{STYLE\_FLAG\_BOLD}}
+{\footnotesize\ttfamily \#define S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+B\+O\+LD~(1$<$$<$0)}
+
+
+
+Definition at line 32 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a7d52f7990836f426544707c983667490}\label{movtextdec_8c_a7d52f7990836f426544707c983667490}} 
+\index{movtextdec.c@{movtextdec.c}!STYLE\_FLAG\_ITALIC@{STYLE\_FLAG\_ITALIC}}
+\index{STYLE\_FLAG\_ITALIC@{STYLE\_FLAG\_ITALIC}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{STYLE\_FLAG\_ITALIC}{STYLE\_FLAG\_ITALIC}}
+{\footnotesize\ttfamily \#define S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+I\+T\+A\+L\+IC~(1$<$$<$1)}
+
+
+
+Definition at line 33 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a117b4271594156da6a8e45082ab5cab9}\label{movtextdec_8c_a117b4271594156da6a8e45082ab5cab9}} 
+\index{movtextdec.c@{movtextdec.c}!STYLE\_FLAG\_UNDERLINE@{STYLE\_FLAG\_UNDERLINE}}
+\index{STYLE\_FLAG\_UNDERLINE@{STYLE\_FLAG\_UNDERLINE}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{STYLE\_FLAG\_UNDERLINE}{STYLE\_FLAG\_UNDERLINE}}
+{\footnotesize\ttfamily \#define S\+T\+Y\+L\+E\+\_\+\+F\+L\+A\+G\+\_\+\+U\+N\+D\+E\+R\+L\+I\+NE~(1$<$$<$2)}
+
+
+
+Definition at line 34 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a18abec35dc8fb223d8a3976e75dde54e}\label{movtextdec_8c_a18abec35dc8fb223d8a3976e75dde54e}} 
+\index{movtextdec.c@{movtextdec.c}!TOP\_CENTER@{TOP\_CENTER}}
+\index{TOP\_CENTER@{TOP\_CENTER}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{TOP\_CENTER}{TOP\_CENTER}}
+{\footnotesize\ttfamily \#define T\+O\+P\+\_\+\+C\+E\+N\+T\+ER~8}
+
+
+
+Definition at line 50 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a1b0c3083ed9973911de4767aa677f673}\label{movtextdec_8c_a1b0c3083ed9973911de4767aa677f673}} 
+\index{movtextdec.c@{movtextdec.c}!TOP\_LEFT@{TOP\_LEFT}}
+\index{TOP\_LEFT@{TOP\_LEFT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{TOP\_LEFT}{TOP\_LEFT}}
+{\footnotesize\ttfamily \#define T\+O\+P\+\_\+\+L\+E\+FT~7}
+
+
+
+Definition at line 49 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a80473d4f5c5ff853d7342618295ba314}\label{movtextdec_8c_a80473d4f5c5ff853d7342618295ba314}} 
+\index{movtextdec.c@{movtextdec.c}!TOP\_RIGHT@{TOP\_RIGHT}}
+\index{TOP\_RIGHT@{TOP\_RIGHT}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{TOP\_RIGHT}{TOP\_RIGHT}}
+{\footnotesize\ttfamily \#define T\+O\+P\+\_\+\+R\+I\+G\+HT~9}
+
+
+
+Definition at line 51 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_ac9e8694f2b8f7b74c3d0c6c667b42713}\label{movtextdec_8c_ac9e8694f2b8f7b74c3d0c6c667b42713}} 
+\index{movtextdec.c@{movtextdec.c}!TWRP\_BOX@{TWRP\_BOX}}
+\index{TWRP\_BOX@{TWRP\_BOX}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{TWRP\_BOX}{TWRP\_BOX}}
+{\footnotesize\ttfamily \#define T\+W\+R\+P\+\_\+\+B\+OX~(1$<$$<$3)}
+
+
+
+Definition at line 41 of file movtextdec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{movtextdec_8c_ac9622753e8adbed9755ad8e7e5572e76}\label{movtextdec_8c_ac9622753e8adbed9755ad8e7e5572e76}} 
+\index{movtextdec.c@{movtextdec.c}!decode\_hclr@{decode\_hclr}}
+\index{decode\_hclr@{decode\_hclr}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_hclr()}{decode\_hclr()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+hclr (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{tsmb,  }\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 258 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{movtextdec_8c_ac9622753e8adbed9755ad8e7e5572e76_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_a2b86565b4420e1a4a395ef2ca69c3647}\label{movtextdec_8c_a2b86565b4420e1a4a395ef2ca69c3647}} 
+\index{movtextdec.c@{movtextdec.c}!decode\_hlit@{decode\_hlit}}
+\index{decode\_hlit@{decode\_hlit}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_hlit()}{decode\_hlit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+hlit (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{tsmb,  }\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 250 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_ac5d3ddd199954d49aeaf20c3c2dfa2bb}\label{movtextdec_8c_ac5d3ddd199954d49aeaf20c3c2dfa2bb}} 
+\index{movtextdec.c@{movtextdec.c}!decode\_styl@{decode\_styl}}
+\index{decode\_styl@{decode\_styl}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_styl()}{decode\_styl()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+styl (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{tsmb,  }\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 265 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_ac5d3ddd199954d49aeaf20c3c2dfa2bb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_ac285af7ae014e3eb9ccb2cfcaaa9c43f}\label{movtextdec_8c_ac285af7ae014e3eb9ccb2cfcaaa9c43f}} 
+\index{movtextdec.c@{movtextdec.c}!decode\_twrp@{decode\_twrp}}
+\index{decode\_twrp@{decode\_twrp}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_twrp()}{decode\_twrp()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+twrp (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{tsmb,  }\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 243 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a3be57fea85280b0c23d0e7d0e83ce8c2}\label{movtextdec_8c_a3be57fea85280b0c23d0e7d0e83ce8c2}} 
+\index{movtextdec.c@{movtextdec.c}!get\_utf8\_length\_at@{get\_utf8\_length\_at}}
+\index{get\_utf8\_length\_at@{get\_utf8\_length\_at}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{get\_utf8\_length\_at()}{get\_utf8\_length\_at()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+utf8\+\_\+length\+\_\+at (\begin{DoxyParamCaption}\item[{const char $\ast$}]{text,  }\item[{const char $\ast$}]{text\+\_\+end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 322 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{movtextdec_8c_a3be57fea85280b0c23d0e7d0e83ce8c2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_a3be57fea85280b0c23d0e7d0e83ce8c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_a5fd7f96ce0da28b00aebce772d133317}\label{movtextdec_8c_a5fd7f96ce0da28b00aebce772d133317}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_cleanup@{mov\_text\_cleanup}}
+\index{mov\_text\_cleanup@{mov\_text\_cleanup}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_cleanup()}{mov\_text\_cleanup()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mov\+\_\+text\+\_\+cleanup (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 123 of file movtextdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{movtextdec_8c_a5fd7f96ce0da28b00aebce772d133317_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_afc6948a62f7b03170b226473e5f10849}\label{movtextdec_8c_afc6948a62f7b03170b226473e5f10849}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_cleanup\_ftab@{mov\_text\_cleanup\_ftab}}
+\index{mov\_text\_cleanup\_ftab@{mov\_text\_cleanup\_ftab}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_cleanup\_ftab()}{mov\_text\_cleanup\_ftab()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mov\+\_\+text\+\_\+cleanup\+\_\+ftab (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 131 of file movtextdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_afc6948a62f7b03170b226473e5f10849_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_a17774788f429927c65f7c2f762eb575d}\label{movtextdec_8c_a17774788f429927c65f7c2f762eb575d}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_decode\_close@{mov\_text\_decode\_close}}
+\index{mov\_text\_decode\_close@{mov\_text\_decode\_close}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_decode\_close()}{mov\_text\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mov\+\_\+text\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 555 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_a17774788f429927c65f7c2f762eb575d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_a01092f4ee775707f5c423f43ed9a64de}\label{movtextdec_8c_a01092f4ee775707f5c423f43ed9a64de}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_decode\_frame@{mov\_text\_decode\_frame}}
+\index{mov\_text\_decode\_frame@{mov\_text\_decode\_frame}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_decode\_frame()}{mov\_text\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mov\+\_\+text\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+sub\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 460 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_a01092f4ee775707f5c423f43ed9a64de_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_a7933111c6bd2753dcd285243461fa5cf}\label{movtextdec_8c_a7933111c6bd2753dcd285243461fa5cf}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_flush@{mov\_text\_flush}}
+\index{mov\_text\_flush@{mov\_text\_flush}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_flush()}{mov\_text\_flush()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} mov\+\_\+text\+\_\+flush (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 563 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_ad1a143e87a3df82a31b5aaf1d7a2c83f}\label{movtextdec_8c_ad1a143e87a3df82a31b5aaf1d7a2c83f}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_init@{mov\_text\_init}}
+\index{mov\_text\_init@{mov\_text\_init}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_init()}{mov\_text\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mov\+\_\+text\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 432 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_ad1a143e87a3df82a31b5aaf1d7a2c83f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_aae25e5aa638706a0ae6c18a873edbb33}\label{movtextdec_8c_aae25e5aa638706a0ae6c18a873edbb33}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_tx3g@{mov\_text\_tx3g}}
+\index{mov\_text\_tx3g@{mov\_text\_tx3g}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_tx3g()}{mov\_text\_tx3g()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mov\+\_\+text\+\_\+tx3g (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_mov_text_context}{Mov\+Text\+Context}} $\ast$}]{m }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 139 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_aae25e5aa638706a0ae6c18a873edbb33_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{movtextdec_8c_aae25e5aa638706a0ae6c18a873edbb33_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{movtextdec_8c_ae52997c09f27410982ba933b12434b05}\label{movtextdec_8c_ae52997c09f27410982ba933b12434b05}} 
+\index{movtextdec.c@{movtextdec.c}!text\_to\_ass@{text\_to\_ass}}
+\index{text\_to\_ass@{text\_to\_ass}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{text\_to\_ass()}{text\_to\_ass()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} text\+\_\+to\+\_\+ass (\begin{DoxyParamCaption}\item[{A\+V\+B\+Print $\ast$}]{buf,  }\item[{const char $\ast$}]{text,  }\item[{const char $\ast$}]{text\+\_\+end,  }\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 335 of file movtextdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{movtextdec_8c_ae52997c09f27410982ba933b12434b05_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{movtextdec_8c_ae52997c09f27410982ba933b12434b05_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{movtextdec_8c_aa002a38dcb309573e387c98af2559c5b}\label{movtextdec_8c_aa002a38dcb309573e387c98af2559c5b}} 
+\index{movtextdec.c@{movtextdec.c}!box\_count@{box\_count}}
+\index{box\_count@{box\_count}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{box\_count}{box\_count}}
+{\footnotesize\ttfamily const size\+\_\+t box\+\_\+count = \mbox{\hyperlink{libm_8h_a3508a98d3ee7e2c9a4841fe264cf70f7}{F\+F\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+E\+L\+E\+MS}}(\mbox{\hyperlink{movtextenc_8c_a40a82f68137da33db97824edc9573f40}{box\+\_\+types}})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 319 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a40a82f68137da33db97824edc9573f40}\label{movtextdec_8c_a40a82f68137da33db97824edc9573f40}} 
+\index{movtextdec.c@{movtextdec.c}!box\_types@{box\_types}}
+\index{box\_types@{box\_types}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{box\_types}{box\_types}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_box}{Box}} box\+\_\+types\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{common_8h_a1e233db224cd0a3079fd4572d1a3d717}{MKBETAG}}(\textcolor{charliteral}{'s'},\textcolor{charliteral}{'t'},\textcolor{charliteral}{'y'},\textcolor{charliteral}{'l'}), 2, \mbox{\hyperlink{movtextdec_8c_ac5d3ddd199954d49aeaf20c3c2dfa2bb}{decode\_styl}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{common_8h_a1e233db224cd0a3079fd4572d1a3d717}{MKBETAG}}(\textcolor{charliteral}{'h'},\textcolor{charliteral}{'l'},\textcolor{charliteral}{'i'},\textcolor{charliteral}{'t'}), 4, \mbox{\hyperlink{movtextdec_8c_a2b86565b4420e1a4a395ef2ca69c3647}{decode\_hlit}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{common_8h_a1e233db224cd0a3079fd4572d1a3d717}{MKBETAG}}(\textcolor{charliteral}{'h'},\textcolor{charliteral}{'c'},\textcolor{charliteral}{'l'},\textcolor{charliteral}{'r'}), 4, \mbox{\hyperlink{movtextdec_8c_ac9622753e8adbed9755ad8e7e5572e76}{decode\_hclr}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{common_8h_a1e233db224cd0a3079fd4572d1a3d717}{MKBETAG}}(\textcolor{charliteral}{'t'},\textcolor{charliteral}{'w'},\textcolor{charliteral}{'r'},\textcolor{charliteral}{'p'}), 1, \mbox{\hyperlink{movtextdec_8c_ac285af7ae014e3eb9ccb2cfcaaa9c43f}{decode\_twrp}} \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 312 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_ac29c53018cd304a3504fb4f212aeb0a8}\label{movtextdec_8c_ac29c53018cd304a3504fb4f212aeb0a8}} 
+\index{movtextdec.c@{movtextdec.c}!ff\_movtext\_decoder@{ff\_movtext\_decoder}}
+\index{ff\_movtext\_decoder@{ff\_movtext\_decoder}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_movtext\_decoder}{ff\_movtext\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+movtext\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name         = \textcolor{stringliteral}{"{}mov\_text"{}},}
+\DoxyCodeLine{    .long\_name    = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}3GPP Timed Text subtitle"{}}),}
+\DoxyCodeLine{    .type         = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48aa64a67386a9c53360744b86e4707b831}{AVMEDIA\_TYPE\_SUBTITLE}},}
+\DoxyCodeLine{    .id           = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceafef6fb0a89aaa9a74c24129f380da853}{AV\_CODEC\_ID\_MOV\_TEXT}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{struct_mov_text_context}{MovTextContext}}),}
+\DoxyCodeLine{    .priv\_class   = \&\mbox{\hyperlink{movtextdec_8c_a30a3ec271463c3098a46ab46e4bab7fa}{mov\_text\_decoder\_class}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}         = \mbox{\hyperlink{movtextdec_8c_ad1a143e87a3df82a31b5aaf1d7a2c83f}{mov\_text\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}       = \mbox{\hyperlink{movtextdec_8c_a01092f4ee775707f5c423f43ed9a64de}{mov\_text\_decode\_frame}},}
+\DoxyCodeLine{    .close        = \mbox{\hyperlink{movtextdec_8c_a17774788f429927c65f7c2f762eb575d}{mov\_text\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{aacdec__template_8c_affa0ccbe2ef7fd24bb8c61e28d1a6631}{flush}}        = \mbox{\hyperlink{movtextdec_8c_a7933111c6bd2753dcd285243461fa5cf}{mov\_text\_flush}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 585 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a30a3ec271463c3098a46ab46e4bab7fa}\label{movtextdec_8c_a30a3ec271463c3098a46ab46e4bab7fa}} 
+\index{movtextdec.c@{movtextdec.c}!mov\_text\_decoder\_class@{mov\_text\_decoder\_class}}
+\index{mov\_text\_decoder\_class@{mov\_text\_decoder\_class}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{mov\_text\_decoder\_class}{mov\_text\_decoder\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} mov\+\_\+text\+\_\+decoder\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}MOV text decoder"{}},}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{movtextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 578 of file movtextdec.\+c.
+
+\mbox{\Hypertarget{movtextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{movtextdec_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{movtextdec.c@{movtextdec.c}!options@{options}}
+\index{options@{options}!movtextdec.c@{movtextdec.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}width"{}}, \textcolor{stringliteral}{"{}Frame width, usually video width"{}}, \mbox{\hyperlink{movtextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(frame\_width), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=0\}, 0, INT\_MAX, \mbox{\hyperlink{movtextdec_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}height"{}}, \textcolor{stringliteral}{"{}Frame height, usually video height"{}}, \mbox{\hyperlink{movtextdec_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(frame\_height), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64=0\}, 0, INT\_MAX, \mbox{\hyperlink{movtextdec_8c_a6ccad09b4a2a06ae178418fdccf5940d}{FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 572 of file movtextdec.\+c.
+

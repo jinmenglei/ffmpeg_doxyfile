@@ -1,0 +1,954 @@
+\hypertarget{asfenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/asfenc.c File Reference}
+\label{asfenc_8c}\index{E:/github/ffmpeg/libavformat/asfenc.c@{E:/github/ffmpeg/libavformat/asfenc.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/dict.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/mathematics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avlanguage.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avio\+\_\+internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}riff.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}asf.\+h\char`\"{}}\newline
+Include dependency graph for asfenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_s_f_payload}{A\+S\+F\+Payload}}
+\item 
+struct \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}}
+\item 
+struct \mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a4c4acb605a08e4621860875cd6f5981f}{A\+S\+F\+\_\+\+I\+N\+D\+E\+X\+E\+D\+\_\+\+I\+N\+T\+E\+R\+V\+AL}}~10000000
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_ad753ff4410f9fe7e30f8c0405d966df5}{A\+S\+F\+\_\+\+I\+N\+D\+E\+X\+\_\+\+B\+L\+O\+CK}}~(1$<$$<$9)
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a71ad471be1e21f8bf1d14ab253a1c59d}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+S\+\_\+\+P\+E\+R\+\_\+\+P\+A\+C\+K\+ET}}~63
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a59971ac64e5ea87200e62f7794180efd}{A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+D\+A\+T\+A\+\_\+\+S\+I\+ZE}}~0x2
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_ac690ef693033f5d8ef9e74d4618f1ee4}{A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+L\+A\+GS}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a32bb09dee2a6693314f2bbbb23593c6b}{A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+L\+A\+G\+S\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~1
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_acb368e97e5983a3991ac82b6f16a81eb}{A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+R\+O\+P\+E\+R\+T\+Y\+\_\+\+F\+L\+A\+GS}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_af747386b80e227ad1c3107e1d4eaf66a}{A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+T\+Y\+P\+E\+\_\+\+F\+L\+A\+GS}}~0
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a87008e5af1865944db62d630d28ec8d4}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+F\+L\+A\+GS}}~\mbox{\hyperlink{asf_8h_adf05b5e6ac6ac96270badc8f15ea340e}{A\+S\+F\+\_\+\+P\+L\+\_\+\+F\+L\+A\+G\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+I\+S\+\_\+\+W\+O\+RD}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_ac5a76a11c19695c3d7adc7c1eb8951e9}{A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~0
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a37faa5ad18d9d229a13887e6a0e587e3}{A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~0
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a3784282b180478dcf29d0021ee6c25cb}{A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~0
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_ac449e3379b3250cbd58b30cd52dbaa37}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+R\+E\+P\+L\+I\+C\+A\+T\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~1
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_aca748d17ed8ba09f60a2469d3c2a7616}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+I\+N\+T\+O\+\_\+\+M\+E\+D\+I\+A\+\_\+\+O\+B\+J\+E\+C\+T\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~4
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_af13120b478a9cf2c6167dd73609d54f2}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+M\+E\+D\+I\+A\+\_\+\+O\+B\+J\+E\+C\+T\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~1
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_aadf1c9db2c82e3fea7f6b56c38b9b89e}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE}}~2
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a266274f6c66471d03ea372a5dfc8b08e}{P\+A\+C\+K\+E\+T\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+M\+I\+N\+\_\+\+S\+I\+ZE}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a4bfa657f4a73e2ba73578f83903f54d2}{A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+R\+E\+P\+L\+I\+C\+A\+T\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+L\+E\+N\+G\+TH}}~0x08
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a4fb2295feade16acbd9e1d3e591ed55a}{P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+AD}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_aefc3c3ac07ccfdc421348b91026f1962}{P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+U\+L\+T\+I\+P\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+A\+DS}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a1f082bffef9b8610acc64dfc318734ee}{S\+I\+N\+G\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a692bf6cf32f0b48762723da8b93e8bc7}{M\+U\+L\+T\+I\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS}}
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a1e854cf392f48751b77ee7d24087839b}{D\+A\+T\+A\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE}}~50
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a10acf8e15c3d39f8f898a33baa9a0e06}{P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+AX}}~65536
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a11a467ff6ec5bf3efc1d0990e9c8bfe2}{P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+IN}}~100
+\item 
+\#define \mbox{\hyperlink{asfenc_8c_a081725a2ca6d73c81b671fe93fc13466}{P\+R\+E\+R\+O\+L\+L\+\_\+\+T\+I\+ME}}~3100
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_s_f_payload}{A\+S\+F\+Payload}} \mbox{\hyperlink{asfenc_8c_a1644d96e6c8200712a4715b415fd2858}{A\+S\+F\+Payload}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} \mbox{\hyperlink{asfenc_8c_aff410c9e9d1ed98b07b1b7da853ecbd8}{A\+S\+F\+Stream}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}} \mbox{\hyperlink{asfenc_8c_aec11a29e92edaa7bc3f9ce890dd525e5}{A\+S\+F\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_a9343c6a4b1cbf7d3b76101a6ece9f7bf}{put\+\_\+str16}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$\mbox{\hyperlink{movenc_8c_a1c50fcd1195659821729f52af8f3bb7d}{tag}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{asfenc_8c_a88053cae133ac378ccc2c19eb77a536a}{put\+\_\+header}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, const \mbox{\hyperlink{riff_8h_ab0de07baf186c3e2d8710e91f443fca3}{ff\+\_\+asf\+\_\+guid}} $\ast$\mbox{\hyperlink{yuv2rgb_8c_a73c18c59a39b18382081ec00bb456d43}{g}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_ae28c20d4c942fe8c6d68570c6f75b9cf}{end\+\_\+header}} (\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$pb, int64\+\_\+t \mbox{\hyperlink{spdifenc_8c_addcb93d939ffa259ff1d9247bdd590fd}{pos}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_a9f8b9b33cc12f66a1aa1508538cc6136}{put\+\_\+chunk}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{hwdevice_8c_ae4165b400ecd5a84616b429f6516512b}{type}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} payload\+\_\+length, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{asfenc_8c_a12cfc6f9711cc1186e6353a226c8b9dd}{unix\+\_\+to\+\_\+file\+\_\+time}} (int64\+\_\+t ti)
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{asfenc_8c_a63ec00f237a3d4717b5fe78c075be256}{get\+\_\+send\+\_\+time}} (\mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}} $\ast$asf, int64\+\_\+t pres\+\_\+time, uint64\+\_\+t $\ast$\mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_aff1627e1369cb3f77f6d867eaa4fdea1}{asf\+\_\+write\+\_\+markers}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_acaeafebbab38a8078aa771078fb225a4}{asf\+\_\+write\+\_\+header1}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, int64\+\_\+t file\+\_\+size, int64\+\_\+t data\+\_\+chunk\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_aa964abfbe45bc9f709460b199c24ee6b}{asf\+\_\+write\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_ab0fd2f9582bc584fdebfed669934f6f9}{asf\+\_\+write\+\_\+stream\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_a86a12106cc8e67eed63c4f7aad71794d}{put\+\_\+payload\+\_\+parsing\+\_\+info}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, unsigned sendtime, unsigned \mbox{\hyperlink{tests_2movenc_8c_a1f342e4e3615abc9314684ce6b4819c0}{duration}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} nb\+\_\+payloads, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} padsize)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_a39febaf6f2b10811cb4868cfa2174390}{flush\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_a77d3fe6909a580ade360f3d312673caf}{put\+\_\+payload\+\_\+header}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} $\ast$stream, int64\+\_\+t presentation\+\_\+time, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} m\+\_\+obj\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} m\+\_\+obj\+\_\+offset, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} payload\+\_\+len, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{asfenc_8c_a9cc04a8232765953fd61d9b6403f2bea}{put\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} $\ast$stream, \mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$avst, int64\+\_\+t timestamp, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} m\+\_\+obj\+\_\+size, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_a227a8cbe0d285e8b8c041df1264cec01}{update\+\_\+index}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start\+\_\+sec, uint32\+\_\+t packet\+\_\+number, uint16\+\_\+t packet\+\_\+count, uint64\+\_\+t packet\+\_\+offset)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_a497406e6a94f5039ca15b185e90e9063}{asf\+\_\+write\+\_\+packet}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_a11d66dc2834a778afee13b835d5fbbe7}{asf\+\_\+write\+\_\+index}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{struct_a_s_f_index}{A\+S\+F\+Index}} $\ast$\mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}, uint16\+\_\+t \mbox{\hyperlink{cuda__runtime_8h_affe776513b24d84b39af8ab0930fef7f}{max}}, uint32\+\_\+t count)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{asfenc_8c_ae981ba7ead5205d0f03126475cd76316}{asf\+\_\+write\+\_\+trailer}} (\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_codec_tag}{A\+V\+Codec\+Tag}} \mbox{\hyperlink{asfenc_8c_a609cea076f066ee37f1d548d2ed49e72}{codec\+\_\+asf\+\_\+bmp\+\_\+tags}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{asfenc_8c_a3f061179c6633f4cee237b2a4ab96a90}{asf\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{asfenc_8c_ad753ff4410f9fe7e30f8c0405d966df5}\label{asfenc_8c_ad753ff4410f9fe7e30f8c0405d966df5}} 
+\index{asfenc.c@{asfenc.c}!ASF\_INDEX\_BLOCK@{ASF\_INDEX\_BLOCK}}
+\index{ASF\_INDEX\_BLOCK@{ASF\_INDEX\_BLOCK}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_INDEX\_BLOCK}{ASF\_INDEX\_BLOCK}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+I\+N\+D\+E\+X\+\_\+\+B\+L\+O\+CK~(1$<$$<$9)}
+
+
+
+Definition at line 34 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a4c4acb605a08e4621860875cd6f5981f}\label{asfenc_8c_a4c4acb605a08e4621860875cd6f5981f}} 
+\index{asfenc.c@{asfenc.c}!ASF\_INDEXED\_INTERVAL@{ASF\_INDEXED\_INTERVAL}}
+\index{ASF\_INDEXED\_INTERVAL@{ASF\_INDEXED\_INTERVAL}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_INDEXED\_INTERVAL}{ASF\_INDEXED\_INTERVAL}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+I\+N\+D\+E\+X\+E\+D\+\_\+\+I\+N\+T\+E\+R\+V\+AL~10000000}
+
+
+
+Definition at line 33 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a59971ac64e5ea87200e62f7794180efd}\label{asfenc_8c_a59971ac64e5ea87200e62f7794180efd}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE@{ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE}}
+\index{ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE@{ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE}{ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+D\+A\+T\+A\+\_\+\+S\+I\+ZE~0x2}
+
+
+
+Definition at line 37 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_ac690ef693033f5d8ef9e74d4618f1ee4}\label{asfenc_8c_ac690ef693033f5d8ef9e74d4618f1ee4}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS@{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS}}
+\index{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS@{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS}{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+L\+A\+GS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (\mbox{\hyperlink{asf_8h_aaf99cce9f78921871677437efd85ac95}{ASF\_PACKET\_FLAG\_ERROR\_CORRECTION\_PRESENT}} |    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE)}
+
+\end{DoxyCode}
+
+
+Definition at line 38 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a32bb09dee2a6693314f2bbbb23593c6b}\label{asfenc_8c_a32bb09dee2a6693314f2bbbb23593c6b}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE@{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE}}
+\index{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE@{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE}{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+L\+A\+G\+S\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~1}
+
+
+
+Definition at line 43 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a87008e5af1865944db62d630d28ec8d4}\label{asfenc_8c_a87008e5af1865944db62d630d28ec8d4}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_FLAGS@{ASF\_PAYLOAD\_FLAGS}}
+\index{ASF\_PAYLOAD\_FLAGS@{ASF\_PAYLOAD\_FLAGS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_FLAGS}{ASF\_PAYLOAD\_FLAGS}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+F\+L\+A\+GS~\mbox{\hyperlink{asf_8h_adf05b5e6ac6ac96270badc8f15ea340e}{A\+S\+F\+\_\+\+P\+L\+\_\+\+F\+L\+A\+G\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+I\+S\+\_\+\+W\+O\+RD}}}
+
+
+
+Definition at line 56 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_aadf1c9db2c82e3fea7f6b56c38b9b89e}\label{asfenc_8c_aadf1c9db2c82e3fea7f6b56c38b9b89e}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE@{ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE}}
+\index{ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE@{ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE}{ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~2}
+
+
+
+Definition at line 140 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_af13120b478a9cf2c6167dd73609d54f2}\label{asfenc_8c_af13120b478a9cf2c6167dd73609d54f2}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE@{ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE}}
+\index{ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE@{ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE}{ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+M\+E\+D\+I\+A\+\_\+\+O\+B\+J\+E\+C\+T\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~1}
+
+
+
+Definition at line 124 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_aca748d17ed8ba09f60a2469d3c2a7616}\label{asfenc_8c_aca748d17ed8ba09f60a2469d3c2a7616}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE@{ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE}}
+\index{ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE@{ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE}{ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+O\+F\+F\+S\+E\+T\+\_\+\+I\+N\+T\+O\+\_\+\+M\+E\+D\+I\+A\+\_\+\+O\+B\+J\+E\+C\+T\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~4}
+
+
+
+Definition at line 117 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a4bfa657f4a73e2ba73578f83903f54d2}\label{asfenc_8c_a4bfa657f4a73e2ba73578f83903f54d2}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH@{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH}}
+\index{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH@{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH}{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+R\+E\+P\+L\+I\+C\+A\+T\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+L\+E\+N\+G\+TH~0x08}
+
+
+
+Definition at line 158 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_ac449e3379b3250cbd58b30cd52dbaa37}\label{asfenc_8c_ac449e3379b3250cbd58b30cd52dbaa37}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE@{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE}}
+\index{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE@{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE}{ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+R\+E\+P\+L\+I\+C\+A\+T\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~1}
+
+
+
+Definition at line 98 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a71ad471be1e21f8bf1d14ab253a1c59d}\label{asfenc_8c_a71ad471be1e21f8bf1d14ab253a1c59d}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PAYLOADS\_PER\_PACKET@{ASF\_PAYLOADS\_PER\_PACKET}}
+\index{ASF\_PAYLOADS\_PER\_PACKET@{ASF\_PAYLOADS\_PER\_PACKET}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PAYLOADS\_PER\_PACKET}{ASF\_PAYLOADS\_PER\_PACKET}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+S\+\_\+\+P\+E\+R\+\_\+\+P\+A\+C\+K\+ET~63}
+
+
+
+Definition at line 35 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_af747386b80e227ad1c3107e1d4eaf66a}\label{asfenc_8c_af747386b80e227ad1c3107e1d4eaf66a}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PPI\_LENGTH\_TYPE\_FLAGS@{ASF\_PPI\_LENGTH\_TYPE\_FLAGS}}
+\index{ASF\_PPI\_LENGTH\_TYPE\_FLAGS@{ASF\_PPI\_LENGTH\_TYPE\_FLAGS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PPI\_LENGTH\_TYPE\_FLAGS}{ASF\_PPI\_LENGTH\_TYPE\_FLAGS}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+T\+Y\+P\+E\+\_\+\+F\+L\+A\+GS~0}
+
+
+
+Definition at line 54 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a37faa5ad18d9d229a13887e6a0e587e3}\label{asfenc_8c_a37faa5ad18d9d229a13887e6a0e587e3}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE@{ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE}}
+\index{ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE@{ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE}{ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~0}
+
+
+
+Definition at line 81 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a3784282b180478dcf29d0021ee6c25cb}\label{asfenc_8c_a3784282b180478dcf29d0021ee6c25cb}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE@{ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE}}
+\index{ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE@{ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE}{ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+A\+D\+D\+I\+N\+G\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~0}
+
+
+
+Definition at line 94 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_acb368e97e5983a3991ac82b6f16a81eb}\label{asfenc_8c_acb368e97e5983a3991ac82b6f16a81eb}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PPI\_PROPERTY\_FLAGS@{ASF\_PPI\_PROPERTY\_FLAGS}}
+\index{ASF\_PPI\_PROPERTY\_FLAGS@{ASF\_PPI\_PROPERTY\_FLAGS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PPI\_PROPERTY\_FLAGS}{ASF\_PPI\_PROPERTY\_FLAGS}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+P\+R\+O\+P\+E\+R\+T\+Y\+\_\+\+F\+L\+A\+GS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (\mbox{\hyperlink{asf_8h_a63b4db589fe32ebc2f180ff2a0af5a4f}{ASF\_PL\_FLAG\_REPLICATED\_DATA\_LENGTH\_FIELD\_IS\_BYTE}}           |    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PL\_FLAG\_OFFSET\_INTO\_MEDIA\_OBJECT\_LENGTH\_FIELD\_IS\_DWORD |    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PL\_FLAG\_MEDIA\_OBJECT\_NUMBER\_LENGTH\_FIELD\_IS\_BYTE       |    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PL\_FLAG\_STREAM\_NUMBER\_LENGTH\_FIELD\_IS\_BYTE)}
+
+\end{DoxyCode}
+
+
+Definition at line 48 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_ac5a76a11c19695c3d7adc7c1eb8951e9}\label{asfenc_8c_ac5a76a11c19695c3d7adc7c1eb8951e9}} 
+\index{asfenc.c@{asfenc.c}!ASF\_PPI\_SEQUENCE\_FIELD\_SIZE@{ASF\_PPI\_SEQUENCE\_FIELD\_SIZE}}
+\index{ASF\_PPI\_SEQUENCE\_FIELD\_SIZE@{ASF\_PPI\_SEQUENCE\_FIELD\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASF\_PPI\_SEQUENCE\_FIELD\_SIZE}{ASF\_PPI\_SEQUENCE\_FIELD\_SIZE}}
+{\footnotesize\ttfamily \#define A\+S\+F\+\_\+\+P\+P\+I\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+\_\+\+F\+I\+E\+L\+D\+\_\+\+S\+I\+ZE~0}
+
+
+
+Definition at line 68 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a1e854cf392f48751b77ee7d24087839b}\label{asfenc_8c_a1e854cf392f48751b77ee7d24087839b}} 
+\index{asfenc.c@{asfenc.c}!DATA\_HEADER\_SIZE@{DATA\_HEADER\_SIZE}}
+\index{DATA\_HEADER\_SIZE@{DATA\_HEADER\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{DATA\_HEADER\_SIZE}{DATA\_HEADER\_SIZE}}
+{\footnotesize\ttfamily \#define D\+A\+T\+A\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE~50}
+
+
+
+Definition at line 184 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a692bf6cf32f0b48762723da8b93e8bc7}\label{asfenc_8c_a692bf6cf32f0b48762723da8b93e8bc7}} 
+\index{asfenc.c@{asfenc.c}!MULTI\_PAYLOAD\_HEADERS@{MULTI\_PAYLOAD\_HEADERS}}
+\index{MULTI\_PAYLOAD\_HEADERS@{MULTI\_PAYLOAD\_HEADERS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{MULTI\_PAYLOAD\_HEADERS}{MULTI\_PAYLOAD\_HEADERS}}
+{\footnotesize\ttfamily \#define M\+U\+L\+T\+I\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (\mbox{\hyperlink{asfenc_8c_a266274f6c66471d03ea372a5dfc8b08e}{PACKET\_HEADER\_MIN\_SIZE}} +                             \(\backslash\)}
+\DoxyCodeLine{     1 +         \textcolor{comment}{/* Payload Flags */}                      \(\backslash\)}
+\DoxyCodeLine{     2 * \mbox{\hyperlink{asfenc_8c_aefc3c3ac07ccfdc421348b91026f1962}{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS}})}
+
+\end{DoxyCode}
+
+
+Definition at line 179 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a266274f6c66471d03ea372a5dfc8b08e}\label{asfenc_8c_a266274f6c66471d03ea372a5dfc8b08e}} 
+\index{asfenc.c@{asfenc.c}!PACKET\_HEADER\_MIN\_SIZE@{PACKET\_HEADER\_MIN\_SIZE}}
+\index{PACKET\_HEADER\_MIN\_SIZE@{PACKET\_HEADER\_MIN\_SIZE}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PACKET\_HEADER\_MIN\_SIZE}{PACKET\_HEADER\_MIN\_SIZE}}
+{\footnotesize\ttfamily \#define P\+A\+C\+K\+E\+T\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+M\+I\+N\+\_\+\+S\+I\+ZE}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (\mbox{\hyperlink{asfenc_8c_a32bb09dee2a6693314f2bbbb23593c6b}{ASF\_PACKET\_ERROR\_CORRECTION\_FLAGS\_FIELD\_SIZE}} +       \(\backslash\)}
+\DoxyCodeLine{     ASF\_PACKET\_ERROR\_CORRECTION\_DATA\_SIZE +              \(\backslash\)}
+\DoxyCodeLine{     1 +        \textcolor{comment}{/* Length Type Flags */}                   \(\backslash\)}
+\DoxyCodeLine{     1 +        \textcolor{comment}{/* Property Flags */}                      \(\backslash\)}
+\DoxyCodeLine{     ASF\_PPI\_PACKET\_LENGTH\_FIELD\_SIZE +                   \(\backslash\)}
+\DoxyCodeLine{     ASF\_PPI\_SEQUENCE\_FIELD\_SIZE +                        \(\backslash\)}
+\DoxyCodeLine{     ASF\_PPI\_PADDING\_LENGTH\_FIELD\_SIZE +                  \(\backslash\)}
+\DoxyCodeLine{     4 +        \textcolor{comment}{/* Send Time Field */}                     \(\backslash\)}
+\DoxyCodeLine{     2)         \textcolor{comment}{/* Duration Field */}}
+
+\end{DoxyCode}
+
+
+Definition at line 146 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a10acf8e15c3d39f8f898a33baa9a0e06}\label{asfenc_8c_a10acf8e15c3d39f8f898a33baa9a0e06}} 
+\index{asfenc.c@{asfenc.c}!PACKET\_SIZE\_MAX@{PACKET\_SIZE\_MAX}}
+\index{PACKET\_SIZE\_MAX@{PACKET\_SIZE\_MAX}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PACKET\_SIZE\_MAX}{PACKET\_SIZE\_MAX}}
+{\footnotesize\ttfamily \#define P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+AX~65536}
+
+
+
+Definition at line 186 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a11a467ff6ec5bf3efc1d0990e9c8bfe2}\label{asfenc_8c_a11a467ff6ec5bf3efc1d0990e9c8bfe2}} 
+\index{asfenc.c@{asfenc.c}!PACKET\_SIZE\_MIN@{PACKET\_SIZE\_MIN}}
+\index{PACKET\_SIZE\_MIN@{PACKET\_SIZE\_MIN}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PACKET\_SIZE\_MIN}{PACKET\_SIZE\_MIN}}
+{\footnotesize\ttfamily \#define P\+A\+C\+K\+E\+T\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+IN~100}
+
+
+
+Definition at line 187 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_aefc3c3ac07ccfdc421348b91026f1962}\label{asfenc_8c_aefc3c3ac07ccfdc421348b91026f1962}} 
+\index{asfenc.c@{asfenc.c}!PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS@{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS}}
+\index{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS@{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS}{PAYLOAD\_HEADER\_SIZE\_MULTIPLE\_PAYLOADS}}
+{\footnotesize\ttfamily \#define P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+U\+L\+T\+I\+P\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+A\+DS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (1 +        \textcolor{comment}{/* Stream Number */}                       \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE +         \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE +    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE +      \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH +                 \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_LENGTH\_FIELD\_SIZE)}
+
+\end{DoxyCode}
+
+
+Definition at line 167 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a4fb2295feade16acbd9e1d3e591ed55a}\label{asfenc_8c_a4fb2295feade16acbd9e1d3e591ed55a}} 
+\index{asfenc.c@{asfenc.c}!PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD@{PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD}}
+\index{PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD@{PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD}{PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD}}
+{\footnotesize\ttfamily \#define P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+S\+I\+N\+G\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+AD}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (1 +     \textcolor{comment}{/* Stream Number */}                          \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_MEDIA\_OBJECT\_NUMBER\_FIELD\_SIZE +         \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_OFFSET\_INTO\_MEDIA\_OBJECT\_FIELD\_SIZE +    \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH\_FIELD\_SIZE +      \(\backslash\)}
+\DoxyCodeLine{     ASF\_PAYLOAD\_REPLICATED\_DATA\_LENGTH)}
+
+\end{DoxyCode}
+
+
+Definition at line 160 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a081725a2ca6d73c81b671fe93fc13466}\label{asfenc_8c_a081725a2ca6d73c81b671fe93fc13466}} 
+\index{asfenc.c@{asfenc.c}!PREROLL\_TIME@{PREROLL\_TIME}}
+\index{PREROLL\_TIME@{PREROLL\_TIME}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{PREROLL\_TIME}{PREROLL\_TIME}}
+{\footnotesize\ttfamily \#define P\+R\+E\+R\+O\+L\+L\+\_\+\+T\+I\+ME~3100}
+
+
+
+Definition at line 261 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a1f082bffef9b8610acc64dfc318734ee}\label{asfenc_8c_a1f082bffef9b8610acc64dfc318734ee}} 
+\index{asfenc.c@{asfenc.c}!SINGLE\_PAYLOAD\_HEADERS@{SINGLE\_PAYLOAD\_HEADERS}}
+\index{SINGLE\_PAYLOAD\_HEADERS@{SINGLE\_PAYLOAD\_HEADERS}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{SINGLE\_PAYLOAD\_HEADERS}{SINGLE\_PAYLOAD\_HEADERS}}
+{\footnotesize\ttfamily \#define S\+I\+N\+G\+L\+E\+\_\+\+P\+A\+Y\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (\mbox{\hyperlink{asfenc_8c_a266274f6c66471d03ea372a5dfc8b08e}{PACKET\_HEADER\_MIN\_SIZE}} +                             \(\backslash\)}
+\DoxyCodeLine{     PAYLOAD\_HEADER\_SIZE\_SINGLE\_PAYLOAD)}
+
+\end{DoxyCode}
+
+
+Definition at line 175 of file asfenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{asfenc_8c_aec11a29e92edaa7bc3f9ce890dd525e5}\label{asfenc_8c_aec11a29e92edaa7bc3f9ce890dd525e5}} 
+\index{asfenc.c@{asfenc.c}!ASFContext@{ASFContext}}
+\index{ASFContext@{ASFContext}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASFContext}{ASFContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}} \mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}}}
+
+\mbox{\Hypertarget{asfenc_8c_a1644d96e6c8200712a4715b415fd2858}\label{asfenc_8c_a1644d96e6c8200712a4715b415fd2858}} 
+\index{asfenc.c@{asfenc.c}!ASFPayload@{ASFPayload}}
+\index{ASFPayload@{ASFPayload}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASFPayload}{ASFPayload}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_s_f_payload}{A\+S\+F\+Payload}} \mbox{\hyperlink{struct_a_s_f_payload}{A\+S\+F\+Payload}}}
+
+\mbox{\Hypertarget{asfenc_8c_aff410c9e9d1ed98b07b1b7da853ecbd8}\label{asfenc_8c_aff410c9e9d1ed98b07b1b7da853ecbd8}} 
+\index{asfenc.c@{asfenc.c}!ASFStream@{ASFStream}}
+\index{ASFStream@{ASFStream}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{ASFStream}{ASFStream}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} \mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{asfenc_8c_aa964abfbe45bc9f709460b199c24ee6b}\label{asfenc_8c_aa964abfbe45bc9f709460b199c24ee6b}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_header@{asf\_write\_header}}
+\index{asf\_write\_header@{asf\_write\_header}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_header()}{asf\_write\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 776 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_aa964abfbe45bc9f709460b199c24ee6b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{asfenc_8c_aa964abfbe45bc9f709460b199c24ee6b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_acaeafebbab38a8078aa771078fb225a4}\label{asfenc_8c_acaeafebbab38a8078aa771078fb225a4}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_header1@{asf\_write\_header1}}
+\index{asf\_write\_header1@{asf\_write\_header1}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_header1()}{asf\_write\_header1()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+header1 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{int64\+\_\+t}]{file\+\_\+size,  }\item[{int64\+\_\+t}]{data\+\_\+chunk\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 385 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_acaeafebbab38a8078aa771078fb225a4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_acaeafebbab38a8078aa771078fb225a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a11d66dc2834a778afee13b835d5fbbe7}\label{asfenc_8c_a11d66dc2834a778afee13b835d5fbbe7}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_index@{asf\_write\_index}}
+\index{asf\_write\_index@{asf\_write\_index}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_index()}{asf\_write\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{struct_a_s_f_index}{A\+S\+F\+Index}} $\ast$}]{index,  }\item[{uint16\+\_\+t}]{max,  }\item[{uint32\+\_\+t}]{count }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1097 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a11d66dc2834a778afee13b835d5fbbe7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=283pt]{asfenc_8c_a11d66dc2834a778afee13b835d5fbbe7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_aff1627e1369cb3f77f6d867eaa4fdea1}\label{asfenc_8c_aff1627e1369cb3f77f6d867eaa4fdea1}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_markers@{asf\_write\_markers}}
+\index{asf\_write\_markers@{asf\_write\_markers}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_markers()}{asf\_write\_markers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+markers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 341 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_aff1627e1369cb3f77f6d867eaa4fdea1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_aff1627e1369cb3f77f6d867eaa4fdea1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a497406e6a94f5039ca15b185e90e9063}\label{asfenc_8c_a497406e6a94f5039ca15b185e90e9063}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_packet@{asf\_write\_packet}}
+\index{asf\_write\_packet@{asf\_write\_packet}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_packet()}{asf\_write\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1049 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a497406e6a94f5039ca15b185e90e9063_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_ab0fd2f9582bc584fdebfed669934f6f9}\label{asfenc_8c_ab0fd2f9582bc584fdebfed669934f6f9}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_stream\_header@{asf\_write\_stream\_header}}
+\index{asf\_write\_stream\_header@{asf\_write\_stream\_header}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_stream\_header()}{asf\_write\_stream\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+stream\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 816 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_ab0fd2f9582bc584fdebfed669934f6f9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_ae981ba7ead5205d0f03126475cd76316}\label{asfenc_8c_ae981ba7ead5205d0f03126475cd76316}} 
+\index{asfenc.c@{asfenc.c}!asf\_write\_trailer@{asf\_write\_trailer}}
+\index{asf\_write\_trailer@{asf\_write\_trailer}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_write\_trailer()}{asf\_write\_trailer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} asf\+\_\+write\+\_\+trailer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1117 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_ae981ba7ead5205d0f03126475cd76316_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_ae28c20d4c942fe8c6d68570c6f75b9cf}\label{asfenc_8c_ae28c20d4c942fe8c6d68570c6f75b9cf}} 
+\index{asfenc.c@{asfenc.c}!end\_header@{end\_header}}
+\index{end\_header@{end\_header}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{end\_header()}{end\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} end\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{int64\+\_\+t}]{pos }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 289 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_ae28c20d4c942fe8c6d68570c6f75b9cf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_ae28c20d4c942fe8c6d68570c6f75b9cf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a39febaf6f2b10811cb4868cfa2174390}\label{asfenc_8c_a39febaf6f2b10811cb4868cfa2174390}} 
+\index{asfenc.c@{asfenc.c}!flush\_packet@{flush\_packet}}
+\index{flush\_packet@{flush\_packet}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{flush\_packet()}{flush\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} flush\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 873 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a39febaf6f2b10811cb4868cfa2174390_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a39febaf6f2b10811cb4868cfa2174390_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a63ec00f237a3d4717b5fe78c075be256}\label{asfenc_8c_a63ec00f237a3d4717b5fe78c075be256}} 
+\index{asfenc.c@{asfenc.c}!get\_send\_time@{get\_send\_time}}
+\index{get\_send\_time@{get\_send\_time}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_send\_time()}{get\_send\_time()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} get\+\_\+send\+\_\+time (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_s_f_context}{A\+S\+F\+Context}} $\ast$}]{asf,  }\item[{int64\+\_\+t}]{pres\+\_\+time,  }\item[{uint64\+\_\+t $\ast$}]{offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 326 of file asfenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a63ec00f237a3d4717b5fe78c075be256_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a9f8b9b33cc12f66a1aa1508538cc6136}\label{asfenc_8c_a9f8b9b33cc12f66a1aa1508538cc6136}} 
+\index{asfenc.c@{asfenc.c}!put\_chunk@{put\_chunk}}
+\index{put\_chunk@{put\_chunk}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_chunk()}{put\_chunk()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+chunk (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{type,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{payload\+\_\+length,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 300 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a9f8b9b33cc12f66a1aa1508538cc6136_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a9f8b9b33cc12f66a1aa1508538cc6136_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a9cc04a8232765953fd61d9b6403f2bea}\label{asfenc_8c_a9cc04a8232765953fd61d9b6403f2bea}} 
+\index{asfenc.c@{asfenc.c}!put\_frame@{put\_frame}}
+\index{put\_frame@{put\_frame}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_frame()}{put\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} $\ast$}]{stream,  }\item[{\mbox{\hyperlink{struct_a_v_stream}{A\+V\+Stream}} $\ast$}]{avst,  }\item[{int64\+\_\+t}]{timestamp,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{m\+\_\+obj\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 936 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a9cc04a8232765953fd61d9b6403f2bea_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{asfenc_8c_a9cc04a8232765953fd61d9b6403f2bea_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a88053cae133ac378ccc2c19eb77a536a}\label{asfenc_8c_a88053cae133ac378ccc2c19eb77a536a}} 
+\index{asfenc.c@{asfenc.c}!put\_header@{put\_header}}
+\index{put\_header@{put\_header}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_header()}{put\_header()}}
+{\footnotesize\ttfamily static int64\+\_\+t put\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{pb,  }\item[{const \mbox{\hyperlink{riff_8h_ab0de07baf186c3e2d8710e91f443fca3}{ff\+\_\+asf\+\_\+guid}} $\ast$}]{g }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 278 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a88053cae133ac378ccc2c19eb77a536a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a88053cae133ac378ccc2c19eb77a536a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a77d3fe6909a580ade360f3d312673caf}\label{asfenc_8c_a77d3fe6909a580ade360f3d312673caf}} 
+\index{asfenc.c@{asfenc.c}!put\_payload\_header@{put\_payload\_header}}
+\index{put\_payload\_header@{put\_payload\_header}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_payload\_header()}{put\_payload\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+payload\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_a_s_f_stream}{A\+S\+F\+Stream}} $\ast$}]{stream,  }\item[{int64\+\_\+t}]{presentation\+\_\+time,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{m\+\_\+obj\+\_\+size,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{m\+\_\+obj\+\_\+offset,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{payload\+\_\+len,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 905 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a77d3fe6909a580ade360f3d312673caf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a77d3fe6909a580ade360f3d312673caf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a86a12106cc8e67eed63c4f7aad71794d}\label{asfenc_8c_a86a12106cc8e67eed63c4f7aad71794d}} 
+\index{asfenc.c@{asfenc.c}!put\_payload\_parsing\_info@{put\_payload\_parsing\_info}}
+\index{put\_payload\_parsing\_info@{put\_payload\_parsing\_info}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_payload\_parsing\_info()}{put\_payload\_parsing\_info()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} put\+\_\+payload\+\_\+parsing\+\_\+info (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{unsigned}]{sendtime,  }\item[{unsigned}]{duration,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{nb\+\_\+payloads,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{padsize }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 825 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a86a12106cc8e67eed63c4f7aad71794d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a86a12106cc8e67eed63c4f7aad71794d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a9343c6a4b1cbf7d3b76101a6ece9f7bf}\label{asfenc_8c_a9343c6a4b1cbf7d3b76101a6ece9f7bf}} 
+\index{asfenc.c@{asfenc.c}!put\_str16@{put\_str16}}
+\index{put\_str16@{put\_str16}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_str16()}{put\_str16()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+str16 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_i_o_context}{A\+V\+I\+O\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{tag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 263 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a9343c6a4b1cbf7d3b76101a6ece9f7bf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a9343c6a4b1cbf7d3b76101a6ece9f7bf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a12cfc6f9711cc1186e6353a226c8b9dd}\label{asfenc_8c_a12cfc6f9711cc1186e6353a226c8b9dd}} 
+\index{asfenc.c@{asfenc.c}!unix\_to\_file\_time@{unix\_to\_file\_time}}
+\index{unix\_to\_file\_time@{unix\_to\_file\_time}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{unix\_to\_file\_time()}{unix\_to\_file\_time()}}
+{\footnotesize\ttfamily static int64\+\_\+t unix\+\_\+to\+\_\+file\+\_\+time (\begin{DoxyParamCaption}\item[{int64\+\_\+t}]{ti }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 317 of file asfenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a12cfc6f9711cc1186e6353a226c8b9dd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{asfenc_8c_a227a8cbe0d285e8b8c041df1264cec01}\label{asfenc_8c_a227a8cbe0d285e8b8c041df1264cec01}} 
+\index{asfenc.c@{asfenc.c}!update\_index@{update\_index}}
+\index{update\_index@{update\_index}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{update\_index()}{update\_index()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+index (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_format_context}{A\+V\+Format\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start\+\_\+sec,  }\item[{uint32\+\_\+t}]{packet\+\_\+number,  }\item[{uint16\+\_\+t}]{packet\+\_\+count,  }\item[{uint64\+\_\+t}]{packet\+\_\+offset }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1007 of file asfenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{asfenc_8c_a227a8cbe0d285e8b8c041df1264cec01_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{asfenc_8c_a227a8cbe0d285e8b8c041df1264cec01_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{asfenc_8c_a3f061179c6633f4cee237b2a4ab96a90}\label{asfenc_8c_a3f061179c6633f4cee237b2a4ab96a90}} 
+\index{asfenc.c@{asfenc.c}!asf\_options@{asf\_options}}
+\index{asf\_options@{asf\_options}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{asf\_options}{asf\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} asf\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}packet\_size"{}}, \textcolor{stringliteral}{"{}Packet size"{}}, offsetof(\mbox{\hyperlink{struct_a_s_f_context}{ASFContext}}, packet\_size), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 3200\}, \mbox{\hyperlink{asfenc_8c_a11a467ff6ec5bf3efc1d0990e9c8bfe2}{PACKET\_SIZE\_MIN}}, \mbox{\hyperlink{asfenc_8c_a10acf8e15c3d39f8f898a33baa9a0e06}{PACKET\_SIZE\_MAX}}, \mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{AV\_OPT\_FLAG\_ENCODING\_PARAM}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1148 of file asfenc.\+c.
+
+\mbox{\Hypertarget{asfenc_8c_a609cea076f066ee37f1d548d2ed49e72}\label{asfenc_8c_a609cea076f066ee37f1d548d2ed49e72}} 
+\index{asfenc.c@{asfenc.c}!codec\_asf\_bmp\_tags@{codec\_asf\_bmp\_tags}}
+\index{codec\_asf\_bmp\_tags@{codec\_asf\_bmp\_tags}!asfenc.c@{asfenc.c}}
+\doxysubsubsection{\texorpdfstring{codec\_asf\_bmp\_tags}{codec\_asf\_bmp\_tags}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_codec_tag}{A\+V\+Codec\+Tag}} codec\+\_\+asf\+\_\+bmp\+\_\+tags\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cead95dfdf68b462db508b45fb693a4c09e}{AV\_CODEC\_ID\_MPEG4}},     \mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{MKTAG}}(\textcolor{charliteral}{'M'}, \textcolor{charliteral}{'4'}, \textcolor{charliteral}{'S'}, \textcolor{charliteral}{'2'}) \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cead95dfdf68b462db508b45fb693a4c09e}{AV\_CODEC\_ID\_MPEG4}},     \mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{MKTAG}}(\textcolor{charliteral}{'M'}, \textcolor{charliteral}{'P'}, \textcolor{charliteral}{'4'}, \textcolor{charliteral}{'S'}) \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceaf2c51d3f6f70b731f3b316d352e0fc62}{AV\_CODEC\_ID\_MSMPEG4V3}}, \mbox{\hyperlink{common_8h_a19c68e2b5efcbab914d79db1e4fee734}{MKTAG}}(\textcolor{charliteral}{'M'}, \textcolor{charliteral}{'P'}, \textcolor{charliteral}{'4'}, \textcolor{charliteral}{'3'}) \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea48761c50b102343e2648c3e28a94e7ab}{AV\_CODEC\_ID\_NONE}},      0 \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 254 of file asfenc.\+c.
+

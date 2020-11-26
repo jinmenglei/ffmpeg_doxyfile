@@ -1,0 +1,1034 @@
+\hypertarget{amrnbdec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/amrnbdec.c File Reference}
+\label{amrnbdec_8c}\index{E:/github/ffmpeg/libavcodec/amrnbdec.c@{E:/github/ffmpeg/libavcodec/amrnbdec.c}}
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}celp\+\_\+math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}celp\+\_\+filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+vectors.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+pitch\+\_\+delay.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amr.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amrnbdata.\+h\char`\"{}}\newline
+Include dependency graph for amrnbdec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a761545eb4c54c23e7fd5796eb0c23c24}{A\+M\+R\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE}}~160
+\begin{DoxyCompactList}\small\item\em samples per frame \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a63cab97d22376207ef7bc94b48e141f9}{A\+M\+R\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+B\+O\+U\+ND}}~32768.\+0
+\begin{DoxyCompactList}\small\item\em threshold for synthesis overflow \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_ac1e87bddb7255283f20c040de383d8b9}{A\+M\+R\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+S\+C\+A\+LE}}~(2.\+0 / 32768.\+0)
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a6ff8861ac03ca3a34e1479bf2e3e1cf5}{P\+R\+E\+D\+\_\+\+F\+A\+C\+\_\+\+M\+O\+D\+E\+\_\+12k2}}~0.\+65
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_aea10e088cff499d9f9ca886a72e875dd}{L\+S\+F\+\_\+\+R\+\_\+\+F\+AC}}~(8000.\+0 / 32768.\+0)
+\begin{DoxyCompactList}\small\item\em L\+SF residual tables to Hertz. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a87bb4d7d47fc9a4172565c063469521d}{M\+I\+N\+\_\+\+L\+S\+F\+\_\+\+S\+P\+A\+C\+I\+NG}}~(50.\+0488 / 8000.\+0)
+\begin{DoxyCompactList}\small\item\em Ensures stability of L\+PC filter. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a3d1287efc9924b67cbab16d6a07cbb27}{P\+I\+T\+C\+H\+\_\+\+L\+A\+G\+\_\+\+M\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+12k2}}~18
+\begin{DoxyCompactList}\small\item\em Lower bound on decoded lag search in 12.\+2kbit/s mode. \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_acaf1374d6ee289b87034543bec682af6}{M\+I\+N\+\_\+\+E\+N\+E\+R\+GY}}~-\/14.\+0
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_acca47319151f94e5aae9c534edb5bfa8}{S\+H\+A\+R\+P\+\_\+\+M\+AX}}~0.\+79449462890625
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_afc076bdfb6b0bcdb97acdf74faef2e79}{A\+M\+R\+\_\+\+T\+I\+L\+T\+\_\+\+R\+E\+S\+P\+O\+N\+SE}}~22
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a7d318e9f870951c80cbe7f4263c92f91}{A\+M\+R\+\_\+\+T\+I\+L\+T\+\_\+\+G\+A\+M\+M\+A\+\_\+T}}~0.\+8
+\item 
+\#define \mbox{\hyperlink{amrnbdec_8c_a286ed069767593abc158c7e31e86ce40}{A\+M\+R\+\_\+\+A\+G\+C\+\_\+\+A\+L\+P\+HA}}~0.\+9
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \mbox{\hyperlink{amrnbdec_8c_a3123b77ca3e7263e60ab006637856a21}{A\+M\+R\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a7d7267ac651c1215f2b7461c1baf5984}{weighted\+\_\+vector\+\_\+sumd}} (double $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const double $\ast$in\+\_\+a, const double $\ast$in\+\_\+b, double weight\+\_\+coeff\+\_\+a, double weight\+\_\+coeff\+\_\+b, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} length)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{amrnbdec_8c_ae397ab764784f7d9873b5f623fa5e5b0}{amrnb\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \mbox{\hyperlink{amrnbdec_8c_a93e16f11e94d063f00db05facfd2efcf}{unpack\+\_\+bitstream}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} buf\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{amrnbdec_8c_aefcc51fdeece13fefafe1dd73912012e}{amrnb\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\end{DoxyCompactItemize}
+\begin{Indent}\textbf{ A\+MR pitch L\+PC coefficient decoding functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a1c85444c7d716f8ddfe67e40a972f527}{interpolate\+\_\+lsf}} (\mbox{\hyperlink{struct_a_c_e_l_p_v_context}{A\+C\+E\+L\+P\+V\+Context}} $\ast$\mbox{\hyperlink{tests_2movenc_8c_a93cc7296f13f507c1fd7abd0db36b898}{ctx}}, float lsf\+\_\+q\mbox{[}4\mbox{]}\mbox{[}\mbox{\hyperlink{sipr_8h_ab7ebbfaeced769246e8623c25914c425}{L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER}}\mbox{]}, float $\ast$lsf\+\_\+new)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a209d3474be12b81789ddad55dc9773e1}{lsf2lsp\+\_\+for\+\_\+mode12k2}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, double lsp\mbox{[}\mbox{\hyperlink{sipr_8h_ab7ebbfaeced769246e8623c25914c425}{L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER}}\mbox{]}, const float lsf\+\_\+no\+\_\+r\mbox{[}\mbox{\hyperlink{sipr_8h_ab7ebbfaeced769246e8623c25914c425}{L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER}}\mbox{]}, const int16\+\_\+t $\ast$lsf\+\_\+quantizer\mbox{[}5\mbox{]}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} quantizer\+\_\+offset, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} sign, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__waveform_8c_a5d9d8869a49fdc890bb3f64aff331297}{update}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a317bf19dcd120ccbf4a9812f430e564e}{lsf2lsp\+\_\+5}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a75ab60d3b79df7f8759fa7625de82e00}{lsf2lsp\+\_\+3}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR pitch vector decoding functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a31363862930d60371d010b43fefa4ebd}{decode\+\_\+pitch\+\_\+lag\+\_\+1\+\_\+6}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$lag\+\_\+int, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$lag\+\_\+frac, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pitch\+\_\+index, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prev\+\_\+lag\+\_\+int, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a3da3282d94f7c5b849eb309cb4366deb}{decode\+\_\+pitch\+\_\+vector}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, const \mbox{\hyperlink{struct_a_m_r_n_b_subframe}{A\+M\+R\+N\+B\+Subframe}} $\ast$amr\+\_\+subframe, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR algebraic code book (fixed) vector decoding functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a351e33ee287e2ff13e4a9d679e7e75be}{decode\+\_\+10bit\+\_\+pulse}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a5588144d84c4c0c07d52c2f1dfebfa4f}{code}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pulse\+\_\+position\mbox{[}8\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} i1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} i2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} i3)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_ad087166a9faaa3f85aadd8a26aebb658}{decode\+\_\+8\+\_\+pulses\+\_\+31bits}} (const int16\+\_\+t $\ast$fixed\+\_\+index, \mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$fixed\+\_\+sparse)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a71c512839eee686b630fcc33a80e75a5}{decode\+\_\+fixed\+\_\+sparse}} (\mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$fixed\+\_\+sparse, const uint16\+\_\+t $\ast$\mbox{\hyperlink{g723__1_8h_ae7066a3dd30231dccbc429b70615a5a7}{pulses}}, const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a9917383fd05d16e47d04536c26170ad2}{pitch\+\_\+sharpening}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe, enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, \mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$fixed\+\_\+sparse)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR gain decoding functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static float \mbox{\hyperlink{amrnbdec_8c_a9e2f115a395e9c35239bf81e7982376e}{fixed\+\_\+gain\+\_\+smooth}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, const float $\ast$lsf, const float $\ast$lsf\+\_\+avg, const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a37085cf3abff63b881f45335889c81d7}{decode\+\_\+gains}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, const \mbox{\hyperlink{struct_a_m_r_n_b_subframe}{A\+M\+R\+N\+B\+Subframe}} $\ast$amr\+\_\+subframe, const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} \mbox{\hyperlink{ebur128_8h_a1a6b6fb557d8d37d59700faf4e4c9167}{mode}}, const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe, float $\ast$fixed\+\_\+gain\+\_\+factor)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR preprocessing functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a5dc867db5f5ce3b1a422154de3b5fd64}{apply\+\_\+ir\+\_\+filter}} (float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const \mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const float $\ast$\mbox{\hyperlink{vf__yadif__cuda_8c_a294d40c1ad5452fd8f8a6571e854e061}{filter}})
+\item 
+static const float $\ast$ \mbox{\hyperlink{amrnbdec_8c_ab81e7c5ad6246e12fd6e1855bc326522}{anti\+\_\+sparseness}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, \mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$fixed\+\_\+sparse, const float $\ast$fixed\+\_\+vector, float fixed\+\_\+gain, float $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}})
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR synthesis functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{amrnbdec_8c_a55d0211f8b106e7649c9855ac809463e}{synthesis}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, float $\ast$lpc, float fixed\+\_\+gain, const float $\ast$fixed\+\_\+vector, float $\ast$\mbox{\hyperlink{filter__design_8txt_ac53f7e33bdbd6ea3ec96ee0f1292ee84}{samples}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{undefined_8txt_a4380d92b0f151c36d5304b11b6610c66}{overflow}})
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR update functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a15753cc17c40c79e69a6fcd159a6be66}{update\+\_\+state}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p)
+\end{DoxyCompactItemize}
+\end{Indent}
+\begin{Indent}\textbf{ A\+MR Postprocessing functions}\par
+\begin{DoxyCompactItemize}
+\item 
+static float \mbox{\hyperlink{amrnbdec_8c_a639da9eb5a5f104aebc7d5480faddfd2}{tilt\+\_\+factor}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, float $\ast$lpc\+\_\+n, float $\ast$lpc\+\_\+d)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{amrnbdec_8c_a0b399dad993e197861a77af22e80c0e2}{postfilter}} (\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$p, float $\ast$lpc, float $\ast$buf\+\_\+out)
+\end{DoxyCompactItemize}
+\end{Indent}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{amrnbdec_8c_a34eed12d43ff807d31262467c12099ca}{ff\+\_\+amrnb\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A\+MR narrowband decoder
+
+This decoder uses floats for simplicity and so is not bit-\/exact. One difference is that differences in phase can accumulate. The test sequences in 3G\+PP TS 26.\+074 can still be useful.
+
+
+\begin{DoxyItemize}
+\item Comparing this file\textquotesingle{}s output to the output of the ref decoder gives a P\+S\+NR of 30 to 80. Plotting the output samples shows a difference in phase in some areas.
+\item Comparing both decoders against their input, this decoder gives a similar P\+S\+NR. If the test sequence homing frames are removed (this decoder does not detect them), the P\+S\+NR is at least as good as the reference on 140 out of 169 tests. 
+\end{DoxyItemize}
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{amrnbdec_8c_a286ed069767593abc158c7e31e86ce40}\label{amrnbdec_8c_a286ed069767593abc158c7e31e86ce40}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_AGC\_ALPHA@{AMR\_AGC\_ALPHA}}
+\index{AMR\_AGC\_ALPHA@{AMR\_AGC\_ALPHA}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_AGC\_ALPHA}{AMR\_AGC\_ALPHA}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+A\+G\+C\+\_\+\+A\+L\+P\+HA~0.\+9}
+
+Adaptive gain control factor used in post-\/filter 
+
+Definition at line 98 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a761545eb4c54c23e7fd5796eb0c23c24}\label{amrnbdec_8c_a761545eb4c54c23e7fd5796eb0c23c24}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_BLOCK\_SIZE@{AMR\_BLOCK\_SIZE}}
+\index{AMR\_BLOCK\_SIZE@{AMR\_BLOCK\_SIZE}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_BLOCK\_SIZE}{AMR\_BLOCK\_SIZE}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE~160}
+
+
+
+samples per frame 
+
+
+
+Definition at line 62 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a63cab97d22376207ef7bc94b48e141f9}\label{amrnbdec_8c_a63cab97d22376207ef7bc94b48e141f9}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_SAMPLE\_BOUND@{AMR\_SAMPLE\_BOUND}}
+\index{AMR\_SAMPLE\_BOUND@{AMR\_SAMPLE\_BOUND}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_SAMPLE\_BOUND}{AMR\_SAMPLE\_BOUND}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+B\+O\+U\+ND~32768.\+0}
+
+
+
+threshold for synthesis overflow 
+
+
+
+Definition at line 63 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_ac1e87bddb7255283f20c040de383d8b9}\label{amrnbdec_8c_ac1e87bddb7255283f20c040de383d8b9}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_SAMPLE\_SCALE@{AMR\_SAMPLE\_SCALE}}
+\index{AMR\_SAMPLE\_SCALE@{AMR\_SAMPLE\_SCALE}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_SAMPLE\_SCALE}{AMR\_SAMPLE\_SCALE}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+S\+A\+M\+P\+L\+E\+\_\+\+S\+C\+A\+LE~(2.\+0 / 32768.\+0)}
+
+Scale from constructed speech to \mbox{[}-\/1,1\mbox{]}
+
+A\+MR is designed to produce 16-\/bit P\+CM samples (3G\+PP TS 26.\+090 4.\+2) but upscales by two (section 6.\+2.\+2).
+
+Fundamentally, this scale is determined by energy\+\_\+mean through the fixed vector contribution to the excitation vector. 
+
+Definition at line 74 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a7d318e9f870951c80cbe7f4263c92f91}\label{amrnbdec_8c_a7d318e9f870951c80cbe7f4263c92f91}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_TILT\_GAMMA\_T@{AMR\_TILT\_GAMMA\_T}}
+\index{AMR\_TILT\_GAMMA\_T@{AMR\_TILT\_GAMMA\_T}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_TILT\_GAMMA\_T}{AMR\_TILT\_GAMMA\_T}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+T\+I\+L\+T\+\_\+\+G\+A\+M\+M\+A\+\_\+T~0.\+8}
+
+Tilt factor = 1st reflection coefficient $\ast$ gamma\+\_\+t 
+
+Definition at line 96 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_afc076bdfb6b0bcdb97acdf74faef2e79}\label{amrnbdec_8c_afc076bdfb6b0bcdb97acdf74faef2e79}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMR\_TILT\_RESPONSE@{AMR\_TILT\_RESPONSE}}
+\index{AMR\_TILT\_RESPONSE@{AMR\_TILT\_RESPONSE}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMR\_TILT\_RESPONSE}{AMR\_TILT\_RESPONSE}}
+{\footnotesize\ttfamily \#define A\+M\+R\+\_\+\+T\+I\+L\+T\+\_\+\+R\+E\+S\+P\+O\+N\+SE~22}
+
+Number of impulse response coefficients used for tilt factor 
+
+Definition at line 94 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_aea10e088cff499d9f9ca886a72e875dd}\label{amrnbdec_8c_aea10e088cff499d9f9ca886a72e875dd}} 
+\index{amrnbdec.c@{amrnbdec.c}!LSF\_R\_FAC@{LSF\_R\_FAC}}
+\index{LSF\_R\_FAC@{LSF\_R\_FAC}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{LSF\_R\_FAC}{LSF\_R\_FAC}}
+{\footnotesize\ttfamily \#define L\+S\+F\+\_\+\+R\+\_\+\+F\+AC~(8000.\+0 / 32768.\+0)}
+
+
+
+L\+SF residual tables to Hertz. 
+
+
+
+Definition at line 79 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_acaf1374d6ee289b87034543bec682af6}\label{amrnbdec_8c_acaf1374d6ee289b87034543bec682af6}} 
+\index{amrnbdec.c@{amrnbdec.c}!MIN\_ENERGY@{MIN\_ENERGY}}
+\index{MIN\_ENERGY@{MIN\_ENERGY}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_ENERGY}{MIN\_ENERGY}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+E\+N\+E\+R\+GY~-\/14.\+0}
+
+Initial energy in dB. Also used for bad frames (unimplemented). 
+
+Definition at line 84 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a87bb4d7d47fc9a4172565c063469521d}\label{amrnbdec_8c_a87bb4d7d47fc9a4172565c063469521d}} 
+\index{amrnbdec.c@{amrnbdec.c}!MIN\_LSF\_SPACING@{MIN\_LSF\_SPACING}}
+\index{MIN\_LSF\_SPACING@{MIN\_LSF\_SPACING}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_LSF\_SPACING}{MIN\_LSF\_SPACING}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+L\+S\+F\+\_\+\+S\+P\+A\+C\+I\+NG~(50.\+0488 / 8000.\+0)}
+
+
+
+Ensures stability of L\+PC filter. 
+
+
+
+Definition at line 80 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a3d1287efc9924b67cbab16d6a07cbb27}\label{amrnbdec_8c_a3d1287efc9924b67cbab16d6a07cbb27}} 
+\index{amrnbdec.c@{amrnbdec.c}!PITCH\_LAG\_MIN\_MODE\_12k2@{PITCH\_LAG\_MIN\_MODE\_12k2}}
+\index{PITCH\_LAG\_MIN\_MODE\_12k2@{PITCH\_LAG\_MIN\_MODE\_12k2}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{PITCH\_LAG\_MIN\_MODE\_12k2}{PITCH\_LAG\_MIN\_MODE\_12k2}}
+{\footnotesize\ttfamily \#define P\+I\+T\+C\+H\+\_\+\+L\+A\+G\+\_\+\+M\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+12k2~18}
+
+
+
+Lower bound on decoded lag search in 12.\+2kbit/s mode. 
+
+
+
+Definition at line 81 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_a6ff8861ac03ca3a34e1479bf2e3e1cf5}\label{amrnbdec_8c_a6ff8861ac03ca3a34e1479bf2e3e1cf5}} 
+\index{amrnbdec.c@{amrnbdec.c}!PRED\_FAC\_MODE\_12k2@{PRED\_FAC\_MODE\_12k2}}
+\index{PRED\_FAC\_MODE\_12k2@{PRED\_FAC\_MODE\_12k2}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{PRED\_FAC\_MODE\_12k2}{PRED\_FAC\_MODE\_12k2}}
+{\footnotesize\ttfamily \#define P\+R\+E\+D\+\_\+\+F\+A\+C\+\_\+\+M\+O\+D\+E\+\_\+12k2~0.\+65}
+
+\mbox{\hyperlink{struct_prediction}{Prediction}} factor for 12.\+2kbit/s mode 
+
+Definition at line 77 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_acca47319151f94e5aae9c534edb5bfa8}\label{amrnbdec_8c_acca47319151f94e5aae9c534edb5bfa8}} 
+\index{amrnbdec.c@{amrnbdec.c}!SHARP\_MAX@{SHARP\_MAX}}
+\index{SHARP\_MAX@{SHARP\_MAX}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{SHARP\_MAX}{SHARP\_MAX}}
+{\footnotesize\ttfamily \#define S\+H\+A\+R\+P\+\_\+\+M\+AX~0.\+79449462890625}
+
+Maximum sharpening factor
+
+The specification says 0.\+8, which should be 13107, but the reference C code uses 13017 instead. (Amusingly the same applies to S\+H\+A\+R\+P\+\_\+\+M\+AX in g729dec.\+c.) 
+
+Definition at line 91 of file amrnbdec.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{amrnbdec_8c_a3123b77ca3e7263e60ab006637856a21}\label{amrnbdec_8c_a3123b77ca3e7263e60ab006637856a21}} 
+\index{amrnbdec.c@{amrnbdec.c}!AMRContext@{AMRContext}}
+\index{AMRContext@{AMRContext}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{AMRContext}{AMRContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{amrnbdec_8c_aefcc51fdeece13fefafe1dd73912012e}\label{amrnbdec_8c_aefcc51fdeece13fefafe1dd73912012e}} 
+\index{amrnbdec.c@{amrnbdec.c}!amrnb\_decode\_frame@{amrnb\_decode\_frame}}
+\index{amrnb\_decode\_frame@{amrnb\_decode\_frame}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{amrnb\_decode\_frame()}{amrnb\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} amrnb\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 948 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{amrnbdec_8c_aefcc51fdeece13fefafe1dd73912012e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_ae397ab764784f7d9873b5f623fa5e5b0}\label{amrnbdec_8c_ae397ab764784f7d9873b5f623fa5e5b0}} 
+\index{amrnbdec.c@{amrnbdec.c}!amrnb\_decode\_init@{amrnb\_decode\_init}}
+\index{amrnb\_decode\_init@{amrnb\_decode\_init}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{amrnb\_decode\_init()}{amrnb\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} amrnb\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 160 of file amrnbdec.\+c.
+
+\mbox{\Hypertarget{amrnbdec_8c_ab81e7c5ad6246e12fd6e1855bc326522}\label{amrnbdec_8c_ab81e7c5ad6246e12fd6e1855bc326522}} 
+\index{amrnbdec.c@{amrnbdec.c}!anti\_sparseness@{anti\_sparseness}}
+\index{anti\_sparseness@{anti\_sparseness}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{anti\_sparseness()}{anti\_sparseness()}}
+{\footnotesize\ttfamily static const float$\ast$ anti\+\_\+sparseness (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$}]{fixed\+\_\+sparse,  }\item[{const float $\ast$}]{fixed\+\_\+vector,  }\item[{float}]{fixed\+\_\+gain,  }\item[{float $\ast$}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Reduce fixed vector sparseness by smoothing with one of three IR filters. Also know as \char`\"{}adaptive phase dispersion\char`\"{}.
+
+This implements 3G\+PP TS 26.\+090 section 6.\+1(5).
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em fixed\+\_\+sparse} & algebraic codebook vector \\
+\hline
+{\em fixed\+\_\+vector} & unfiltered fixed vector \\
+\hline
+{\em fixed\+\_\+gain} & smoothed gain \\
+\hline
+{\em out} & space for modified vector if necessary \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 719 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_ab81e7c5ad6246e12fd6e1855bc326522_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{amrnbdec_8c_ab81e7c5ad6246e12fd6e1855bc326522_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a5dc867db5f5ce3b1a422154de3b5fd64}\label{amrnbdec_8c_a5dc867db5f5ce3b1a422154de3b5fd64}} 
+\index{amrnbdec.c@{amrnbdec.c}!apply\_ir\_filter@{apply\_ir\_filter}}
+\index{apply\_ir\_filter@{apply\_ir\_filter}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{apply\_ir\_filter()}{apply\_ir\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} apply\+\_\+ir\+\_\+filter (\begin{DoxyParamCaption}\item[{float $\ast$}]{out,  }\item[{const \mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$}]{in,  }\item[{const float $\ast$}]{filter }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Circularly convolve a sparse fixed vector with a phase dispersion impulse response filter (D.\+6.\+2 of G.\+729 and 6.\+1.\+5 of A\+MR).
+
+
+\begin{DoxyParams}{Parameters}
+{\em out} & vector with filter applied \\
+\hline
+{\em in} & source vector \\
+\hline
+{\em filter} & phase filter coefficients\\
+\hline
+\end{DoxyParams}
+out\mbox{[}n\mbox{]} = sum(i,0,len-\/1)\{ in\mbox{[}i\mbox{]} $\ast$ filter\mbox{[}(len + n -\/ i)len\mbox{]} \} $<$ filters at pitch lag$\ast$1 and $\ast$2
+
+Definition at line 672 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a5dc867db5f5ce3b1a422154de3b5fd64_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a5dc867db5f5ce3b1a422154de3b5fd64_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a351e33ee287e2ff13e4a9d679e7e75be}\label{amrnbdec_8c_a351e33ee287e2ff13e4a9d679e7e75be}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_10bit\_pulse@{decode\_10bit\_pulse}}
+\index{decode\_10bit\_pulse@{decode\_10bit\_pulse}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_10bit\_pulse()}{decode\_10bit\_pulse()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+10bit\+\_\+pulse (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{code,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pulse\+\_\+position\mbox{[}8\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i3 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode a 10-\/bit algebraic codebook index from a 10.\+2 kbit/s frame. 
+
+Definition at line 435 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a351e33ee287e2ff13e4a9d679e7e75be_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_ad087166a9faaa3f85aadd8a26aebb658}\label{amrnbdec_8c_ad087166a9faaa3f85aadd8a26aebb658}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_8\_pulses\_31bits@{decode\_8\_pulses\_31bits}}
+\index{decode\_8\_pulses\_31bits@{decode\_8\_pulses\_31bits}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_8\_pulses\_31bits()}{decode\_8\_pulses\_31bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+8\+\_\+pulses\+\_\+31bits (\begin{DoxyParamCaption}\item[{const int16\+\_\+t $\ast$}]{fixed\+\_\+index,  }\item[{\mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$}]{fixed\+\_\+sparse }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the algebraic codebook index to pulse positions and signs and construct the algebraic codebook vector for M\+O\+D\+E\+\_\+10k2.
+
+
+\begin{DoxyParams}{Parameters}
+{\em fixed\+\_\+index} & positions of the eight pulses \\
+\hline
+{\em fixed\+\_\+sparse} & pointer to the algebraic codebook vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 453 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=343pt]{amrnbdec_8c_ad087166a9faaa3f85aadd8a26aebb658_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_ad087166a9faaa3f85aadd8a26aebb658_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a71c512839eee686b630fcc33a80e75a5}\label{amrnbdec_8c_a71c512839eee686b630fcc33a80e75a5}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_fixed\_sparse@{decode\_fixed\_sparse}}
+\index{decode\_fixed\_sparse@{decode\_fixed\_sparse}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_fixed\_sparse()}{decode\_fixed\_sparse()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+fixed\+\_\+sparse (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$}]{fixed\+\_\+sparse,  }\item[{const uint16\+\_\+t $\ast$}]{pulses,  }\item[{const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}}}]{mode,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode the algebraic codebook index to pulse positions and signs, then construct the algebraic codebook vector. \begin{DoxyVerb}                         nb of pulses | bits encoding pulses
+\end{DoxyVerb}
+ For M\+O\+D\+E\+\_\+4k75 or M\+O\+D\+E\+\_\+5k15, 2 $\vert$ 1-\/3, 4-\/6, 7 M\+O\+D\+E\+\_\+5k9, 2 $\vert$ 1, 2-\/4, 5-\/6, 7-\/9 M\+O\+D\+E\+\_\+6k7, 3 $\vert$ 1-\/3, 4, 5-\/7, 8, 9-\/11 M\+O\+D\+E\+\_\+7k4 or M\+O\+D\+E\+\_\+7k95, 4 $\vert$ 1-\/3, 4-\/6, 7-\/9, 10, 11-\/13
+
+
+\begin{DoxyParams}{Parameters}
+{\em fixed\+\_\+sparse} & pointer to the algebraic codebook vector \\
+\hline
+{\em pulses} & algebraic codebook indexes \\
+\hline
+{\em mode} & mode of the current frame \\
+\hline
+{\em subframe} & current subframe number \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 499 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a71c512839eee686b630fcc33a80e75a5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{amrnbdec_8c_a71c512839eee686b630fcc33a80e75a5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a37085cf3abff63b881f45335889c81d7}\label{amrnbdec_8c_a37085cf3abff63b881f45335889c81d7}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_gains@{decode\_gains}}
+\index{decode\_gains@{decode\_gains}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_gains()}{decode\_gains()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+gains (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{struct_a_m_r_n_b_subframe}{A\+M\+R\+N\+B\+Subframe}} $\ast$}]{amr\+\_\+subframe,  }\item[{const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}}}]{mode,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe,  }\item[{float $\ast$}]{fixed\+\_\+gain\+\_\+factor }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode pitch gain and fixed gain factor (part of section 6.\+1.\+3).
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em amr\+\_\+subframe} & unpacked amr subframe \\
+\hline
+{\em mode} & mode of the current frame \\
+\hline
+{\em subframe} & current subframe number \\
+\hline
+{\em fixed\+\_\+gain\+\_\+factor} & decoded gain correction factor \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 630 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=303pt]{amrnbdec_8c_a37085cf3abff63b881f45335889c81d7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a31363862930d60371d010b43fefa4ebd}\label{amrnbdec_8c_a31363862930d60371d010b43fefa4ebd}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_pitch\_lag\_1\_6@{decode\_pitch\_lag\_1\_6}}
+\index{decode\_pitch\_lag\_1\_6@{decode\_pitch\_lag\_1\_6}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_pitch\_lag\_1\_6()}{decode\_pitch\_lag\_1\_6()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+pitch\+\_\+lag\+\_\+1\+\_\+6 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{lag\+\_\+int,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{lag\+\_\+frac,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pitch\+\_\+index,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{prev\+\_\+lag\+\_\+int,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Like \mbox{\hyperlink{acelp__pitch__delay_8c_a874fd848faa735c0a85fe3c0e04d1190}{ff\+\_\+decode\+\_\+pitch\+\_\+lag()}}, but with 1/6 resolution 
+
+Definition at line 372 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a31363862930d60371d010b43fefa4ebd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a3da3282d94f7c5b849eb309cb4366deb}\label{amrnbdec_8c_a3da3282d94f7c5b849eb309cb4366deb}} 
+\index{amrnbdec.c@{amrnbdec.c}!decode\_pitch\_vector@{decode\_pitch\_vector}}
+\index{decode\_pitch\_vector@{decode\_pitch\_vector}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_pitch\_vector()}{decode\_pitch\_vector()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+pitch\+\_\+vector (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{struct_a_m_r_n_b_subframe}{A\+M\+R\+N\+B\+Subframe}} $\ast$}]{amr\+\_\+subframe,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 391 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{amrnbdec_8c_a3da3282d94f7c5b849eb309cb4366deb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=331pt]{amrnbdec_8c_a3da3282d94f7c5b849eb309cb4366deb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a9e2f115a395e9c35239bf81e7982376e}\label{amrnbdec_8c_a9e2f115a395e9c35239bf81e7982376e}} 
+\index{amrnbdec.c@{amrnbdec.c}!fixed\_gain\_smooth@{fixed\_gain\_smooth}}
+\index{fixed\_gain\_smooth@{fixed\_gain\_smooth}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{fixed\_gain\_smooth()}{fixed\_gain\_smooth()}}
+{\footnotesize\ttfamily static float fixed\+\_\+gain\+\_\+smooth (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{const float $\ast$}]{lsf,  }\item[{const float $\ast$}]{lsf\+\_\+avg,  }\item[{const enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}}}]{mode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+fixed gain smoothing Note that where the spec specifies the \char`\"{}spectrum in the q domain\char`\"{} in section 6.\+1.\+4, in fact frequencies should be used.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em lsf} & L\+S\+Fs for the current subframe, in the range \mbox{[}0,1\mbox{]} \\
+\hline
+{\em lsf\+\_\+avg} & averaged L\+S\+Fs \\
+\hline
+{\em mode} & mode of the current frame\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+fixed gain smoothed 
+\end{DoxyReturn}
+
+
+Definition at line 588 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{amrnbdec_8c_a9e2f115a395e9c35239bf81e7982376e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{amrnbdec_8c_a9e2f115a395e9c35239bf81e7982376e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a1c85444c7d716f8ddfe67e40a972f527}\label{amrnbdec_8c_a1c85444c7d716f8ddfe67e40a972f527}} 
+\index{amrnbdec.c@{amrnbdec.c}!interpolate\_lsf@{interpolate\_lsf}}
+\index{interpolate\_lsf@{interpolate\_lsf}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_lsf()}{interpolate\_lsf()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} interpolate\+\_\+lsf (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_c_e_l_p_v_context}{A\+C\+E\+L\+P\+V\+Context}} $\ast$}]{ctx,  }\item[{float}]{lsf\+\_\+q\mbox{[}4\mbox{]}\mbox{[}\+L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+E\+R\mbox{]},  }\item[{float $\ast$}]{lsf\+\_\+new }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Interpolate the L\+SF vector (used for fixed gain smoothing). The interpolation is done over all four subframes even in M\+O\+D\+E\+\_\+12k2.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em ctx} & The \mbox{\hyperlink{struct_context}{Context}} \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em lsf\+\_\+q} & L\+S\+Fs in \mbox{[}0,1\mbox{]} for each subframe \\
+\hline
+\mbox{\texttt{ in}}  & {\em lsf\+\_\+new} & New L\+S\+Fs in \mbox{[}0,1\mbox{]} for subframe 4 \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 239 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a1c85444c7d716f8ddfe67e40a972f527_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a75ab60d3b79df7f8759fa7625de82e00}\label{amrnbdec_8c_a75ab60d3b79df7f8759fa7625de82e00}} 
+\index{amrnbdec.c@{amrnbdec.c}!lsf2lsp\_3@{lsf2lsp\_3}}
+\index{lsf2lsp\_3@{lsf2lsp\_3}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{lsf2lsp\_3()}{lsf2lsp\_3()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lsf2lsp\+\_\+3 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode a set of 3 split-\/matrix quantized lsf indexes into an lsp vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & pointer to the \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 327 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=268pt]{amrnbdec_8c_a75ab60d3b79df7f8759fa7625de82e00_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{amrnbdec_8c_a75ab60d3b79df7f8759fa7625de82e00_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a317bf19dcd120ccbf4a9812f430e564e}\label{amrnbdec_8c_a317bf19dcd120ccbf4a9812f430e564e}} 
+\index{amrnbdec.c@{amrnbdec.c}!lsf2lsp\_5@{lsf2lsp\_5}}
+\index{lsf2lsp\_5@{lsf2lsp\_5}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{lsf2lsp\_5()}{lsf2lsp\_5()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lsf2lsp\+\_\+5 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode a set of 5 split-\/matrix quantized lsf indexes into 2 lsp vectors.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & pointer to the \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 298 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a317bf19dcd120ccbf4a9812f430e564e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{amrnbdec_8c_a317bf19dcd120ccbf4a9812f430e564e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a209d3474be12b81789ddad55dc9773e1}\label{amrnbdec_8c_a209d3474be12b81789ddad55dc9773e1}} 
+\index{amrnbdec.c@{amrnbdec.c}!lsf2lsp\_for\_mode12k2@{lsf2lsp\_for\_mode12k2}}
+\index{lsf2lsp\_for\_mode12k2@{lsf2lsp\_for\_mode12k2}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{lsf2lsp\_for\_mode12k2()}{lsf2lsp\_for\_mode12k2()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lsf2lsp\+\_\+for\+\_\+mode12k2 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{double}]{lsp\mbox{[}\+L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+E\+R\mbox{]},  }\item[{const float}]{lsf\+\_\+no\+\_\+r\mbox{[}\+L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+E\+R\mbox{]},  }\item[{const int16\+\_\+t $\ast$}]{lsf\+\_\+quantizer\mbox{[}5\mbox{]},  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{quantizer\+\_\+offset,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{sign,  }\item[{const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{update }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode a set of 5 split-\/matrix quantized lsf indexes into an lsp vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em lsp} & output L\+SP vector \\
+\hline
+{\em lsf\+\_\+no\+\_\+r} & L\+SF vector without the residual vector added \\
+\hline
+{\em lsf\+\_\+quantizer} & pointers to L\+SF dictionary tables \\
+\hline
+{\em quantizer\+\_\+offset} & offset in tables \\
+\hline
+{\em sign} & for the 3 dictionary table \\
+\hline
+{\em update} & store data for computing the next frame\textquotesingle{}s L\+S\+Fs \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 260 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a209d3474be12b81789ddad55dc9773e1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a209d3474be12b81789ddad55dc9773e1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a9917383fd05d16e47d04536c26170ad2}\label{amrnbdec_8c_a9917383fd05d16e47d04536c26170ad2}} 
+\index{amrnbdec.c@{amrnbdec.c}!pitch\_sharpening@{pitch\_sharpening}}
+\index{pitch\_sharpening@{pitch\_sharpening}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{pitch\_sharpening()}{pitch\_sharpening()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} pitch\+\_\+sharpening (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe,  }\item[{enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}}}]{mode,  }\item[{\mbox{\hyperlink{struct_a_m_r_fixed}{A\+M\+R\+Fixed}} $\ast$}]{fixed\+\_\+sparse }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Apply pitch lag to obtain the sharpened fixed vector (section 6.\+1.\+2)
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em subframe} & unpacked amr subframe \\
+\hline
+{\em mode} & mode of the current frame \\
+\hline
+{\em fixed\+\_\+sparse} & sparse representation of the fixed vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 552 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{amrnbdec_8c_a9917383fd05d16e47d04536c26170ad2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a0b399dad993e197861a77af22e80c0e2}\label{amrnbdec_8c_a0b399dad993e197861a77af22e80c0e2}} 
+\index{amrnbdec.c@{amrnbdec.c}!postfilter@{postfilter}}
+\index{postfilter@{postfilter}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{postfilter()}{postfilter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} postfilter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{float $\ast$}]{lpc,  }\item[{float $\ast$}]{buf\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Perform adaptive post-\/filtering to enhance the quality of the speech. See section 6.\+2.\+1.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & pointer to the \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \\
+\hline
+{\em lpc} & interpolated LP coefficients for this subframe \\
+\hline
+{\em buf\+\_\+out} & output of the filter \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 904 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a0b399dad993e197861a77af22e80c0e2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{amrnbdec_8c_a0b399dad993e197861a77af22e80c0e2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a55d0211f8b106e7649c9855ac809463e}\label{amrnbdec_8c_a55d0211f8b106e7649c9855ac809463e}} 
+\index{amrnbdec.c@{amrnbdec.c}!synthesis@{synthesis}}
+\index{synthesis@{synthesis}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{synthesis()}{synthesis()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} synthesis (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{float $\ast$}]{lpc,  }\item[{float}]{fixed\+\_\+gain,  }\item[{const float $\ast$}]{fixed\+\_\+vector,  }\item[{float $\ast$}]{samples,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}}}]{overflow }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Conduct 10th order linear predictive coding synthesis.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & pointer to the \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \\
+\hline
+{\em lpc} & pointer to the L\+PC coefficients \\
+\hline
+{\em fixed\+\_\+gain} & fixed codebook gain for synthesis \\
+\hline
+{\em fixed\+\_\+vector} & algebraic codebook vector \\
+\hline
+{\em samples} & pointer to the output speech samples \\
+\hline
+{\em overflow} & 16-\/bit overflow flag \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 790 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a55d0211f8b106e7649c9855ac809463e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=285pt]{amrnbdec_8c_a55d0211f8b106e7649c9855ac809463e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a639da9eb5a5f104aebc7d5480faddfd2}\label{amrnbdec_8c_a639da9eb5a5f104aebc7d5480faddfd2}} 
+\index{amrnbdec.c@{amrnbdec.c}!tilt\_factor@{tilt\_factor}}
+\index{tilt\_factor@{tilt\_factor}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{tilt\_factor()}{tilt\_factor()}}
+{\footnotesize\ttfamily static float tilt\+\_\+factor (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{float $\ast$}]{lpc\+\_\+n,  }\item[{float $\ast$}]{lpc\+\_\+d }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Get the tilt factor of a formant filter from its transfer function
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & The \mbox{\hyperlink{struct_context}{Context}} \\
+\hline
+{\em lpc\+\_\+n} & L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER coefficients of the numerator \\
+\hline
+{\em lpc\+\_\+d} & L\+P\+\_\+\+F\+I\+L\+T\+E\+R\+\_\+\+O\+R\+D\+ER coefficients of the denominator \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 874 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a639da9eb5a5f104aebc7d5480faddfd2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a93e16f11e94d063f00db05facfd2efcf}\label{amrnbdec_8c_a93e16f11e94d063f00db05facfd2efcf}} 
+\index{amrnbdec.c@{amrnbdec.c}!unpack\_bitstream@{unpack\_bitstream}}
+\index{unpack\_bitstream@{unpack\_bitstream}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{unpack\_bitstream()}{unpack\_bitstream()}}
+{\footnotesize\ttfamily static enum \mbox{\hyperlink{amrnbdata_8h_a46c8a310cf4c094f8c80e1cb8dc1f911}{Mode}} unpack\+\_\+bitstream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{buf\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Unpack an R\+F\+C4867 speech frame into the A\+MR frame mode and parameters.
+
+The order of speech bits is specified by 3G\+PP TS 26.\+101.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & the context \\
+\hline
+{\em buf} & pointer to the input buffer \\
+\hline
+{\em buf\+\_\+size} & size of the input buffer\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the frame mode 
+\end{DoxyReturn}
+
+
+Definition at line 160 of file amrnbdec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a93e16f11e94d063f00db05facfd2efcf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{amrnbdec_8c_a93e16f11e94d063f00db05facfd2efcf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a15753cc17c40c79e69a6fcd159a6be66}\label{amrnbdec_8c_a15753cc17c40c79e69a6fcd159a6be66}} 
+\index{amrnbdec.c@{amrnbdec.c}!update\_state@{update\_state}}
+\index{update\_state@{update\_state}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{update\_state()}{update\_state()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+state (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Update buffers and history at the end of decoding a subframe.
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & pointer to the \mbox{\hyperlink{struct_a_m_r_context}{A\+M\+R\+Context}} \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 847 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{amrnbdec_8c_a15753cc17c40c79e69a6fcd159a6be66_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{amrnbdec_8c_a7d7267ac651c1215f2b7461c1baf5984}\label{amrnbdec_8c_a7d7267ac651c1215f2b7461c1baf5984}} 
+\index{amrnbdec.c@{amrnbdec.c}!weighted\_vector\_sumd@{weighted\_vector\_sumd}}
+\index{weighted\_vector\_sumd@{weighted\_vector\_sumd}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{weighted\_vector\_sumd()}{weighted\_vector\_sumd()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} weighted\+\_\+vector\+\_\+sumd (\begin{DoxyParamCaption}\item[{double $\ast$}]{out,  }\item[{const double $\ast$}]{in\+\_\+a,  }\item[{const double $\ast$}]{in\+\_\+b,  }\item[{double}]{weight\+\_\+coeff\+\_\+a,  }\item[{double}]{weight\+\_\+coeff\+\_\+b,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Double version of \mbox{\hyperlink{acelp__vectors_8c_ae6f91c4819ad805fec298b39b860f2aa}{ff\+\_\+weighted\+\_\+vector\+\_\+sumf()}} 
+
+Definition at line 149 of file amrnbdec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{amrnbdec_8c_a7d7267ac651c1215f2b7461c1baf5984_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{amrnbdec_8c_a34eed12d43ff807d31262467c12099ca}\label{amrnbdec_8c_a34eed12d43ff807d31262467c12099ca}} 
+\index{amrnbdec.c@{amrnbdec.c}!ff\_amrnb\_decoder@{ff\_amrnb\_decoder}}
+\index{ff\_amrnb\_decoder@{ff\_amrnb\_decoder}!amrnbdec.c@{amrnbdec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_amrnb\_decoder}{ff\_amrnb\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+amrnb\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}amrnb"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}AMR-\/NB (Adaptive Multi-\/Rate NarrowBand)"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea88d9e41adf1df5445e3068512177b582}{AV\_CODEC\_ID\_AMR\_NB}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{amrnbdec_8c_a3123b77ca3e7263e60ab006637856a21}{AMRContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{amrnbdec_8c_ae397ab764784f7d9873b5f623fa5e5b0}{amrnb\_decode\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{amrnbdec_8c_aefcc51fdeece13fefafe1dd73912012e}{amrnb\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}    = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a5251d62cc3c7f18e56bc8e0c48a27903}{AV\_SAMPLE\_FMT\_FLT}},}
+\DoxyCodeLine{                                                     \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1083 of file amrnbdec.\+c.
+

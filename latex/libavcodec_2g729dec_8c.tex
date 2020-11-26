@@ -1,0 +1,611 @@
+\hypertarget{libavcodec_2g729dec_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/g729dec.c File Reference}
+\label{libavcodec_2g729dec_8c}\index{E:/github/ffmpeg/libavcodec/g729dec.c@{E:/github/ffmpeg/libavcodec/g729dec.c}}
+{\ttfamily \#include $<$inttypes.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avutil.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}audiodsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}g729.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}lsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}celp\+\_\+math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}celp\+\_\+filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+filters.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+pitch\+\_\+delay.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}acelp\+\_\+vectors.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}g729data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}g729postfilter.\+h\char`\"{}}\newline
+Include dependency graph for g729dec.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2g729dec_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_g729_format_description}{G729\+Format\+Description}}
+\item 
+struct \mbox{\hyperlink{struct_g729_channel_context}{G729\+Channel\+Context}}
+\item 
+struct \mbox{\hyperlink{struct_g729_context}{G729\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_aebb66655119c2778d6b797803584c6ea}{L\+S\+F\+Q\+\_\+\+M\+IN}}~40
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_af857764d4f075742cbcb1361bdee09fe}{L\+S\+F\+Q\+\_\+\+M\+AX}}~25681
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_aee0c50f0a11d028779561a936e538470}{L\+S\+F\+Q\+\_\+\+D\+I\+F\+F\+\_\+\+M\+IN}}~321
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_aebc4a52a0b526fa2f7d9587ab2bd6d74}{I\+N\+T\+E\+R\+P\+O\+L\+\_\+\+L\+EN}}~11
+\begin{DoxyCompactList}\small\item\em interpolation filter length \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_a55181116836865fc361d1df514bbddcb}{S\+H\+A\+R\+P\+\_\+\+M\+IN}}~3277
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_acca47319151f94e5aae9c534edb5bfa8}{S\+H\+A\+R\+P\+\_\+\+M\+AX}}~13017
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_a7abdc5a459ce5bc0ee903f3d7bd54035}{M\+R\+\_\+\+E\+N\+E\+R\+GY}}~1018156
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_aa679b3f92c14767af476ce8607dea249}{D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+N\+O\+I\+SE}}~0
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_a59ef498e7ee009feca97cb8e186237b8}{D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+I\+N\+T\+E\+R\+M\+E\+D\+I\+A\+TE}}~1
+\item 
+\#define \mbox{\hyperlink{libavcodec_2g729dec_8c_a75bd36d1343ca71a973eccd8540567fd}{D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+V\+O\+I\+CE}}~2
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33}{G729\+Formats}} \{ \mbox{\hyperlink{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33ab2bb645276d4da977695e52565b52c55}{F\+O\+R\+M\+A\+T\+\_\+\+G729\+\_\+8K}} = 0, 
+\mbox{\hyperlink{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33a7596e3ff32c567e05bfc4b504a282852}{F\+O\+R\+M\+A\+T\+\_\+\+G729\+D\+\_\+6\+K4}}, 
+\mbox{\hyperlink{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33aad820037bbccf91876ba43072e0609c3}{F\+O\+R\+M\+A\+T\+\_\+\+C\+O\+U\+NT}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static uint16\+\_\+t \mbox{\hyperlink{libavcodec_2g729dec_8c_a14c79f97851584d24e2f9c5f9bc4f968}{g729\+\_\+prng}} (uint16\+\_\+t \mbox{\hyperlink{eval_8c_aee90379adb0307effb138f4871edbc5c}{value}})
+\begin{DoxyCompactList}\small\item\em pseudo random number generator \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2g729dec_8c_ae16efedea607df0c928db1612edce54e}{lsf\+\_\+decode}} (int16\+\_\+t $\ast$lsfq, int16\+\_\+t $\ast$past\+\_\+quantizer\+\_\+outputs\mbox{[}\mbox{\hyperlink{g729data_8h_aa729acdea82400e867430e86e79875c4}{M\+A\+\_\+\+NP}}+1\mbox{]}, int16\+\_\+t ma\+\_\+predictor, int16\+\_\+t vq\+\_\+1st, int16\+\_\+t vq\+\_\+2nd\+\_\+low, int16\+\_\+t vq\+\_\+2nd\+\_\+high)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a6a303c63d29d195ed6b8e3d04cb24618}{lsf\+\_\+restore\+\_\+from\+\_\+previous}} (int16\+\_\+t $\ast$lsfq, int16\+\_\+t $\ast$past\+\_\+quantizer\+\_\+outputs\mbox{[}\mbox{\hyperlink{g729data_8h_aa729acdea82400e867430e86e79875c4}{M\+A\+\_\+\+NP}}+1\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ma\+\_\+predictor\+\_\+prev)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a026690957287ecf3768cbbaafae98451}{g729d\+\_\+get\+\_\+new\+\_\+exc}} (int16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, const int16\+\_\+t $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, const int16\+\_\+t $\ast$fc\+\_\+cur, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} dstate, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gain\+\_\+code, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a524b064dcd1c780e2606607656824cef}{g729d\+\_\+onset\+\_\+decision}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} past\+\_\+onset, const int16\+\_\+t $\ast$past\+\_\+gain\+\_\+code)
+\item 
+static int16\+\_\+t \mbox{\hyperlink{libavcodec_2g729dec_8c_af2cd9c3e8818ce85d513ea378f91626a}{g729d\+\_\+voice\+\_\+decision}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} onset, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} prev\+\_\+voice\+\_\+decision, const int16\+\_\+t $\ast$past\+\_\+gain\+\_\+pitch)
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a158c03898b0e5e024295035d4bd9606a}{scalarproduct\+\_\+int16\+\_\+c}} (const int16\+\_\+t $\ast$v1, const int16\+\_\+t $\ast$v2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} order)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698}{decoder\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a48462025775e112b5220440bdd4da254}{decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_g729_format_description}{G729\+Format\+Description}} \mbox{\hyperlink{libavcodec_2g729dec_8c_a1b101d63033dc45857b3a125ed512940}{format\+\_\+g729\+\_\+8k}}
+\item 
+static const \mbox{\hyperlink{struct_g729_format_description}{G729\+Format\+Description}} \mbox{\hyperlink{libavcodec_2g729dec_8c_ac492715656bc322bdb518860d6314c1d}{format\+\_\+g729d\+\_\+6k4}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2g729dec_8c_afd0e8d2ac8ee48160eaed18849dbb34a}{ff\+\_\+g729\+\_\+decoder}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{libavcodec_2g729dec_8c_aaf6e8bfce11c756c349ec8ec0dd81e5c}{ff\+\_\+acelp\+\_\+kelvin\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a59ef498e7ee009feca97cb8e186237b8}\label{libavcodec_2g729dec_8c_a59ef498e7ee009feca97cb8e186237b8}} 
+\index{g729dec.c@{g729dec.c}!DECISION\_INTERMEDIATE@{DECISION\_INTERMEDIATE}}
+\index{DECISION\_INTERMEDIATE@{DECISION\_INTERMEDIATE}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{DECISION\_INTERMEDIATE}{DECISION\_INTERMEDIATE}}
+{\footnotesize\ttfamily \#define D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+I\+N\+T\+E\+R\+M\+E\+D\+I\+A\+TE~1}
+
+
+
+Definition at line 84 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_aa679b3f92c14767af476ce8607dea249}\label{libavcodec_2g729dec_8c_aa679b3f92c14767af476ce8607dea249}} 
+\index{g729dec.c@{g729dec.c}!DECISION\_NOISE@{DECISION\_NOISE}}
+\index{DECISION\_NOISE@{DECISION\_NOISE}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{DECISION\_NOISE}{DECISION\_NOISE}}
+{\footnotesize\ttfamily \#define D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+N\+O\+I\+SE~0}
+
+
+
+Definition at line 83 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a75bd36d1343ca71a973eccd8540567fd}\label{libavcodec_2g729dec_8c_a75bd36d1343ca71a973eccd8540567fd}} 
+\index{g729dec.c@{g729dec.c}!DECISION\_VOICE@{DECISION\_VOICE}}
+\index{DECISION\_VOICE@{DECISION\_VOICE}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{DECISION\_VOICE}{DECISION\_VOICE}}
+{\footnotesize\ttfamily \#define D\+E\+C\+I\+S\+I\+O\+N\+\_\+\+V\+O\+I\+CE~2}
+
+
+
+Definition at line 85 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_aebc4a52a0b526fa2f7d9587ab2bd6d74}\label{libavcodec_2g729dec_8c_aebc4a52a0b526fa2f7d9587ab2bd6d74}} 
+\index{g729dec.c@{g729dec.c}!INTERPOL\_LEN@{INTERPOL\_LEN}}
+\index{INTERPOL\_LEN@{INTERPOL\_LEN}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{INTERPOL\_LEN}{INTERPOL\_LEN}}
+{\footnotesize\ttfamily \#define I\+N\+T\+E\+R\+P\+O\+L\+\_\+\+L\+EN~11}
+
+
+
+interpolation filter length 
+
+
+
+Definition at line 61 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_aee0c50f0a11d028779561a936e538470}\label{libavcodec_2g729dec_8c_aee0c50f0a11d028779561a936e538470}} 
+\index{g729dec.c@{g729dec.c}!LSFQ\_DIFF\_MIN@{LSFQ\_DIFF\_MIN}}
+\index{LSFQ\_DIFF\_MIN@{LSFQ\_DIFF\_MIN}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{LSFQ\_DIFF\_MIN}{LSFQ\_DIFF\_MIN}}
+{\footnotesize\ttfamily \#define L\+S\+F\+Q\+\_\+\+D\+I\+F\+F\+\_\+\+M\+IN~321}
+
+minimum L\+SF distance (3.\+2.\+4) 0.\+0391 in Q13 
+
+Definition at line 58 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_af857764d4f075742cbcb1361bdee09fe}\label{libavcodec_2g729dec_8c_af857764d4f075742cbcb1361bdee09fe}} 
+\index{g729dec.c@{g729dec.c}!LSFQ\_MAX@{LSFQ\_MAX}}
+\index{LSFQ\_MAX@{LSFQ\_MAX}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{LSFQ\_MAX}{LSFQ\_MAX}}
+{\footnotesize\ttfamily \#define L\+S\+F\+Q\+\_\+\+M\+AX~25681}
+
+maximum quantized L\+SF value (3.\+2.\+4) 3.\+135 in Q13 
+
+Definition at line 52 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_aebb66655119c2778d6b797803584c6ea}\label{libavcodec_2g729dec_8c_aebb66655119c2778d6b797803584c6ea}} 
+\index{g729dec.c@{g729dec.c}!LSFQ\_MIN@{LSFQ\_MIN}}
+\index{LSFQ\_MIN@{LSFQ\_MIN}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{LSFQ\_MIN}{LSFQ\_MIN}}
+{\footnotesize\ttfamily \#define L\+S\+F\+Q\+\_\+\+M\+IN~40}
+
+minimum quantized L\+SF value (3.\+2.\+4) 0.\+005 in Q13 
+
+Definition at line 46 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a7abdc5a459ce5bc0ee903f3d7bd54035}\label{libavcodec_2g729dec_8c_a7abdc5a459ce5bc0ee903f3d7bd54035}} 
+\index{g729dec.c@{g729dec.c}!MR\_ENERGY@{MR\_ENERGY}}
+\index{MR\_ENERGY@{MR\_ENERGY}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{MR\_ENERGY}{MR\_ENERGY}}
+{\footnotesize\ttfamily \#define M\+R\+\_\+\+E\+N\+E\+R\+GY~1018156}
+
+M\+R\+\_\+\+E\+N\+E\+R\+GY (mean removed energy) = mean\+\_\+energy + 10 $\ast$ log10(2$^\wedge$26  $\ast$ subframe\+\_\+size) in (7.\+13) 
+
+Definition at line 81 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_acca47319151f94e5aae9c534edb5bfa8}\label{libavcodec_2g729dec_8c_acca47319151f94e5aae9c534edb5bfa8}} 
+\index{g729dec.c@{g729dec.c}!SHARP\_MAX@{SHARP\_MAX}}
+\index{SHARP\_MAX@{SHARP\_MAX}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{SHARP\_MAX}{SHARP\_MAX}}
+{\footnotesize\ttfamily \#define S\+H\+A\+R\+P\+\_\+\+M\+AX~13017}
+
+maximum gain pitch value (3.\+8, Equation 47) (EE) This does not comply with the specification. Specification says about 0.\+8, which should be 13107 in (1.\+14), but reference C code uses 13017 (equals to 0.\+7945) instead of it. 
+
+Definition at line 76 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a55181116836865fc361d1df514bbddcb}\label{libavcodec_2g729dec_8c_a55181116836865fc361d1df514bbddcb}} 
+\index{g729dec.c@{g729dec.c}!SHARP\_MIN@{SHARP\_MIN}}
+\index{SHARP\_MIN@{SHARP\_MIN}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{SHARP\_MIN}{SHARP\_MIN}}
+{\footnotesize\ttfamily \#define S\+H\+A\+R\+P\+\_\+\+M\+IN~3277}
+
+minimum gain pitch value (3.\+8, Equation 47) 0.\+2 in (1.\+14) 
+
+Definition at line 67 of file g729dec.\+c.
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33}\label{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33}} 
+\index{g729dec.c@{g729dec.c}!G729Formats@{G729Formats}}
+\index{G729Formats@{G729Formats}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{G729Formats}{G729Formats}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33}{G729\+Formats}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FORMAT\_G729\_8K@{FORMAT\_G729\_8K}!g729dec.c@{g729dec.c}}\index{g729dec.c@{g729dec.c}!FORMAT\_G729\_8K@{FORMAT\_G729\_8K}}}\mbox{\Hypertarget{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33ab2bb645276d4da977695e52565b52c55}\label{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33ab2bb645276d4da977695e52565b52c55}} 
+F\+O\+R\+M\+A\+T\+\_\+\+G729\+\_\+8K&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FORMAT\_G729D\_6K4@{FORMAT\_G729D\_6K4}!g729dec.c@{g729dec.c}}\index{g729dec.c@{g729dec.c}!FORMAT\_G729D\_6K4@{FORMAT\_G729D\_6K4}}}\mbox{\Hypertarget{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33a7596e3ff32c567e05bfc4b504a282852}\label{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33a7596e3ff32c567e05bfc4b504a282852}} 
+F\+O\+R\+M\+A\+T\+\_\+\+G729\+D\+\_\+6\+K4&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FORMAT\_COUNT@{FORMAT\_COUNT}!g729dec.c@{g729dec.c}}\index{g729dec.c@{g729dec.c}!FORMAT\_COUNT@{FORMAT\_COUNT}}}\mbox{\Hypertarget{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33aad820037bbccf91876ba43072e0609c3}\label{libavcodec_2g729dec_8c_a18bd8868cee7e1301dab4608c7a5be33aad820037bbccf91876ba43072e0609c3}} 
+F\+O\+R\+M\+A\+T\+\_\+\+C\+O\+U\+NT&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 87 of file g729dec.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a48462025775e112b5220440bdd4da254}\label{libavcodec_2g729dec_8c_a48462025775e112b5220440bdd4da254}} 
+\index{g729dec.c@{g729dec.c}!decode\_close@{decode\_close}}
+\index{decode\_close@{decode\_close}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_close()}{decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 745 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}\label{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}} 
+\index{g729dec.c@{g729dec.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+$<$ switched MA predictor of L\+SP quantizer
+
+$<$ first stage vector of quantizer
+
+$<$ second stage lower vector of quantizer (size in bits)
+
+$<$ second stage higher vector of quantizer (size in bits)
+
+$<$ frame erasure detected during decoding
+
+$<$ parity check failed
+
+$<$ whether one of the subframes is declared as periodic or not
+
+$<$ adaptive codebook index
+
+$<$ fixed-\/codebook vector pulse signs
+
+$<$ fixed-\/codebook indexes
+
+$<$ gain codebook (first stage) index
+
+$<$ gain codebook (second stage) index
+
+Definition at line 402 of file g729dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698}\label{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698}} 
+\index{g729dec.c@{g729dec.c}!decoder\_init@{decoder\_init}}
+\index{decoder\_init@{decoder\_init}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{decoder\_init()}{decoder\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decoder\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 349 of file g729dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a14c79f97851584d24e2f9c5f9bc4f968}\label{libavcodec_2g729dec_8c_a14c79f97851584d24e2f9c5f9bc4f968}} 
+\index{g729dec.c@{g729dec.c}!g729\_prng@{g729\_prng}}
+\index{g729\_prng@{g729\_prng}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{g729\_prng()}{g729\_prng()}}
+{\footnotesize\ttfamily static uint16\+\_\+t g729\+\_\+prng (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+pseudo random number generator 
+
+
+
+Definition at line 185 of file g729dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=255pt]{libavcodec_2g729dec_8c_a14c79f97851584d24e2f9c5f9bc4f968_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a026690957287ecf3768cbbaafae98451}\label{libavcodec_2g729dec_8c_a026690957287ecf3768cbbaafae98451}} 
+\index{g729dec.c@{g729dec.c}!g729d\_get\_new\_exc@{g729d\_get\_new\_exc}}
+\index{g729d\_get\_new\_exc@{g729d\_get\_new\_exc}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{g729d\_get\_new\_exc()}{g729d\_get\_new\_exc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} g729d\+\_\+get\+\_\+new\+\_\+exc (\begin{DoxyParamCaption}\item[{int16\+\_\+t $\ast$}]{out,  }\item[{const int16\+\_\+t $\ast$}]{in,  }\item[{const int16\+\_\+t $\ast$}]{fc\+\_\+cur,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{dstate,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{gain\+\_\+code,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Constructs new excitation signal and applies phase filter to it 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ out}}  & {\em out} & constructed speech signal \\
+\hline
+ & {\em in} & original excitation signal \\
+\hline
+ & {\em fc\+\_\+cur} & (2.\+13) original fixed-\/codebook vector \\
+\hline
+ & {\em gain\+\_\+code} & (14.\+1) gain code \\
+\hline
+ & {\em subframe\+\_\+size} & length of the subframe \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 265 of file g729dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=328pt]{libavcodec_2g729dec_8c_a026690957287ecf3768cbbaafae98451_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{libavcodec_2g729dec_8c_a026690957287ecf3768cbbaafae98451_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a524b064dcd1c780e2606607656824cef}\label{libavcodec_2g729dec_8c_a524b064dcd1c780e2606607656824cef}} 
+\index{g729dec.c@{g729dec.c}!g729d\_onset\_decision@{g729d\_onset\_decision}}
+\index{g729d\_onset\_decision@{g729d\_onset\_decision}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{g729d\_onset\_decision()}{g729d\_onset\_decision()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} g729d\+\_\+onset\+\_\+decision (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{past\+\_\+onset,  }\item[{const int16\+\_\+t $\ast$}]{past\+\_\+gain\+\_\+code }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Makes decision about onset in current subframe 
+\begin{DoxyParams}{Parameters}
+{\em past\+\_\+onset} & decision result of previous subframe \\
+\hline
+{\em past\+\_\+gain\+\_\+code} & gain code of current and previous subframe\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+onset decision result for current subframe 
+\end{DoxyReturn}
+
+
+Definition at line 292 of file g729dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{libavcodec_2g729dec_8c_a524b064dcd1c780e2606607656824cef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_af2cd9c3e8818ce85d513ea378f91626a}\label{libavcodec_2g729dec_8c_af2cd9c3e8818ce85d513ea378f91626a}} 
+\index{g729dec.c@{g729dec.c}!g729d\_voice\_decision@{g729d\_voice\_decision}}
+\index{g729d\_voice\_decision@{g729d\_voice\_decision}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{g729d\_voice\_decision()}{g729d\_voice\_decision()}}
+{\footnotesize\ttfamily static int16\+\_\+t g729d\+\_\+voice\+\_\+decision (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{onset,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{prev\+\_\+voice\+\_\+decision,  }\item[{const int16\+\_\+t $\ast$}]{past\+\_\+gain\+\_\+pitch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Makes decision about voice presence in current subframe 
+\begin{DoxyParams}{Parameters}
+{\em onset} & onset level \\
+\hline
+{\em prev\+\_\+voice\+\_\+decision} & voice decision result from previous subframe \\
+\hline
+{\em past\+\_\+gain\+\_\+pitch} & pitch gain of current and previous subframes\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+voice decision result for current subframe 
+\end{DoxyReturn}
+
+
+Definition at line 308 of file g729dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{libavcodec_2g729dec_8c_af2cd9c3e8818ce85d513ea378f91626a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_ae16efedea607df0c928db1612edce54e}\label{libavcodec_2g729dec_8c_ae16efedea607df0c928db1612edce54e}} 
+\index{g729dec.c@{g729dec.c}!lsf\_decode@{lsf\_decode}}
+\index{lsf\_decode@{lsf\_decode}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{lsf\_decode()}{lsf\_decode()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lsf\+\_\+decode (\begin{DoxyParamCaption}\item[{int16\+\_\+t $\ast$}]{lsfq,  }\item[{int16\+\_\+t $\ast$}]{past\+\_\+quantizer\+\_\+outputs\mbox{[}\+M\+A\+\_\+\+N\+P+1\mbox{]},  }\item[{int16\+\_\+t}]{ma\+\_\+predictor,  }\item[{int16\+\_\+t}]{vq\+\_\+1st,  }\item[{int16\+\_\+t}]{vq\+\_\+2nd\+\_\+low,  }\item[{int16\+\_\+t}]{vq\+\_\+2nd\+\_\+high }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decodes L\+SF (Line Spectral Frequencies) from L0-\/\+L3 (3.\+2.\+4). 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ out}}  & {\em lsfq} & (2.\+13) quantized L\+SF coefficients \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em past\+\_\+quantizer\+\_\+outputs} & (2.\+13) quantizer outputs from previous frames \\
+\hline
+ & {\em ma\+\_\+predictor} & switched MA predictor of L\+SP quantizer \\
+\hline
+ & {\em vq\+\_\+1st} & first stage vector of quantizer \\
+\hline
+ & {\em vq\+\_\+2nd\+\_\+low} & second stage lower vector of L\+SP quantizer \\
+\hline
+ & {\em vq\+\_\+2nd\+\_\+high} & second stage higher vector of L\+SP quantizer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 199 of file g729dec.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{libavcodec_2g729dec_8c_ae16efedea607df0c928db1612edce54e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{libavcodec_2g729dec_8c_ae16efedea607df0c928db1612edce54e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a6a303c63d29d195ed6b8e3d04cb24618}\label{libavcodec_2g729dec_8c_a6a303c63d29d195ed6b8e3d04cb24618}} 
+\index{g729dec.c@{g729dec.c}!lsf\_restore\_from\_previous@{lsf\_restore\_from\_previous}}
+\index{lsf\_restore\_from\_previous@{lsf\_restore\_from\_previous}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{lsf\_restore\_from\_previous()}{lsf\_restore\_from\_previous()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lsf\+\_\+restore\+\_\+from\+\_\+previous (\begin{DoxyParamCaption}\item[{int16\+\_\+t $\ast$}]{lsfq,  }\item[{int16\+\_\+t $\ast$}]{past\+\_\+quantizer\+\_\+outputs\mbox{[}\+M\+A\+\_\+\+N\+P+1\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ma\+\_\+predictor\+\_\+prev }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Restores past L\+SP quantizer output using L\+SF from previous frame 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in,out}}  & {\em lsfq} & (2.\+13) quantized L\+SF coefficients \\
+\hline
+\mbox{\texttt{ in,out}}  & {\em past\+\_\+quantizer\+\_\+outputs} & (2.\+13) quantizer outputs from previous frames \\
+\hline
+ & {\em ma\+\_\+predictor\+\_\+prev} & MA predictor from previous frame \\
+\hline
+ & {\em lsfq\+\_\+prev} & (2.\+13) quantized L\+SF coefficients from previous frame \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 240 of file g729dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{libavcodec_2g729dec_8c_a6a303c63d29d195ed6b8e3d04cb24618_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a158c03898b0e5e024295035d4bd9606a}\label{libavcodec_2g729dec_8c_a158c03898b0e5e024295035d4bd9606a}} 
+\index{g729dec.c@{g729dec.c}!scalarproduct\_int16\_c@{scalarproduct\_int16\_c}}
+\index{scalarproduct\_int16\_c@{scalarproduct\_int16\_c}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{scalarproduct\_int16\_c()}{scalarproduct\_int16\_c()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} scalarproduct\+\_\+int16\+\_\+c (\begin{DoxyParamCaption}\item[{const int16\+\_\+t $\ast$}]{v1,  }\item[{const int16\+\_\+t $\ast$}]{v2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 336 of file g729dec.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{libavcodec_2g729dec_8c_a158c03898b0e5e024295035d4bd9606a_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_aaf6e8bfce11c756c349ec8ec0dd81e5c}\label{libavcodec_2g729dec_8c_aaf6e8bfce11c756c349ec8ec0dd81e5c}} 
+\index{g729dec.c@{g729dec.c}!ff\_acelp\_kelvin\_decoder@{ff\_acelp\_kelvin\_decoder}}
+\index{ff\_acelp\_kelvin\_decoder@{ff\_acelp\_kelvin\_decoder}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_acelp\_kelvin\_decoder}{ff\_acelp\_kelvin\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+acelp\+\_\+kelvin\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}acelp.kelvin"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}Sipro ACELP.KELVIN"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea976934d63d321dcf556c16fa209542b1}{AV\_CODEC\_ID\_ACELP\_KELVIN}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{struct_g729_context}{G729Context}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698}{decoder\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}{decode\_frame}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2g729dec_8c_a48462025775e112b5220440bdd4da254}{decode\_close}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 765 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_afd0e8d2ac8ee48160eaed18849dbb34a}\label{libavcodec_2g729dec_8c_afd0e8d2ac8ee48160eaed18849dbb34a}} 
+\index{g729dec.c@{g729dec.c}!ff\_g729\_decoder@{ff\_g729\_decoder}}
+\index{ff\_g729\_decoder@{ff\_g729\_decoder}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{ff\_g729\_decoder}{ff\_g729\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+g729\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name           = \textcolor{stringliteral}{"{}g729"{}},}
+\DoxyCodeLine{    .long\_name      = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}G.729"{}}),}
+\DoxyCodeLine{    .type           = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id             = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea1a6ba806315bfaee42f10782c1240256}{AV\_CODEC\_ID\_G729}},}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{struct_g729_context}{G729Context}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}           = \mbox{\hyperlink{libavcodec_2g729dec_8c_ae873d6d584f97d2d0eff90112998b698}{decoder\_init}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}         = \mbox{\hyperlink{libavcodec_2g729dec_8c_ae667617d4f9eb1b396ccf497dea6c9fb}{decode\_frame}},}
+\DoxyCodeLine{    .close          = \mbox{\hyperlink{libavcodec_2g729dec_8c_a48462025775e112b5220440bdd4da254}{decode\_close}},}
+\DoxyCodeLine{    .capabilities   = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 753 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_a1b101d63033dc45857b3a125ed512940}\label{libavcodec_2g729dec_8c_a1b101d63033dc45857b3a125ed512940}} 
+\index{g729dec.c@{g729dec.c}!format\_g729\_8k@{format\_g729\_8k}}
+\index{format\_g729\_8k@{format\_g729\_8k}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{format\_g729\_8k}{format\_g729\_8k}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_g729_format_description}{G729\+Format\+Description}} format\+\_\+g729\+\_\+8k\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .ac\_index\_bits     = \{8,5\},}
+\DoxyCodeLine{    .parity\_bit        = 1,}
+\DoxyCodeLine{    .gc\_1st\_index\_bits = \mbox{\hyperlink{g729data_8h_a590539ad3d4257b647393c4f41bbd485}{GC\_1ST\_IDX\_BITS\_8K}},}
+\DoxyCodeLine{    .gc\_2nd\_index\_bits = \mbox{\hyperlink{g729data_8h_ae7f7601415f39ac28c301d1a6a0a3557}{GC\_2ND\_IDX\_BITS\_8K}},}
+\DoxyCodeLine{    .fc\_signs\_bits     = 4,}
+\DoxyCodeLine{    .fc\_indexes\_bits   = 13,}
+\DoxyCodeLine{    .block\_size        = \mbox{\hyperlink{g729_8h_a5cb52349c80f4c5e066fa0bbf263783b}{G729\_8K\_BLOCK\_SIZE}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 162 of file g729dec.\+c.
+
+\mbox{\Hypertarget{libavcodec_2g729dec_8c_ac492715656bc322bdb518860d6314c1d}\label{libavcodec_2g729dec_8c_ac492715656bc322bdb518860d6314c1d}} 
+\index{g729dec.c@{g729dec.c}!format\_g729d\_6k4@{format\_g729d\_6k4}}
+\index{format\_g729d\_6k4@{format\_g729d\_6k4}!g729dec.c@{g729dec.c}}
+\doxysubsubsection{\texorpdfstring{format\_g729d\_6k4}{format\_g729d\_6k4}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_g729_format_description}{G729\+Format\+Description}} format\+\_\+g729d\+\_\+6k4\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .ac\_index\_bits     = \{8,4\},}
+\DoxyCodeLine{    .parity\_bit        = 0,}
+\DoxyCodeLine{    .gc\_1st\_index\_bits = \mbox{\hyperlink{g729data_8h_a2d41a457fe481bcfeef6e17a52bfba2e}{GC\_1ST\_IDX\_BITS\_6K4}},}
+\DoxyCodeLine{    .gc\_2nd\_index\_bits = \mbox{\hyperlink{g729data_8h_a78dc3886f407096a2b663edd3d05bf2d}{GC\_2ND\_IDX\_BITS\_6K4}},}
+\DoxyCodeLine{    .fc\_signs\_bits     = 2,}
+\DoxyCodeLine{    .fc\_indexes\_bits   = 9,}
+\DoxyCodeLine{    .block\_size        = \mbox{\hyperlink{g729_8h_a9bd454c214081139a6585cfebbdb2e1c}{G729D\_6K4\_BLOCK\_SIZE}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 172 of file g729dec.\+c.
+

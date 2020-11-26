@@ -1,0 +1,1302 @@
+\hypertarget{dcaenc_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/dcaenc.c File Reference}
+\label{dcaenc_8c}\index{E:/github/ffmpeg/libavcodec/dcaenc.c@{E:/github/ffmpeg/libavcodec/dcaenc.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/channel\+\_\+layout.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/common.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/ffmath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dca.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dcaadpcm.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dcamath.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dca\+\_\+core.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dcadata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dcaenc.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}put\+\_\+bits.\+h\char`\"{}}\newline
+Include dependency graph for dcaenc.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}}
+\item 
+struct \mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a72747b31926acd99da182527760d6c0e}{F\+F\+T\+\_\+\+F\+L\+O\+AT}}~0
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a960d1101767432cb3ad7f8f92ed625a8}{F\+F\+T\+\_\+\+F\+I\+X\+E\+D\+\_\+32}}~1
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~6
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a2ddd805bd2f25c152cddcd6888651770}{D\+C\+A\+\_\+\+M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE}}~16384
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a31423e45539ecede55e644302f19b158}{D\+C\+A\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE}}~13
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_ae11968d80bd2b5fb12f44c679ed7354f}{D\+C\+A\+\_\+\+L\+F\+E\+\_\+\+S\+A\+M\+P\+L\+ES}}~8
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_af9a212f8e66990d631736bc498fc5c73}{D\+C\+A\+E\+N\+C\+\_\+\+S\+U\+B\+B\+A\+N\+DS}}~32
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a09d6f93f198998f4d44cf098408fd059}{S\+U\+B\+F\+R\+A\+M\+ES}}~1
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a32e019c177461b7bd102c2f9fe3f7799}{S\+U\+B\+S\+U\+B\+F\+R\+A\+M\+ES}}~2
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_ade88b04b402c49949d0e73874806be44}{S\+U\+B\+B\+A\+N\+D\+\_\+\+S\+A\+M\+P\+L\+ES}}~(\mbox{\hyperlink{g723__1_8h_a09d6f93f198998f4d44cf098408fd059}{S\+U\+B\+F\+R\+A\+M\+ES}} $\ast$ \mbox{\hyperlink{dcaenc_8c_a32e019c177461b7bd102c2f9fe3f7799}{S\+U\+B\+S\+U\+B\+F\+R\+A\+M\+ES}} $\ast$ 8)
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a0c1169c234911727f71620ca909b7aa9}{A\+U\+B\+A\+N\+DS}}~25
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_ade103e0dc85ff44b70fdd92fe3f70aea}{C\+O\+S\+\_\+T}}(x)~(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}-\/$>$\mbox{\hyperlink{audiogen_8c_adf289146facf5475b24aa900d56bf420}{cos\+\_\+table}}\mbox{[}(x) \& 2047\mbox{]})
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a679e09dfb6e4b44222e9c2d13586370d}{U\+S\+E\+D\+\_\+1\+A\+B\+I\+TS}}~1
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_af4b687297a3e24333f546517c409d820}{U\+S\+E\+D\+\_\+26\+A\+B\+I\+TS}}~4
+\item 
+\#define \mbox{\hyperlink{dcaenc_8c_a18508269b9c33b61f9950f57fd546b87}{D\+C\+A\+E\+N\+C\+\_\+\+F\+L\+A\+GS}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}} \mbox{\hyperlink{dcaenc_8c_a244fd24bfa983ec8a98a711f27e39789}{Compression\+Options}}
+\item 
+typedef struct \mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} \mbox{\hyperlink{dcaenc_8c_a2411d172430f6b4f17bb5c7bbc2811f3}{D\+C\+A\+Enc\+Context}}
+\item 
+typedef \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ \mbox{\hyperlink{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}{walk\+\_\+band\+\_\+t}}) (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum1, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static double \mbox{\hyperlink{dcaenc_8c_a001876021ddc42c06ca4dcc3c6c7e8d6}{hom}} (double \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static double \mbox{\hyperlink{dcaenc_8c_aae2205728552bec7fb162855c72d7a69}{gammafilter}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{input_8c_acb559820d9ca11295b4500f179ef6392}{i}}, double \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_a48f85b078df1922598709843ffed2f02}{subband\+\_\+bufer\+\_\+alloc}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_adf1e472959af2e3a0a5eaa4fac6fedc1}{subband\+\_\+bufer\+\_\+free}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_a1913e3d68c42729f4bad5bbc198db2c7}{encode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_a6942ff784b5be2cedffd44f26a0f9338}{encode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a7562bc666d464250d263523e62a729af}{subband\+\_\+transform}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_abfffc7309e7b45c1cfbcc4496951fc1b}{lfe\+\_\+downsample}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{dcaenc_8c_ade834544a5a183323857d2871e59563e}{get\+\_\+cb}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}})
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{dcaenc_8c_a7390456dec1590125576fc489b8d634b}{add\+\_\+cb}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a3279be306bf6e0df4f0716193225ec9b}{calc\+\_\+power}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}\mbox{[}2 $\ast$256\mbox{]}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} power\mbox{[}256\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a42b7e89c232dfdd6955f25365ed8d0b7}{adjust\+\_\+jnd}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}\mbox{[}512\mbox{]}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} out\+\_\+cb\mbox{[}256\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a1a74883570aee2a8963119d1d6885169}{walk\+\_\+band\+\_\+low}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}{walk\+\_\+band\+\_\+t}} walk, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_ac438693104e8a5de67c84cfe3b65ca76}{walk\+\_\+band\+\_\+high}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}{walk\+\_\+band\+\_\+t}} walk, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_ad791b57b449986a3306787b1386c25d7}{update\+\_\+band\+\_\+masking}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum1, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_aa2d087d7247e287c17e6cd0e09df99fb}{calc\+\_\+masking}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{dcaenc_8c_a5c537bf57186d5f449872ef5fc156e8f}{find\+\_\+peak}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{audio__convert_8c_ab92ad91055387e15b43ff5f6f60f2895}{in}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{spdifenc_8c_a77124bd5f7e31e6fffc19f335da0c23f}{len}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_aef5d07764c4a5dcc5243d64b5c4510b9}{find\+\_\+peaks}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a5b10ae327ba545d0258d8a0bcaa2fa10}{adpcm\+\_\+analysis}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} \mbox{\hyperlink{dcaenc_8c_a587f0413e47d45caf43b1737be2ef22f}{get\+\_\+step\+\_\+size}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_ad4dcfb7b32a5c694525e33db080a605f}{calc\+\_\+one\+\_\+scale}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} peak\+\_\+cb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} abits, \mbox{\hyperlink{structsoftfloat}{softfloat}} $\ast$\mbox{\hyperlink{libavcodec_2g726_8c_a543cd89a6890b4c9eca252bee9c9429f}{quant}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_af53901dec7a0c48d44b00877ab7790d5}{quantize\+\_\+adpcm\+\_\+subband}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a707b131fc8bc59ab6f13133941f50fc1}{quantize\+\_\+adpcm}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a6676735ceba451df7205c438a40fb621}{quantize\+\_\+pcm}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_ac77b996c0dcf0f0b55fdc650376d98b5}{accumulate\+\_\+huff\+\_\+bit\+\_\+consumption}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} abits, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$quantized, uint32\+\_\+t $\ast$\mbox{\hyperlink{filter__design_8txt_adf51c0fafb1c1b683c7f943c2a349904}{result}})
+\item 
+static uint32\+\_\+t \mbox{\hyperlink{dcaenc_8c_a86cc29bac9c5b45a87a757c0199cf026}{set\+\_\+best\+\_\+code}} (uint32\+\_\+t vlc\+\_\+bits\mbox{[}\mbox{\hyperlink{dcahuff_8h_ac490ae7c9797f8035e8aa07e1856ecfd}{D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+KS}}\mbox{]}\mbox{[}7\mbox{]}, uint32\+\_\+t clc\+\_\+bits\mbox{[}\mbox{\hyperlink{dcahuff_8h_ac490ae7c9797f8035e8aa07e1856ecfd}{D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+KS}}\mbox{]}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} res\mbox{[}\mbox{\hyperlink{dcahuff_8h_ac490ae7c9797f8035e8aa07e1856ecfd}{D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+KS}}\mbox{]})
+\item 
+static uint32\+\_\+t \mbox{\hyperlink{dcaenc_8c_aa6e6466a879549f12994edbefb4ed565}{set\+\_\+best\+\_\+abits\+\_\+code}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} abits\mbox{[}\mbox{\hyperlink{dcaenc_8c_af9a212f8e66990d631736bc498fc5c73}{D\+C\+A\+E\+N\+C\+\_\+\+S\+U\+B\+B\+A\+N\+DS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{af__superequalizer_8c_ab4edab3980d056fc2e3acc475b444d11}{bands}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$res)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_a3b87773fcec16b386e805be79ff0711e}{init\+\_\+quantization\+\_\+noise}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__noise_8c_adedc33519bc8e9dc1fa11abdb0858bf8}{noise}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} forbid\+\_\+zero)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a2ba1f9cb1431b7ebff3f854d1aff7f06}{assign\+\_\+bits}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a2ed1cfa3938c167b0899dc63cf7cd0ab}{shift\+\_\+history}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_ae90bf2488cafce8d381fa22eb50aa8e4}{fill\+\_\+in\+\_\+adpcm\+\_\+bufer}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a0aec75031c201fe7bbf13ca6ddd4e492}{calc\+\_\+lfe\+\_\+scales}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a0c43f94836e06f9f38be4e1bae64669b}{put\+\_\+frame\+\_\+header}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a8810fba0d66f210ef92ab950b62b4bf3}{put\+\_\+primary\+\_\+audio\+\_\+header}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_ac61fa1129248e94a6bddfbf082067f04}{put\+\_\+subframe\+\_\+samples}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{colorspacedsp__template_8c_a74d3c3c85d450f9238a162d015c0b407}{ss}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ch)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{dcaenc_8c_a3e0de3f9d81f2eba1eb3d926145e56a8}{put\+\_\+subframe}} (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subframe)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_af96537a53a824a938cd2cb8569e99b96}{encode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt, const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$\mbox{\hyperlink{cbs__vp9__syntax__template_8c_a78a801b08f3801b9059f0450b834984e}{frame}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+packet\+\_\+ptr)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{dcaenc_8c_a189c0ef47688695646af3e914d0094e4}{snr\+\_\+fudge}} = 128
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{dcaenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} \mbox{\hyperlink{dcaenc_8c_ad4498c74a156c3cd5f0639e22dddc925}{dcaenc\+\_\+class}}
+\item 
+static const \mbox{\hyperlink{struct_a_v_codec_default}{A\+V\+Codec\+Default}} \mbox{\hyperlink{dcaenc_8c_a06a81528f29475b48d86ad34c9e65223}{defaults}} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{dcaenc_8c_a01afb18b1ff6ad0d9e1b1d66e99b6077}{ff\+\_\+dca\+\_\+encoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{dcaenc_8c_a0c1169c234911727f71620ca909b7aa9}\label{dcaenc_8c_a0c1169c234911727f71620ca909b7aa9}} 
+\index{dcaenc.c@{dcaenc.c}!AUBANDS@{AUBANDS}}
+\index{AUBANDS@{AUBANDS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{AUBANDS}{AUBANDS}}
+{\footnotesize\ttfamily \#define A\+U\+B\+A\+N\+DS~25}
+
+
+
+Definition at line 53 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_ade103e0dc85ff44b70fdd92fe3f70aea}\label{dcaenc_8c_ade103e0dc85ff44b70fdd92fe3f70aea}} 
+\index{dcaenc.c@{dcaenc.c}!COS\_T@{COS\_T}}
+\index{COS\_T@{COS\_T}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{COS\_T}{COS\_T}}
+{\footnotesize\ttfamily \#define C\+O\+S\+\_\+T(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~(\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}-\/$>$\mbox{\hyperlink{audiogen_8c_adf289146facf5475b24aa900d56bf420}{cos\+\_\+table}}\mbox{[}(x) \& 2047\mbox{]})}
+
+
+
+Definition at line 55 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a31423e45539ecede55e644302f19b158}\label{dcaenc_8c_a31423e45539ecede55e644302f19b158}} 
+\index{dcaenc.c@{dcaenc.c}!DCA\_HEADER\_SIZE@{DCA\_HEADER\_SIZE}}
+\index{DCA\_HEADER\_SIZE@{DCA\_HEADER\_SIZE}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCA\_HEADER\_SIZE}{DCA\_HEADER\_SIZE}}
+{\footnotesize\ttfamily \#define D\+C\+A\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+S\+I\+ZE~13}
+
+
+
+Definition at line 46 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_ae11968d80bd2b5fb12f44c679ed7354f}\label{dcaenc_8c_ae11968d80bd2b5fb12f44c679ed7354f}} 
+\index{dcaenc.c@{dcaenc.c}!DCA\_LFE\_SAMPLES@{DCA\_LFE\_SAMPLES}}
+\index{DCA\_LFE\_SAMPLES@{DCA\_LFE\_SAMPLES}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCA\_LFE\_SAMPLES}{DCA\_LFE\_SAMPLES}}
+{\footnotesize\ttfamily \#define D\+C\+A\+\_\+\+L\+F\+E\+\_\+\+S\+A\+M\+P\+L\+ES~8}
+
+
+
+Definition at line 47 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a2ddd805bd2f25c152cddcd6888651770}\label{dcaenc_8c_a2ddd805bd2f25c152cddcd6888651770}} 
+\index{dcaenc.c@{dcaenc.c}!DCA\_MAX\_FRAME\_SIZE@{DCA\_MAX\_FRAME\_SIZE}}
+\index{DCA\_MAX\_FRAME\_SIZE@{DCA\_MAX\_FRAME\_SIZE}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCA\_MAX\_FRAME\_SIZE}{DCA\_MAX\_FRAME\_SIZE}}
+{\footnotesize\ttfamily \#define D\+C\+A\+\_\+\+M\+A\+X\+\_\+\+F\+R\+A\+M\+E\+\_\+\+S\+I\+ZE~16384}
+
+
+
+Definition at line 45 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a18508269b9c33b61f9950f57fd546b87}\label{dcaenc_8c_a18508269b9c33b61f9950f57fd546b87}} 
+\index{dcaenc.c@{dcaenc.c}!DCAENC\_FLAGS@{DCAENC\_FLAGS}}
+\index{DCAENC\_FLAGS@{DCAENC\_FLAGS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCAENC\_FLAGS}{DCAENC\_FLAGS}}
+{\footnotesize\ttfamily \#define D\+C\+A\+E\+N\+C\+\_\+\+F\+L\+A\+GS~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}} $\vert$ \mbox{\hyperlink{opt_8h_aaa63966a3f547a71a7742f4aea00093a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+A\+U\+D\+I\+O\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 1221 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_af9a212f8e66990d631736bc498fc5c73}\label{dcaenc_8c_af9a212f8e66990d631736bc498fc5c73}} 
+\index{dcaenc.c@{dcaenc.c}!DCAENC\_SUBBANDS@{DCAENC\_SUBBANDS}}
+\index{DCAENC\_SUBBANDS@{DCAENC\_SUBBANDS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCAENC\_SUBBANDS}{DCAENC\_SUBBANDS}}
+{\footnotesize\ttfamily \#define D\+C\+A\+E\+N\+C\+\_\+\+S\+U\+B\+B\+A\+N\+DS~32}
+
+
+
+Definition at line 49 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a960d1101767432cb3ad7f8f92ed625a8}\label{dcaenc_8c_a960d1101767432cb3ad7f8f92ed625a8}} 
+\index{dcaenc.c@{dcaenc.c}!FFT\_FIXED\_32@{FFT\_FIXED\_32}}
+\index{FFT\_FIXED\_32@{FFT\_FIXED\_32}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{FFT\_FIXED\_32}{FFT\_FIXED\_32}}
+{\footnotesize\ttfamily \#define F\+F\+T\+\_\+\+F\+I\+X\+E\+D\+\_\+32~1}
+
+
+
+Definition at line 25 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a72747b31926acd99da182527760d6c0e}\label{dcaenc_8c_a72747b31926acd99da182527760d6c0e}} 
+\index{dcaenc.c@{dcaenc.c}!FFT\_FLOAT@{FFT\_FLOAT}}
+\index{FFT\_FLOAT@{FFT\_FLOAT}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{FFT\_FLOAT}{FFT\_FLOAT}}
+{\footnotesize\ttfamily \#define F\+F\+T\+\_\+\+F\+L\+O\+AT~0}
+
+
+
+Definition at line 24 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_ac69ee46f4a51ed14f0d68628c2dec71d}\label{dcaenc_8c_ac69ee46f4a51ed14f0d68628c2dec71d}} 
+\index{dcaenc.c@{dcaenc.c}!MAX\_CHANNELS@{MAX\_CHANNELS}}
+\index{MAX\_CHANNELS@{MAX\_CHANNELS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_CHANNELS}{MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~6}
+
+
+
+Definition at line 44 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_ade88b04b402c49949d0e73874806be44}\label{dcaenc_8c_ade88b04b402c49949d0e73874806be44}} 
+\index{dcaenc.c@{dcaenc.c}!SUBBAND\_SAMPLES@{SUBBAND\_SAMPLES}}
+\index{SUBBAND\_SAMPLES@{SUBBAND\_SAMPLES}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBBAND\_SAMPLES}{SUBBAND\_SAMPLES}}
+{\footnotesize\ttfamily \#define S\+U\+B\+B\+A\+N\+D\+\_\+\+S\+A\+M\+P\+L\+ES~(\mbox{\hyperlink{g723__1_8h_a09d6f93f198998f4d44cf098408fd059}{S\+U\+B\+F\+R\+A\+M\+ES}} $\ast$ \mbox{\hyperlink{dcaenc_8c_a32e019c177461b7bd102c2f9fe3f7799}{S\+U\+B\+S\+U\+B\+F\+R\+A\+M\+ES}} $\ast$ 8)}
+
+
+
+Definition at line 52 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a09d6f93f198998f4d44cf098408fd059}\label{dcaenc_8c_a09d6f93f198998f4d44cf098408fd059}} 
+\index{dcaenc.c@{dcaenc.c}!SUBFRAMES@{SUBFRAMES}}
+\index{SUBFRAMES@{SUBFRAMES}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBFRAMES}{SUBFRAMES}}
+{\footnotesize\ttfamily \#define S\+U\+B\+F\+R\+A\+M\+ES~1}
+
+
+
+Definition at line 50 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a32e019c177461b7bd102c2f9fe3f7799}\label{dcaenc_8c_a32e019c177461b7bd102c2f9fe3f7799}} 
+\index{dcaenc.c@{dcaenc.c}!SUBSUBFRAMES@{SUBSUBFRAMES}}
+\index{SUBSUBFRAMES@{SUBSUBFRAMES}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{SUBSUBFRAMES}{SUBSUBFRAMES}}
+{\footnotesize\ttfamily \#define S\+U\+B\+S\+U\+B\+F\+R\+A\+M\+ES~2}
+
+
+
+Definition at line 51 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a679e09dfb6e4b44222e9c2d13586370d}\label{dcaenc_8c_a679e09dfb6e4b44222e9c2d13586370d}} 
+\index{dcaenc.c@{dcaenc.c}!USED\_1ABITS@{USED\_1ABITS}}
+\index{USED\_1ABITS@{USED\_1ABITS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{USED\_1ABITS}{USED\_1ABITS}}
+{\footnotesize\ttfamily \#define U\+S\+E\+D\+\_\+1\+A\+B\+I\+TS~1}
+
+
+
+Definition at line 596 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_af4b687297a3e24333f546517c409d820}\label{dcaenc_8c_af4b687297a3e24333f546517c409d820}} 
+\index{dcaenc.c@{dcaenc.c}!USED\_26ABITS@{USED\_26ABITS}}
+\index{USED\_26ABITS@{USED\_26ABITS}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{USED\_26ABITS}{USED\_26ABITS}}
+{\footnotesize\ttfamily \#define U\+S\+E\+D\+\_\+26\+A\+B\+I\+TS~4}
+
+
+
+Definition at line 597 of file dcaenc.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{dcaenc_8c_a244fd24bfa983ec8a98a711f27e39789}\label{dcaenc_8c_a244fd24bfa983ec8a98a711f27e39789}} 
+\index{dcaenc.c@{dcaenc.c}!CompressionOptions@{CompressionOptions}}
+\index{CompressionOptions@{CompressionOptions}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{CompressionOptions}{CompressionOptions}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_compression_options}{Compression\+Options}} \mbox{\hyperlink{struct_compression_options}{Compression\+Options}}}
+
+\mbox{\Hypertarget{dcaenc_8c_a2411d172430f6b4f17bb5c7bbc2811f3}\label{dcaenc_8c_a2411d172430f6b4f17bb5c7bbc2811f3}} 
+\index{dcaenc.c@{dcaenc.c}!DCAEncContext@{DCAEncContext}}
+\index{DCAEncContext@{DCAEncContext}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{DCAEncContext}{DCAEncContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} \mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}}}
+
+\mbox{\Hypertarget{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}\label{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}} 
+\index{dcaenc.c@{dcaenc.c}!walk\_band\_t@{walk\_band\_t}}
+\index{walk\_band\_t@{walk\_band\_t}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{walk\_band\_t}{walk\_band\_t}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}($\ast$ walk\+\_\+band\+\_\+t) (\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band1, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} band2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__bsf__fuzzer_8c_a74b1d1806653d461788d9d335e023047}{f}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum1, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} spectrum2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{ebur128_8h_af4463779bb9b119822c94419a10d31c0}{channel}}, \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})}
+
+
+
+Definition at line 466 of file dcaenc.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{dcaenc_8c_ac77b996c0dcf0f0b55fdc650376d98b5}\label{dcaenc_8c_ac77b996c0dcf0f0b55fdc650376d98b5}} 
+\index{dcaenc.c@{dcaenc.c}!accumulate\_huff\_bit\_consumption@{accumulate\_huff\_bit\_consumption}}
+\index{accumulate\_huff\_bit\_consumption@{accumulate\_huff\_bit\_consumption}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{accumulate\_huff\_bit\_consumption()}{accumulate\_huff\_bit\_consumption()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} accumulate\+\_\+huff\+\_\+bit\+\_\+consumption (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{abits,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{quantized,  }\item[{uint32\+\_\+t $\ast$}]{result }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 688 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ac77b996c0dcf0f0b55fdc650376d98b5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ac77b996c0dcf0f0b55fdc650376d98b5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a7390456dec1590125576fc489b8d634b}\label{dcaenc_8c_a7390456dec1590125576fc489b8d634b}} 
+\index{dcaenc.c@{dcaenc.c}!add\_cb@{add\_cb}}
+\index{add\_cb@{add\_cb}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{add\_cb()}{add\_cb()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} add\+\_\+cb (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{a,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 410 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a7390456dec1590125576fc489b8d634b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a42b7e89c232dfdd6955f25365ed8d0b7}\label{dcaenc_8c_a42b7e89c232dfdd6955f25365ed8d0b7}} 
+\index{dcaenc.c@{dcaenc.c}!adjust\_jnd@{adjust\_jnd}}
+\index{adjust\_jnd@{adjust\_jnd}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{adjust\_jnd()}{adjust\_jnd()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} adjust\+\_\+jnd (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{in\mbox{[}512\mbox{]},  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{out\+\_\+cb\mbox{[}256\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 437 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a42b7e89c232dfdd6955f25365ed8d0b7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a42b7e89c232dfdd6955f25365ed8d0b7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a5b10ae327ba545d0258d8a0bcaa2fa10}\label{dcaenc_8c_a5b10ae327ba545d0258d8a0bcaa2fa10}} 
+\index{dcaenc.c@{dcaenc.c}!adpcm\_analysis@{adpcm\_analysis}}
+\index{adpcm\_analysis@{adpcm\_analysis}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{adpcm\_analysis()}{adpcm\_analysis()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} adpcm\+\_\+analysis (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 571 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a5b10ae327ba545d0258d8a0bcaa2fa10_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{dcaenc_8c_a5b10ae327ba545d0258d8a0bcaa2fa10_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a2ba1f9cb1431b7ebff3f854d1aff7f06}\label{dcaenc_8c_a2ba1f9cb1431b7ebff3f854d1aff7f06}} 
+\index{dcaenc.c@{dcaenc.c}!assign\_bits@{assign\_bits}}
+\index{assign\_bits@{assign\_bits}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{assign\_bits()}{assign\_bits()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} assign\+\_\+bits (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 845 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a2ba1f9cb1431b7ebff3f854d1aff7f06_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=259pt]{dcaenc_8c_a2ba1f9cb1431b7ebff3f854d1aff7f06_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a0aec75031c201fe7bbf13ca6ddd4e492}\label{dcaenc_8c_a0aec75031c201fe7bbf13ca6ddd4e492}} 
+\index{dcaenc.c@{dcaenc.c}!calc\_lfe\_scales@{calc\_lfe\_scales}}
+\index{calc\_lfe\_scales@{calc\_lfe\_scales}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_lfe\_scales()}{calc\_lfe\_scales()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+lfe\+\_\+scales (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 935 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a0aec75031c201fe7bbf13ca6ddd4e492_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{dcaenc_8c_a0aec75031c201fe7bbf13ca6ddd4e492_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_aa2d087d7247e287c17e6cd0e09df99fb}\label{dcaenc_8c_aa2d087d7247e287c17e6cd0e09df99fb}} 
+\index{dcaenc.c@{dcaenc.c}!calc\_masking@{calc\_masking}}
+\index{calc\_masking@{calc\_masking}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_masking()}{calc\_masking()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+masking (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 510 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_aa2d087d7247e287c17e6cd0e09df99fb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=270pt]{dcaenc_8c_aa2d087d7247e287c17e6cd0e09df99fb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ad4dcfb7b32a5c694525e33db080a605f}\label{dcaenc_8c_ad4dcfb7b32a5c694525e33db080a605f}} 
+\index{dcaenc.c@{dcaenc.c}!calc\_one\_scale@{calc\_one\_scale}}
+\index{calc\_one\_scale@{calc\_one\_scale}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_one\_scale()}{calc\_one\_scale()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} calc\+\_\+one\+\_\+scale (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{peak\+\_\+cb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{abits,  }\item[{\mbox{\hyperlink{structsoftfloat}{softfloat}} $\ast$}]{quant }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 611 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ad4dcfb7b32a5c694525e33db080a605f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ad4dcfb7b32a5c694525e33db080a605f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a3279be306bf6e0df4f0716193225ec9b}\label{dcaenc_8c_a3279be306bf6e0df4f0716193225ec9b}} 
+\index{dcaenc.c@{dcaenc.c}!calc\_power@{calc\_power}}
+\index{calc\_power@{calc\_power}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{calc\_power()}{calc\_power()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} calc\+\_\+power (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{in\mbox{[}2 $\ast$256\mbox{]},  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{power\mbox{[}256\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 420 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a3279be306bf6e0df4f0716193225ec9b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a3279be306bf6e0df4f0716193225ec9b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a6942ff784b5be2cedffd44f26a0f9338}\label{dcaenc_8c_a6942ff784b5be2cedffd44f26a0f9338}} 
+\index{dcaenc.c@{dcaenc.c}!encode\_close@{encode\_close}}
+\index{encode\_close@{encode\_close}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_close()}{encode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 308 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{dcaenc_8c_a6942ff784b5be2cedffd44f26a0f9338_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_af96537a53a824a938cd2cb8569e99b96}\label{dcaenc_8c_af96537a53a824a938cd2cb8569e99b96}} 
+\index{dcaenc.c@{dcaenc.c}!encode\_frame@{encode\_frame}}
+\index{encode\_frame@{encode\_frame}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_frame()}{encode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt,  }\item[{const \mbox{\hyperlink{struct_a_v_frame}{A\+V\+Frame}} $\ast$}]{frame,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+packet\+\_\+ptr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1177 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_af96537a53a824a938cd2cb8569e99b96_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a1913e3d68c42729f4bad5bbc198db2c7}\label{dcaenc_8c_a1913e3d68c42729f4bad5bbc198db2c7}} 
+\index{dcaenc.c@{dcaenc.c}!encode\_init@{encode\_init}}
+\index{encode\_init@{encode\_init}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{encode\_init()}{encode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 162 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a1913e3d68c42729f4bad5bbc198db2c7_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ae90bf2488cafce8d381fa22eb50aa8e4}\label{dcaenc_8c_ae90bf2488cafce8d381fa22eb50aa8e4}} 
+\index{dcaenc.c@{dcaenc.c}!fill\_in\_adpcm\_bufer@{fill\_in\_adpcm\_bufer}}
+\index{fill\_in\_adpcm\_bufer@{fill\_in\_adpcm\_bufer}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{fill\_in\_adpcm\_bufer()}{fill\_in\_adpcm\_bufer()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fill\+\_\+in\+\_\+adpcm\+\_\+bufer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 899 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ae90bf2488cafce8d381fa22eb50aa8e4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{dcaenc_8c_ae90bf2488cafce8d381fa22eb50aa8e4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a5c537bf57186d5f449872ef5fc156e8f}\label{dcaenc_8c_a5c537bf57186d5f449872ef5fc156e8f}} 
+\index{dcaenc.c@{dcaenc.c}!find\_peak@{find\_peak}}
+\index{find\_peak@{find\_peak}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_peak()}{find\_peak()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} find\+\_\+peak (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{in,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 545 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{dcaenc_8c_a5c537bf57186d5f449872ef5fc156e8f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a5c537bf57186d5f449872ef5fc156e8f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_aef5d07764c4a5dcc5243d64b5c4510b9}\label{dcaenc_8c_aef5d07764c4a5dcc5243d64b5c4510b9}} 
+\index{dcaenc.c@{dcaenc.c}!find\_peaks@{find\_peaks}}
+\index{find\_peaks@{find\_peaks}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{find\_peaks()}{find\_peaks()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} find\+\_\+peaks (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 557 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{dcaenc_8c_aef5d07764c4a5dcc5243d64b5c4510b9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{dcaenc_8c_aef5d07764c4a5dcc5243d64b5c4510b9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_aae2205728552bec7fb162855c72d7a69}\label{dcaenc_8c_aae2205728552bec7fb162855c72d7a69}} 
+\index{dcaenc.c@{dcaenc.c}!gammafilter@{gammafilter}}
+\index{gammafilter@{gammafilter}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{gammafilter()}{gammafilter()}}
+{\footnotesize\ttfamily static double gammafilter (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{i,  }\item[{double}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 123 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{dcaenc_8c_aae2205728552bec7fb162855c72d7a69_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ade834544a5a183323857d2871e59563e}\label{dcaenc_8c_ade834544a5a183323857d2871e59563e}} 
+\index{dcaenc.c@{dcaenc.c}!get\_cb@{get\_cb}}
+\index{get\_cb@{get\_cb}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_cb()}{get\_cb()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} get\+\_\+cb (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 398 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ade834544a5a183323857d2871e59563e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a587f0413e47d45caf43b1737be2ef22f}\label{dcaenc_8c_a587f0413e47d45caf43b1737be2ef22f}} 
+\index{dcaenc.c@{dcaenc.c}!get\_step\_size@{get\_step\_size}}
+\index{get\_step\_size@{get\_step\_size}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{get\_step\_size()}{get\_step\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} get\+\_\+step\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 599 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a587f0413e47d45caf43b1737be2ef22f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a001876021ddc42c06ca4dcc3c6c7e8d6}\label{dcaenc_8c_a001876021ddc42c06ca4dcc3c6c7e8d6}} 
+\index{dcaenc.c@{dcaenc.c}!hom@{hom}}
+\index{hom@{hom}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{hom()}{hom()}}
+{\footnotesize\ttfamily static double hom (\begin{DoxyParamCaption}\item[{double}]{f }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 113 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{dcaenc_8c_a001876021ddc42c06ca4dcc3c6c7e8d6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a3b87773fcec16b386e805be79ff0711e}\label{dcaenc_8c_a3b87773fcec16b386e805be79ff0711e}} 
+\index{dcaenc.c@{dcaenc.c}!init\_quantization\_noise@{init\_quantization\_noise}}
+\index{init\_quantization\_noise@{init\_quantization\_noise}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{init\_quantization\_noise()}{init\_quantization\_noise()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+quantization\+\_\+noise (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{noise,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{forbid\+\_\+zero }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 766 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a3b87773fcec16b386e805be79ff0711e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a3b87773fcec16b386e805be79ff0711e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_abfffc7309e7b45c1cfbcc4496951fc1b}\label{dcaenc_8c_abfffc7309e7b45c1cfbcc4496951fc1b}} 
+\index{dcaenc.c@{dcaenc.c}!lfe\_downsample@{lfe\_downsample}}
+\index{lfe\_downsample@{lfe\_downsample}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{lfe\_downsample()}{lfe\_downsample()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} lfe\+\_\+downsample (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 368 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_abfffc7309e7b45c1cfbcc4496951fc1b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{dcaenc_8c_abfffc7309e7b45c1cfbcc4496951fc1b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a0c43f94836e06f9f38be4e1bae64669b}\label{dcaenc_8c_a0c43f94836e06f9f38be4e1bae64669b}} 
+\index{dcaenc.c@{dcaenc.c}!put\_frame\_header@{put\_frame\_header}}
+\index{put\_frame\_header@{put\_frame\_header}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_frame\_header()}{put\_frame\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+frame\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 941 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=326pt]{dcaenc_8c_a0c43f94836e06f9f38be4e1bae64669b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{dcaenc_8c_a0c43f94836e06f9f38be4e1bae64669b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a8810fba0d66f210ef92ab950b62b4bf3}\label{dcaenc_8c_a8810fba0d66f210ef92ab950b62b4bf3}} 
+\index{dcaenc.c@{dcaenc.c}!put\_primary\_audio\_header@{put\_primary\_audio\_header}}
+\index{put\_primary\_audio\_header@{put\_primary\_audio\_header}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_primary\_audio\_header()}{put\_primary\_audio\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+primary\+\_\+audio\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1024 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a8810fba0d66f210ef92ab950b62b4bf3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{dcaenc_8c_a8810fba0d66f210ef92ab950b62b4bf3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a3e0de3f9d81f2eba1eb3d926145e56a8}\label{dcaenc_8c_a3e0de3f9d81f2eba1eb3d926145e56a8}} 
+\index{dcaenc.c@{dcaenc.c}!put\_subframe@{put\_subframe}}
+\index{put\_subframe@{put\_subframe}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_subframe()}{put\_subframe()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+subframe (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{subframe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1105 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a3e0de3f9d81f2eba1eb3d926145e56a8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=268pt]{dcaenc_8c_a3e0de3f9d81f2eba1eb3d926145e56a8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ac61fa1129248e94a6bddfbf082067f04}\label{dcaenc_8c_ac61fa1129248e94a6bddfbf082067f04}} 
+\index{dcaenc.c@{dcaenc.c}!put\_subframe\_samples@{put\_subframe\_samples}}
+\index{put\_subframe\_samples@{put\_subframe\_samples}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{put\_subframe\_samples()}{put\_subframe\_samples()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} put\+\_\+subframe\+\_\+samples (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ss,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1071 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ac61fa1129248e94a6bddfbf082067f04_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ac61fa1129248e94a6bddfbf082067f04_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a707b131fc8bc59ab6f13133941f50fc1}\label{dcaenc_8c_a707b131fc8bc59ab6f13133941f50fc1}} 
+\index{dcaenc.c@{dcaenc.c}!quantize\_adpcm@{quantize\_adpcm}}
+\index{quantize\_adpcm@{quantize\_adpcm}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{quantize\_adpcm()}{quantize\_adpcm()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} quantize\+\_\+adpcm (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 661 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a707b131fc8bc59ab6f13133941f50fc1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a707b131fc8bc59ab6f13133941f50fc1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_af53901dec7a0c48d44b00877ab7790d5}\label{dcaenc_8c_af53901dec7a0c48d44b00877ab7790d5}} 
+\index{dcaenc.c@{dcaenc.c}!quantize\_adpcm\_subband@{quantize\_adpcm\_subband}}
+\index{quantize\_adpcm\_subband@{quantize\_adpcm\_subband}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{quantize\_adpcm\_subband()}{quantize\_adpcm\_subband()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} quantize\+\_\+adpcm\+\_\+subband (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{ch,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 644 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_af53901dec7a0c48d44b00877ab7790d5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_af53901dec7a0c48d44b00877ab7790d5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a6676735ceba451df7205c438a40fb621}\label{dcaenc_8c_a6676735ceba451df7205c438a40fb621}} 
+\index{dcaenc.c@{dcaenc.c}!quantize\_pcm@{quantize\_pcm}}
+\index{quantize\_pcm@{quantize\_pcm}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{quantize\_pcm()}{quantize\_pcm()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} quantize\+\_\+pcm (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 671 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a6676735ceba451df7205c438a40fb621_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a6676735ceba451df7205c438a40fb621_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_aa6e6466a879549f12994edbefb4ed565}\label{dcaenc_8c_aa6e6466a879549f12994edbefb4ed565}} 
+\index{dcaenc.c@{dcaenc.c}!set\_best\_abits\_code@{set\_best\_abits\_code}}
+\index{set\_best\_abits\_code@{set\_best\_abits\_code}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_best\_abits\_code()}{set\_best\_abits\_code()}}
+{\footnotesize\ttfamily static uint32\+\_\+t set\+\_\+best\+\_\+abits\+\_\+code (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{abits\mbox{[}\+D\+C\+A\+E\+N\+C\+\_\+\+S\+U\+B\+B\+A\+N\+D\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bands,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{res }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 738 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_aa6e6466a879549f12994edbefb4ed565_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_aa6e6466a879549f12994edbefb4ed565_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a86cc29bac9c5b45a87a757c0199cf026}\label{dcaenc_8c_a86cc29bac9c5b45a87a757c0199cf026}} 
+\index{dcaenc.c@{dcaenc.c}!set\_best\_code@{set\_best\_code}}
+\index{set\_best\_code@{set\_best\_code}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{set\_best\_code()}{set\_best\_code()}}
+{\footnotesize\ttfamily static uint32\+\_\+t set\+\_\+best\+\_\+code (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{vlc\+\_\+bits\mbox{[}\+D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+K\+S\mbox{]}\mbox{[}7\mbox{]},  }\item[{uint32\+\_\+t}]{clc\+\_\+bits\mbox{[}\+D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+K\+S\mbox{]},  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{res\mbox{[}\+D\+C\+A\+\_\+\+C\+O\+D\+E\+\_\+\+B\+O\+O\+K\+S\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 697 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a86cc29bac9c5b45a87a757c0199cf026_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a2ed1cfa3938c167b0899dc63cf7cd0ab}\label{dcaenc_8c_a2ed1cfa3938c167b0899dc63cf7cd0ab}} 
+\index{dcaenc.c@{dcaenc.c}!shift\_history@{shift\_history}}
+\index{shift\_history@{shift\_history}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{shift\_history()}{shift\_history()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} shift\+\_\+history (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 887 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{dcaenc_8c_a2ed1cfa3938c167b0899dc63cf7cd0ab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a48f85b078df1922598709843ffed2f02}\label{dcaenc_8c_a48f85b078df1922598709843ffed2f02}} 
+\index{dcaenc.c@{dcaenc.c}!subband\_bufer\_alloc@{subband\_bufer\_alloc}}
+\index{subband\_bufer\_alloc@{subband\_bufer\_alloc}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{subband\_bufer\_alloc()}{subband\_bufer\_alloc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} subband\+\_\+bufer\+\_\+alloc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 132 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a48f85b078df1922598709843ffed2f02_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=287pt]{dcaenc_8c_a48f85b078df1922598709843ffed2f02_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_adf1e472959af2e3a0a5eaa4fac6fedc1}\label{dcaenc_8c_adf1e472959af2e3a0a5eaa4fac6fedc1}} 
+\index{dcaenc.c@{dcaenc.c}!subband\_bufer\_free@{subband\_bufer\_free}}
+\index{subband\_bufer\_free@{subband\_bufer\_free}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{subband\_bufer\_free()}{subband\_bufer\_free()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subband\+\_\+bufer\+\_\+free (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 153 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{dcaenc_8c_adf1e472959af2e3a0a5eaa4fac6fedc1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a7562bc666d464250d263523e62a729af}\label{dcaenc_8c_a7562bc666d464250d263523e62a729af}} 
+\index{dcaenc.c@{dcaenc.c}!subband\_transform@{subband\_transform}}
+\index{subband\_transform@{subband\_transform}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{subband\_transform()}{subband\_transform()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} subband\+\_\+transform (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{const \mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 318 of file dcaenc.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a7562bc666d464250d263523e62a729af_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{dcaenc_8c_a7562bc666d464250d263523e62a729af_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ad791b57b449986a3306787b1386c25d7}\label{dcaenc_8c_ad791b57b449986a3306787b1386c25d7}} 
+\index{dcaenc.c@{dcaenc.c}!update\_band\_masking@{update\_band\_masking}}
+\index{update\_band\_masking@{update\_band\_masking}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{update\_band\_masking()}{update\_band\_masking()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+band\+\_\+masking (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band1,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{f,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{spectrum1,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}}}]{spectrum2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 500 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ad791b57b449986a3306787b1386c25d7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_ac438693104e8a5de67c84cfe3b65ca76}\label{dcaenc_8c_ac438693104e8a5de67c84cfe3b65ca76}} 
+\index{dcaenc.c@{dcaenc.c}!walk\_band\_high@{walk\_band\_high}}
+\index{walk\_band\_high@{walk\_band\_high}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{walk\_band\_high()}{walk\_band\_high()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} walk\+\_\+band\+\_\+high (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}{walk\+\_\+band\+\_\+t}}}]{walk,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 485 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_ac438693104e8a5de67c84cfe3b65ca76_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{dcaenc_8c_a1a74883570aee2a8963119d1d6885169}\label{dcaenc_8c_a1a74883570aee2a8963119d1d6885169}} 
+\index{dcaenc.c@{dcaenc.c}!walk\_band\_low@{walk\_band\_low}}
+\index{walk\_band\_low@{walk\_band\_low}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{walk\_band\_low()}{walk\_band\_low()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} walk\+\_\+band\+\_\+low (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_d_c_a_enc_context}{D\+C\+A\+Enc\+Context}} $\ast$}]{c,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{band,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel,  }\item[{\mbox{\hyperlink{dcaenc_8c_a4581fbc37555d2ba5aaea688fe21d27a}{walk\+\_\+band\+\_\+t}}}]{walk,  }\item[{\mbox{\hyperlink{audioconvert_8c_afd12020da5a235dfcf0c3c748fb5baed}{int32\+\_\+t}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 470 of file dcaenc.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dcaenc_8c_a1a74883570aee2a8963119d1d6885169_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{dcaenc_8c_ad4498c74a156c3cd5f0639e22dddc925}\label{dcaenc_8c_ad4498c74a156c3cd5f0639e22dddc925}} 
+\index{dcaenc.c@{dcaenc.c}!dcaenc\_class@{dcaenc\_class}}
+\index{dcaenc\_class@{dcaenc\_class}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{dcaenc\_class}{dcaenc\_class}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_class}{A\+V\+Class}} dcaenc\+\_\+class\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .class\_name = \textcolor{stringliteral}{"{}DCA (DTS Coherent Acoustics)"{}},}
+\DoxyCodeLine{    .item\_name = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},}
+\DoxyCodeLine{    .option = \mbox{\hyperlink{dcaenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},}
+\DoxyCodeLine{    .version = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1228 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a06a81528f29475b48d86ad34c9e65223}\label{dcaenc_8c_a06a81528f29475b48d86ad34c9e65223}} 
+\index{dcaenc.c@{dcaenc.c}!defaults@{defaults}}
+\index{defaults@{defaults}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{defaults}{defaults}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_codec_default}{A\+V\+Codec\+Default}} defaults\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}b"{}},          \textcolor{stringliteral}{"{}1411200"{}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1235 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a01afb18b1ff6ad0d9e1b1d66e99b6077}\label{dcaenc_8c_a01afb18b1ff6ad0d9e1b1d66e99b6077}} 
+\index{dcaenc.c@{dcaenc.c}!ff\_dca\_encoder@{ff\_dca\_encoder}}
+\index{ff\_dca\_encoder@{ff\_dca\_encoder}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{ff\_dca\_encoder}{ff\_dca\_encoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+dca\+\_\+encoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name                  = \textcolor{stringliteral}{"{}dca"{}},}
+\DoxyCodeLine{    .long\_name             = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}DCA (DTS Coherent Acoustics)"{}}),}
+\DoxyCodeLine{    .type                  = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id                    = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceaa3379ed720d45daac872b2f483f545de}{AV\_CODEC\_ID\_DTS}},}
+\DoxyCodeLine{    .priv\_data\_size        = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{dcaenc_8c_a2411d172430f6b4f17bb5c7bbc2811f3}{DCAEncContext}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}                  = \mbox{\hyperlink{dcaenc_8c_a1913e3d68c42729f4bad5bbc198db2c7}{encode\_init}},}
+\DoxyCodeLine{    .close                 = \mbox{\hyperlink{dcaenc_8c_a6942ff784b5be2cedffd44f26a0f9338}{encode\_close}},}
+\DoxyCodeLine{    .encode2               = \mbox{\hyperlink{dcaenc_8c_af96537a53a824a938cd2cb8569e99b96}{encode\_frame}},}
+\DoxyCodeLine{    .capabilities          = \mbox{\hyperlink{group__lavc__core_gafbc01f68af47e3c5ce96211a93927996}{AV\_CODEC\_CAP\_EXPERIMENTAL}},}
+\DoxyCodeLine{    .caps\_internal         = \mbox{\hyperlink{libavcodec_2internal_8h_a93962007020d71a3541778040d30413f}{FF\_CODEC\_CAP\_INIT\_THREADSAFE}} | \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}           = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[])\{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ab7ae6bb6718c07cd316778783a57a63b}{AV\_SAMPLE\_FMT\_S32}},}
+\DoxyCodeLine{                                                            \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{    .supported\_samplerates = \mbox{\hyperlink{ffmpeg__filter_8c_a12ee30995b3ac94a573f01870d1289e8}{sample\_rates}},}
+\DoxyCodeLine{    .channel\_layouts       = (\textcolor{keyword}{const} uint64\_t[]) \{ \mbox{\hyperlink{group__channel__mask__c_ga53d6da2dcd56f5f87c7afd8b33fa15ba}{AV\_CH\_LAYOUT\_MONO}},}
+\DoxyCodeLine{                                                  \mbox{\hyperlink{group__channel__mask__c_gabc6d6651bba254cd0fa2c42a57228e65}{AV\_CH\_LAYOUT\_STEREO}},}
+\DoxyCodeLine{                                                  \mbox{\hyperlink{group__channel__mask__c_ga5c25ee8b976d0cb15e0b6d2cf923d19d}{AV\_CH\_LAYOUT\_2\_2}},}
+\DoxyCodeLine{                                                  \mbox{\hyperlink{group__channel__mask__c_ga10eddec555bcf849efce5158b0cbdb50}{AV\_CH\_LAYOUT\_5POINT0}},}
+\DoxyCodeLine{                                                  \mbox{\hyperlink{group__channel__mask__c_gac36a042dc21866f9043ce930f300d0df}{AV\_CH\_LAYOUT\_5POINT1}},}
+\DoxyCodeLine{                                                  0 \},}
+\DoxyCodeLine{    .defaults              = \mbox{\hyperlink{dcaenc_8c_a06a81528f29475b48d86ad34c9e65223}{defaults}},}
+\DoxyCodeLine{    .priv\_class            = \&\mbox{\hyperlink{dcaenc_8c_ad4498c74a156c3cd5f0639e22dddc925}{dcaenc\_class}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1240 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{dcaenc_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{dcaenc.c@{dcaenc.c}!options@{options}}
+\index{options@{options}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{ \textcolor{stringliteral}{"{}dca\_adpcm"{}}, \textcolor{stringliteral}{"{}Use ADPCM encoding"{}}, offsetof(\mbox{\hyperlink{struct_d_c_a_enc_context}{DCAEncContext}}, \mbox{\hyperlink{dcaenc_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}}.adpcm\_mode), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444af3898696f46dc79b74b708d8fa4b52a7}{AV\_OPT\_TYPE\_BOOL}}, \{.i64 = 0\}, 0, 1, \mbox{\hyperlink{dcaenc_8c_a18508269b9c33b61f9950f57fd546b87}{DCAENC\_FLAGS}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1223 of file dcaenc.\+c.
+
+\mbox{\Hypertarget{dcaenc_8c_a189c0ef47688695646af3e914d0094e4}\label{dcaenc_8c_a189c0ef47688695646af3e914d0094e4}} 
+\index{dcaenc.c@{dcaenc.c}!snr\_fudge@{snr\_fudge}}
+\index{snr\_fudge@{snr\_fudge}!dcaenc.c@{dcaenc.c}}
+\doxysubsubsection{\texorpdfstring{snr\_fudge}{snr\_fudge}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} snr\+\_\+fudge = 128\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 595 of file dcaenc.\+c.
+

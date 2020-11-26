@@ -1,0 +1,2093 @@
+\hypertarget{rtmpproto_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/rtmpproto.c File Reference}
+\label{rtmpproto_8c}\index{E:/github/ffmpeg/libavformat/rtmpproto.c@{E:/github/ffmpeg/libavformat/rtmpproto.c}}
+{\ttfamily \#include \char`\"{}libavcodec/bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/base64.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/intfloat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/lfg.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/md5.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/random\+\_\+seed.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}network.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}flv.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtmp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtmpcrypt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rtmppkt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}url.\+h\char`\"{}}\newline
+Include dependency graph for rtmpproto.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_tracked_method}{Tracked\+Method}}
+\item 
+struct \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_aaa251eebd521bc5c9775efa0997090fe}{A\+P\+P\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH}}~1024
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_aea3b3f4c8f75ed7943da7a45bf09887b}{T\+C\+U\+R\+L\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH}}~1024
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_a4886f9da0d3a1422c896fd733341fe07}{F\+L\+A\+S\+H\+V\+E\+R\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH}}~64
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_ac64e33b62a24a2777dc28dc194cd0f9f}{R\+T\+M\+P\+\_\+\+P\+K\+T\+D\+A\+T\+A\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+I\+ZE}}~4096
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_a5fc8c6619f45f4e5517b080fb51d74f6}{R\+T\+M\+P\+\_\+\+H\+E\+A\+D\+ER}}~11
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_af270aa34e115197900fb2ff9733f769d}{P\+L\+A\+Y\+E\+R\+\_\+\+K\+E\+Y\+\_\+\+O\+P\+E\+N\+\_\+\+P\+A\+R\+T\+\_\+\+L\+EN}}~30
+\begin{DoxyCompactList}\small\item\em length of partial key used for first client digest signing \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_a1760f12a5e4604ce023d296f8d215ae5}{S\+E\+R\+V\+E\+R\+\_\+\+K\+E\+Y\+\_\+\+O\+P\+E\+N\+\_\+\+P\+A\+R\+T\+\_\+\+L\+EN}}~36
+\begin{DoxyCompactList}\small\item\em length of partial key used for first server digest signing \end{DoxyCompactList}\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_aa4021f044abb07e759329fbc11a85e96}{R\+T\+M\+P\+\_\+\+C\+T\+R\+L\+\_\+\+A\+B\+O\+R\+T\+\_\+\+M\+E\+S\+S\+A\+GE}}~(2)
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{D\+EC}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{E\+NC}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{rtmpproto_8c_ae498f7bfcbe478d71f8e2af828ba2195}{R\+T\+M\+P\+\_\+\+P\+R\+O\+T\+O\+C\+OL}}(flavor)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_tracked_method}{Tracked\+Method}} \mbox{\hyperlink{rtmpproto_8c_a703185ba34a2794f9376db6a8d1f8d78}{Tracked\+Method}}
+\item 
+typedef struct \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} \mbox{\hyperlink{rtmpproto_8c_ac8a3ac90ab98810aca7d94b0ed7b50f1}{R\+T\+M\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0}{Client\+State}} \{ \newline
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a1844f314039d713261df43a309145446}{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+RT}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a5964326e46c0ae36fdb8380d94af4c54}{S\+T\+A\+T\+E\+\_\+\+H\+A\+N\+D\+S\+H\+A\+K\+ED}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0aedc665c5354e85f69210deabd555d75a}{S\+T\+A\+T\+E\+\_\+\+F\+C\+P\+U\+B\+L\+I\+SH}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0af8f1d4013be7a14c51495005d39e7c0e}{S\+T\+A\+T\+E\+\_\+\+P\+L\+A\+Y\+I\+NG}}, 
+\newline
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ac30ad1b84965e048865cc897ca2dd718}{S\+T\+A\+T\+E\+\_\+\+S\+E\+E\+K\+I\+NG}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4648a1fbb4ce77eb78ceca5082e975bd}{S\+T\+A\+T\+E\+\_\+\+P\+U\+B\+L\+I\+S\+H\+I\+NG}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ab7ebc953eaa11bea3aad29105cc6f39e}{S\+T\+A\+T\+E\+\_\+\+R\+E\+C\+E\+I\+V\+I\+NG}}, 
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a45d8c6414ff9a61faf18a42257ca2768}{S\+T\+A\+T\+E\+\_\+\+S\+E\+N\+D\+I\+NG}}, 
+\newline
+\mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4400c9c67d611ba71f30f7b48a5802ec}{S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+ED}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a28f697be524e1bc04a5bbfacf04ebc43}{handle\+\_\+chunk\+\_\+size}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a8bbfde78138765050d54f53169c1a305}{handle\+\_\+window\+\_\+ack\+\_\+size}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a2ea43157f19e8b765c716d393fd144c7}{handle\+\_\+set\+\_\+peer\+\_\+bw}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a3d4acba04912eccf3072d9d2deace6ff}{add\+\_\+tracked\+\_\+method}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, const char $\ast$\mbox{\hyperlink{checkasm_8c_a8f8f80d37794cde9472343e4487ba3eb}{name}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a92ba2b3ed65ae251e69195d3ebe639b6}{id}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtmpproto_8c_ab615914694f1c913c7ae77b6129f4b7f}{del\+\_\+tracked\+\_\+method}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a34b81b31e48014a1b495fb61d57c9a88}{find\+\_\+tracked\+\_\+method}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{vf__uspp_8c_a06b941e27d7180a9a7c906f9907682d6}{offset}}, char $\ast$$\ast$tracked\+\_\+method)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{rtmpproto_8c_ab330b0c4553cdcc3e199e60452d2f78b}{free\+\_\+tracked\+\_\+methods}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ad6398357fba26e6afdb8c5173cfa90dc}{rtmp\+\_\+send\+\_\+packet}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} track)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a52bf8433e170a39f3687bff9ec559b0a}{rtmp\+\_\+write\+\_\+amf\+\_\+data}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, char $\ast$param, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_abf56fdd2d29ffa15f0b6e2baad24411d}{gen\+\_\+connect}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a3d07401fb857ed6fbc4ed3fbf4de8483}{read\+\_\+connect}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a761d5e23adebdf61e138908e1b198a0a}{gen\+\_\+release\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_adba021f43965652d0ffd9cc765325998}{gen\+\_\+fcpublish\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_abd7ecf5f4fed8ac0511c3f38ed85ac5b}{gen\+\_\+fcunpublish\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a78ff6efb4d65a683aa92c53d9281cd3e}{gen\+\_\+create\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_abd4f926ecf4a80ff809b5f73c292ee0d}{gen\+\_\+delete\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a2f574b1fa776e64c159ded054b5dfb6e}{gen\+\_\+get\+\_\+stream\+\_\+length}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a109c51dbea7ef5369f58e59aba474a7c}{gen\+\_\+buffer\+\_\+time}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ae78a5a201f150ea9b5dc01e0146d93b4}{gen\+\_\+play}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a23b1d151f04500ac8b8fd222f07b4716}{gen\+\_\+seek}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, int64\+\_\+t timestamp)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ae927f08533414f8320830e1949313934}{gen\+\_\+pause}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pause, uint32\+\_\+t timestamp)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a1d8ac6417169742edaa63768db29b57a}{gen\+\_\+publish}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aaf266034a735beaf2e63791a8ce0d050}{gen\+\_\+pong}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$ppkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a6285166bf3e33a2fbf0da78adde02f78}{gen\+\_\+swf\+\_\+verification}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aa77b1a98475608b5528d01f66fad947d}{gen\+\_\+window\+\_\+ack\+\_\+size}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aa7379d4f79a16cd4af392696711c5e53}{gen\+\_\+check\+\_\+bw}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a77c9c7937ff07135a374a863e7591ffb}{gen\+\_\+bytes\+\_\+read}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, uint32\+\_\+t ts)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ab5846c223c3edbf1f4ce77c772619451}{gen\+\_\+fcsubscribe\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, const char $\ast$subscribe)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aafec7629faf406d476f7d2fc3f7abd84}{rtmp\+\_\+handshake\+\_\+imprint\+\_\+with\+\_\+digest}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} encrypted)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aecb7102a1c5f71fb09b73d5d7ecd66ce}{rtmp\+\_\+validate\+\_\+digest}} (\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} off)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_abaf1cef9c9e95b6fa254d6a24ac23091}{rtmp\+\_\+calc\+\_\+swf\+\_\+verification}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a0af5b620522d12bc6e399869f651b8f1}{rtmp\+\_\+calc\+\_\+swfhash}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ac282a218718a3c81c5cb4560b7c0b765}{rtmp\+\_\+handshake}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a5f0ba07e169b1840e7334f6b49b30fad}{rtmp\+\_\+receive\+\_\+hs\+\_\+packet}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, uint32\+\_\+t $\ast$first\+\_\+int, uint32\+\_\+t $\ast$second\+\_\+int, char $\ast$arraydata, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a27162b9277021217c7a347b2e82e970d}{rtmp\+\_\+send\+\_\+hs\+\_\+packet}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, uint32\+\_\+t first\+\_\+int, uint32\+\_\+t second\+\_\+int, char $\ast$arraydata, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a3fca168bbc361b2aff94a800b5e82caf}{rtmp\+\_\+server\+\_\+handshake}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_afdc149a18efe756219d287d7e1c36897}{handle\+\_\+user\+\_\+control}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a9a7e091fd7ebaac40c3f908a229d03c7}{do\+\_\+adobe\+\_\+auth}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, const char $\ast$user, const char $\ast$salt, const char $\ast$opaque, const char $\ast$challenge)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a69dca51f2f5d791acee10d71e4f76ffe}{do\+\_\+llnw\+\_\+auth}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, const char $\ast$user, const char $\ast$nonce)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a79cc08e7f12afaa1c4a706d3fc5784bc}{handle\+\_\+connect\+\_\+error}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$\mbox{\hyperlink{qsv_8c_a710bce51374aba96ab04912897666c35}{desc}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a32ecea21b33298ae51587e4d421b9c78}{handle\+\_\+invoke\+\_\+error}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a5df4204b330bdd9f5744cbe4a26488df}{write\+\_\+begin}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a257bf85eb7e0f16555bcca46bf4a197b}{write\+\_\+status}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, const char $\ast$\mbox{\hyperlink{filter__design_8txt_ad6a339ae538717b3e99082a8016207df}{status}}, const char $\ast$filename)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a1c29f4812818bf888f50b77c2845d4fa}{send\+\_\+invoke\+\_\+response}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a084894e8edda936d2c81f4468279c43e}{read\+\_\+number\+\_\+result}} (\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, double $\ast$number)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a9d00244fbd0321e2ede1b3a253692d95}{handle\+\_\+invoke\+\_\+result}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_aed25b159f86e5ef041db953a6c4b510e}{handle\+\_\+invoke\+\_\+status}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a6528cfadf168d4abcc775fe2e3fdf6e8}{handle\+\_\+invoke}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ad0b2e168eb2e4021c2cc02a7cd3660ba}{update\+\_\+offset}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a7880f7514b36441d3e743c73f432f1f8}{append\+\_\+flv\+\_\+data}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} skip)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a005c5815ed007c27df0b4f5125720d12}{handle\+\_\+notify}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a971d967a3c2285ca8196fbbea4923d70}{rtmp\+\_\+parse\+\_\+result}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_af115b334a7a76d2141e687aae527741a}{handle\+\_\+metadata}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt, \mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$\mbox{\hyperlink{demuxing__decoding_8c_a3d4c6562f0b27cf0cacbbea5c038c090}{pkt}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a9fdf2bbb134fe97b358cb840436e343d}{get\+\_\+packet}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} for\+\_\+header)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568}{rtmp\+\_\+close}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a5c64ec459dd17d622ac801541e437f3d}{inject\+\_\+fake\+\_\+duration\+\_\+metadata}} (\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$rt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_ae70fb4bfe45a1d7a5186d39d3aedf6f2}{rtmp\+\_\+open}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$uri, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{tests_2movenc_8c_af540b728145b614e34c4e10930354b93}{opts}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a07aec410046651ab47e91d3750fcf98a}{rtmp\+\_\+read}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{rtmpproto_8c_ae2247c0a174ae6a0ec7a21d5c64cfa9f}{rtmp\+\_\+seek}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} stream\+\_\+index, int64\+\_\+t timestamp, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_a369c0a32cbb0ab859e876042f3d46d42}{rtmp\+\_\+pause}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} pause)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{rtmpproto_8c_af49a18b1d1be46fde9c26d561821d681}{rtmp\+\_\+write}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{rtmpproto_8c_a902bb4b94689fb2263799d78e2b39d89}{rtmp\+\_\+player\+\_\+key}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{rtmpproto_8c_a372e9e57060149923b7f0fe06b43ae9a}{rtmp\+\_\+server\+\_\+key}} \mbox{[}$\,$\mbox{]}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{rtmpproto_8c_a01616ba57274bb27f2e3f86ebc252203}{rtmp\+\_\+options}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+R\+T\+MP protocol 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{rtmpproto_8c_aaa251eebd521bc5c9775efa0997090fe}\label{rtmpproto_8c_aaa251eebd521bc5c9775efa0997090fe}} 
+\index{rtmpproto.c@{rtmpproto.c}!APP\_MAX\_LENGTH@{APP\_MAX\_LENGTH}}
+\index{APP\_MAX\_LENGTH@{APP\_MAX\_LENGTH}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{APP\_MAX\_LENGTH}{APP\_MAX\_LENGTH}}
+{\footnotesize\ttfamily \#define A\+P\+P\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH~1024}
+
+
+
+Definition at line 50 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}\label{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}} 
+\index{rtmpproto.c@{rtmpproto.c}!DEC@{DEC}}
+\index{DEC@{DEC}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{DEC}{DEC}}
+{\footnotesize\ttfamily \#define D\+EC~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 3095 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}\label{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}} 
+\index{rtmpproto.c@{rtmpproto.c}!ENC@{ENC}}
+\index{ENC@{ENC}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{ENC}{ENC}}
+{\footnotesize\ttfamily \#define E\+NC~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 3096 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a4886f9da0d3a1422c896fd733341fe07}\label{rtmpproto_8c_a4886f9da0d3a1422c896fd733341fe07}} 
+\index{rtmpproto.c@{rtmpproto.c}!FLASHVER\_MAX\_LENGTH@{FLASHVER\_MAX\_LENGTH}}
+\index{FLASHVER\_MAX\_LENGTH@{FLASHVER\_MAX\_LENGTH}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{FLASHVER\_MAX\_LENGTH}{FLASHVER\_MAX\_LENGTH}}
+{\footnotesize\ttfamily \#define F\+L\+A\+S\+H\+V\+E\+R\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH~64}
+
+
+
+Definition at line 52 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{rtmpproto.c@{rtmpproto.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}}, x)}
+
+
+
+Definition at line 3094 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_af270aa34e115197900fb2ff9733f769d}\label{rtmpproto_8c_af270aa34e115197900fb2ff9733f769d}} 
+\index{rtmpproto.c@{rtmpproto.c}!PLAYER\_KEY\_OPEN\_PART\_LEN@{PLAYER\_KEY\_OPEN\_PART\_LEN}}
+\index{PLAYER\_KEY\_OPEN\_PART\_LEN@{PLAYER\_KEY\_OPEN\_PART\_LEN}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{PLAYER\_KEY\_OPEN\_PART\_LEN}{PLAYER\_KEY\_OPEN\_PART\_LEN}}
+{\footnotesize\ttfamily \#define P\+L\+A\+Y\+E\+R\+\_\+\+K\+E\+Y\+\_\+\+O\+P\+E\+N\+\_\+\+P\+A\+R\+T\+\_\+\+L\+EN~30}
+
+
+
+length of partial key used for first client digest signing 
+
+
+
+Definition at line 133 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_aa4021f044abb07e759329fbc11a85e96}\label{rtmpproto_8c_aa4021f044abb07e759329fbc11a85e96}} 
+\index{rtmpproto.c@{rtmpproto.c}!RTMP\_CTRL\_ABORT\_MESSAGE@{RTMP\_CTRL\_ABORT\_MESSAGE}}
+\index{RTMP\_CTRL\_ABORT\_MESSAGE@{RTMP\_CTRL\_ABORT\_MESSAGE}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{RTMP\_CTRL\_ABORT\_MESSAGE}{RTMP\_CTRL\_ABORT\_MESSAGE}}
+{\footnotesize\ttfamily \#define R\+T\+M\+P\+\_\+\+C\+T\+R\+L\+\_\+\+A\+B\+O\+R\+T\+\_\+\+M\+E\+S\+S\+A\+GE~(2)}
+
+
+
+Definition at line 406 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a5fc8c6619f45f4e5517b080fb51d74f6}\label{rtmpproto_8c_a5fc8c6619f45f4e5517b080fb51d74f6}} 
+\index{rtmpproto.c@{rtmpproto.c}!RTMP\_HEADER@{RTMP\_HEADER}}
+\index{RTMP\_HEADER@{RTMP\_HEADER}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{RTMP\_HEADER}{RTMP\_HEADER}}
+{\footnotesize\ttfamily \#define R\+T\+M\+P\+\_\+\+H\+E\+A\+D\+ER~11}
+
+
+
+Definition at line 54 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_ac64e33b62a24a2777dc28dc194cd0f9f}\label{rtmpproto_8c_ac64e33b62a24a2777dc28dc194cd0f9f}} 
+\index{rtmpproto.c@{rtmpproto.c}!RTMP\_PKTDATA\_DEFAULT\_SIZE@{RTMP\_PKTDATA\_DEFAULT\_SIZE}}
+\index{RTMP\_PKTDATA\_DEFAULT\_SIZE@{RTMP\_PKTDATA\_DEFAULT\_SIZE}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{RTMP\_PKTDATA\_DEFAULT\_SIZE}{RTMP\_PKTDATA\_DEFAULT\_SIZE}}
+{\footnotesize\ttfamily \#define R\+T\+M\+P\+\_\+\+P\+K\+T\+D\+A\+T\+A\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+S\+I\+ZE~4096}
+
+
+
+Definition at line 53 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_ae498f7bfcbe478d71f8e2af828ba2195}\label{rtmpproto_8c_ae498f7bfcbe478d71f8e2af828ba2195}} 
+\index{rtmpproto.c@{rtmpproto.c}!RTMP\_PROTOCOL@{RTMP\_PROTOCOL}}
+\index{RTMP\_PROTOCOL@{RTMP\_PROTOCOL}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{RTMP\_PROTOCOL}{RTMP\_PROTOCOL}}
+{\footnotesize\ttfamily \#define R\+T\+M\+P\+\_\+\+P\+R\+O\+T\+O\+C\+OL(\begin{DoxyParamCaption}\item[{}]{flavor }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keyword}{const} \mbox{\hyperlink{struct_a_v_class}{AVClass}} flavor\#\#\_class = \{          \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{struct_a_v_class_aa8883e113a3f2965abd008f7667db7eb}{class\_name}} = \#flavor,                       \(\backslash\)}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},          \(\backslash\)}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{rtmpproto_8c_a01616ba57274bb27f2e3f86ebc252203}{rtmp\_options}},                  \(\backslash\)}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},         \(\backslash\)}
+\DoxyCodeLine{\};                                               \(\backslash\)}
+\DoxyCodeLine{                                                 \(\backslash\)}
+\DoxyCodeLine{const \mbox{\hyperlink{struct_u_r_l_protocol}{URLProtocol}} ff\_\#\#flavor\#\#\_protocol = \{     \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{struct_u_r_l_protocol_aa733e1d46333f08d68fbcbc518e4a235}{name}}           = \#flavor,                   \(\backslash\)}
+\DoxyCodeLine{    .url\_open2      = \mbox{\hyperlink{rtmpproto_8c_ae70fb4bfe45a1d7a5186d39d3aedf6f2}{rtmp\_open}},                 \(\backslash\)}
+\DoxyCodeLine{    .url\_read       = \mbox{\hyperlink{rtmpproto_8c_a07aec410046651ab47e91d3750fcf98a}{rtmp\_read}},                 \(\backslash\)}
+\DoxyCodeLine{    .url\_read\_seek  = \mbox{\hyperlink{rtmpproto_8c_ae2247c0a174ae6a0ec7a21d5c64cfa9f}{rtmp\_seek}},                 \(\backslash\)}
+\DoxyCodeLine{    .url\_read\_pause = \mbox{\hyperlink{rtmpproto_8c_a369c0a32cbb0ab859e876042f3d46d42}{rtmp\_pause}},                \(\backslash\)}
+\DoxyCodeLine{    .url\_write      = \mbox{\hyperlink{rtmpproto_8c_af49a18b1d1be46fde9c26d561821d681}{rtmp\_write}},                \(\backslash\)}
+\DoxyCodeLine{    .url\_close      = \mbox{\hyperlink{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568}{rtmp\_close}},                \(\backslash\)}
+\DoxyCodeLine{    .priv\_data\_size = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{rtmpproto_8c_ac8a3ac90ab98810aca7d94b0ed7b50f1}{RTMPContext}}),       \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{cbs__av1_8c_a67119bce106892b6dade1dc5aa405ac9}{flags}}          = \mbox{\hyperlink{url_8h_ae575748ec7008ec519ddb262d8f58508}{URL\_PROTOCOL\_FLAG\_NETWORK}}, \(\backslash\)}
+\DoxyCodeLine{    .priv\_data\_class= \&flavor\#\#\_class,           \(\backslash\)}
+\DoxyCodeLine{\};}
+
+\end{DoxyCode}
+
+
+Definition at line 3122 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a1760f12a5e4604ce023d296f8d215ae5}\label{rtmpproto_8c_a1760f12a5e4604ce023d296f8d215ae5}} 
+\index{rtmpproto.c@{rtmpproto.c}!SERVER\_KEY\_OPEN\_PART\_LEN@{SERVER\_KEY\_OPEN\_PART\_LEN}}
+\index{SERVER\_KEY\_OPEN\_PART\_LEN@{SERVER\_KEY\_OPEN\_PART\_LEN}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{SERVER\_KEY\_OPEN\_PART\_LEN}{SERVER\_KEY\_OPEN\_PART\_LEN}}
+{\footnotesize\ttfamily \#define S\+E\+R\+V\+E\+R\+\_\+\+K\+E\+Y\+\_\+\+O\+P\+E\+N\+\_\+\+P\+A\+R\+T\+\_\+\+L\+EN~36}
+
+
+
+length of partial key used for first server digest signing 
+
+
+
+Definition at line 144 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_aea3b3f4c8f75ed7943da7a45bf09887b}\label{rtmpproto_8c_aea3b3f4c8f75ed7943da7a45bf09887b}} 
+\index{rtmpproto.c@{rtmpproto.c}!TCURL\_MAX\_LENGTH@{TCURL\_MAX\_LENGTH}}
+\index{TCURL\_MAX\_LENGTH@{TCURL\_MAX\_LENGTH}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{TCURL\_MAX\_LENGTH}{TCURL\_MAX\_LENGTH}}
+{\footnotesize\ttfamily \#define T\+C\+U\+R\+L\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH~1024}
+
+
+
+Definition at line 51 of file rtmpproto.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{rtmpproto_8c_ac8a3ac90ab98810aca7d94b0ed7b50f1}\label{rtmpproto_8c_ac8a3ac90ab98810aca7d94b0ed7b50f1}} 
+\index{rtmpproto.c@{rtmpproto.c}!RTMPContext@{RTMPContext}}
+\index{RTMPContext@{RTMPContext}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{RTMPContext}{RTMPContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} \mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}}}
+
+protocol handler context \mbox{\Hypertarget{rtmpproto_8c_a703185ba34a2794f9376db6a8d1f8d78}\label{rtmpproto_8c_a703185ba34a2794f9376db6a8d1f8d78}} 
+\index{rtmpproto.c@{rtmpproto.c}!TrackedMethod@{TrackedMethod}}
+\index{TrackedMethod@{TrackedMethod}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{TrackedMethod}{TrackedMethod}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_tracked_method}{Tracked\+Method}} \mbox{\hyperlink{struct_tracked_method}{Tracked\+Method}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0}} 
+\index{rtmpproto.c@{rtmpproto.c}!ClientState@{ClientState}}
+\index{ClientState@{ClientState}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{ClientState}{ClientState}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0}{Client\+State}}}
+
+R\+T\+MP protocol handler state \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_START@{STATE\_START}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_START@{STATE\_START}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a1844f314039d713261df43a309145446}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a1844f314039d713261df43a309145446}} 
+S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+RT&client has not done anything yet \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_HANDSHAKED@{STATE\_HANDSHAKED}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_HANDSHAKED@{STATE\_HANDSHAKED}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a5964326e46c0ae36fdb8380d94af4c54}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a5964326e46c0ae36fdb8380d94af4c54}} 
+S\+T\+A\+T\+E\+\_\+\+H\+A\+N\+D\+S\+H\+A\+K\+ED&client has performed handshake \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_FCPUBLISH@{STATE\_FCPUBLISH}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_FCPUBLISH@{STATE\_FCPUBLISH}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0aedc665c5354e85f69210deabd555d75a}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0aedc665c5354e85f69210deabd555d75a}} 
+S\+T\+A\+T\+E\+\_\+\+F\+C\+P\+U\+B\+L\+I\+SH&client F\+C\+Publishing stream (for output) \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_PLAYING@{STATE\_PLAYING}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_PLAYING@{STATE\_PLAYING}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0af8f1d4013be7a14c51495005d39e7c0e}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0af8f1d4013be7a14c51495005d39e7c0e}} 
+S\+T\+A\+T\+E\+\_\+\+P\+L\+A\+Y\+I\+NG&client has started receiving multimedia data from server \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_SEEKING@{STATE\_SEEKING}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_SEEKING@{STATE\_SEEKING}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ac30ad1b84965e048865cc897ca2dd718}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ac30ad1b84965e048865cc897ca2dd718}} 
+S\+T\+A\+T\+E\+\_\+\+S\+E\+E\+K\+I\+NG&client has started the seek operation. Back on S\+T\+A\+T\+E\+\_\+\+P\+L\+A\+Y\+I\+NG when the time comes \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_PUBLISHING@{STATE\_PUBLISHING}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_PUBLISHING@{STATE\_PUBLISHING}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4648a1fbb4ce77eb78ceca5082e975bd}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4648a1fbb4ce77eb78ceca5082e975bd}} 
+S\+T\+A\+T\+E\+\_\+\+P\+U\+B\+L\+I\+S\+H\+I\+NG&client has started sending multimedia data to server (for output) \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_RECEIVING@{STATE\_RECEIVING}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_RECEIVING@{STATE\_RECEIVING}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ab7ebc953eaa11bea3aad29105cc6f39e}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0ab7ebc953eaa11bea3aad29105cc6f39e}} 
+S\+T\+A\+T\+E\+\_\+\+R\+E\+C\+E\+I\+V\+I\+NG&received a publish command (for input) \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_SENDING@{STATE\_SENDING}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_SENDING@{STATE\_SENDING}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a45d8c6414ff9a61faf18a42257ca2768}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a45d8c6414ff9a61faf18a42257ca2768}} 
+S\+T\+A\+T\+E\+\_\+\+S\+E\+N\+D\+I\+NG&received a play command (for output) \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{STATE\_STOPPED@{STATE\_STOPPED}!rtmpproto.c@{rtmpproto.c}}\index{rtmpproto.c@{rtmpproto.c}!STATE\_STOPPED@{STATE\_STOPPED}}}\mbox{\Hypertarget{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4400c9c67d611ba71f30f7b48a5802ec}\label{rtmpproto_8c_a8d4a6786d6193f0e6245c44e4a7bb4a0a4400c9c67d611ba71f30f7b48a5802ec}} 
+S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+ED&the broadcast has been stopped \\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 57 of file rtmpproto.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{rtmpproto_8c_a3d4acba04912eccf3072d9d2deace6ff}\label{rtmpproto_8c_a3d4acba04912eccf3072d9d2deace6ff}} 
+\index{rtmpproto.c@{rtmpproto.c}!add\_tracked\_method@{add\_tracked\_method}}
+\index{add\_tracked\_method@{add\_tracked\_method}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{add\_tracked\_method()}{add\_tracked\_method()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} add\+\_\+tracked\+\_\+method (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{const char $\ast$}]{name,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 160 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a3d4acba04912eccf3072d9d2deace6ff_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a3d4acba04912eccf3072d9d2deace6ff_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a7880f7514b36441d3e743c73f432f1f8}\label{rtmpproto_8c_a7880f7514b36441d3e743c73f432f1f8}} 
+\index{rtmpproto.c@{rtmpproto.c}!append\_flv\_data@{append\_flv\_data}}
+\index{append\_flv\_data@{append\_flv\_data}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{append\_flv\_data()}{append\_flv\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} append\+\_\+flv\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{skip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2205 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a7880f7514b36441d3e743c73f432f1f8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a7880f7514b36441d3e743c73f432f1f8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ab615914694f1c913c7ae77b6129f4b7f}\label{rtmpproto_8c_ab615914694f1c913c7ae77b6129f4b7f}} 
+\index{rtmpproto.c@{rtmpproto.c}!del\_tracked\_method@{del\_tracked\_method}}
+\index{del\_tracked\_method@{del\_tracked\_method}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{del\_tracked\_method()}{del\_tracked\_method()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} del\+\_\+tracked\+\_\+method (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 183 of file rtmpproto.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ab615914694f1c913c7ae77b6129f4b7f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a9a7e091fd7ebaac40c3f908a229d03c7}\label{rtmpproto_8c_a9a7e091fd7ebaac40c3f908a229d03c7}} 
+\index{rtmpproto.c@{rtmpproto.c}!do\_adobe\_auth@{do\_adobe\_auth}}
+\index{do\_adobe\_auth@{do\_adobe\_auth}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{do\_adobe\_auth()}{do\_adobe\_auth()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} do\+\_\+adobe\+\_\+auth (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{const char $\ast$}]{user,  }\item[{const char $\ast$}]{salt,  }\item[{const char $\ast$}]{opaque,  }\item[{const char $\ast$}]{challenge }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1603 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a9a7e091fd7ebaac40c3f908a229d03c7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a9a7e091fd7ebaac40c3f908a229d03c7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a69dca51f2f5d791acee10d71e4f76ffe}\label{rtmpproto_8c_a69dca51f2f5d791acee10d71e4f76ffe}} 
+\index{rtmpproto.c@{rtmpproto.c}!do\_llnw\_auth@{do\_llnw\_auth}}
+\index{do\_llnw\_auth@{do\_llnw\_auth}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{do\_llnw\_auth()}{do\_llnw\_auth()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} do\+\_\+llnw\+\_\+auth (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{const char $\ast$}]{user,  }\item[{const char $\ast$}]{nonce }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1642 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a69dca51f2f5d791acee10d71e4f76ffe_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a69dca51f2f5d791acee10d71e4f76ffe_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a34b81b31e48014a1b495fb61d57c9a88}\label{rtmpproto_8c_a34b81b31e48014a1b495fb61d57c9a88}} 
+\index{rtmpproto.c@{rtmpproto.c}!find\_tracked\_method@{find\_tracked\_method}}
+\index{find\_tracked\_method@{find\_tracked\_method}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{find\_tracked\_method()}{find\_tracked\_method()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+tracked\+\_\+method (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{offset,  }\item[{char $\ast$$\ast$}]{tracked\+\_\+method }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 190 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a34b81b31e48014a1b495fb61d57c9a88_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a34b81b31e48014a1b495fb61d57c9a88_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ab330b0c4553cdcc3e199e60452d2f78b}\label{rtmpproto_8c_ab330b0c4553cdcc3e199e60452d2f78b}} 
+\index{rtmpproto.c@{rtmpproto.c}!free\_tracked\_methods@{free\_tracked\_methods}}
+\index{free\_tracked\_methods@{free\_tracked\_methods}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{free\_tracked\_methods()}{free\_tracked\_methods()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} free\+\_\+tracked\+\_\+methods (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 215 of file rtmpproto.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ab330b0c4553cdcc3e199e60452d2f78b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a109c51dbea7ef5369f58e59aba474a7c}\label{rtmpproto_8c_a109c51dbea7ef5369f58e59aba474a7c}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_buffer\_time@{gen\_buffer\_time}}
+\index{gen\_buffer\_time@{gen\_buffer\_time}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_buffer\_time()}{gen\_buffer\_time()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+buffer\+\_\+time (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate client buffer time and send it to the server. 
+
+Definition at line 741 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a109c51dbea7ef5369f58e59aba474a7c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a109c51dbea7ef5369f58e59aba474a7c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a77c9c7937ff07135a374a863e7591ffb}\label{rtmpproto_8c_a77c9c7937ff07135a374a863e7591ffb}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_bytes\_read@{gen\_bytes\_read}}
+\index{gen\_bytes\_read@{gen\_bytes\_read}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_bytes\_read()}{gen\_bytes\_read()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+bytes\+\_\+read (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{uint32\+\_\+t}]{ts }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate report on bytes read so far and send it to the server. 
+
+Definition at line 954 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a77c9c7937ff07135a374a863e7591ffb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a77c9c7937ff07135a374a863e7591ffb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aa7379d4f79a16cd4af392696711c5e53}\label{rtmpproto_8c_aa7379d4f79a16cd4af392696711c5e53}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_check\_bw@{gen\_check\_bw}}
+\index{gen\_check\_bw@{gen\_check\_bw}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_check\_bw()}{gen\_check\_bw()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+check\+\_\+bw (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate check bandwidth message and send it to the server. 
+
+Definition at line 933 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aa7379d4f79a16cd4af392696711c5e53_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aa7379d4f79a16cd4af392696711c5e53_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_abf56fdd2d29ffa15f0b6e2baad24411d}\label{rtmpproto_8c_abf56fdd2d29ffa15f0b6e2baad24411d}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_connect@{gen\_connect}}
+\index{gen\_connect@{gen\_connect}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_connect()}{gen\_connect()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+connect (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}connect\textquotesingle{} call and send it to the server. 
+
+Definition at line 317 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abf56fdd2d29ffa15f0b6e2baad24411d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=250pt]{rtmpproto_8c_abf56fdd2d29ffa15f0b6e2baad24411d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a78ff6efb4d65a683aa92c53d9281cd3e}\label{rtmpproto_8c_a78ff6efb4d65a683aa92c53d9281cd3e}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_create\_stream@{gen\_create\_stream}}
+\index{gen\_create\_stream@{gen\_create\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_create\_stream()}{gen\_create\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+create\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}create\+Stream\textquotesingle{} call and send it to the server. It should make the server allocate some channel for media streams. 
+
+Definition at line 668 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a78ff6efb4d65a683aa92c53d9281cd3e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a78ff6efb4d65a683aa92c53d9281cd3e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_abd4f926ecf4a80ff809b5f73c292ee0d}\label{rtmpproto_8c_abd4f926ecf4a80ff809b5f73c292ee0d}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_delete\_stream@{gen\_delete\_stream}}
+\index{gen\_delete\_stream@{gen\_delete\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_delete\_stream()}{gen\_delete\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+delete\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}delete\+Stream\textquotesingle{} call and send it to the server. It should make the server remove some channel for media streams. 
+
+Definition at line 693 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abd4f926ecf4a80ff809b5f73c292ee0d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abd4f926ecf4a80ff809b5f73c292ee0d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_adba021f43965652d0ffd9cc765325998}\label{rtmpproto_8c_adba021f43965652d0ffd9cc765325998}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_fcpublish\_stream@{gen\_fcpublish\_stream}}
+\index{gen\_fcpublish\_stream@{gen\_fcpublish\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_fcpublish\_stream()}{gen\_fcpublish\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+fcpublish\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}F\+C\+Publish\textquotesingle{} call and send it to the server. It should make the server prepare for receiving media streams. 
+
+Definition at line 620 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_adba021f43965652d0ffd9cc765325998_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_adba021f43965652d0ffd9cc765325998_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ab5846c223c3edbf1f4ce77c772619451}\label{rtmpproto_8c_ab5846c223c3edbf1f4ce77c772619451}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_fcsubscribe\_stream@{gen\_fcsubscribe\_stream}}
+\index{gen\_fcsubscribe\_stream@{gen\_fcsubscribe\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_fcsubscribe\_stream()}{gen\_fcsubscribe\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+fcsubscribe\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{const char $\ast$}]{subscribe }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 970 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ab5846c223c3edbf1f4ce77c772619451_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ab5846c223c3edbf1f4ce77c772619451_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_abd7ecf5f4fed8ac0511c3f38ed85ac5b}\label{rtmpproto_8c_abd7ecf5f4fed8ac0511c3f38ed85ac5b}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_fcunpublish\_stream@{gen\_fcunpublish\_stream}}
+\index{gen\_fcunpublish\_stream@{gen\_fcunpublish\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_fcunpublish\_stream()}{gen\_fcunpublish\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+fcunpublish\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}F\+C\+Unpublish\textquotesingle{} call and send it to the server. It should make the server destroy stream. 
+
+Definition at line 644 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abd7ecf5f4fed8ac0511c3f38ed85ac5b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abd7ecf5f4fed8ac0511c3f38ed85ac5b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a2f574b1fa776e64c159ded054b5dfb6e}\label{rtmpproto_8c_a2f574b1fa776e64c159ded054b5dfb6e}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_get\_stream\_length@{gen\_get\_stream\_length}}
+\index{gen\_get\_stream\_length@{gen\_get\_stream\_length}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_get\_stream\_length()}{gen\_get\_stream\_length()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+get\+\_\+stream\+\_\+length (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}get\+Stream\+Length\textquotesingle{} call and send it to the server. If the server knows the duration of the selected stream, it will reply with the duration in seconds. 
+
+Definition at line 719 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a2f574b1fa776e64c159ded054b5dfb6e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a2f574b1fa776e64c159ded054b5dfb6e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ae927f08533414f8320830e1949313934}\label{rtmpproto_8c_ae927f08533414f8320830e1949313934}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_pause@{gen\_pause}}
+\index{gen\_pause@{gen\_pause}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_pause()}{gen\_pause()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+pause (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pause,  }\item[{uint32\+\_\+t}]{timestamp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate a pause packet that either pauses or unpauses the current stream. 
+
+Definition at line 813 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ae927f08533414f8320830e1949313934_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{rtmpproto_8c_ae927f08533414f8320830e1949313934_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ae78a5a201f150ea9b5dc01e0146d93b4}\label{rtmpproto_8c_ae78a5a201f150ea9b5dc01e0146d93b4}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_play@{gen\_play}}
+\index{gen\_play@{gen\_play}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_play()}{gen\_play()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+play (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}play\textquotesingle{} call and send it to the server, then ping the server to start actual playing. 
+
+Definition at line 763 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ae78a5a201f150ea9b5dc01e0146d93b4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ae78a5a201f150ea9b5dc01e0146d93b4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aaf266034a735beaf2e63791a8ce0d050}\label{rtmpproto_8c_aaf266034a735beaf2e63791a8ce0d050}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_pong@{gen\_pong}}
+\index{gen\_pong@{gen\_pong}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_pong()}{gen\_pong()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+pong (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{ppkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate ping reply and send it to the server. 
+
+Definition at line 867 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aaf266034a735beaf2e63791a8ce0d050_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aaf266034a735beaf2e63791a8ce0d050_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a1d8ac6417169742edaa63768db29b57a}\label{rtmpproto_8c_a1d8ac6417169742edaa63768db29b57a}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_publish@{gen\_publish}}
+\index{gen\_publish@{gen\_publish}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_publish()}{gen\_publish()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+publish (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}publish\textquotesingle{} call and send it to the server. 
+
+Definition at line 840 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a1d8ac6417169742edaa63768db29b57a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a1d8ac6417169742edaa63768db29b57a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a761d5e23adebdf61e138908e1b198a0a}\label{rtmpproto_8c_a761d5e23adebdf61e138908e1b198a0a}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_release\_stream@{gen\_release\_stream}}
+\index{gen\_release\_stream@{gen\_release\_stream}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_release\_stream()}{gen\_release\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+release\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate \textquotesingle{}release\+Stream\textquotesingle{} call and send it to the server. It should make the server release some channel for media streams. 
+
+Definition at line 596 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a761d5e23adebdf61e138908e1b198a0a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a761d5e23adebdf61e138908e1b198a0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a23b1d151f04500ac8b8fd222f07b4716}\label{rtmpproto_8c_a23b1d151f04500ac8b8fd222f07b4716}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_seek@{gen\_seek}}
+\index{gen\_seek@{gen\_seek}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_seek()}{gen\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{int64\+\_\+t}]{timestamp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 787 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a23b1d151f04500ac8b8fd222f07b4716_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{rtmpproto_8c_a23b1d151f04500ac8b8fd222f07b4716_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a6285166bf3e33a2fbf0da78adde02f78}\label{rtmpproto_8c_a6285166bf3e33a2fbf0da78adde02f78}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_swf\_verification@{gen\_swf\_verification}}
+\index{gen\_swf\_verification@{gen\_swf\_verification}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_swf\_verification()}{gen\_swf\_verification()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+swf\+\_\+verification (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate S\+WF verification message and send it to the server. 
+
+Definition at line 893 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a6285166bf3e33a2fbf0da78adde02f78_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a6285166bf3e33a2fbf0da78adde02f78_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aa77b1a98475608b5528d01f66fad947d}\label{rtmpproto_8c_aa77b1a98475608b5528d01f66fad947d}} 
+\index{rtmpproto.c@{rtmpproto.c}!gen\_window\_ack\_size@{gen\_window\_ack\_size}}
+\index{gen\_window\_ack\_size@{gen\_window\_ack\_size}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{gen\_window\_ack\_size()}{gen\_window\_ack\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} gen\+\_\+window\+\_\+ack\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Generate window acknowledgement size message and send it to the server. 
+
+Definition at line 914 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aa77b1a98475608b5528d01f66fad947d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aa77b1a98475608b5528d01f66fad947d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a9fdf2bbb134fe97b358cb840436e343d}\label{rtmpproto_8c_a9fdf2bbb134fe97b358cb840436e343d}} 
+\index{rtmpproto.c@{rtmpproto.c}!get\_packet@{get\_packet}}
+\index{get\_packet@{get\_packet}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{get\_packet()}{get\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{for\+\_\+header }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Interact with the server by receiving and sending R\+T\+MP packets until there is some significant data (media data or expected status notification).
+
+
+\begin{DoxyParams}{Parameters}
+{\em s} & reading context \\
+\hline
+{\em for\+\_\+header} & non-\/zero value tells function to work until it gets notification from the server that playing has been started, otherwise function will work until some media data is received (or an error happens) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 for successful operation, negative value in case of error 
+\end{DoxyReturn}
+
+
+Definition at line 2407 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a9fdf2bbb134fe97b358cb840436e343d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{rtmpproto_8c_a9fdf2bbb134fe97b358cb840436e343d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a28f697be524e1bc04a5bbfacf04ebc43}\label{rtmpproto_8c_a28f697be524e1bc04a5bbfacf04ebc43}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_chunk\_size@{handle\_chunk\_size}}
+\index{handle\_chunk\_size@{handle\_chunk\_size}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_chunk\_size()}{handle\_chunk\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+chunk\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1490 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a28f697be524e1bc04a5bbfacf04ebc43_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a28f697be524e1bc04a5bbfacf04ebc43_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a79cc08e7f12afaa1c4a706d3fc5784bc}\label{rtmpproto_8c_a79cc08e7f12afaa1c4a706d3fc5784bc}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_connect\_error@{handle\_connect\_error}}
+\index{handle\_connect\_error@{handle\_connect\_error}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_connect\_error()}{handle\_connect\_error()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+connect\+\_\+error (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{desc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1701 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a79cc08e7f12afaa1c4a706d3fc5784bc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a79cc08e7f12afaa1c4a706d3fc5784bc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a6528cfadf168d4abcc775fe2e3fdf6e8}\label{rtmpproto_8c_a6528cfadf168d4abcc775fe2e3fdf6e8}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_invoke@{handle\_invoke}}
+\index{handle\_invoke@{handle\_invoke}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_invoke()}{handle\_invoke()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+invoke (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2155 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a6528cfadf168d4abcc775fe2e3fdf6e8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a6528cfadf168d4abcc775fe2e3fdf6e8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a32ecea21b33298ae51587e4d421b9c78}\label{rtmpproto_8c_a32ecea21b33298ae51587e4d421b9c78}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_invoke\_error@{handle\_invoke\_error}}
+\index{handle\_invoke\_error@{handle\_invoke\_error}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_invoke\_error()}{handle\_invoke\_error()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+invoke\+\_\+error (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1792 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a32ecea21b33298ae51587e4d421b9c78_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a32ecea21b33298ae51587e4d421b9c78_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a9d00244fbd0321e2ede1b3a253692d95}\label{rtmpproto_8c_a9d00244fbd0321e2ede1b3a253692d95}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_invoke\_result@{handle\_invoke\_result}}
+\index{handle\_invoke\_result@{handle\_invoke\_result}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_invoke\_result()}{handle\_invoke\_result()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+invoke\+\_\+result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2046 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a9d00244fbd0321e2ede1b3a253692d95_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a9d00244fbd0321e2ede1b3a253692d95_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aed25b159f86e5ef041db953a6c4b510e}\label{rtmpproto_8c_aed25b159f86e5ef041db953a6c4b510e}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_invoke\_status@{handle\_invoke\_status}}
+\index{handle\_invoke\_status@{handle\_invoke\_status}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_invoke\_status()}{handle\_invoke\_status()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+invoke\+\_\+status (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2118 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aed25b159f86e5ef041db953a6c4b510e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aed25b159f86e5ef041db953a6c4b510e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_af115b334a7a76d2141e687aae527741a}\label{rtmpproto_8c_af115b334a7a76d2141e687aae527741a}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_metadata@{handle\_metadata}}
+\index{handle\_metadata@{handle\_metadata}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_metadata()}{handle\_metadata()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+metadata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2346 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_af115b334a7a76d2141e687aae527741a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_af115b334a7a76d2141e687aae527741a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a005c5815ed007c27df0b4f5125720d12}\label{rtmpproto_8c_a005c5815ed007c27df0b4f5125720d12}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_notify@{handle\_notify}}
+\index{handle\_notify@{handle\_notify}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_notify()}{handle\_notify()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+notify (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2238 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a005c5815ed007c27df0b4f5125720d12_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a005c5815ed007c27df0b4f5125720d12_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a2ea43157f19e8b765c716d393fd144c7}\label{rtmpproto_8c_a2ea43157f19e8b765c716d393fd144c7}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_set\_peer\_bw@{handle\_set\_peer\_bw}}
+\index{handle\_set\_peer\_bw@{handle\_set\_peer\_bw}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_set\_peer\_bw()}{handle\_set\_peer\_bw()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+set\+\_\+peer\+\_\+bw (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1550 of file rtmpproto.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a2ea43157f19e8b765c716d393fd144c7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_afdc149a18efe756219d287d7e1c36897}\label{rtmpproto_8c_afdc149a18efe756219d287d7e1c36897}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_user\_control@{handle\_user\_control}}
+\index{handle\_user\_control@{handle\_user\_control}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_user\_control()}{handle\_user\_control()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+user\+\_\+control (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1523 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_afdc149a18efe756219d287d7e1c36897_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_afdc149a18efe756219d287d7e1c36897_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a8bbfde78138765050d54f53169c1a305}\label{rtmpproto_8c_a8bbfde78138765050d54f53169c1a305}} 
+\index{rtmpproto.c@{rtmpproto.c}!handle\_window\_ack\_size@{handle\_window\_ack\_size}}
+\index{handle\_window\_ack\_size@{handle\_window\_ack\_size}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{handle\_window\_ack\_size()}{handle\_window\_ack\_size()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} handle\+\_\+window\+\_\+ack\+\_\+size (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1577 of file rtmpproto.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a8bbfde78138765050d54f53169c1a305_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a5c64ec459dd17d622ac801541e437f3d}\label{rtmpproto_8c_a5c64ec459dd17d622ac801541e437f3d}} 
+\index{rtmpproto.c@{rtmpproto.c}!inject\_fake\_duration\_metadata@{inject\_fake\_duration\_metadata}}
+\index{inject\_fake\_duration\_metadata@{inject\_fake\_duration\_metadata}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{inject\_fake\_duration\_metadata()}{inject\_fake\_duration\_metadata()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} inject\+\_\+fake\+\_\+duration\+\_\+metadata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Insert a fake on\+Metadata packet into the F\+LV stream to notify the F\+LV demuxer about the duration of the stream.
+
+This should only be done if there was no real on\+Metadata packet sent by the server at the start of the stream and if we were able to retrieve a valid duration via a get\+Stream\+Length call.
+
+\begin{DoxyReturn}{Returns}
+0 for successful operation, negative value in case of error 
+\end{DoxyReturn}
+
+
+Definition at line 2528 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=332pt]{rtmpproto_8c_a5c64ec459dd17d622ac801541e437f3d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{rtmpproto_8c_a5c64ec459dd17d622ac801541e437f3d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a3d07401fb857ed6fbc4ed3fbf4de8483}\label{rtmpproto_8c_a3d07401fb857ed6fbc4ed3fbf4de8483}} 
+\index{rtmpproto.c@{rtmpproto.c}!read\_connect@{read\_connect}}
+\index{read\_connect@{read\_connect}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{read\_connect()}{read\_connect()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+connect (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 408 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{rtmpproto_8c_a3d07401fb857ed6fbc4ed3fbf4de8483_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=253pt]{rtmpproto_8c_a3d07401fb857ed6fbc4ed3fbf4de8483_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a084894e8edda936d2c81f4468279c43e}\label{rtmpproto_8c_a084894e8edda936d2c81f4468279c43e}} 
+\index{rtmpproto.c@{rtmpproto.c}!read\_number\_result@{read\_number\_result}}
+\index{read\_number\_result@{read\_number\_result}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{read\_number\_result()}{read\_number\_result()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} read\+\_\+number\+\_\+result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt,  }\item[{double $\ast$}]{number }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Read the A\+M\+F\+\_\+\+N\+U\+M\+B\+ER response (\char`\"{}\+\_\+result\char`\"{}) to a function call (e.\+g. create\+Stream()). This response should be made up of the A\+M\+F\+\_\+\+S\+T\+R\+I\+NG \char`\"{}result\char`\"{}, a N\+U\+LL object and then the response encoded as A\+M\+F\+\_\+\+N\+U\+M\+B\+ER. On a successful response, we will return set the value to number (otherwise number will not be changed).
+
+\begin{DoxyReturn}{Returns}
+0 if reading the value succeeds, negative value otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 2016 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a084894e8edda936d2c81f4468279c43e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a084894e8edda936d2c81f4468279c43e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_abaf1cef9c9e95b6fa254d6a24ac23091}\label{rtmpproto_8c_abaf1cef9c9e95b6fa254d6a24ac23091}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_calc\_swf\_verification@{rtmp\_calc\_swf\_verification}}
+\index{rtmp\_calc\_swf\_verification@{rtmp\_calc\_swf\_verification}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_calc\_swf\_verification()}{rtmp\_calc\_swf\_verification()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+calc\+\_\+swf\+\_\+verification (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1041 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abaf1cef9c9e95b6fa254d6a24ac23091_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_abaf1cef9c9e95b6fa254d6a24ac23091_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a0af5b620522d12bc6e399869f651b8f1}\label{rtmpproto_8c_a0af5b620522d12bc6e399869f651b8f1}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_calc\_swfhash@{rtmp\_calc\_swfhash}}
+\index{rtmp\_calc\_swfhash@{rtmp\_calc\_swfhash}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_calc\_swfhash()}{rtmp\_calc\_swfhash()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+calc\+\_\+swfhash (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1109 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a0af5b620522d12bc6e399869f651b8f1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=278pt]{rtmpproto_8c_a0af5b620522d12bc6e399869f651b8f1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568}\label{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_close@{rtmp\_close}}
+\index{rtmp\_close@{rtmp\_close}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_close()}{rtmp\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2492 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{rtmpproto_8c_a39df4d5ff7a3c2fab6964a6373a0f568_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ac282a218718a3c81c5cb4560b7c0b765}\label{rtmpproto_8c_ac282a218718a3c81c5cb4560b7c0b765}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_handshake@{rtmp\_handshake}}
+\index{rtmp\_handshake@{rtmp\_handshake}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_handshake()}{rtmp\_handshake()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+handshake (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Perform handshake with the server by means of exchanging pseudorandom data signed with H\+M\+A\+C-\/\+S\+H\+A2 digest.
+
+\begin{DoxyReturn}{Returns}
+0 if handshake succeeds, negative value otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 1196 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ac282a218718a3c81c5cb4560b7c0b765_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=267pt]{rtmpproto_8c_ac282a218718a3c81c5cb4560b7c0b765_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aafec7629faf406d476f7d2fc3f7abd84}\label{rtmpproto_8c_aafec7629faf406d476f7d2fc3f7abd84}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_handshake\_imprint\_with\_digest@{rtmp\_handshake\_imprint\_with\_digest}}
+\index{rtmp\_handshake\_imprint\_with\_digest@{rtmp\_handshake\_imprint\_with\_digest}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_handshake\_imprint\_with\_digest()}{rtmp\_handshake\_imprint\_with\_digest()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+handshake\+\_\+imprint\+\_\+with\+\_\+digest (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{encrypted }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Put H\+M\+A\+C-\/\+S\+H\+A2 digest of packet data (except for the bytes where this digest will be stored) into that packet.
+
+
+\begin{DoxyParams}{Parameters}
+{\em buf} & handshake data (1536 bytes) \\
+\hline
+{\em encrypted} & use an encrypted connection (R\+T\+M\+PE) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+offset to the digest inside input data 
+\end{DoxyReturn}
+
+
+Definition at line 998 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aafec7629faf406d476f7d2fc3f7abd84_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aafec7629faf406d476f7d2fc3f7abd84_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ae70fb4bfe45a1d7a5186d39d3aedf6f2}\label{rtmpproto_8c_ae70fb4bfe45a1d7a5186d39d3aedf6f2}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_open@{rtmp\_open}}
+\index{rtmp\_open@{rtmp\_open}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_open()}{rtmp\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{opts }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Open R\+T\+MP connection and verify that the stream can be played.
+
+U\+RL syntax\+: rtmp\+://server\mbox{[}\+:port\mbox{]}\mbox{[}/app\mbox{]}\mbox{[}/playpath\mbox{]} where \textquotesingle{}app\textquotesingle{} is first one or two directories in the path (e.\+g. /ondemand/, /flash/live/, etc.) and \textquotesingle{}playpath\textquotesingle{} is a file name (the rest of the path, may be prefixed with \char`\"{}mp4\+:\char`\"{}) 
+
+Definition at line 2591 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{rtmpproto_8c_ae70fb4bfe45a1d7a5186d39d3aedf6f2_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a971d967a3c2285ca8196fbbea4923d70}\label{rtmpproto_8c_a971d967a3c2285ca8196fbbea4923d70}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_parse\_result@{rtmp\_parse\_result}}
+\index{rtmp\_parse\_result@{rtmp\_parse\_result}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_parse\_result()}{rtmp\_parse\_result()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+parse\+\_\+result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Parse received packet and possibly perform some action depending on the packet contents. \begin{DoxyReturn}{Returns}
+0 for no errors, negative values for serious errors which prevent further communications, positive values for uncritical errors 
+\end{DoxyReturn}
+
+
+Definition at line 2301 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a971d967a3c2285ca8196fbbea4923d70_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a971d967a3c2285ca8196fbbea4923d70_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a369c0a32cbb0ab859e876042f3d46d42}\label{rtmpproto_8c_a369c0a32cbb0ab859e876042f3d46d42}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_pause@{rtmp\_pause}}
+\index{rtmp\_pause@{rtmp\_pause}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_pause()}{rtmp\_pause()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+pause (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{pause }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2939 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a369c0a32cbb0ab859e876042f3d46d42_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a07aec410046651ab47e91d3750fcf98a}\label{rtmpproto_8c_a07aec410046651ab47e91d3750fcf98a}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_read@{rtmp\_read}}
+\index{rtmp\_read@{rtmp\_read}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_read()}{rtmp\_read()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+read (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2892 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a07aec410046651ab47e91d3750fcf98a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a5f0ba07e169b1840e7334f6b49b30fad}\label{rtmpproto_8c_a5f0ba07e169b1840e7334f6b49b30fad}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_receive\_hs\_packet@{rtmp\_receive\_hs\_packet}}
+\index{rtmp\_receive\_hs\_packet@{rtmp\_receive\_hs\_packet}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_receive\_hs\_packet()}{rtmp\_receive\_hs\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+receive\+\_\+hs\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{uint32\+\_\+t $\ast$}]{first\+\_\+int,  }\item[{uint32\+\_\+t $\ast$}]{second\+\_\+int,  }\item[{char $\ast$}]{arraydata,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1375 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a5f0ba07e169b1840e7334f6b49b30fad_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a5f0ba07e169b1840e7334f6b49b30fad_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ae2247c0a174ae6a0ec7a21d5c64cfa9f}\label{rtmpproto_8c_ae2247c0a174ae6a0ec7a21d5c64cfa9f}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_seek@{rtmp\_seek}}
+\index{rtmp\_seek@{rtmp\_seek}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_seek()}{rtmp\_seek()}}
+{\footnotesize\ttfamily static int64\+\_\+t rtmp\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{stream\+\_\+index,  }\item[{int64\+\_\+t}]{timestamp,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2919 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ae2247c0a174ae6a0ec7a21d5c64cfa9f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a27162b9277021217c7a347b2e82e970d}\label{rtmpproto_8c_a27162b9277021217c7a347b2e82e970d}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_send\_hs\_packet@{rtmp\_send\_hs\_packet}}
+\index{rtmp\_send\_hs\_packet@{rtmp\_send\_hs\_packet}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_send\_hs\_packet()}{rtmp\_send\_hs\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+send\+\_\+hs\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{uint32\+\_\+t}]{first\+\_\+int,  }\item[{uint32\+\_\+t}]{second\+\_\+int,  }\item[{char $\ast$}]{arraydata,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1396 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a27162b9277021217c7a347b2e82e970d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a27162b9277021217c7a347b2e82e970d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ad6398357fba26e6afdb8c5173cfa90dc}\label{rtmpproto_8c_ad6398357fba26e6afdb8c5173cfa90dc}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_send\_packet@{rtmp\_send\_packet}}
+\index{rtmp\_send\_packet@{rtmp\_send\_packet}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_send\_packet()}{rtmp\_send\_packet()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+send\+\_\+packet (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{track }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 226 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ad6398357fba26e6afdb8c5173cfa90dc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ad6398357fba26e6afdb8c5173cfa90dc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a3fca168bbc361b2aff94a800b5e82caf}\label{rtmpproto_8c_a3fca168bbc361b2aff94a800b5e82caf}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_server\_handshake@{rtmp\_server\_handshake}}
+\index{rtmp\_server\_handshake@{rtmp\_server\_handshake}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_server\_handshake()}{rtmp\_server\_handshake()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+server\+\_\+handshake (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+rtmp handshake server side 
+
+Definition at line 1416 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a3fca168bbc361b2aff94a800b5e82caf_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{rtmpproto_8c_a3fca168bbc361b2aff94a800b5e82caf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_aecb7102a1c5f71fb09b73d5d7ecd66ce}\label{rtmpproto_8c_aecb7102a1c5f71fb09b73d5d7ecd66ce}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_validate\_digest@{rtmp\_validate\_digest}}
+\index{rtmp\_validate\_digest@{rtmp\_validate\_digest}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_validate\_digest()}{rtmp\_validate\_digest()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+validate\+\_\+digest (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{off }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Verify that the received server response has the expected digest value.
+
+
+\begin{DoxyParams}{Parameters}
+{\em buf} & handshake data received from the server (1536 bytes) \\
+\hline
+{\em off} & position to search digest offset from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if digest is valid, digest position otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 1023 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aecb7102a1c5f71fb09b73d5d7ecd66ce_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_aecb7102a1c5f71fb09b73d5d7ecd66ce_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_af49a18b1d1be46fde9c26d561821d681}\label{rtmpproto_8c_af49a18b1d1be46fde9c26d561821d681}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_write@{rtmp\_write}}
+\index{rtmp\_write@{rtmp\_write}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_write()}{rtmp\_write()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+write (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2953 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_af49a18b1d1be46fde9c26d561821d681_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a52bf8433e170a39f3687bff9ec559b0a}\label{rtmpproto_8c_a52bf8433e170a39f3687bff9ec559b0a}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_write\_amf\_data@{rtmp\_write\_amf\_data}}
+\index{rtmp\_write\_amf\_data@{rtmp\_write\_amf\_data}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_write\_amf\_data()}{rtmp\_write\_amf\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} rtmp\+\_\+write\+\_\+amf\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{char $\ast$}]{param,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$$\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 254 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a52bf8433e170a39f3687bff9ec559b0a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a52bf8433e170a39f3687bff9ec559b0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a1c29f4812818bf888f50b77c2845d4fa}\label{rtmpproto_8c_a1c29f4812818bf888f50b77c2845d4fa}} 
+\index{rtmpproto.c@{rtmpproto.c}!send\_invoke\_response@{send\_invoke\_response}}
+\index{send\_invoke\_response@{send\_invoke\_response}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{send\_invoke\_response()}{send\_invoke\_response()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} send\+\_\+invoke\+\_\+response (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1900 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{rtmpproto_8c_a1c29f4812818bf888f50b77c2845d4fa_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a1c29f4812818bf888f50b77c2845d4fa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_ad0b2e168eb2e4021c2cc02a7cd3660ba}\label{rtmpproto_8c_ad0b2e168eb2e4021c2cc02a7cd3660ba}} 
+\index{rtmpproto.c@{rtmpproto.c}!update\_offset@{update\_offset}}
+\index{update\_offset@{update\_offset}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{update\_offset()}{update\_offset()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} update\+\_\+offset (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_t_m_p_context}{R\+T\+M\+P\+Context}} $\ast$}]{rt,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2186 of file rtmpproto.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_ad0b2e168eb2e4021c2cc02a7cd3660ba_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a5df4204b330bdd9f5744cbe4a26488df}\label{rtmpproto_8c_a5df4204b330bdd9f5744cbe4a26488df}} 
+\index{rtmpproto.c@{rtmpproto.c}!write\_begin@{write\_begin}}
+\index{write\_begin@{write\_begin}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{write\_begin()}{write\_begin()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+begin (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1831 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a5df4204b330bdd9f5744cbe4a26488df_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a5df4204b330bdd9f5744cbe4a26488df_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{rtmpproto_8c_a257bf85eb7e0f16555bcca46bf4a197b}\label{rtmpproto_8c_a257bf85eb7e0f16555bcca46bf4a197b}} 
+\index{rtmpproto.c@{rtmpproto.c}!write\_status@{write\_status}}
+\index{write\_status@{write\_status}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{write\_status()}{write\_status()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} write\+\_\+status (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_r_t_m_p_packet}{R\+T\+M\+P\+Packet}} $\ast$}]{pkt,  }\item[{const char $\ast$}]{status,  }\item[{const char $\ast$}]{filename }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1857 of file rtmpproto.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a257bf85eb7e0f16555bcca46bf4a197b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rtmpproto_8c_a257bf85eb7e0f16555bcca46bf4a197b_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{rtmpproto_8c_a01616ba57274bb27f2e3f86ebc252203}\label{rtmpproto_8c_a01616ba57274bb27f2e3f86ebc252203}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_options@{rtmp\_options}}
+\index{rtmp\_options@{rtmp\_options}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_options}{rtmp\_options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} rtmp\+\_\+options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_app"{}}, \textcolor{stringliteral}{"{}Name of application to connect to on the RTMP server"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(app), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_buffer"{}}, \textcolor{stringliteral}{"{}Set buffer time in milliseconds. The default is 3000."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(client\_buffer\_time), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 3000\}, 0, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_conn"{}}, \textcolor{stringliteral}{"{}Append arbitrary AMF data to the Connect message"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(conn), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_flashver"{}}, \textcolor{stringliteral}{"{}Version of the Flash plugin used to run the SWF player."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(flashver), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_flush\_interval"{}}, \textcolor{stringliteral}{"{}Number of packets flushed in the same request (RTMPT only)."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(flush\_interval), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 10\}, 0, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_live"{}}, \textcolor{stringliteral}{"{}Specify that the media is a live stream."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(live), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/2\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_live"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}any"{}}, \textcolor{stringliteral}{"{}both"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = -\/2\}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_live"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}live"{}}, \textcolor{stringliteral}{"{}live stream"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = -\/1\}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_live"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}recorded"{}}, \textcolor{stringliteral}{"{}recorded stream"{}}, 0, \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a0fa9f07d428bdc32495fe55c365c5329}{AV\_OPT\_TYPE\_CONST}}, \{.i64 = 0\}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_live"{}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_pageurl"{}}, \textcolor{stringliteral}{"{}URL of the web page in which the media was embedded. By default no value will be sent."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(pageurl), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_playpath"{}}, \textcolor{stringliteral}{"{}Stream identifier to play or to publish"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(playpath), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_subscribe"{}}, \textcolor{stringliteral}{"{}Name of live stream to subscribe to. Defaults to rtmp\_playpath."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(subscribe), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_swfhash"{}}, \textcolor{stringliteral}{"{}SHA256 hash of the decompressed SWF file (32 bytes)."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(swfhash), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444a2689966edbe494482dfdfaa4efdf95d3}{AV\_OPT\_TYPE\_BINARY}}, .flags = \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_swfsize"{}}, \textcolor{stringliteral}{"{}Size of the decompressed SWF file, required for SWFVerification."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(swfsize), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, 0, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_swfurl"{}}, \textcolor{stringliteral}{"{}URL of the SWF player. By default no value will be sent"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(swfurl), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_swfverify"{}}, \textcolor{stringliteral}{"{}URL to player swf file, compute hash/size automatically."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(swfverify), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_tcurl"{}}, \textcolor{stringliteral}{"{}URL of the target stream. Defaults to proto://host[:port]/app."{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(tcurl), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444afadddce95ad3b690dd38644b458b96c4}{AV\_OPT\_TYPE\_STRING}}, \{.str = \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \}, 0, 0, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}|\mbox{\hyperlink{rtmpproto_8c_a9668f8b1c2bedfb7c54bb8686ac2c0d5}{ENC}}\},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}rtmp\_listen"{}}, \textcolor{stringliteral}{"{}Listen for incoming rtmp connections"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(listen), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_listen"{}} \},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}listen"{}},      \textcolor{stringliteral}{"{}Listen for incoming rtmp connections"{}}, \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(listen), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = 0\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_listen"{}} \},}
+\DoxyCodeLine{    \{\textcolor{stringliteral}{"{}timeout"{}}, \textcolor{stringliteral}{"{}Maximum timeout (in seconds) to wait for incoming connections. -\/1 is infinite. Implies -\/rtmp\_listen 1"{}},  \mbox{\hyperlink{rtmpproto_8c_ad12dce0a7bf9d908b172a28155b3d261}{OFFSET}}(listen\_timeout), \mbox{\hyperlink{group__avoptions_ggabd75aa30eb8ad6387672df9a1fa79444ac068b8f6afeeb293a13aeabb5d702411}{AV\_OPT\_TYPE\_INT}}, \{.i64 = -\/1\}, INT\_MIN, INT\_MAX, \mbox{\hyperlink{rtmpproto_8c_afe38ec6126e35e40049e27fdf4586ba5}{DEC}}, \textcolor{stringliteral}{"{}rtmp\_listen"{}} \},}
+\DoxyCodeLine{    \{ \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}} \},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 3098 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a902bb4b94689fb2263799d78e2b39d89}\label{rtmpproto_8c_a902bb4b94689fb2263799d78e2b39d89}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_player\_key@{rtmp\_player\_key}}
+\index{rtmp\_player\_key@{rtmp\_player\_key}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_player\_key}{rtmp\_player\_key}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} rtmp\+\_\+player\+\_\+key\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \textcolor{charliteral}{'G'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'n'}, \textcolor{charliteral}{'u'}, \textcolor{charliteral}{'i'}, \textcolor{charliteral}{'n'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'A'}, \textcolor{charliteral}{'d'}, \textcolor{charliteral}{'o'}, \textcolor{charliteral}{'b'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{' '},}
+\DoxyCodeLine{    \textcolor{charliteral}{'F'}, \textcolor{charliteral}{'l'}, \textcolor{charliteral}{'a'}, \textcolor{charliteral}{'s'}, \textcolor{charliteral}{'h'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'P'}, \textcolor{charliteral}{'l'}, \textcolor{charliteral}{'a'}, \textcolor{charliteral}{'y'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'r'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'0'}, \textcolor{charliteral}{'0'}, \textcolor{charliteral}{'1'},}
+\DoxyCodeLine{}
+\DoxyCodeLine{    0xF0, 0xEE, 0xC2, 0x4A, 0x80, 0x68, 0xBE, 0xE8, 0x2E, 0x00, 0xD0, 0xD1, 0x02,}
+\DoxyCodeLine{    0x9E, 0x7E, 0x57, 0x6E, 0xEC, 0x5D, 0x2D, 0x29, 0x80, 0x6F, 0xAB, 0x93, 0xB8,}
+\DoxyCodeLine{    0xE6, 0x36, 0xCF, 0xEB, 0x31, 0xAE}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Client key used for digest signing 
+
+Definition at line 135 of file rtmpproto.\+c.
+
+\mbox{\Hypertarget{rtmpproto_8c_a372e9e57060149923b7f0fe06b43ae9a}\label{rtmpproto_8c_a372e9e57060149923b7f0fe06b43ae9a}} 
+\index{rtmpproto.c@{rtmpproto.c}!rtmp\_server\_key@{rtmp\_server\_key}}
+\index{rtmp\_server\_key@{rtmp\_server\_key}!rtmpproto.c@{rtmpproto.c}}
+\doxysubsubsection{\texorpdfstring{rtmp\_server\_key}{rtmp\_server\_key}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} rtmp\+\_\+server\+\_\+key\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    \textcolor{charliteral}{'G'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'n'}, \textcolor{charliteral}{'u'}, \textcolor{charliteral}{'i'}, \textcolor{charliteral}{'n'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'A'}, \textcolor{charliteral}{'d'}, \textcolor{charliteral}{'o'}, \textcolor{charliteral}{'b'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{' '},}
+\DoxyCodeLine{    \textcolor{charliteral}{'F'}, \textcolor{charliteral}{'l'}, \textcolor{charliteral}{'a'}, \textcolor{charliteral}{'s'}, \textcolor{charliteral}{'h'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'M'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'d'}, \textcolor{charliteral}{'i'}, \textcolor{charliteral}{'a'}, \textcolor{charliteral}{' '},}
+\DoxyCodeLine{    \textcolor{charliteral}{'S'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'r'}, \textcolor{charliteral}{'v'}, \textcolor{charliteral}{'e'}, \textcolor{charliteral}{'r'}, \textcolor{charliteral}{' '}, \textcolor{charliteral}{'0'}, \textcolor{charliteral}{'0'}, \textcolor{charliteral}{'1'},}
+\DoxyCodeLine{}
+\DoxyCodeLine{    0xF0, 0xEE, 0xC2, 0x4A, 0x80, 0x68, 0xBE, 0xE8, 0x2E, 0x00, 0xD0, 0xD1, 0x02,}
+\DoxyCodeLine{    0x9E, 0x7E, 0x57, 0x6E, 0xEC, 0x5D, 0x2D, 0x29, 0x80, 0x6F, 0xAB, 0x93, 0xB8,}
+\DoxyCodeLine{    0xE6, 0x36, 0xCF, 0xEB, 0x31, 0xAE}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+Key used for R\+T\+MP server digest signing 
+
+Definition at line 146 of file rtmpproto.\+c.
+

@@ -1,0 +1,1433 @@
+\hypertarget{http_8c}{}\doxysection{E\+:/github/ffmpeg/libavformat/http.c File Reference}
+\label{http_8c}\index{E:/github/ffmpeg/libavformat/http.c@{E:/github/ffmpeg/libavformat/http.c}}
+{\ttfamily \#include \char`\"{}config.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/avstring.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/bprint.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/opt.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/time.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/parseutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avformat.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}http.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}httpauth.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}network.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}os\+\_\+support.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}url.\+h\char`\"{}}\newline
+Include dependency graph for http.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{http_8c_a6b20d41d6252e9871430c242cb1a56e7}{B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE}}~(\mbox{\hyperlink{libavformat_2internal_8h_ab9c288a59a1c4d29847845c5d6ca455f}{M\+A\+X\+\_\+\+U\+R\+L\+\_\+\+S\+I\+ZE}} + \mbox{\hyperlink{http_8h_aa3d8212ee21684dd7d1e456d4bd5e56e}{H\+T\+T\+P\+\_\+\+H\+E\+A\+D\+E\+R\+S\+\_\+\+S\+I\+ZE}})
+\item 
+\#define \mbox{\hyperlink{http_8c_ac02cde674a4c670cf571ab3f34b83f84}{M\+A\+X\+\_\+\+R\+E\+D\+I\+R\+E\+C\+TS}}~8
+\item 
+\#define \mbox{\hyperlink{http_8c_a8b0b424d9d5feb6b5abaae87be2c757f}{H\+T\+T\+P\+\_\+\+S\+I\+N\+G\+LE}}~1
+\item 
+\#define \mbox{\hyperlink{http_8c_a0966b74ee61415cc9f0a1bd81590cca2}{H\+T\+T\+P\+\_\+\+M\+U\+T\+LI}}~2
+\item 
+\#define \mbox{\hyperlink{http_8c_a045bcf6c026ff7ae2af603f67cd81c5b}{M\+A\+X\+\_\+\+E\+X\+P\+I\+RY}}~19
+\item 
+\#define \mbox{\hyperlink{http_8c_ae486692fac07c1c1ef2a7d32e9e57463}{W\+H\+I\+T\+E\+S\+P\+A\+C\+ES}}~\char`\"{} \textbackslash{}n\textbackslash{}t\textbackslash{}r\char`\"{}
+\item 
+\#define \mbox{\hyperlink{http_8c_ad12dce0a7bf9d908b172a28155b3d261}{O\+F\+F\+S\+ET}}(x)~offsetof(\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}}, x)
+\item 
+\#define \mbox{\hyperlink{http_8c_af316c33cc298530f245e8b55330e86b5}{D}}~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{http_8c_a07484107e6d9fdf38b53edf631d6511d}{E}}~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}
+\item 
+\#define \mbox{\hyperlink{http_8c_aa6407b49b77c8e44dc330223aa3be9a0}{D\+E\+F\+A\+U\+L\+T\+\_\+\+U\+S\+E\+R\+\_\+\+A\+G\+E\+NT}}~\char`\"{}Lavf/\char`\"{} A\+V\+\_\+\+S\+T\+R\+I\+N\+G\+I\+FY(\mbox{\hyperlink{libavformat_2version_8h_a82f92d7f1617b4f78bf94942c664dead}{L\+I\+B\+A\+V\+F\+O\+R\+M\+A\+T\+\_\+\+V\+E\+R\+S\+I\+ON}})
+\item 
+\#define \mbox{\hyperlink{http_8c_a0bbb1653b36c7d9c6b95f147e1b8c930}{N\+E\+E\+D\+S\+\_\+\+E\+S\+C\+A\+PE}}(ch)
+\item 
+\#define \mbox{\hyperlink{http_8c_aadd6da16a032d7b9b1ff28b59f2f45ff}{H\+T\+T\+P\+\_\+\+C\+L\+A\+SS}}(flavor)
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} \mbox{\hyperlink{http_8c_a455a427d178d6f1eefeff90414cbceb9}{H\+T\+T\+P\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434d}{Handshake\+State}} \{ \mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434dab477c197de00c0c78b2978f521a6a87d}{L\+O\+W\+E\+R\+\_\+\+P\+R\+O\+TO}}, 
+\mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434daceb3e65f83376b07b705fd9d963f3cfc}{R\+E\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS}}, 
+\mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434daf4c0c029b866950d7b54f08d1f59c5de}{W\+R\+I\+T\+E\+\_\+\+R\+E\+P\+L\+Y\+\_\+\+H\+E\+A\+D\+E\+RS}}, 
+\mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434da8b9af67858708d770f017e4aae85900d}{F\+I\+N\+I\+SH}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_aae99dcd21d7573ec374b2eea6982615c}{http\+\_\+connect}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$path, const char $\ast$local\+\_\+path, const char $\ast$hoststr, const char $\ast$auth, const char $\ast$proxyauth, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$new\+\_\+location)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_aa21700ec605d3f24e700f54b02b06af7}{http\+\_\+read\+\_\+header}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$new\+\_\+location)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a23e3a685241551cfc4df18ac46692298}{http\+\_\+shutdown}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}})
+\item 
+\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{http_8c_a8527e0c4ec245824858dfb167543e62d}{ff\+\_\+http\+\_\+init\+\_\+auth\+\_\+state}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$dest, const \mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a4be0b6529b21a2061d01720420f16156}{http\+\_\+open\+\_\+cnx\+\_\+internal}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_ae02ef74b5743a3704335097578c4c1b2}{http\+\_\+open\+\_\+cnx}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a5418f0c57a057b77594f587d2165e10b}{ff\+\_\+http\+\_\+get\+\_\+shutdown\+\_\+status}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_aeaeca746d18be2f77975ab8c60e486cd}{ff\+\_\+http\+\_\+do\+\_\+new\+\_\+request}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a26d9d51c791dc3ee7a04a9ec25456f63}{ff\+\_\+http\+\_\+do\+\_\+new\+\_\+request2}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{tests_2movenc_8c_af540b728145b614e34c4e10930354b93}{opts}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a5bb6b4d50abfb56eff038ba1abc14b92}{ff\+\_\+http\+\_\+averror}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} status\+\_\+code, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} default\+\_\+averror)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a897e2f67243b61705ea6b44784089f0d}{http\+\_\+write\+\_\+reply}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} status\+\_\+code)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{http_8c_a9fe72a7d6c1a1c6e9230061c49988a00}{handle\+\_\+http\+\_\+errors}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{target__dem__fuzzer_8c_aa3d85a3469f60990fdff296efb86a9c2}{error}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a03583ab5c3b98f1b201b73bd53369624}{http\+\_\+handshake}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a6344ca08eebe8f5dfe50dace69c0cee1}{http\+\_\+listen}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a08d28a134863d46a635b4b144096c333}{http\+\_\+open}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$uri, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{log_8c_ac8bf36fe0577cba66bccda3a6f7e80a4}{flags}}, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$\mbox{\hyperlink{libswresample_2options_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_af34cebda5d4537315dd3d02df571dbd1}{http\+\_\+accept}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, \mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$$\ast$\mbox{\hyperlink{target__dec__fuzzer_8c_acfe27e61edea06412363421f1a013e81}{c}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a35d119c61b31c753c86099b93679a089}{http\+\_\+getc}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a592dbafc889b6deb257771ff990853d3}{http\+\_\+get\+\_\+line}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, char $\ast$\mbox{\hyperlink{structline}{line}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} line\+\_\+size)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a7fc4c956c6482b3fca476bf0f7b6de83}{check\+\_\+http\+\_\+code}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+code, const char $\ast$\mbox{\hyperlink{avrndec_8c_a13191ba45577b1d4f9b37d64df91eb55}{end}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_aff91b7551e89e81ca442dfb594a36d15}{parse\+\_\+location}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$p)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{http_8c_a5295e67f34cf36d3037600c31ee1d45e}{parse\+\_\+content\+\_\+range}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a131ae54694371858cf1b571821c54f38}{parse\+\_\+content\+\_\+encoding}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const char $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a616b13098910267df4f2fae9daafb8b4}{parse\+\_\+icy}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$\mbox{\hyperlink{movenc_8c_a1c50fcd1195659821729f52af8f3bb7d}{tag}}, const char $\ast$p)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_ab6c178827f37539605e089065d0a1704}{parse\+\_\+set\+\_\+cookie\+\_\+expiry\+\_\+time}} (const char $\ast$exp\+\_\+str, struct tm $\ast$buf)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a2a9a7aca01b0232a71abc2842cbc6d5a}{parse\+\_\+set\+\_\+cookie}} (const char $\ast$set\+\_\+cookie, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$dict)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_ae692948cc4a9cd2e0c2a74bd1b5bfecb}{parse\+\_\+cookie}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, const char $\ast$p, \mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$cookies)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a09db757e6003d86e75291b688d816c43}{cookie\+\_\+string}} (\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$dict, char $\ast$$\ast$cookies)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a65b0feefea66ae01b485387fa2d84e1a}{process\+\_\+line}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, char $\ast$\mbox{\hyperlink{structline}{line}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} line\+\_\+count, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$new\+\_\+location)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a449bafd9d20125817cde72e5594c81d0}{get\+\_\+cookies}} (\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a517a4433fe5466cc6af1c80c538b0881}{s}}, char $\ast$$\ast$cookies, const char $\ast$path, const char $\ast$domain)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a63082f2a284fbbd3f4fe33266ceda08a}{has\+\_\+header}} (const char $\ast$str, const char $\ast$\mbox{\hyperlink{api-h264-slice-test_8c_adc7ed4d9991bc47d473e178bd4fe9a49}{header}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{http_8c_abd6354cf5d7211c7c06943f1aceb096f}{bprint\+\_\+escaped\+\_\+path}} (A\+V\+B\+Print $\ast$bp, const char $\ast$path)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a5be1822c49bf8ae16791f221b99b6fc7}{http\+\_\+buf\+\_\+read}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{http_8c_a57d9568277c08ea554004cc9da66c0b7}{http\+\_\+seek\+\_\+internal}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, int64\+\_\+t off, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} whence, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} force\+\_\+reconnect)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_af7681dc3022673ad8e408e3eb138b93a}{http\+\_\+read\+\_\+stream}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_afc6fa3c7ba3089920be31f855fab211b}{http\+\_\+read\+\_\+stream\+\_\+all}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{http_8c_a548fa8798c919d1be71feeebc1d18942}{update\+\_\+metadata}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, char $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a11c5a99873dc8a63bd3f7b30834e570e}{store\+\_\+icy}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a2e51b1edb0ddc094280c9aeb1d689a79}{http\+\_\+read}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_abb97fb65372cd552ab7afd60ea67b3f9}{http\+\_\+write}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$buf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_aea27050c1c208d4579865d481c28ffc4}{http\+\_\+close}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static int64\+\_\+t \mbox{\hyperlink{http_8c_ac9300bca4ebcb1c39529d7b7add02284}{http\+\_\+seek}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, int64\+\_\+t off, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} whence)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a85105247cb7f7e73060d6233a30245a8}{http\+\_\+get\+\_\+file\+\_\+handle}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{http_8c_a8448afb18f2f8701400bd86a9fc3227a}{http\+\_\+get\+\_\+short\+\_\+seek}} (\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} \mbox{\hyperlink{http_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{http_8c_a6b20d41d6252e9871430c242cb1a56e7}\label{http_8c_a6b20d41d6252e9871430c242cb1a56e7}} 
+\index{http.c@{http.c}!BUFFER\_SIZE@{BUFFER\_SIZE}}
+\index{BUFFER\_SIZE@{BUFFER\_SIZE}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{BUFFER\_SIZE}{BUFFER\_SIZE}}
+{\footnotesize\ttfamily \#define B\+U\+F\+F\+E\+R\+\_\+\+S\+I\+ZE~(\mbox{\hyperlink{libavformat_2internal_8h_ab9c288a59a1c4d29847845c5d6ca455f}{M\+A\+X\+\_\+\+U\+R\+L\+\_\+\+S\+I\+ZE}} + \mbox{\hyperlink{http_8h_aa3d8212ee21684dd7d1e456d4bd5e56e}{H\+T\+T\+P\+\_\+\+H\+E\+A\+D\+E\+R\+S\+\_\+\+S\+I\+ZE}})}
+
+
+
+Definition at line 49 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_af316c33cc298530f245e8b55330e86b5}\label{http_8c_af316c33cc298530f245e8b55330e86b5}} 
+\index{http.c@{http.c}!D@{D}}
+\index{D@{D}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{D}{D}}
+{\footnotesize\ttfamily \#define D~\mbox{\hyperlink{opt_8h_aad820197915e73441f76f5e0c384d78a}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+D\+E\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 133 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_aa6407b49b77c8e44dc330223aa3be9a0}\label{http_8c_aa6407b49b77c8e44dc330223aa3be9a0}} 
+\index{http.c@{http.c}!DEFAULT\_USER\_AGENT@{DEFAULT\_USER\_AGENT}}
+\index{DEFAULT\_USER\_AGENT@{DEFAULT\_USER\_AGENT}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_USER\_AGENT}{DEFAULT\_USER\_AGENT}}
+{\footnotesize\ttfamily \#define D\+E\+F\+A\+U\+L\+T\+\_\+\+U\+S\+E\+R\+\_\+\+A\+G\+E\+NT~\char`\"{}Lavf/\char`\"{} A\+V\+\_\+\+S\+T\+R\+I\+N\+G\+I\+FY(\mbox{\hyperlink{libavformat_2version_8h_a82f92d7f1617b4f78bf94942c664dead}{L\+I\+B\+A\+V\+F\+O\+R\+M\+A\+T\+\_\+\+V\+E\+R\+S\+I\+ON}})}
+
+
+
+Definition at line 135 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a07484107e6d9fdf38b53edf631d6511d}\label{http_8c_a07484107e6d9fdf38b53edf631d6511d}} 
+\index{http.c@{http.c}!E@{E}}
+\index{E@{E}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{E}{E}}
+{\footnotesize\ttfamily \#define E~\mbox{\hyperlink{opt_8h_aba0d5e41287b6fbeae5dd59f643695cc}{A\+V\+\_\+\+O\+P\+T\+\_\+\+F\+L\+A\+G\+\_\+\+E\+N\+C\+O\+D\+I\+N\+G\+\_\+\+P\+A\+R\+AM}}}
+
+
+
+Definition at line 134 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_aadd6da16a032d7b9b1ff28b59f2f45ff}\label{http_8c_aadd6da16a032d7b9b1ff28b59f2f45ff}} 
+\index{http.c@{http.c}!HTTP\_CLASS@{HTTP\_CLASS}}
+\index{HTTP\_CLASS@{HTTP\_CLASS}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{HTTP\_CLASS}{HTTP\_CLASS}}
+{\footnotesize\ttfamily \#define H\+T\+T\+P\+\_\+\+C\+L\+A\+SS(\begin{DoxyParamCaption}\item[{}]{flavor }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{static} \textcolor{keyword}{const} \mbox{\hyperlink{struct_a_v_class}{AVClass}} flavor \#\# \_context\_class = \{   \(\backslash\)}
+\DoxyCodeLine{    .\mbox{\hyperlink{struct_a_v_class_aa8883e113a3f2965abd008f7667db7eb}{class\_name}} = \# flavor,                         \(\backslash\)}
+\DoxyCodeLine{    .item\_name  = \mbox{\hyperlink{group__lavu__log_ga791fcd0dba1d19fe0c3677509344328e}{av\_default\_item\_name}},             \(\backslash\)}
+\DoxyCodeLine{    .option     = \mbox{\hyperlink{http_8c_a384ff94b5139f441c282c9b4c7b985e6}{options}},                          \(\backslash\)}
+\DoxyCodeLine{    .version    = \mbox{\hyperlink{group__lavu__ver_ga36e17e3fc9bcbe5c55820a8ac8b47e3c}{LIBAVUTIL\_VERSION\_INT}},            \(\backslash\)}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1794 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a0966b74ee61415cc9f0a1bd81590cca2}\label{http_8c_a0966b74ee61415cc9f0a1bd81590cca2}} 
+\index{http.c@{http.c}!HTTP\_MUTLI@{HTTP\_MUTLI}}
+\index{HTTP\_MUTLI@{HTTP\_MUTLI}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{HTTP\_MUTLI}{HTTP\_MUTLI}}
+{\footnotesize\ttfamily \#define H\+T\+T\+P\+\_\+\+M\+U\+T\+LI~2}
+
+
+
+Definition at line 52 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a8b0b424d9d5feb6b5abaae87be2c757f}\label{http_8c_a8b0b424d9d5feb6b5abaae87be2c757f}} 
+\index{http.c@{http.c}!HTTP\_SINGLE@{HTTP\_SINGLE}}
+\index{HTTP\_SINGLE@{HTTP\_SINGLE}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{HTTP\_SINGLE}{HTTP\_SINGLE}}
+{\footnotesize\ttfamily \#define H\+T\+T\+P\+\_\+\+S\+I\+N\+G\+LE~1}
+
+
+
+Definition at line 51 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a045bcf6c026ff7ae2af603f67cd81c5b}\label{http_8c_a045bcf6c026ff7ae2af603f67cd81c5b}} 
+\index{http.c@{http.c}!MAX\_EXPIRY@{MAX\_EXPIRY}}
+\index{MAX\_EXPIRY@{MAX\_EXPIRY}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_EXPIRY}{MAX\_EXPIRY}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+E\+X\+P\+I\+RY~19}
+
+
+
+Definition at line 53 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_ac02cde674a4c670cf571ab3f34b83f84}\label{http_8c_ac02cde674a4c670cf571ab3f34b83f84}} 
+\index{http.c@{http.c}!MAX\_REDIRECTS@{MAX\_REDIRECTS}}
+\index{MAX\_REDIRECTS@{MAX\_REDIRECTS}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_REDIRECTS}{MAX\_REDIRECTS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+R\+E\+D\+I\+R\+E\+C\+TS~8}
+
+
+
+Definition at line 50 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a0bbb1653b36c7d9c6b95f147e1b8c930}\label{http_8c_a0bbb1653b36c7d9c6b95f147e1b8c930}} 
+\index{http.c@{http.c}!NEEDS\_ESCAPE@{NEEDS\_ESCAPE}}
+\index{NEEDS\_ESCAPE@{NEEDS\_ESCAPE}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{NEEDS\_ESCAPE}{NEEDS\_ESCAPE}}
+{\footnotesize\ttfamily \#define N\+E\+E\+D\+S\+\_\+\+E\+S\+C\+A\+PE(\begin{DoxyParamCaption}\item[{}]{ch }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    ((ch) <= \textcolor{charliteral}{' '} || (ch) >= \textcolor{stringliteral}{'\(\backslash\)x7f'} || \(\backslash\)}
+\DoxyCodeLine{     (ch) == \textcolor{charliteral}{'"{}'} || (ch) == \textcolor{charliteral}{'\%'} || (ch) == \textcolor{charliteral}{'<'} || (ch) == \textcolor{charliteral}{'>'} || (ch) == \textcolor{charliteral}{'\(\backslash\)\(\backslash\)'} || \(\backslash\)}
+\DoxyCodeLine{     (ch) == \textcolor{charliteral}{'\string^'} || (ch) == \textcolor{charliteral}{'`'} || (ch) == \textcolor{charliteral}{'\{'} || (ch) == \textcolor{charliteral}{'\}'} || (ch) == \textcolor{charliteral}{'|'})}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{http_8c_ad12dce0a7bf9d908b172a28155b3d261}\label{http_8c_ad12dce0a7bf9d908b172a28155b3d261}} 
+\index{http.c@{http.c}!OFFSET@{OFFSET}}
+\index{OFFSET@{OFFSET}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{OFFSET}{OFFSET}}
+{\footnotesize\ttfamily \#define O\+F\+F\+S\+ET(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~offsetof(\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}}, x)}
+
+
+
+Definition at line 132 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_ae486692fac07c1c1ef2a7d32e9e57463}\label{http_8c_ae486692fac07c1c1ef2a7d32e9e57463}} 
+\index{http.c@{http.c}!WHITESPACES@{WHITESPACES}}
+\index{WHITESPACES@{WHITESPACES}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{WHITESPACES}{WHITESPACES}}
+{\footnotesize\ttfamily \#define W\+H\+I\+T\+E\+S\+P\+A\+C\+ES~\char`\"{} \textbackslash{}n\textbackslash{}t\textbackslash{}r\char`\"{}}
+
+
+
+Definition at line 54 of file http.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{http_8c_a455a427d178d6f1eefeff90414cbceb9}\label{http_8c_a455a427d178d6f1eefeff90414cbceb9}} 
+\index{http.c@{http.c}!HTTPContext@{HTTPContext}}
+\index{HTTPContext@{HTTPContext}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{HTTPContext}{HTTPContext}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} \mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{http_8c_a064110dfc80d1d11620b1f45acca434d}\label{http_8c_a064110dfc80d1d11620b1f45acca434d}} 
+\index{http.c@{http.c}!HandshakeState@{HandshakeState}}
+\index{HandshakeState@{HandshakeState}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{HandshakeState}{HandshakeState}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{http_8c_a064110dfc80d1d11620b1f45acca434d}{Handshake\+State}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LOWER\_PROTO@{LOWER\_PROTO}!http.c@{http.c}}\index{http.c@{http.c}!LOWER\_PROTO@{LOWER\_PROTO}}}\mbox{\Hypertarget{http_8c_a064110dfc80d1d11620b1f45acca434dab477c197de00c0c78b2978f521a6a87d}\label{http_8c_a064110dfc80d1d11620b1f45acca434dab477c197de00c0c78b2978f521a6a87d}} 
+L\+O\+W\+E\+R\+\_\+\+P\+R\+O\+TO&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{READ\_HEADERS@{READ\_HEADERS}!http.c@{http.c}}\index{http.c@{http.c}!READ\_HEADERS@{READ\_HEADERS}}}\mbox{\Hypertarget{http_8c_a064110dfc80d1d11620b1f45acca434daceb3e65f83376b07b705fd9d963f3cfc}\label{http_8c_a064110dfc80d1d11620b1f45acca434daceb3e65f83376b07b705fd9d963f3cfc}} 
+R\+E\+A\+D\+\_\+\+H\+E\+A\+D\+E\+RS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{WRITE\_REPLY\_HEADERS@{WRITE\_REPLY\_HEADERS}!http.c@{http.c}}\index{http.c@{http.c}!WRITE\_REPLY\_HEADERS@{WRITE\_REPLY\_HEADERS}}}\mbox{\Hypertarget{http_8c_a064110dfc80d1d11620b1f45acca434daf4c0c029b866950d7b54f08d1f59c5de}\label{http_8c_a064110dfc80d1d11620b1f45acca434daf4c0c029b866950d7b54f08d1f59c5de}} 
+W\+R\+I\+T\+E\+\_\+\+R\+E\+P\+L\+Y\+\_\+\+H\+E\+A\+D\+E\+RS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FINISH@{FINISH}!http.c@{http.c}}\index{http.c@{http.c}!FINISH@{FINISH}}}\mbox{\Hypertarget{http_8c_a064110dfc80d1d11620b1f45acca434da8b9af67858708d770f017e4aae85900d}\label{http_8c_a064110dfc80d1d11620b1f45acca434da8b9af67858708d770f017e4aae85900d}} 
+F\+I\+N\+I\+SH&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line 55 of file http.\+c.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{http_8c_abd6354cf5d7211c7c06943f1aceb096f}\label{http_8c_abd6354cf5d7211c7c06943f1aceb096f}} 
+\index{http.c@{http.c}!bprint\_escaped\_path@{bprint\_escaped\_path}}
+\index{bprint\_escaped\_path@{bprint\_escaped\_path}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{bprint\_escaped\_path()}{bprint\_escaped\_path()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} bprint\+\_\+escaped\+\_\+path (\begin{DoxyParamCaption}\item[{A\+V\+B\+Print $\ast$}]{bp,  }\item[{const char $\ast$}]{path }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Escape unsafe characters in path in order to pass them safely to the H\+T\+TP request. Insipred by the algorithm in G\+NU wget\+:
+\begin{DoxyItemize}
+\item escape \char`\"{}\%\char`\"{} characters not followed by two hex digits
+\item escape all \char`\"{}unsafe\char`\"{} characters except which are also \char`\"{}reserved\char`\"{}
+\item pass through everything else 
+\end{DoxyItemize}
+
+Definition at line 1194 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_abd6354cf5d7211c7c06943f1aceb096f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_abd6354cf5d7211c7c06943f1aceb096f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a7fc4c956c6482b3fca476bf0f7b6de83}\label{http_8c_a7fc4c956c6482b3fca476bf0f7b6de83}} 
+\index{http.c@{http.c}!check\_http\_code@{check\_http\_code}}
+\index{check\_http\_code@{check\_http\_code}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{check\_http\_code()}{check\_http\_code()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} check\+\_\+http\+\_\+code (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{http\+\_\+code,  }\item[{const char $\ast$}]{end }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 662 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a7fc4c956c6482b3fca476bf0f7b6de83_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a7fc4c956c6482b3fca476bf0f7b6de83_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a09db757e6003d86e75291b688d816c43}\label{http_8c_a09db757e6003d86e75291b688d816c43}} 
+\index{http.c@{http.c}!cookie\_string@{cookie\_string}}
+\index{cookie\_string@{cookie\_string}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{cookie\_string()}{cookie\_string()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} cookie\+\_\+string (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$}]{dict,  }\item[{char $\ast$$\ast$}]{cookies }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 886 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a09db757e6003d86e75291b688d816c43_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a09db757e6003d86e75291b688d816c43_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a5bb6b4d50abfb56eff038ba1abc14b92}\label{http_8c_a5bb6b4d50abfb56eff038ba1abc14b92}} 
+\index{http.c@{http.c}!ff\_http\_averror@{ff\_http\_averror}}
+\index{ff\_http\_averror@{ff\_http\_averror}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{ff\_http\_averror()}{ff\_http\_averror()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+http\+\_\+averror (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{status\+\_\+code,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{default\+\_\+averror }\end{DoxyParamCaption})}
+
+
+
+Definition at line 391 of file http.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5bb6b4d50abfb56eff038ba1abc14b92_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_aeaeca746d18be2f77975ab8c60e486cd}\label{http_8c_aeaeca746d18be2f77975ab8c60e486cd}} 
+\index{http.c@{http.c}!ff\_http\_do\_new\_request@{ff\_http\_do\_new\_request}}
+\index{ff\_http\_do\_new\_request@{ff\_http\_do\_new\_request}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{ff\_http\_do\_new\_request()}{ff\_http\_do\_new\_request()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+http\+\_\+do\+\_\+new\+\_\+request (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri }\end{DoxyParamCaption})}
+
+Send a new H\+T\+TP request, reusing the old connection.
+
+
+\begin{DoxyParams}{Parameters}
+{\em h} & pointer to the resource \\
+\hline
+{\em uri} & uri used to perform the request \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a negative value if an error condition occurred, 0 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 333 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aeaeca746d18be2f77975ab8c60e486cd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aeaeca746d18be2f77975ab8c60e486cd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a26d9d51c791dc3ee7a04a9ec25456f63}\label{http_8c_a26d9d51c791dc3ee7a04a9ec25456f63}} 
+\index{http.c@{http.c}!ff\_http\_do\_new\_request2@{ff\_http\_do\_new\_request2}}
+\index{ff\_http\_do\_new\_request2@{ff\_http\_do\_new\_request2}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{ff\_http\_do\_new\_request2()}{ff\_http\_do\_new\_request2()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+http\+\_\+do\+\_\+new\+\_\+request2 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})}
+
+Send a new H\+T\+TP request, reusing the old connection.
+
+
+\begin{DoxyParams}{Parameters}
+{\em h} & pointer to the resource \\
+\hline
+{\em uri} & uri used to perform the request \\
+\hline
+{\em options} & A dictionary filled with H\+T\+TP options. On return this parameter will be destroyed and replaced with a dict containing options that were not found. May be N\+U\+LL. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a negative value if an error condition occurred, 0 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 337 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a26d9d51c791dc3ee7a04a9ec25456f63_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a26d9d51c791dc3ee7a04a9ec25456f63_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a5418f0c57a057b77594f587d2165e10b}\label{http_8c_a5418f0c57a057b77594f587d2165e10b}} 
+\index{http.c@{http.c}!ff\_http\_get\_shutdown\_status@{ff\_http\_get\_shutdown\_status}}
+\index{ff\_http\_get\_shutdown\_status@{ff\_http\_get\_shutdown\_status}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{ff\_http\_get\_shutdown\_status()}{ff\_http\_get\_shutdown\_status()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+http\+\_\+get\+\_\+shutdown\+\_\+status (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})}
+
+Get the H\+T\+TP shutdown response status, be used after http\+\_\+shutdown.
+
+
+\begin{DoxyParams}{Parameters}
+{\em h} & pointer to the resource \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a negative value if an error condition occurred, 0 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 317 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5418f0c57a057b77594f587d2165e10b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5418f0c57a057b77594f587d2165e10b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a8527e0c4ec245824858dfb167543e62d}\label{http_8c_a8527e0c4ec245824858dfb167543e62d}} 
+\index{http.c@{http.c}!ff\_http\_init\_auth\_state@{ff\_http\_init\_auth\_state}}
+\index{ff\_http\_init\_auth\_state@{ff\_http\_init\_auth\_state}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{ff\_http\_init\_auth\_state()}{ff\_http\_init\_auth\_state()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} ff\+\_\+http\+\_\+init\+\_\+auth\+\_\+state (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{dest,  }\item[{const \mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{src }\end{DoxyParamCaption})}
+
+Initialize the authentication state based on another H\+T\+TP \mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}}. This can be used to pre-\/initialize the authentication parameters if they are known beforehand, to avoid having to do an initial failing request just to get the parameters.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dest} & U\+RL context whose authentication state gets updated \\
+\hline
+{\em src} & U\+RL context whose authentication state gets copied \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 181 of file http.\+c.
+
+\mbox{\Hypertarget{http_8c_a449bafd9d20125817cde72e5594c81d0}\label{http_8c_a449bafd9d20125817cde72e5594c81d0}} 
+\index{http.c@{http.c}!get\_cookies@{get\_cookies}}
+\index{get\_cookies@{get\_cookies}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{get\_cookies()}{get\_cookies()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} get\+\_\+cookies (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s,  }\item[{char $\ast$$\ast$}]{cookies,  }\item[{const char $\ast$}]{path,  }\item[{const char $\ast$}]{domain }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Create a string containing cookie values for use as a H\+T\+TP cookie header field value for a particular path and domain from the cookie values stored in the H\+T\+TP protocol context. The cookie string is stored in $\ast$cookies, and may be N\+U\+LL if there are no valid cookies.
+
+\begin{DoxyReturn}{Returns}
+a negative value if an error condition occurred, 0 otherwise 
+\end{DoxyReturn}
+
+
+Definition at line 1063 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a449bafd9d20125817cde72e5594c81d0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a449bafd9d20125817cde72e5594c81d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a9fe72a7d6c1a1c6e9230061c49988a00}\label{http_8c_a9fe72a7d6c1a1c6e9230061c49988a00}} 
+\index{http.c@{http.c}!handle\_http\_errors@{handle\_http\_errors}}
+\index{handle\_http\_errors@{handle\_http\_errors}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{handle\_http\_errors()}{handle\_http\_errors()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} handle\+\_\+http\+\_\+errors (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{error }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 482 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a9fe72a7d6c1a1c6e9230061c49988a00_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a9fe72a7d6c1a1c6e9230061c49988a00_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a63082f2a284fbbd3f4fe33266ceda08a}\label{http_8c_a63082f2a284fbbd3f4fe33266ceda08a}} 
+\index{http.c@{http.c}!has\_header@{has\_header}}
+\index{has\_header@{has\_header}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{has\_header()}{has\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} has\+\_\+header (\begin{DoxyParamCaption}\item[{const char $\ast$}]{str,  }\item[{const char $\ast$}]{header }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Definition at line 1147 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a63082f2a284fbbd3f4fe33266ceda08a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a63082f2a284fbbd3f4fe33266ceda08a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_af34cebda5d4537315dd3d02df571dbd1}\label{http_8c_af34cebda5d4537315dd3d02df571dbd1}} 
+\index{http.c@{http.c}!http\_accept@{http\_accept}}
+\index{http\_accept@{http\_accept}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_accept()}{http\_accept()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+accept (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{s,  }\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$$\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 597 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_af34cebda5d4537315dd3d02df571dbd1_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a5be1822c49bf8ae16791f221b99b6fc7}\label{http_8c_a5be1822c49bf8ae16791f221b99b6fc7}} 
+\index{http.c@{http.c}!http\_buf\_read@{http\_buf\_read}}
+\index{http\_buf\_read@{http\_buf\_read}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_buf\_read()}{http\_buf\_read()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+buf\+\_\+read (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1384 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5be1822c49bf8ae16791f221b99b6fc7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5be1822c49bf8ae16791f221b99b6fc7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_aea27050c1c208d4579865d481c28ffc4}\label{http_8c_aea27050c1c208d4579865d481c28ffc4}} 
+\index{http.c@{http.c}!http\_close@{http\_close}}
+\index{http\_close@{http\_close}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_close()}{http\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1699 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aea27050c1c208d4579865d481c28ffc4_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_aae99dcd21d7573ec374b2eea6982615c}\label{http_8c_aae99dcd21d7573ec374b2eea6982615c}} 
+\index{http.c@{http.c}!http\_connect@{http\_connect}}
+\index{http\_connect@{http\_connect}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_connect()}{http\_connect()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+connect (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{path,  }\item[{const char $\ast$}]{local\+\_\+path,  }\item[{const char $\ast$}]{hoststr,  }\item[{const char $\ast$}]{auth,  }\item[{const char $\ast$}]{proxyauth,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{new\+\_\+location }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1218 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{http_8c_aae99dcd21d7573ec374b2eea6982615c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aae99dcd21d7573ec374b2eea6982615c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a85105247cb7f7e73060d6233a30245a8}\label{http_8c_a85105247cb7f7e73060d6233a30245a8}} 
+\index{http.c@{http.c}!http\_get\_file\_handle@{http\_get\_file\_handle}}
+\index{http\_get\_file\_handle@{http\_get\_file\_handle}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_get\_file\_handle()}{http\_get\_file\_handle()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+get\+\_\+file\+\_\+handle (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1782 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{http_8c_a85105247cb7f7e73060d6233a30245a8_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a592dbafc889b6deb257771ff990853d3}\label{http_8c_a592dbafc889b6deb257771ff990853d3}} 
+\index{http.c@{http.c}!http\_get\_line@{http\_get\_line}}
+\index{http\_get\_line@{http\_get\_line}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_get\_line()}{http\_get\_line()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+get\+\_\+line (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s,  }\item[{char $\ast$}]{line,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{line\+\_\+size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 638 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a592dbafc889b6deb257771ff990853d3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a592dbafc889b6deb257771ff990853d3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a8448afb18f2f8701400bd86a9fc3227a}\label{http_8c_a8448afb18f2f8701400bd86a9fc3227a}} 
+\index{http.c@{http.c}!http\_get\_short\_seek@{http\_get\_short\_seek}}
+\index{http\_get\_short\_seek@{http\_get\_short\_seek}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_get\_short\_seek()}{http\_get\_short\_seek()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+get\+\_\+short\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1788 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a8448afb18f2f8701400bd86a9fc3227a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a35d119c61b31c753c86099b93679a089}\label{http_8c_a35d119c61b31c753c86099b93679a089}} 
+\index{http.c@{http.c}!http\_getc@{http\_getc}}
+\index{http\_getc@{http\_getc}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_getc()}{http\_getc()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+getc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 621 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a35d119c61b31c753c86099b93679a089_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a35d119c61b31c753c86099b93679a089_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a03583ab5c3b98f1b201b73bd53369624}\label{http_8c_a03583ab5c3b98f1b201b73bd53369624}} 
+\index{http.c@{http.c}!http\_handshake@{http\_handshake}}
+\index{http\_handshake@{http\_handshake}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_handshake()}{http\_handshake()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+handshake (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{c }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 488 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a03583ab5c3b98f1b201b73bd53369624_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a03583ab5c3b98f1b201b73bd53369624_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a6344ca08eebe8f5dfe50dace69c0cee1}\label{http_8c_a6344ca08eebe8f5dfe50dace69c0cee1}} 
+\index{http.c@{http.c}!http\_listen@{http\_listen}}
+\index{http\_listen@{http\_listen}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_listen()}{http\_listen()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+listen (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 524 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a6344ca08eebe8f5dfe50dace69c0cee1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=237pt]{http_8c_a6344ca08eebe8f5dfe50dace69c0cee1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a08d28a134863d46a635b4b144096c333}\label{http_8c_a08d28a134863d46a635b4b144096c333}} 
+\index{http.c@{http.c}!http\_open@{http\_open}}
+\index{http\_open@{http\_open}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_open()}{http\_open()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+open (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{uri,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 555 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a08d28a134863d46a635b4b144096c333_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_ae02ef74b5743a3704335097578c4c1b2}\label{http_8c_ae02ef74b5743a3704335097578c4c1b2}} 
+\index{http.c@{http.c}!http\_open\_cnx@{http\_open\_cnx}}
+\index{http\_open\_cnx@{http\_open\_cnx}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_open\_cnx()}{http\_open\_cnx()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+open\+\_\+cnx (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 262 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ae02ef74b5743a3704335097578c4c1b2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ae02ef74b5743a3704335097578c4c1b2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a4be0b6529b21a2061d01720420f16156}\label{http_8c_a4be0b6529b21a2061d01720420f16156}} 
+\index{http.c@{http.c}!http\_open\_cnx\_internal@{http\_open\_cnx\_internal}}
+\index{http\_open\_cnx\_internal@{http\_open\_cnx\_internal}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_open\_cnx\_internal()}{http\_open\_cnx\_internal()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+open\+\_\+cnx\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{options }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 191 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a4be0b6529b21a2061d01720420f16156_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a4be0b6529b21a2061d01720420f16156_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a2e51b1edb0ddc094280c9aeb1d689a79}\label{http_8c_a2e51b1edb0ddc094280c9aeb1d689a79}} 
+\index{http.c@{http.c}!http\_read@{http\_read}}
+\index{http\_read@{http\_read}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_read()}{http\_read()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+read (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1627 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a2e51b1edb0ddc094280c9aeb1d689a79_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_aa21700ec605d3f24e700f54b02b06af7}\label{http_8c_aa21700ec605d3f24e700f54b02b06af7}} 
+\index{http.c@{http.c}!http\_read\_header@{http\_read\_header}}
+\index{http\_read\_header@{http\_read\_header}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_read\_header()}{http\_read\_header()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+read\+\_\+header (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{new\+\_\+location }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1155 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aa21700ec605d3f24e700f54b02b06af7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aa21700ec605d3f24e700f54b02b06af7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_af7681dc3022673ad8e408e3eb138b93a}\label{http_8c_af7681dc3022673ad8e408e3eb138b93a}} 
+\index{http.c@{http.c}!http\_read\_stream@{http\_read\_stream}}
+\index{http\_read\_stream@{http\_read\_stream}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_read\_stream()}{http\_read\_stream()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+read\+\_\+stream (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1493 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_af7681dc3022673ad8e408e3eb138b93a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_af7681dc3022673ad8e408e3eb138b93a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_afc6fa3c7ba3089920be31f855fab211b}\label{http_8c_afc6fa3c7ba3089920be31f855fab211b}} 
+\index{http.c@{http.c}!http\_read\_stream\_all@{http\_read\_stream\_all}}
+\index{http\_read\_stream\_all@{http\_read\_stream\_all}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_read\_stream\_all()}{http\_read\_stream\_all()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+read\+\_\+stream\+\_\+all (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1549 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_afc6fa3c7ba3089920be31f855fab211b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_afc6fa3c7ba3089920be31f855fab211b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_ac9300bca4ebcb1c39529d7b7add02284}\label{http_8c_ac9300bca4ebcb1c39529d7b7add02284}} 
+\index{http.c@{http.c}!http\_seek@{http\_seek}}
+\index{http\_seek@{http\_seek}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_seek()}{http\_seek()}}
+{\footnotesize\ttfamily static int64\+\_\+t http\+\_\+seek (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{int64\+\_\+t}]{off,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{whence }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1777 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ac9300bca4ebcb1c39529d7b7add02284_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a57d9568277c08ea554004cc9da66c0b7}\label{http_8c_a57d9568277c08ea554004cc9da66c0b7}} 
+\index{http.c@{http.c}!http\_seek\_internal@{http\_seek\_internal}}
+\index{http\_seek\_internal@{http\_seek\_internal}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_seek\_internal()}{http\_seek\_internal()}}
+{\footnotesize\ttfamily static int64\+\_\+t http\+\_\+seek\+\_\+internal (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{int64\+\_\+t}]{off,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{whence,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{force\+\_\+reconnect }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1719 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a57d9568277c08ea554004cc9da66c0b7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a57d9568277c08ea554004cc9da66c0b7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a23e3a685241551cfc4df18ac46692298}\label{http_8c_a23e3a685241551cfc4df18ac46692298}} 
+\index{http.c@{http.c}!http\_shutdown@{http\_shutdown}}
+\index{http\_shutdown@{http\_shutdown}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_shutdown()}{http\_shutdown()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+shutdown (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flags }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1670 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a23e3a685241551cfc4df18ac46692298_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a23e3a685241551cfc4df18ac46692298_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_abb97fb65372cd552ab7afd60ea67b3f9}\label{http_8c_abb97fb65372cd552ab7afd60ea67b3f9}} 
+\index{http.c@{http.c}!http\_write@{http\_write}}
+\index{http\_write@{http\_write}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_write()}{http\_write()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+write (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{buf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1644 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_abb97fb65372cd552ab7afd60ea67b3f9_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a897e2f67243b61705ea6b44784089f0d}\label{http_8c_a897e2f67243b61705ea6b44784089f0d}} 
+\index{http.c@{http.c}!http\_write\_reply@{http\_write\_reply}}
+\index{http\_write\_reply@{http\_write\_reply}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{http\_write\_reply()}{http\_write\_reply()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} http\+\_\+write\+\_\+reply (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{status\+\_\+code }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 408 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a897e2f67243b61705ea6b44784089f0d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a897e2f67243b61705ea6b44784089f0d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a131ae54694371858cf1b571821c54f38}\label{http_8c_a131ae54694371858cf1b571821c54f38}} 
+\index{http.c@{http.c}!parse\_content\_encoding@{parse\_content\_encoding}}
+\index{parse\_content\_encoding@{parse\_content\_encoding}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_content\_encoding()}{parse\_content\_encoding()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+content\+\_\+encoding (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 706 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a131ae54694371858cf1b571821c54f38_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a131ae54694371858cf1b571821c54f38_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a5295e67f34cf36d3037600c31ee1d45e}\label{http_8c_a5295e67f34cf36d3037600c31ee1d45e}} 
+\index{http.c@{http.c}!parse\_content\_range@{parse\_content\_range}}
+\index{parse\_content\_range@{parse\_content\_range}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_content\_range()}{parse\_content\_range()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} parse\+\_\+content\+\_\+range (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{const char $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 691 of file http.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a5295e67f34cf36d3037600c31ee1d45e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_ae692948cc4a9cd2e0c2a74bd1b5bfecb}\label{http_8c_ae692948cc4a9cd2e0c2a74bd1b5bfecb}} 
+\index{http.c@{http.c}!parse\_cookie@{parse\_cookie}}
+\index{parse\_cookie@{parse\_cookie}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_cookie()}{parse\_cookie()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+cookie (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{p,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{cookies }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 824 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ae692948cc4a9cd2e0c2a74bd1b5bfecb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ae692948cc4a9cd2e0c2a74bd1b5bfecb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a616b13098910267df4f2fae9daafb8b4}\label{http_8c_a616b13098910267df4f2fae9daafb8b4}} 
+\index{http.c@{http.c}!parse\_icy@{parse\_icy}}
+\index{parse\_icy@{parse\_icy}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_icy()}{parse\_icy()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+icy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{tag,  }\item[{const char $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 740 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a616b13098910267df4f2fae9daafb8b4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a616b13098910267df4f2fae9daafb8b4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_aff91b7551e89e81ca442dfb594a36d15}\label{http_8c_aff91b7551e89e81ca442dfb594a36d15}} 
+\index{http.c@{http.c}!parse\_location@{parse\_location}}
+\index{parse\_location@{parse\_location}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_location()}{parse\_location()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+location (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h_t_t_p_context}{H\+T\+T\+P\+Context}} $\ast$}]{s,  }\item[{const char $\ast$}]{p }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 677 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aff91b7551e89e81ca442dfb594a36d15_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_aff91b7551e89e81ca442dfb594a36d15_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a2a9a7aca01b0232a71abc2842cbc6d5a}\label{http_8c_a2a9a7aca01b0232a71abc2842cbc6d5a}} 
+\index{http.c@{http.c}!parse\_set\_cookie@{parse\_set\_cookie}}
+\index{parse\_set\_cookie@{parse\_set\_cookie}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_set\_cookie()}{parse\_set\_cookie()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+set\+\_\+cookie (\begin{DoxyParamCaption}\item[{const char $\ast$}]{set\+\_\+cookie,  }\item[{\mbox{\hyperlink{struct_a_v_dictionary}{A\+V\+Dictionary}} $\ast$$\ast$}]{dict }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 787 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a2a9a7aca01b0232a71abc2842cbc6d5a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a2a9a7aca01b0232a71abc2842cbc6d5a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_ab6c178827f37539605e089065d0a1704}\label{http_8c_ab6c178827f37539605e089065d0a1704}} 
+\index{http.c@{http.c}!parse\_set\_cookie\_expiry\_time@{parse\_set\_cookie\_expiry\_time}}
+\index{parse\_set\_cookie\_expiry\_time@{parse\_set\_cookie\_expiry\_time}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{parse\_set\_cookie\_expiry\_time()}{parse\_set\_cookie\_expiry\_time()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} parse\+\_\+set\+\_\+cookie\+\_\+expiry\+\_\+time (\begin{DoxyParamCaption}\item[{const char $\ast$}]{exp\+\_\+str,  }\item[{struct tm $\ast$}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 762 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ab6c178827f37539605e089065d0a1704_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_ab6c178827f37539605e089065d0a1704_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a65b0feefea66ae01b485387fa2d84e1a}\label{http_8c_a65b0feefea66ae01b485387fa2d84e1a}} 
+\index{http.c@{http.c}!process\_line@{process\_line}}
+\index{process\_line@{process\_line}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{process\_line()}{process\_line()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} process\+\_\+line (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{char $\ast$}]{line,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{line\+\_\+count,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{new\+\_\+location }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 909 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a65b0feefea66ae01b485387fa2d84e1a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a65b0feefea66ae01b485387fa2d84e1a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a11c5a99873dc8a63bd3f7b30834e570e}\label{http_8c_a11c5a99873dc8a63bd3f7b30834e570e}} 
+\index{http.c@{http.c}!store\_icy@{store\_icy}}
+\index{store\_icy@{store\_icy}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{store\_icy()}{store\_icy()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} store\+\_\+icy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1589 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{http_8c_a11c5a99873dc8a63bd3f7b30834e570e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{http_8c_a11c5a99873dc8a63bd3f7b30834e570e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{http_8c_a548fa8798c919d1be71feeebc1d18942}\label{http_8c_a548fa8798c919d1be71feeebc1d18942}} 
+\index{http.c@{http.c}!update\_metadata@{update\_metadata}}
+\index{update\_metadata@{update\_metadata}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{update\_metadata()}{update\_metadata()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} update\+\_\+metadata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_u_r_l_context}{U\+R\+L\+Context}} $\ast$}]{h,  }\item[{char $\ast$}]{data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1561 of file http.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a548fa8798c919d1be71feeebc1d18942_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{http_8c_a548fa8798c919d1be71feeebc1d18942_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{http_8c_a384ff94b5139f441c282c9b4c7b985e6}\label{http_8c_a384ff94b5139f441c282c9b4c7b985e6}} 
+\index{http.c@{http.c}!options@{options}}
+\index{options@{options}!http.c@{http.c}}
+\doxysubsubsection{\texorpdfstring{options}{options}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{struct_a_v_option}{A\+V\+Option}} options\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 137 of file http.\+c.
+

@@ -1,0 +1,1049 @@
+\hypertarget{h264__slice_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/h264\+\_\+slice.c File Reference}
+\label{h264__slice_8c}\index{E:/github/ffmpeg/libavcodec/h264\_slice.c@{E:/github/ffmpeg/libavcodec/h264\_slice.c}}
+{\ttfamily \#include \char`\"{}libavutil/avassert.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/display.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/imgutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/stereo3d.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cabac.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cabac\+\_\+functions.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}error\+\_\+resilience.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264dec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264chroma.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264\+\_\+mvpred.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}h264\+\_\+ps.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}golomb.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mathops.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpegutils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mpegvideo.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}rectangle.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\newline
+Include dependency graph for h264\+\_\+slice.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{h264__slice_8c_a6acbb6020b325238d89cff488d929c7d}{I\+N\+\_\+\+R\+A\+N\+GE}}(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  \mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}})~(((\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $>$= (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})) \&\& ((\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $<$ (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)((\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) + (\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}))))
+\item 
+\#define \mbox{\hyperlink{h264__slice_8c_a5ba00de78c6be31f8548f7df05c022f6}{R\+E\+B\+A\+S\+E\+\_\+\+P\+I\+C\+T\+U\+RE}}(pic,  new\+\_\+ctx,  old\+\_\+ctx)
+\item 
+\#define \mbox{\hyperlink{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}{T\+R\+A\+N\+S\+P\+O\+SE}}(x)~((x) $>$$>$ 2) $\vert$ (((x) $<$$<$ 2) \& 0xF)
+\item 
+\#define \mbox{\hyperlink{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}{T\+R\+A\+N\+S\+P\+O\+SE}}(x)~((x) $>$$>$ 3) $\vert$ (((x) \& 7) $<$$<$ 3)
+\item 
+\#define \mbox{\hyperlink{h264__slice_8c_a8e25fb6de2602478d1a220135a3264c4}{H\+W\+A\+C\+C\+E\+L\+\_\+\+M\+AX}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a8aa4245e89614c37b985310da7f1c6f5}{release\+\_\+unused\+\_\+pictures}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} remove\+\_\+current)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a6c6df1b650bca2e5ad20c1f2eb543de3}{alloc\+\_\+scratch\+\_\+buffers}} (\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} linesize)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_ab6c605a4f84ed6cfda07cbabd98f708f}{init\+\_\+table\+\_\+pools}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a8463f747babbd5fff2ba959dadd006cc}{alloc\+\_\+picture}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$pic)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_afd01b8373b02eb3456286a824a12f017}{find\+\_\+unused\+\_\+picture}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a5aeff8b736aa556315562cdbee36e46d}{copy\+\_\+picture\+\_\+range}} (\mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$$\ast$\mbox{\hyperlink{libavcodec_2webvttdec_8c_a5d467a63df9ff99d33d6749038f6f421}{to}}, \mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$$\ast$\mbox{\hyperlink{libavcodec_2webvttdec_8c_af9f143e62cdad4afb8a53a21b8b8fcfd}{from}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} count, \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$new\+\_\+base, \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$old\+\_\+base)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a900125d92abadef7225df0aaf818c9c6}{h264\+\_\+slice\+\_\+header\+\_\+init}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a1ee1c405d5637d2ab895eb0457107aeb}{ff\+\_\+h264\+\_\+update\+\_\+thread\+\_\+context}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$dst, const \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$\mbox{\hyperlink{tests_2checkasm_2vp9dsp_8c_a858376c0918f93e656c8c0d76c63dbe8}{src}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a18543104885d8131b4c439c1966161c7}{h264\+\_\+frame\+\_\+start}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a68d9e2cb4f88a831ff1c5c01b18cb714}{backup\+\_\+mb\+\_\+border}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+y, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+cb, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$src\+\_\+cr, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} linesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} uvlinesize, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} simple)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a2f42a7b0a3c1e0ceeea175ad9755bae1}{implicit\+\_\+weight\+\_\+table}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{writing__filters_8txt_aa377c914ccb65b694f52fc4ce9d02f03}{field}})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a27b9bae7c36430b2cc94a91805a7cf7f}{init\+\_\+scan\+\_\+tables}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{h264__slice_8c_aab87336eef35f1203881a73b60622223}{get\+\_\+pixel\+\_\+format}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} force\+\_\+callback)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a1d3bc85fde3c3556d158fe5d980c2643}{init\+\_\+dimensions}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{h264__slice_8c_ac06de11c285020badbb26356e9d5dcb9}{non\+\_\+j\+\_\+pixfmt}} (enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} \mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a998c1323db67bde61cee62037b76569f}{h264\+\_\+init\+\_\+ps}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} first\+\_\+slice)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a8191969d0c5c258762c0d8e5bfc7cc85}{h264\+\_\+export\+\_\+frame\+\_\+props}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_ad0f75f9b85be4e0041e46ca34ad6e3ba}{h264\+\_\+select\+\_\+output\+\_\+frame}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a4dca8c64006f039f3fa04cbeb02cab0a}{h264\+\_\+field\+\_\+start}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$nal, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} first\+\_\+slice)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a79a71eb50219252f898f53fc0e23ab09}{h264\+\_\+slice\+\_\+header\+\_\+parse}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$nal)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a2bf0eb8cbbdf084c4360b39e6a65792a}{h264\+\_\+slice\+\_\+init}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$nal)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a5b72118a66ad7765ddb977cf1c87d626}{ff\+\_\+h264\+\_\+queue\+\_\+decode\+\_\+slice}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$nal)
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_ab601c1bdf8905c63f4cab5668b462dff}{ff\+\_\+h264\+\_\+get\+\_\+slice\+\_\+type}} (const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl)
+\item 
+static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a5d157b6580d010b39acfab476257aedb}{fill\+\_\+filter\+\_\+caches\+\_\+inter}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+type, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} top\+\_\+xy, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} left\+\_\+xy\mbox{[}\mbox{\hyperlink{h264dec_8h_a888d981e3f12d4c8650fc34130eda33e}{L\+E\+F\+T\+\_\+\+M\+BS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} top\+\_\+type, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} left\+\_\+type\mbox{[}\mbox{\hyperlink{h264dec_8h_a888d981e3f12d4c8650fc34130eda33e}{L\+E\+F\+T\+\_\+\+M\+BS}}\mbox{]}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+xy, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{filter__design_8txt_a9f17285cc70842ab252aa590b046ecf5}{list}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a299b2d0eff55a139f51057128e347343}{fill\+\_\+filter\+\_\+caches}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} mb\+\_\+type)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a641f3cb0955896238df6ec26c4f54ec3}{loop\+\_\+filter}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} start\+\_\+x, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} end\+\_\+x)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a3e11f4d75a3107359a15a94c3613cac8}{predict\+\_\+field\+\_\+decoding\+\_\+flag}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_ab8849f35ed7ba07e50b78eea9b1037df}{decode\+\_\+finish\+\_\+row}} (const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}}, \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{h264__slice_8c_a335b9ee5132ef200a59ea4c375901936}{er\+\_\+add\+\_\+slice}} (\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$sl, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} startx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} starty, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} endx, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} endy, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{filter__design_8txt_ad6a339ae538717b3e99082a8016207df}{status}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef}{decode\+\_\+slice}} (struct \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{libavcodec_2jacosubdec_8c_ac3a73711fd7f8a50db1c4b62e41cf852}{arg}})
+\item 
+\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{h264__slice_8c_a3df9edf586252d84efa5c8a1bca57cfd}{ff\+\_\+h264\+\_\+execute\+\_\+decode\+\_\+slices}} (\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$\mbox{\hyperlink{sw__rgb_8c_a1f1dfeb2f802fe99f37fe91867b84456}{h}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{h264__slice_8c_a6031f2c91f61f97b7b3f3fb93d1e0209}{field\+\_\+scan}} \mbox{[}16+1\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{h264__slice_8c_a814f769cd6907170152a08cd537ff1dd}{field\+\_\+scan8x8}} \mbox{[}64+1\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{h264__slice_8c_a8484c6fa0ed16cb11b33fa44fe11c504}{field\+\_\+scan8x8\+\_\+cavlc}} \mbox{[}64+1\mbox{]}
+\item 
+static const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} \mbox{\hyperlink{h264__slice_8c_adce17734fa38715fb8d6d1e48ce2e486}{zigzag\+\_\+scan8x8\+\_\+cavlc}} \mbox{[}64+1\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+H.\+264 / A\+VC / M\+P\+E\+G-\/4 part10 codec. \begin{DoxyAuthor}{Author}
+Michael Niedermayer \href{mailto:michaelni@gmx.at}{\texttt{ michaelni@gmx.\+at}} 
+\end{DoxyAuthor}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{h264__slice_8c_a8e25fb6de2602478d1a220135a3264c4}\label{h264__slice_8c_a8e25fb6de2602478d1a220135a3264c4}} 
+\index{h264\_slice.c@{h264\_slice.c}!HWACCEL\_MAX@{HWACCEL\_MAX}}
+\index{HWACCEL\_MAX@{HWACCEL\_MAX}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{HWACCEL\_MAX}{HWACCEL\_MAX}}
+{\footnotesize\ttfamily \#define H\+W\+A\+C\+C\+E\+L\+\_\+\+M\+AX}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{                     (CONFIG\_H264\_DXVA2\_HWACCEL + \(\backslash\)}
+\DoxyCodeLine{                     (CONFIG\_H264\_D3D11VA\_HWACCEL * 2) + \(\backslash\)}
+\DoxyCodeLine{                     CONFIG\_H264\_NVDEC\_HWACCEL + \(\backslash\)}
+\DoxyCodeLine{                     CONFIG\_H264\_VAAPI\_HWACCEL + \(\backslash\)}
+\DoxyCodeLine{                     CONFIG\_H264\_VIDEOTOOLBOX\_HWACCEL + \(\backslash\)}
+\DoxyCodeLine{                     CONFIG\_H264\_VDPAU\_HWACCEL)}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{h264__slice_8c_a6acbb6020b325238d89cff488d929c7d}\label{h264__slice_8c_a6acbb6020b325238d89cff488d929c7d}} 
+\index{h264\_slice.c@{h264\_slice.c}!IN\_RANGE@{IN\_RANGE}}
+\index{IN\_RANGE@{IN\_RANGE}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{IN\_RANGE}{IN\_RANGE}}
+{\footnotesize\ttfamily \#define I\+N\+\_\+\+R\+A\+N\+GE(\begin{DoxyParamCaption}\item[{}]{\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}},  }\item[{}]{\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}},  }\item[{}]{\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}} }\end{DoxyParamCaption})~(((\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $>$= (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}})) \&\& ((\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)(\mbox{\hyperlink{h264pred__template_8c_a4124bc0a9335c27f086f24ba207a4912}{a}}) $<$ (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}$\ast$)((\mbox{\hyperlink{vf__curves_8c_a0a667482238bcca3ac201c1cd09c5072}{b}}) + (\mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}))))}
+
+
+
+Definition at line 273 of file h264\+\_\+slice.\+c.
+
+\mbox{\Hypertarget{h264__slice_8c_a5ba00de78c6be31f8548f7df05c022f6}\label{h264__slice_8c_a5ba00de78c6be31f8548f7df05c022f6}} 
+\index{h264\_slice.c@{h264\_slice.c}!REBASE\_PICTURE@{REBASE\_PICTURE}}
+\index{REBASE\_PICTURE@{REBASE\_PICTURE}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{REBASE\_PICTURE}{REBASE\_PICTURE}}
+{\footnotesize\ttfamily \#define R\+E\+B\+A\+S\+E\+\_\+\+P\+I\+C\+T\+U\+RE(\begin{DoxyParamCaption}\item[{}]{pic,  }\item[{}]{new\+\_\+ctx,  }\item[{}]{old\+\_\+ctx }\end{DoxyParamCaption})}
+
+{\bfseries Value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{    (((pic) \&\& (pic) >= (old\_ctx)-\/>\mbox{\hyperlink{struct_d_p_b}{DPB}} \&\&                       \(\backslash\)}
+\DoxyCodeLine{      (pic) < (old\_ctx)-\/>\mbox{\hyperlink{struct_d_p_b}{DPB}} + \mbox{\hyperlink{h264dec_8h_a3d79954dd0655090e5371f876023fa7c}{H264\_MAX\_PICTURE\_COUNT}}) ?          \(\backslash\)}
+\DoxyCodeLine{     \&(new\_ctx)-\/>\mbox{\hyperlink{struct_d_p_b}{DPB}}[(pic) -\/ (old\_ctx)-\/>\mbox{\hyperlink{struct_d_p_b}{DPB}}] : \mbox{\hyperlink{coverity_8c_a070d2ce7b6bb7e5c05602aa8c308d0c4}{NULL}})}
+
+\end{DoxyCode}
+
+
+Definition at line 275 of file h264\+\_\+slice.\+c.
+
+\mbox{\Hypertarget{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}\label{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}} 
+\index{h264\_slice.c@{h264\_slice.c}!TRANSPOSE@{TRANSPOSE}}
+\index{TRANSPOSE@{TRANSPOSE}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{TRANSPOSE}{TRANSPOSE}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \#define T\+R\+A\+N\+S\+P\+O\+SE(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x) $>$$>$ 2) $\vert$ (((x) $<$$<$ 2) \& 0xF)}
+
+\mbox{\Hypertarget{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}\label{h264__slice_8c_ae2ed997a4625fdc631efcf809804b254}} 
+\index{h264\_slice.c@{h264\_slice.c}!TRANSPOSE@{TRANSPOSE}}
+\index{TRANSPOSE@{TRANSPOSE}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{TRANSPOSE}{TRANSPOSE}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \#define T\+R\+A\+N\+S\+P\+O\+SE(\begin{DoxyParamCaption}\item[{}]{x }\end{DoxyParamCaption})~((x) $>$$>$ 3) $\vert$ (((x) \& 7) $<$$<$ 3)}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{h264__slice_8c_a8463f747babbd5fff2ba959dadd006cc}\label{h264__slice_8c_a8463f747babbd5fff2ba959dadd006cc}} 
+\index{h264\_slice.c@{h264\_slice.c}!alloc\_picture@{alloc\_picture}}
+\index{alloc\_picture@{alloc\_picture}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_picture()}{alloc\_picture()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alloc\+\_\+picture (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$}]{pic }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 187 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8463f747babbd5fff2ba959dadd006cc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8463f747babbd5fff2ba959dadd006cc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a6c6df1b650bca2e5ad20c1f2eb543de3}\label{h264__slice_8c_a6c6df1b650bca2e5ad20c1f2eb543de3}} 
+\index{h264\_slice.c@{h264\_slice.c}!alloc\_scratch\_buffers@{alloc\_scratch\_buffers}}
+\index{alloc\_scratch\_buffers@{alloc\_scratch\_buffers}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_scratch\_buffers()}{alloc\_scratch\_buffers()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} alloc\+\_\+scratch\+\_\+buffers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{linesize }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 128 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a6c6df1b650bca2e5ad20c1f2eb543de3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a6c6df1b650bca2e5ad20c1f2eb543de3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a68d9e2cb4f88a831ff1c5c01b18cb714}\label{h264__slice_8c_a68d9e2cb4f88a831ff1c5c01b18cb714}} 
+\index{h264\_slice.c@{h264\_slice.c}!backup\_mb\_border@{backup\_mb\_border}}
+\index{backup\_mb\_border@{backup\_mb\_border}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{backup\_mb\_border()}{backup\_mb\_border()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} backup\+\_\+mb\+\_\+border (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+y,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+cb,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{src\+\_\+cr,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{linesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{uvlinesize,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{simple }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 567 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a68d9e2cb4f88a831ff1c5c01b18cb714_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a5aeff8b736aa556315562cdbee36e46d}\label{h264__slice_8c_a5aeff8b736aa556315562cdbee36e46d}} 
+\index{h264\_slice.c@{h264\_slice.c}!copy\_picture\_range@{copy\_picture\_range}}
+\index{copy\_picture\_range@{copy\_picture\_range}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{copy\_picture\_range()}{copy\_picture\_range()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} copy\+\_\+picture\+\_\+range (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$$\ast$}]{to,  }\item[{\mbox{\hyperlink{struct_h264_picture}{H264\+Picture}} $\ast$$\ast$}]{from,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{count,  }\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{new\+\_\+base,  }\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{old\+\_\+base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 280 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=331pt]{h264__slice_8c_a5aeff8b736aa556315562cdbee36e46d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ab8849f35ed7ba07e50b78eea9b1037df}\label{h264__slice_8c_ab8849f35ed7ba07e50b78eea9b1037df}} 
+\index{h264\_slice.c@{h264\_slice.c}!decode\_finish\_row@{decode\_finish\_row}}
+\index{decode\_finish\_row@{decode\_finish\_row}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{decode\_finish\_row()}{decode\_finish\_row()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} decode\+\_\+finish\+\_\+row (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Draw edges and report progress for the last MB row. 
+
+Definition at line 2535 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab8849f35ed7ba07e50b78eea9b1037df_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab8849f35ed7ba07e50b78eea9b1037df_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef}\label{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef}} 
+\index{h264\_slice.c@{h264\_slice.c}!decode\_slice@{decode\_slice}}
+\index{decode\_slice@{decode\_slice}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{decode\_slice()}{decode\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+slice (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{arg }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2580 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a335b9ee5132ef200a59ea4c375901936}\label{h264__slice_8c_a335b9ee5132ef200a59ea4c375901936}} 
+\index{h264\_slice.c@{h264\_slice.c}!er\_add\_slice@{er\_add\_slice}}
+\index{er\_add\_slice@{er\_add\_slice}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{er\_add\_slice()}{er\_add\_slice()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} er\+\_\+add\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{startx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{starty,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{endx,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{endy,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{status }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2566 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a335b9ee5132ef200a59ea4c375901936_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a335b9ee5132ef200a59ea4c375901936_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a3df9edf586252d84efa5c8a1bca57cfd}\label{h264__slice_8c_a3df9edf586252d84efa5c8a1bca57cfd}} 
+\index{h264\_slice.c@{h264\_slice.c}!ff\_h264\_execute\_decode\_slices@{ff\_h264\_execute\_decode\_slices}}
+\index{ff\_h264\_execute\_decode\_slices@{ff\_h264\_execute\_decode\_slices}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{ff\_h264\_execute\_decode\_slices()}{ff\_h264\_execute\_decode\_slices()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+h264\+\_\+execute\+\_\+decode\+\_\+slices (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})}
+
+Call \mbox{\hyperlink{h264__slice_8c_ab4c172264d72e44fe906d9dcfaca86ef}{decode\+\_\+slice()}} for each context.
+
+
+\begin{DoxyParams}{Parameters}
+{\em h} & h264 master context \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 2792 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{h264__slice_8c_a3df9edf586252d84efa5c8a1bca57cfd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a3df9edf586252d84efa5c8a1bca57cfd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ab601c1bdf8905c63f4cab5668b462dff}\label{h264__slice_8c_ab601c1bdf8905c63f4cab5668b462dff}} 
+\index{h264\_slice.c@{h264\_slice.c}!ff\_h264\_get\_slice\_type@{ff\_h264\_get\_slice\_type}}
+\index{ff\_h264\_get\_slice\_type@{ff\_h264\_get\_slice\_type}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{ff\_h264\_get\_slice\_type()}{ff\_h264\_get\_slice\_type()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+h264\+\_\+get\+\_\+slice\+\_\+type (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl }\end{DoxyParamCaption})}
+
+Reconstruct bitstream slice\+\_\+type. 
+
+Definition at line 2208 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab601c1bdf8905c63f4cab5668b462dff_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a5b72118a66ad7765ddb977cf1c87d626}\label{h264__slice_8c_a5b72118a66ad7765ddb977cf1c87d626}} 
+\index{h264\_slice.c@{h264\_slice.c}!ff\_h264\_queue\_decode\_slice@{ff\_h264\_queue\_decode\_slice}}
+\index{ff\_h264\_queue\_decode\_slice@{ff\_h264\_queue\_decode\_slice}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{ff\_h264\_queue\_decode\_slice()}{ff\_h264\_queue\_decode\_slice()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+h264\+\_\+queue\+\_\+decode\+\_\+slice (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$}]{nal }\end{DoxyParamCaption})}
+
+Submit a slice for decoding.
+
+Parse the slice header, starting a new field/frame if necessary. If any slices are queued for the previous field, they are decoded. 
+
+Definition at line 2083 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a5b72118a66ad7765ddb977cf1c87d626_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a5b72118a66ad7765ddb977cf1c87d626_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a1ee1c405d5637d2ab895eb0457107aeb}\label{h264__slice_8c_a1ee1c405d5637d2ab895eb0457107aeb}} 
+\index{h264\_slice.c@{h264\_slice.c}!ff\_h264\_update\_thread\_context@{ff\_h264\_update\_thread\_context}}
+\index{ff\_h264\_update\_thread\_context@{ff\_h264\_update\_thread\_context}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{ff\_h264\_update\_thread\_context()}{ff\_h264\_update\_thread\_context()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} ff\+\_\+h264\+\_\+update\+\_\+thread\+\_\+context (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{dst,  }\item[{const \mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{src }\end{DoxyParamCaption})}
+
+
+
+Definition at line 296 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a1ee1c405d5637d2ab895eb0457107aeb_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a299b2d0eff55a139f51057128e347343}\label{h264__slice_8c_a299b2d0eff55a139f51057128e347343}} 
+\index{h264\_slice.c@{h264\_slice.c}!fill\_filter\_caches@{fill\_filter\_caches}}
+\index{fill\_filter\_caches@{fill\_filter\_caches}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{fill\_filter\_caches()}{fill\_filter\_caches()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} fill\+\_\+filter\+\_\+caches (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyReturn}{Returns}
+non zero if the loop filter can be skipped 
+\end{DoxyReturn}
+
+
+Definition at line 2310 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a299b2d0eff55a139f51057128e347343_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a299b2d0eff55a139f51057128e347343_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a5d157b6580d010b39acfab476257aedb}\label{h264__slice_8c_a5d157b6580d010b39acfab476257aedb}} 
+\index{h264\_slice.c@{h264\_slice.c}!fill\_filter\_caches\_inter@{fill\_filter\_caches\_inter}}
+\index{fill\_filter\_caches\_inter@{fill\_filter\_caches\_inter}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{fill\_filter\_caches\_inter()}{fill\_filter\_caches\_inter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_a28f50f4c125959216885f01d56dbe866}{av\+\_\+always\+\_\+inline}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} fill\+\_\+filter\+\_\+caches\+\_\+inter (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+type,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{top\+\_\+xy,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{left\+\_\+xy\mbox{[}\+L\+E\+F\+T\+\_\+\+M\+B\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{top\+\_\+type,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{left\+\_\+type\mbox{[}\+L\+E\+F\+T\+\_\+\+M\+B\+S\mbox{]},  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{mb\+\_\+xy,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{list }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2226 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{h264__slice_8c_a5d157b6580d010b39acfab476257aedb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a5d157b6580d010b39acfab476257aedb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_afd01b8373b02eb3456286a824a12f017}\label{h264__slice_8c_afd01b8373b02eb3456286a824a12f017}} 
+\index{h264\_slice.c@{h264\_slice.c}!find\_unused\_picture@{find\_unused\_picture}}
+\index{find\_unused\_picture@{find\_unused\_picture}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{find\_unused\_picture()}{find\_unused\_picture()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} find\+\_\+unused\+\_\+picture (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 261 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_afd01b8373b02eb3456286a824a12f017_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_aab87336eef35f1203881a73b60622223}\label{h264__slice_8c_aab87336eef35f1203881a73b60622223}} 
+\index{h264\_slice.c@{h264\_slice.c}!get\_pixel\_format@{get\_pixel\_format}}
+\index{get\_pixel\_format@{get\_pixel\_format}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{get\_pixel\_format()}{get\_pixel\_format()}}
+{\footnotesize\ttfamily static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} get\+\_\+pixel\+\_\+format (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{force\+\_\+callback }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 733 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_aab87336eef35f1203881a73b60622223_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a8191969d0c5c258762c0d8e5bfc7cc85}\label{h264__slice_8c_a8191969d0c5c258762c0d8e5bfc7cc85}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_export\_frame\_props@{h264\_export\_frame\_props}}
+\index{h264\_export\_frame\_props@{h264\_export\_frame\_props}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_export\_frame\_props()}{h264\_export\_frame\_props()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+export\+\_\+frame\+\_\+props (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1134 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8191969d0c5c258762c0d8e5bfc7cc85_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8191969d0c5c258762c0d8e5bfc7cc85_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a4dca8c64006f039f3fa04cbeb02cab0a}\label{h264__slice_8c_a4dca8c64006f039f3fa04cbeb02cab0a}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_field\_start@{h264\_field\_start}}
+\index{h264\_field\_start@{h264\_field\_start}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_field\_start()}{h264\_field\_start()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+field\+\_\+start (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$}]{nal,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{first\+\_\+slice }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1450 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{h264__slice_8c_a4dca8c64006f039f3fa04cbeb02cab0a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a4dca8c64006f039f3fa04cbeb02cab0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a18543104885d8131b4c439c1966161c7}\label{h264__slice_8c_a18543104885d8131b4c439c1966161c7}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_frame\_start@{h264\_frame\_start}}
+\index{h264\_frame\_start@{h264\_frame\_start}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_frame\_start()}{h264\_frame\_start()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+frame\+\_\+start (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 468 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a18543104885d8131b4c439c1966161c7_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a18543104885d8131b4c439c1966161c7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a998c1323db67bde61cee62037b76569f}\label{h264__slice_8c_a998c1323db67bde61cee62037b76569f}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_init\_ps@{h264\_init\_ps}}
+\index{h264\_init\_ps@{h264\_init\_ps}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_init\_ps()}{h264\_init\_ps()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+init\+\_\+ps (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{const \mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{first\+\_\+slice }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1015 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a998c1323db67bde61cee62037b76569f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a998c1323db67bde61cee62037b76569f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ad0f75f9b85be4e0041e46ca34ad6e3ba}\label{h264__slice_8c_ad0f75f9b85be4e0041e46ca34ad6e3ba}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_select\_output\_frame@{h264\_select\_output\_frame}}
+\index{h264\_select\_output\_frame@{h264\_select\_output\_frame}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_select\_output\_frame()}{h264\_select\_output\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+select\+\_\+output\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1347 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ad0f75f9b85be4e0041e46ca34ad6e3ba_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ad0f75f9b85be4e0041e46ca34ad6e3ba_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a900125d92abadef7225df0aaf818c9c6}\label{h264__slice_8c_a900125d92abadef7225df0aaf818c9c6}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_slice\_header\_init@{h264\_slice\_header\_init}}
+\index{h264\_slice\_header\_init@{h264\_slice\_header\_init}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_slice\_header\_init()}{h264\_slice\_header\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+slice\+\_\+header\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 920 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a900125d92abadef7225df0aaf818c9c6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a79a71eb50219252f898f53fc0e23ab09}\label{h264__slice_8c_a79a71eb50219252f898f53fc0e23ab09}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_slice\_header\_parse@{h264\_slice\_header\_parse}}
+\index{h264\_slice\_header\_parse@{h264\_slice\_header\_parse}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_slice\_header\_parse()}{h264\_slice\_header\_parse()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+slice\+\_\+header\+\_\+parse (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$}]{nal }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1736 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a79a71eb50219252f898f53fc0e23ab09_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a79a71eb50219252f898f53fc0e23ab09_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a2bf0eb8cbbdf084c4360b39e6a65792a}\label{h264__slice_8c_a2bf0eb8cbbdf084c4360b39e6a65792a}} 
+\index{h264\_slice.c@{h264\_slice.c}!h264\_slice\_init@{h264\_slice\_init}}
+\index{h264\_slice\_init@{h264\_slice\_init}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{h264\_slice\_init()}{h264\_slice\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} h264\+\_\+slice\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{const \mbox{\hyperlink{struct_h2645_n_a_l}{H2645\+N\+AL}} $\ast$}]{nal }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 1947 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a2bf0eb8cbbdf084c4360b39e6a65792a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a2bf0eb8cbbdf084c4360b39e6a65792a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a2f42a7b0a3c1e0ceeea175ad9755bae1}\label{h264__slice_8c_a2f42a7b0a3c1e0ceeea175ad9755bae1}} 
+\index{h264\_slice.c@{h264\_slice.c}!implicit\_weight\_table@{implicit\_weight\_table}}
+\index{implicit\_weight\_table@{implicit\_weight\_table}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{implicit\_weight\_table()}{implicit\_weight\_table()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} implicit\+\_\+weight\+\_\+table (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{field }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Initialize implicit\+\_\+weight table. 
+\begin{DoxyParams}{Parameters}
+{\em field} & 0/1 initialize the weight for interlaced M\+B\+A\+FF -\/1 initializes the rest \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 669 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a2f42a7b0a3c1e0ceeea175ad9755bae1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a1d3bc85fde3c3556d158fe5d980c2643}\label{h264__slice_8c_a1d3bc85fde3c3556d158fe5d980c2643}} 
+\index{h264\_slice.c@{h264\_slice.c}!init\_dimensions@{init\_dimensions}}
+\index{init\_dimensions@{init\_dimensions}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{init\_dimensions()}{init\_dimensions()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+dimensions (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 880 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a1d3bc85fde3c3556d158fe5d980c2643_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a1d3bc85fde3c3556d158fe5d980c2643_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a27b9bae7c36430b2cc94a91805a7cf7f}\label{h264__slice_8c_a27b9bae7c36430b2cc94a91805a7cf7f}} 
+\index{h264\_slice.c@{h264\_slice.c}!init\_scan\_tables@{init\_scan\_tables}}
+\index{init\_scan\_tables@{init\_scan\_tables}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{init\_scan\_tables()}{init\_scan\_tables()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+scan\+\_\+tables (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+initialize scan tables 
+
+Definition at line 733 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a27b9bae7c36430b2cc94a91805a7cf7f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ab6c605a4f84ed6cfda07cbabd98f708f}\label{h264__slice_8c_ab6c605a4f84ed6cfda07cbabd98f708f}} 
+\index{h264\_slice.c@{h264\_slice.c}!init\_table\_pools@{init\_table\_pools}}
+\index{init\_table\_pools@{init\_table\_pools}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{init\_table\_pools()}{init\_table\_pools()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} init\+\_\+table\+\_\+pools (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 160 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab6c605a4f84ed6cfda07cbabd98f708f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ab6c605a4f84ed6cfda07cbabd98f708f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a641f3cb0955896238df6ec26c4f54ec3}\label{h264__slice_8c_a641f3cb0955896238df6ec26c4f54ec3}} 
+\index{h264\_slice.c@{h264\_slice.c}!loop\_filter@{loop\_filter}}
+\index{loop\_filter@{loop\_filter}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{loop\_filter()}{loop\_filter()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} loop\+\_\+filter (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{start\+\_\+x,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{end\+\_\+x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2452 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a641f3cb0955896238df6ec26c4f54ec3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a641f3cb0955896238df6ec26c4f54ec3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_ac06de11c285020badbb26356e9d5dcb9}\label{h264__slice_8c_ac06de11c285020badbb26356e9d5dcb9}} 
+\index{h264\_slice.c@{h264\_slice.c}!non\_j\_pixfmt@{non\_j\_pixfmt}}
+\index{non\_j\_pixfmt@{non\_j\_pixfmt}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{non\_j\_pixfmt()}{non\_j\_pixfmt()}}
+{\footnotesize\ttfamily static enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}} non\+\_\+j\+\_\+pixfmt (\begin{DoxyParamCaption}\item[{enum \mbox{\hyperlink{pixfmt_8h_a9a8e335cf3be472042bc9f0cf80cd4c5}{A\+V\+Pixel\+Format}}}]{a }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 920 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{h264__slice_8c_ac06de11c285020badbb26356e9d5dcb9_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_ac06de11c285020badbb26356e9d5dcb9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a3e11f4d75a3107359a15a94c3613cac8}\label{h264__slice_8c_a3e11f4d75a3107359a15a94c3613cac8}} 
+\index{h264\_slice.c@{h264\_slice.c}!predict\_field\_decoding\_flag@{predict\_field\_decoding\_flag}}
+\index{predict\_field\_decoding\_flag@{predict\_field\_decoding\_flag}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{predict\_field\_decoding\_flag()}{predict\_field\_decoding\_flag()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} predict\+\_\+field\+\_\+decoding\+\_\+flag (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{struct_h264_slice_context}{H264\+Slice\+Context}} $\ast$}]{sl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 2522 of file h264\+\_\+slice.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a3e11f4d75a3107359a15a94c3613cac8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{h264__slice_8c_a8aa4245e89614c37b985310da7f1c6f5}\label{h264__slice_8c_a8aa4245e89614c37b985310da7f1c6f5}} 
+\index{h264\_slice.c@{h264\_slice.c}!release\_unused\_pictures@{release\_unused\_pictures}}
+\index{release\_unused\_pictures@{release\_unused\_pictures}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{release\_unused\_pictures()}{release\_unused\_pictures()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} release\+\_\+unused\+\_\+pictures (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_h264_context}{H264\+Context}} $\ast$}]{h,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{remove\+\_\+current }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 115 of file h264\+\_\+slice.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8aa4245e89614c37b985310da7f1c6f5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{h264__slice_8c_a8aa4245e89614c37b985310da7f1c6f5_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{h264__slice_8c_a6031f2c91f61f97b7b3f3fb93d1e0209}\label{h264__slice_8c_a6031f2c91f61f97b7b3f3fb93d1e0209}} 
+\index{h264\_slice.c@{h264\_slice.c}!field\_scan@{field\_scan}}
+\index{field\_scan@{field\_scan}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{field\_scan}{field\_scan}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} field\+\_\+scan\mbox{[}16+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0 + 0 * 4, 0 + 1 * 4, 1 + 0 * 4, 0 + 2 * 4,}
+\DoxyCodeLine{    0 + 3 * 4, 1 + 1 * 4, 1 + 2 * 4, 1 + 3 * 4,}
+\DoxyCodeLine{    2 + 0 * 4, 2 + 1 * 4, 2 + 2 * 4, 2 + 3 * 4,}
+\DoxyCodeLine{    3 + 0 * 4, 3 + 1 * 4, 3 + 2 * 4, 3 + 3 * 4,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 50 of file h264\+\_\+slice.\+c.
+
+\mbox{\Hypertarget{h264__slice_8c_a814f769cd6907170152a08cd537ff1dd}\label{h264__slice_8c_a814f769cd6907170152a08cd537ff1dd}} 
+\index{h264\_slice.c@{h264\_slice.c}!field\_scan8x8@{field\_scan8x8}}
+\index{field\_scan8x8@{field\_scan8x8}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{field\_scan8x8}{field\_scan8x8}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} field\+\_\+scan8x8\mbox{[}64+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0 + 0 * 8, 0 + 1 * 8, 0 + 2 * 8, 1 + 0 * 8,}
+\DoxyCodeLine{    1 + 1 * 8, 0 + 3 * 8, 0 + 4 * 8, 1 + 2 * 8,}
+\DoxyCodeLine{    2 + 0 * 8, 1 + 3 * 8, 0 + 5 * 8, 0 + 6 * 8,}
+\DoxyCodeLine{    0 + 7 * 8, 1 + 4 * 8, 2 + 1 * 8, 3 + 0 * 8,}
+\DoxyCodeLine{    2 + 2 * 8, 1 + 5 * 8, 1 + 6 * 8, 1 + 7 * 8,}
+\DoxyCodeLine{    2 + 3 * 8, 3 + 1 * 8, 4 + 0 * 8, 3 + 2 * 8,}
+\DoxyCodeLine{    2 + 4 * 8, 2 + 5 * 8, 2 + 6 * 8, 2 + 7 * 8,}
+\DoxyCodeLine{    3 + 3 * 8, 4 + 1 * 8, 5 + 0 * 8, 4 + 2 * 8,}
+\DoxyCodeLine{    3 + 4 * 8, 3 + 5 * 8, 3 + 6 * 8, 3 + 7 * 8,}
+\DoxyCodeLine{    4 + 3 * 8, 5 + 1 * 8, 6 + 0 * 8, 5 + 2 * 8,}
+\DoxyCodeLine{    4 + 4 * 8, 4 + 5 * 8, 4 + 6 * 8, 4 + 7 * 8,}
+\DoxyCodeLine{    5 + 3 * 8, 6 + 1 * 8, 6 + 2 * 8, 5 + 4 * 8,}
+\DoxyCodeLine{    5 + 5 * 8, 5 + 6 * 8, 5 + 7 * 8, 6 + 3 * 8,}
+\DoxyCodeLine{    7 + 0 * 8, 7 + 1 * 8, 6 + 4 * 8, 6 + 5 * 8,}
+\DoxyCodeLine{    6 + 6 * 8, 6 + 7 * 8, 7 + 2 * 8, 7 + 3 * 8,}
+\DoxyCodeLine{    7 + 4 * 8, 7 + 5 * 8, 7 + 6 * 8, 7 + 7 * 8,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 57 of file h264\+\_\+slice.\+c.
+
+\mbox{\Hypertarget{h264__slice_8c_a8484c6fa0ed16cb11b33fa44fe11c504}\label{h264__slice_8c_a8484c6fa0ed16cb11b33fa44fe11c504}} 
+\index{h264\_slice.c@{h264\_slice.c}!field\_scan8x8\_cavlc@{field\_scan8x8\_cavlc}}
+\index{field\_scan8x8\_cavlc@{field\_scan8x8\_cavlc}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{field\_scan8x8\_cavlc}{field\_scan8x8\_cavlc}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} field\+\_\+scan8x8\+\_\+cavlc\mbox{[}64+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0 + 0 * 8, 1 + 1 * 8, 2 + 0 * 8, 0 + 7 * 8,}
+\DoxyCodeLine{    2 + 2 * 8, 2 + 3 * 8, 2 + 4 * 8, 3 + 3 * 8,}
+\DoxyCodeLine{    3 + 4 * 8, 4 + 3 * 8, 4 + 4 * 8, 5 + 3 * 8,}
+\DoxyCodeLine{    5 + 5 * 8, 7 + 0 * 8, 6 + 6 * 8, 7 + 4 * 8,}
+\DoxyCodeLine{    0 + 1 * 8, 0 + 3 * 8, 1 + 3 * 8, 1 + 4 * 8,}
+\DoxyCodeLine{    1 + 5 * 8, 3 + 1 * 8, 2 + 5 * 8, 4 + 1 * 8,}
+\DoxyCodeLine{    3 + 5 * 8, 5 + 1 * 8, 4 + 5 * 8, 6 + 1 * 8,}
+\DoxyCodeLine{    5 + 6 * 8, 7 + 1 * 8, 6 + 7 * 8, 7 + 5 * 8,}
+\DoxyCodeLine{    0 + 2 * 8, 0 + 4 * 8, 0 + 5 * 8, 2 + 1 * 8,}
+\DoxyCodeLine{    1 + 6 * 8, 4 + 0 * 8, 2 + 6 * 8, 5 + 0 * 8,}
+\DoxyCodeLine{    3 + 6 * 8, 6 + 0 * 8, 4 + 6 * 8, 6 + 2 * 8,}
+\DoxyCodeLine{    5 + 7 * 8, 6 + 4 * 8, 7 + 2 * 8, 7 + 6 * 8,}
+\DoxyCodeLine{    1 + 0 * 8, 1 + 2 * 8, 0 + 6 * 8, 3 + 0 * 8,}
+\DoxyCodeLine{    1 + 7 * 8, 3 + 2 * 8, 2 + 7 * 8, 4 + 2 * 8,}
+\DoxyCodeLine{    3 + 7 * 8, 5 + 2 * 8, 4 + 7 * 8, 5 + 4 * 8,}
+\DoxyCodeLine{    6 + 3 * 8, 6 + 5 * 8, 7 + 3 * 8, 7 + 7 * 8,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 76 of file h264\+\_\+slice.\+c.
+
+\mbox{\Hypertarget{h264__slice_8c_adce17734fa38715fb8d6d1e48ce2e486}\label{h264__slice_8c_adce17734fa38715fb8d6d1e48ce2e486}} 
+\index{h264\_slice.c@{h264\_slice.c}!zigzag\_scan8x8\_cavlc@{zigzag\_scan8x8\_cavlc}}
+\index{zigzag\_scan8x8\_cavlc@{zigzag\_scan8x8\_cavlc}!h264\_slice.c@{h264\_slice.c}}
+\doxysubsubsection{\texorpdfstring{zigzag\_scan8x8\_cavlc}{zigzag\_scan8x8\_cavlc}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} zigzag\+\_\+scan8x8\+\_\+cavlc\mbox{[}64+1\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    0 + 0 * 8, 1 + 1 * 8, 1 + 2 * 8, 2 + 2 * 8,}
+\DoxyCodeLine{    4 + 1 * 8, 0 + 5 * 8, 3 + 3 * 8, 7 + 0 * 8,}
+\DoxyCodeLine{    3 + 4 * 8, 1 + 7 * 8, 5 + 3 * 8, 6 + 3 * 8,}
+\DoxyCodeLine{    2 + 7 * 8, 6 + 4 * 8, 5 + 6 * 8, 7 + 5 * 8,}
+\DoxyCodeLine{    1 + 0 * 8, 2 + 0 * 8, 0 + 3 * 8, 3 + 1 * 8,}
+\DoxyCodeLine{    3 + 2 * 8, 0 + 6 * 8, 4 + 2 * 8, 6 + 1 * 8,}
+\DoxyCodeLine{    2 + 5 * 8, 2 + 6 * 8, 6 + 2 * 8, 5 + 4 * 8,}
+\DoxyCodeLine{    3 + 7 * 8, 7 + 3 * 8, 4 + 7 * 8, 7 + 6 * 8,}
+\DoxyCodeLine{    0 + 1 * 8, 3 + 0 * 8, 0 + 4 * 8, 4 + 0 * 8,}
+\DoxyCodeLine{    2 + 3 * 8, 1 + 5 * 8, 5 + 1 * 8, 5 + 2 * 8,}
+\DoxyCodeLine{    1 + 6 * 8, 3 + 5 * 8, 7 + 1 * 8, 4 + 5 * 8,}
+\DoxyCodeLine{    4 + 6 * 8, 7 + 4 * 8, 5 + 7 * 8, 6 + 7 * 8,}
+\DoxyCodeLine{    0 + 2 * 8, 2 + 1 * 8, 1 + 3 * 8, 5 + 0 * 8,}
+\DoxyCodeLine{    1 + 4 * 8, 2 + 4 * 8, 6 + 0 * 8, 4 + 3 * 8,}
+\DoxyCodeLine{    0 + 7 * 8, 4 + 4 * 8, 7 + 2 * 8, 3 + 6 * 8,}
+\DoxyCodeLine{    5 + 5 * 8, 6 + 5 * 8, 6 + 6 * 8, 7 + 7 * 8,}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 96 of file h264\+\_\+slice.\+c.
+

@@ -1,0 +1,764 @@
+\hypertarget{atrac3_8c}{}\doxysection{E\+:/github/ffmpeg/libavcodec/atrac3.c File Reference}
+\label{atrac3_8c}\index{E:/github/ffmpeg/libavcodec/atrac3.c@{E:/github/ffmpeg/libavcodec/atrac3.c}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$stddef.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}libavutil/attributes.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/float\+\_\+dsp.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}libavutil/libm.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}avcodec.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}bytestream.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fft.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+bits.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}internal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}atrac.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}atrac3data.\+h\char`\"{}}\newline
+Include dependency graph for atrac3.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_gain_block}{Gain\+Block}}
+\item 
+struct \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}}
+\item 
+struct \mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}}
+\item 
+struct \mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_aef45771f52c45f5552ea76ea637cf692}{M\+I\+N\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~1
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_ac69ee46f4a51ed14f0d68628c2dec71d}{M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}~8
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a6ce3145708c0c8eec0f4aa03b516d4ff}{M\+A\+X\+\_\+\+J\+S\+\_\+\+P\+A\+I\+RS}}~8 / 2
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}{J\+O\+I\+N\+T\+\_\+\+S\+T\+E\+R\+EO}}~0x12
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_aae597f206a8cf88b5a0593f39044b937}{S\+I\+N\+G\+LE}}~0x2
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a8746ae57f53e99e184ab1e64e71d24c5}{S\+A\+M\+P\+L\+E\+S\+\_\+\+P\+E\+R\+\_\+\+F\+R\+A\+ME}}~1024
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a495246142249cef061e8bf58dbe53580}{M\+D\+C\+T\+\_\+\+S\+I\+ZE}}~512
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a6b04d1d27783ed933051c2ff1f625b82}{A\+T\+R\+A\+C3\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS}}~8
+\item 
+\#define \mbox{\hyperlink{atrac3_8c_a9192c4bc2278ba0d7c8e8ab438753080}{I\+N\+T\+E\+R\+P\+O\+L\+A\+TE}}(old,  new,  nsample)~    ((old) + (nsample) $\ast$ 0.\+125 $\ast$ ((new) -\/ (old)))
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_gain_block}{Gain\+Block}} \mbox{\hyperlink{atrac3_8c_a5ece445677f2f825f4ea081464fb8252}{Gain\+Block}}
+\item 
+typedef struct \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} \mbox{\hyperlink{atrac3_8c_a5bb70e8f91b787735f7b8f26ef996ba8}{Tonal\+Component}}
+\item 
+typedef struct \mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}} \mbox{\hyperlink{atrac3_8c_abbbd86d0914276aedfef0ae5e2a655d8}{Channel\+Unit}}
+\item 
+typedef struct \mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}} \mbox{\hyperlink{atrac3_8c_a75905cd18400be25776586e8ae6c4a9e}{A\+T\+R\+A\+C3\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{atrac3_8c_af96df449dcabe28416e5ab40c6b54263}{D\+E\+C\+L\+A\+R\+E\+\_\+\+A\+L\+I\+G\+N\+ED}} (32, float, mdct\+\_\+window)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a8465e7ece542dcdc7c8f44dab1a72c6f}{decode\+\_\+bytes}} (const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{filter__design_8txt_ae5b41782d9a629f85214ea4140ed1acd}{input}}, \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$\mbox{\hyperlink{audio__convert_8c_af3acf4f5d59e8dda267d0d31ae9a8c67}{out}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} bytes)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a06f13349468fc3ab5f9bf5aaebd25a0c}{init\+\_\+imdct\+\_\+window}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a574c6fd12a8797a9afd4194d10732dbe}{atrac3\+\_\+decode\+\_\+close}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a29fbbea106cc92a7c927f8614b99a687}{read\+\_\+quant\+\_\+spectral\+\_\+coeffs}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} selector, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coding\+\_\+flag, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$mantissas, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+codes)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a27953ee899b1711e0fc0e1dc48f1fb95}{decode\+\_\+spectrum}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, float $\ast$\mbox{\hyperlink{filter__design_8txt_ad29e68e2acddc1f10f601345de7bf4aa}{output}})
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a795c772c413e5394db3c7b37e17c6ee5}{decode\+\_\+tonal\+\_\+components}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} $\ast$components, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+bands)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_ab2bbbce166c4e10eb7f585312fd22edd}{decode\+\_\+gain\+\_\+control}} (\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_gain_block}{Gain\+Block}} $\ast$\mbox{\hyperlink{filter__design_8txt_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+bands)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a0033981a0fc39f6d0f0aaea87d8fe89f}{add\+\_\+tonal\+\_\+components}} (float $\ast$spectrum, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} num\+\_\+components, \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} $\ast$components)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a3eff8c1ba8efd36c88a47df2af20d7ae}{reverse\+\_\+matrixing}} (float $\ast$su1, float $\ast$su2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$prev\+\_\+code, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$curr\+\_\+code)
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a66dfcf889cf352f2db40339cce8852c0}{get\+\_\+channel\+\_\+weights}} (\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{mxfenc_8c_a1138ba4e7cfb75795578eb8cba035127}{index}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{checkasm_8c_adf916204820072417ed73a32de1cefcf}{flag}}, float ch\mbox{[}2\mbox{]})
+\item 
+static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a8b5215a0e87f7cc126ee1af6885c1738}{channel\+\_\+weighting}} (float $\ast$su1, float $\ast$su2, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$p3)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_aff7c87c23e138e2b3d54c82626bb15e5}{decode\+\_\+channel\+\_\+sound\+\_\+unit}} (\mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}} $\ast$q, \mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$gb, \mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}} $\ast$snd, float $\ast$\mbox{\hyperlink{filter__design_8txt_ad29e68e2acddc1f10f601345de7bf4aa}{output}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} channel\+\_\+num, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} coding\+\_\+mode)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_aba472aa74b8d65298d19658bfadd94b0}{decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$databuf, float $\ast$$\ast$out\+\_\+samples)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a2a508ac5a2f06ef986eef6e8822d2685}{al\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$databuf, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{group__lavu__mem__funcs_ga34e10fdac079a9ca4512b8ccd7f20b8a}{size}}, float $\ast$$\ast$out\+\_\+samples)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_aba86d10b9a0c43c6395e05c377f65670}{atrac3\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a1d18f5ac7212ef0d3d7e84f22764f994}{atrac3al\+\_\+decode\+\_\+frame}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx, \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$\mbox{\hyperlink{filter__design_8txt_ac6f0a759dab43b0d58cd04fb6513534c}{data}}, \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$got\+\_\+frame\+\_\+ptr, \mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$avpkt)
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} \mbox{\hyperlink{atrac3_8c_a8cc8a4cff45377c14d1af6dd85683a13}{atrac3\+\_\+init\+\_\+static\+\_\+data}} (\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}})
+\item 
+static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} \mbox{\hyperlink{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234}{atrac3\+\_\+decode\+\_\+init}} (\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$avctx)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{atrac3_8c_a8ef5f1b7c6fe10cfcf93cfff18386db2}{ff\+\_\+atrac3\+\_\+decoder}}
+\item 
+\mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} \mbox{\hyperlink{atrac3_8c_a232c7f62c0c9b92131c7807ddf4b79a5}{ff\+\_\+atrac3al\+\_\+decoder}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A\+T\+R\+A\+C3 compatible decoder. This decoder handles Sony\textquotesingle{}s A\+T\+R\+A\+C3 data.
+
+Container formats used to store A\+T\+R\+A\+C3 data\+: Real\+Media (.rm), R\+I\+FF W\+AV (.wav, .at3), Sony Open\+MG (.oma, .aa3).
+
+To use this decoder, a calling application must supply the extradata bytes provided in the containers above. 
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{atrac3_8c_a6b04d1d27783ed933051c2ff1f625b82}\label{atrac3_8c_a6b04d1d27783ed933051c2ff1f625b82}} 
+\index{atrac3.c@{atrac3.c}!ATRAC3\_VLC\_BITS@{ATRAC3\_VLC\_BITS}}
+\index{ATRAC3\_VLC\_BITS@{ATRAC3\_VLC\_BITS}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{ATRAC3\_VLC\_BITS}{ATRAC3\_VLC\_BITS}}
+{\footnotesize\ttfamily \#define A\+T\+R\+A\+C3\+\_\+\+V\+L\+C\+\_\+\+B\+I\+TS~8}
+
+
+
+Definition at line 61 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a9192c4bc2278ba0d7c8e8ab438753080}\label{atrac3_8c_a9192c4bc2278ba0d7c8e8ab438753080}} 
+\index{atrac3.c@{atrac3.c}!INTERPOLATE@{INTERPOLATE}}
+\index{INTERPOLATE@{INTERPOLATE}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{INTERPOLATE}{INTERPOLATE}}
+{\footnotesize\ttfamily \#define I\+N\+T\+E\+R\+P\+O\+L\+A\+TE(\begin{DoxyParamCaption}\item[{}]{old,  }\item[{}]{new,  }\item[{}]{nsample }\end{DoxyParamCaption})~    ((old) + (nsample) $\ast$ 0.\+125 $\ast$ ((new) -\/ (old)))}
+
+
+
+Definition at line 469 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}\label{atrac3_8c_a4c32ca8c2da4a9ce88b8a4f8f3dddafb}} 
+\index{atrac3.c@{atrac3.c}!JOINT\_STEREO@{JOINT\_STEREO}}
+\index{JOINT\_STEREO@{JOINT\_STEREO}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{JOINT\_STEREO}{JOINT\_STEREO}}
+{\footnotesize\ttfamily \#define J\+O\+I\+N\+T\+\_\+\+S\+T\+E\+R\+EO~0x12}
+
+
+
+Definition at line 55 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_ac69ee46f4a51ed14f0d68628c2dec71d}\label{atrac3_8c_ac69ee46f4a51ed14f0d68628c2dec71d}} 
+\index{atrac3.c@{atrac3.c}!MAX\_CHANNELS@{MAX\_CHANNELS}}
+\index{MAX\_CHANNELS@{MAX\_CHANNELS}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_CHANNELS}{MAX\_CHANNELS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+C\+H\+A\+N\+N\+E\+LS~8}
+
+
+
+Definition at line 52 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a6ce3145708c0c8eec0f4aa03b516d4ff}\label{atrac3_8c_a6ce3145708c0c8eec0f4aa03b516d4ff}} 
+\index{atrac3.c@{atrac3.c}!MAX\_JS\_PAIRS@{MAX\_JS\_PAIRS}}
+\index{MAX\_JS\_PAIRS@{MAX\_JS\_PAIRS}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{MAX\_JS\_PAIRS}{MAX\_JS\_PAIRS}}
+{\footnotesize\ttfamily \#define M\+A\+X\+\_\+\+J\+S\+\_\+\+P\+A\+I\+RS~8 / 2}
+
+
+
+Definition at line 53 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a495246142249cef061e8bf58dbe53580}\label{atrac3_8c_a495246142249cef061e8bf58dbe53580}} 
+\index{atrac3.c@{atrac3.c}!MDCT\_SIZE@{MDCT\_SIZE}}
+\index{MDCT\_SIZE@{MDCT\_SIZE}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{MDCT\_SIZE}{MDCT\_SIZE}}
+{\footnotesize\ttfamily \#define M\+D\+C\+T\+\_\+\+S\+I\+ZE~512}
+
+
+
+Definition at line 59 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_aef45771f52c45f5552ea76ea637cf692}\label{atrac3_8c_aef45771f52c45f5552ea76ea637cf692}} 
+\index{atrac3.c@{atrac3.c}!MIN\_CHANNELS@{MIN\_CHANNELS}}
+\index{MIN\_CHANNELS@{MIN\_CHANNELS}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{MIN\_CHANNELS}{MIN\_CHANNELS}}
+{\footnotesize\ttfamily \#define M\+I\+N\+\_\+\+C\+H\+A\+N\+N\+E\+LS~1}
+
+
+
+Definition at line 51 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a8746ae57f53e99e184ab1e64e71d24c5}\label{atrac3_8c_a8746ae57f53e99e184ab1e64e71d24c5}} 
+\index{atrac3.c@{atrac3.c}!SAMPLES\_PER\_FRAME@{SAMPLES\_PER\_FRAME}}
+\index{SAMPLES\_PER\_FRAME@{SAMPLES\_PER\_FRAME}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{SAMPLES\_PER\_FRAME}{SAMPLES\_PER\_FRAME}}
+{\footnotesize\ttfamily \#define S\+A\+M\+P\+L\+E\+S\+\_\+\+P\+E\+R\+\_\+\+F\+R\+A\+ME~1024}
+
+
+
+Definition at line 58 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_aae597f206a8cf88b5a0593f39044b937}\label{atrac3_8c_aae597f206a8cf88b5a0593f39044b937}} 
+\index{atrac3.c@{atrac3.c}!SINGLE@{SINGLE}}
+\index{SINGLE@{SINGLE}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{SINGLE}{SINGLE}}
+{\footnotesize\ttfamily \#define S\+I\+N\+G\+LE~0x2}
+
+
+
+Definition at line 56 of file atrac3.\+c.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{atrac3_8c_a75905cd18400be25776586e8ae6c4a9e}\label{atrac3_8c_a75905cd18400be25776586e8ae6c4a9e}} 
+\index{atrac3.c@{atrac3.c}!ATRAC3Context@{ATRAC3Context}}
+\index{ATRAC3Context@{ATRAC3Context}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{ATRAC3Context}{ATRAC3Context}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}} \mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}}}
+
+\mbox{\Hypertarget{atrac3_8c_abbbd86d0914276aedfef0ae5e2a655d8}\label{atrac3_8c_abbbd86d0914276aedfef0ae5e2a655d8}} 
+\index{atrac3.c@{atrac3.c}!ChannelUnit@{ChannelUnit}}
+\index{ChannelUnit@{ChannelUnit}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{ChannelUnit}{ChannelUnit}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}} \mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}}}
+
+\mbox{\Hypertarget{atrac3_8c_a5ece445677f2f825f4ea081464fb8252}\label{atrac3_8c_a5ece445677f2f825f4ea081464fb8252}} 
+\index{atrac3.c@{atrac3.c}!GainBlock@{GainBlock}}
+\index{GainBlock@{GainBlock}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{GainBlock}{GainBlock}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_gain_block}{Gain\+Block}} \mbox{\hyperlink{struct_gain_block}{Gain\+Block}}}
+
+\mbox{\Hypertarget{atrac3_8c_a5bb70e8f91b787735f7b8f26ef996ba8}\label{atrac3_8c_a5bb70e8f91b787735f7b8f26ef996ba8}} 
+\index{atrac3.c@{atrac3.c}!TonalComponent@{TonalComponent}}
+\index{TonalComponent@{TonalComponent}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{TonalComponent}{TonalComponent}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} \mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}}}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{atrac3_8c_a0033981a0fc39f6d0f0aaea87d8fe89f}\label{atrac3_8c_a0033981a0fc39f6d0f0aaea87d8fe89f}} 
+\index{atrac3.c@{atrac3.c}!add\_tonal\_components@{add\_tonal\_components}}
+\index{add\_tonal\_components@{add\_tonal\_components}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{add\_tonal\_components()}{add\_tonal\_components()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} add\+\_\+tonal\+\_\+components (\begin{DoxyParamCaption}\item[{float $\ast$}]{spectrum,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+components,  }\item[{\mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} $\ast$}]{components }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Combine the tonal band spectrum and regular band spectrum
+
+
+\begin{DoxyParams}{Parameters}
+{\em spectrum} & output spectrum buffer \\
+\hline
+{\em num\+\_\+components} & number of tonal components \\
+\hline
+{\em components} & tonal components for this band \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+position of the last tonal coefficient 
+\end{DoxyReturn}
+
+
+Definition at line 451 of file atrac3.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a0033981a0fc39f6d0f0aaea87d8fe89f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a2a508ac5a2f06ef986eef6e8822d2685}\label{atrac3_8c_a2a508ac5a2f06ef986eef6e8822d2685}} 
+\index{atrac3.c@{atrac3.c}!al\_decode\_frame@{al\_decode\_frame}}
+\index{al\_decode\_frame@{al\_decode\_frame}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{al\_decode\_frame()}{al\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} al\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{databuf,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{size,  }\item[{float $\ast$$\ast$}]{out\+\_\+samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 758 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a2a508ac5a2f06ef986eef6e8822d2685_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{atrac3_8c_a2a508ac5a2f06ef986eef6e8822d2685_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a574c6fd12a8797a9afd4194d10732dbe}\label{atrac3_8c_a574c6fd12a8797a9afd4194d10732dbe}} 
+\index{atrac3.c@{atrac3.c}!atrac3\_decode\_close@{atrac3\_decode\_close}}
+\index{atrac3\_decode\_close@{atrac3\_decode\_close}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{atrac3\_decode\_close()}{atrac3\_decode\_close()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} atrac3\+\_\+decode\+\_\+close (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 194 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_aba86d10b9a0c43c6395e05c377f65670}\label{atrac3_8c_aba86d10b9a0c43c6395e05c377f65670}} 
+\index{atrac3.c@{atrac3.c}!atrac3\_decode\_frame@{atrac3\_decode\_frame}}
+\index{atrac3\_decode\_frame@{atrac3\_decode\_frame}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{atrac3\_decode\_frame()}{atrac3\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} atrac3\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 792 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_aba86d10b9a0c43c6395e05c377f65670_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234}\label{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234}} 
+\index{atrac3.c@{atrac3.c}!atrac3\_decode\_init@{atrac3\_decode\_init}}
+\index{atrac3\_decode\_init@{atrac3\_decode\_init}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{atrac3\_decode\_init()}{atrac3\_decode\_init()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} atrac3\+\_\+decode\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 873 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a8cc8a4cff45377c14d1af6dd85683a13}\label{atrac3_8c_a8cc8a4cff45377c14d1af6dd85683a13}} 
+\index{atrac3.c@{atrac3.c}!atrac3\_init\_static\_data@{atrac3\_init\_static\_data}}
+\index{atrac3\_init\_static\_data@{atrac3\_init\_static\_data}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{atrac3\_init\_static\_data()}{atrac3\_init\_static\_data()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} atrac3\+\_\+init\+\_\+static\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 854 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a8cc8a4cff45377c14d1af6dd85683a13_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=329pt]{atrac3_8c_a8cc8a4cff45377c14d1af6dd85683a13_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a1d18f5ac7212ef0d3d7e84f22764f994}\label{atrac3_8c_a1d18f5ac7212ef0d3d7e84f22764f994}} 
+\index{atrac3.c@{atrac3.c}!atrac3al\_decode\_frame@{atrac3al\_decode\_frame}}
+\index{atrac3al\_decode\_frame@{atrac3al\_decode\_frame}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{atrac3al\_decode\_frame()}{atrac3al\_decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} atrac3al\+\_\+decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{got\+\_\+frame\+\_\+ptr,  }\item[{\mbox{\hyperlink{struct_a_v_packet}{A\+V\+Packet}} $\ast$}]{avpkt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 832 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a1d18f5ac7212ef0d3d7e84f22764f994_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a8b5215a0e87f7cc126ee1af6885c1738}\label{atrac3_8c_a8b5215a0e87f7cc126ee1af6885c1738}} 
+\index{atrac3.c@{atrac3.c}!channel\_weighting@{channel\_weighting}}
+\index{channel\_weighting@{channel\_weighting}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{channel\_weighting()}{channel\_weighting()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} channel\+\_\+weighting (\begin{DoxyParamCaption}\item[{float $\ast$}]{su1,  }\item[{float $\ast$}]{su2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{p3 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 547 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=319pt]{atrac3_8c_a8b5215a0e87f7cc126ee1af6885c1738_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a8b5215a0e87f7cc126ee1af6885c1738_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_af96df449dcabe28416e5ab40c6b54263}\label{atrac3_8c_af96df449dcabe28416e5ab40c6b54263}} 
+\index{atrac3.c@{atrac3.c}!DECLARE\_ALIGNED@{DECLARE\_ALIGNED}}
+\index{DECLARE\_ALIGNED@{DECLARE\_ALIGNED}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{DECLARE\_ALIGNED()}{DECLARE\_ALIGNED()}}
+{\footnotesize\ttfamily static D\+E\+C\+L\+A\+R\+E\+\_\+\+A\+L\+I\+G\+N\+ED (\begin{DoxyParamCaption}\item[{32}]{,  }\item[{float}]{,  }\item[{mdct\+\_\+window}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Reverse the odd bands before I\+M\+D\+CT, this is an effect of the Q\+MF transform or it gives better compression to do it this way. F\+I\+X\+ME\+: It should be possible to handle this in imdct\+\_\+calc for that to happen a modification of the prerotation step of all S\+I\+MD code and C code is needed. Or fix the functions before so they generate a pre reversed spectrum.
+
+Definition at line 120 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a8465e7ece542dcdc7c8f44dab1a72c6f}\label{atrac3_8c_a8465e7ece542dcdc7c8f44dab1a72c6f}} 
+\index{atrac3.c@{atrac3.c}!decode\_bytes@{decode\_bytes}}
+\index{decode\_bytes@{decode\_bytes}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_bytes()}{decode\_bytes()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+bytes (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{input,  }\item[{\mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{out,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{bytes }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 156 of file atrac3.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=303pt]{atrac3_8c_a8465e7ece542dcdc7c8f44dab1a72c6f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_aff7c87c23e138e2b3d54c82626bb15e5}\label{atrac3_8c_aff7c87c23e138e2b3d54c82626bb15e5}} 
+\index{atrac3.c@{atrac3.c}!decode\_channel\_sound\_unit@{decode\_channel\_sound\_unit}}
+\index{decode\_channel\_sound\_unit@{decode\_channel\_sound\_unit}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_channel\_sound\_unit()}{decode\_channel\_sound\_unit()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+channel\+\_\+sound\+\_\+unit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_t_r_a_c3_context}{A\+T\+R\+A\+C3\+Context}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_channel_unit}{Channel\+Unit}} $\ast$}]{snd,  }\item[{float $\ast$}]{output,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{channel\+\_\+num,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{coding\+\_\+mode }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode a Sound Unit
+
+
+\begin{DoxyParams}{Parameters}
+{\em snd} & the channel unit to be used \\
+\hline
+{\em output} & the decoded samples before I\+Q\+MF in float representation \\
+\hline
+{\em channel\+\_\+num} & channel number \\
+\hline
+{\em coding\+\_\+mode} & the coding mode (J\+O\+I\+N\+T\+\_\+\+S\+T\+E\+R\+EO or single channels) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 578 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_aff7c87c23e138e2b3d54c82626bb15e5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_aff7c87c23e138e2b3d54c82626bb15e5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_aba472aa74b8d65298d19658bfadd94b0}\label{atrac3_8c_aba472aa74b8d65298d19658bfadd94b0}} 
+\index{atrac3.c@{atrac3.c}!decode\_frame@{decode\_frame}}
+\index{decode\_frame@{decode\_frame}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_frame()}{decode\_frame()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+frame (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_a_v_codec_context}{A\+V\+Codec\+Context}} $\ast$}]{avctx,  }\item[{const \mbox{\hyperlink{audio__convert_8c_ae1affc9ca37cfb624959c866a73f83c2}{uint8\+\_\+t}} $\ast$}]{databuf,  }\item[{float $\ast$$\ast$}]{out\+\_\+samples }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 645 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_aba472aa74b8d65298d19658bfadd94b0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=303pt]{atrac3_8c_aba472aa74b8d65298d19658bfadd94b0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_ab2bbbce166c4e10eb7f585312fd22edd}\label{atrac3_8c_ab2bbbce166c4e10eb7f585312fd22edd}} 
+\index{atrac3.c@{atrac3.c}!decode\_gain\_control@{decode\_gain\_control}}
+\index{decode\_gain\_control@{decode\_gain\_control}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_gain\_control()}{decode\_gain\_control()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+gain\+\_\+control (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_gain_block}{Gain\+Block}} $\ast$}]{block,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+bands }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Decode gain parameters for the coded bands
+
+
+\begin{DoxyParams}{Parameters}
+{\em block} & the gainblock for the current band \\
+\hline
+{\em num\+\_\+bands} & amount of coded bands \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 415 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{atrac3_8c_ab2bbbce166c4e10eb7f585312fd22edd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_ab2bbbce166c4e10eb7f585312fd22edd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a27953ee899b1711e0fc0e1dc48f1fb95}\label{atrac3_8c_a27953ee899b1711e0fc0e1dc48f1fb95}} 
+\index{atrac3.c@{atrac3.c}!decode\_spectrum@{decode\_spectrum}}
+\index{decode\_spectrum@{decode\_spectrum}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_spectrum()}{decode\_spectrum()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+spectrum (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{float $\ast$}]{output }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Restore the quantized band spectrum coefficients
+
+\begin{DoxyReturn}{Returns}
+subband count, fix for broken specification/files 
+\end{DoxyReturn}
+
+
+Definition at line 273 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a27953ee899b1711e0fc0e1dc48f1fb95_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a27953ee899b1711e0fc0e1dc48f1fb95_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a795c772c413e5394db3c7b37e17c6ee5}\label{atrac3_8c_a795c772c413e5394db3c7b37e17c6ee5}} 
+\index{atrac3.c@{atrac3.c}!decode\_tonal\_components@{decode\_tonal\_components}}
+\index{decode\_tonal\_components@{decode\_tonal\_components}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{decode\_tonal\_components()}{decode\_tonal\_components()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} decode\+\_\+tonal\+\_\+components (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{struct_tonal_component}{Tonal\+Component}} $\ast$}]{components,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+bands }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Restore the quantized tonal components
+
+
+\begin{DoxyParams}{Parameters}
+{\em components} & tonal components \\
+\hline
+{\em num\+\_\+bands} & number of coded bands \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 331 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a795c772c413e5394db3c7b37e17c6ee5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a795c772c413e5394db3c7b37e17c6ee5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a66dfcf889cf352f2db40339cce8852c0}\label{atrac3_8c_a66dfcf889cf352f2db40339cce8852c0}} 
+\index{atrac3.c@{atrac3.c}!get\_channel\_weights@{get\_channel\_weights}}
+\index{get\_channel\_weights@{get\_channel\_weights}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{get\_channel\_weights()}{get\_channel\_weights()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} get\+\_\+channel\+\_\+weights (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{index,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{flag,  }\item[{float}]{ch\mbox{[}2\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 534 of file atrac3.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a66dfcf889cf352f2db40339cce8852c0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a06f13349468fc3ab5f9bf5aaebd25a0c}\label{atrac3_8c_a06f13349468fc3ab5f9bf5aaebd25a0c}} 
+\index{atrac3.c@{atrac3.c}!init\_imdct\_window@{init\_imdct\_window}}
+\index{init\_imdct\_window@{init\_imdct\_window}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{init\_imdct\_window()}{init\_imdct\_window()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{attributes_8h_abeeb324fff79a5335d36774704e2475c}{av\+\_\+cold}} \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} init\+\_\+imdct\+\_\+window (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}}}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 179 of file atrac3.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a06f13349468fc3ab5f9bf5aaebd25a0c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a29fbbea106cc92a7c927f8614b99a687}\label{atrac3_8c_a29fbbea106cc92a7c927f8614b99a687}} 
+\index{atrac3.c@{atrac3.c}!read\_quant\_spectral\_coeffs@{read\_quant\_spectral\_coeffs}}
+\index{read\_quant\_spectral\_coeffs@{read\_quant\_spectral\_coeffs}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{read\_quant\_spectral\_coeffs()}{read\_quant\_spectral\_coeffs()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} read\+\_\+quant\+\_\+spectral\+\_\+coeffs (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_get_bit_context}{Get\+Bit\+Context}} $\ast$}]{gb,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{selector,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{coding\+\_\+flag,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{mantissas,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}}}]{num\+\_\+codes }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Mantissa decoding
+
+
+\begin{DoxyParams}{Parameters}
+{\em selector} & which table the output values are coded with \\
+\hline
+{\em coding\+\_\+flag} & constant length coding or variable length coding \\
+\hline
+{\em mantissas} & mantissa output table \\
+\hline
+{\em num\+\_\+codes} & number of values to get \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 214 of file atrac3.\+c.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a29fbbea106cc92a7c927f8614b99a687_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a29fbbea106cc92a7c927f8614b99a687_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{atrac3_8c_a3eff8c1ba8efd36c88a47df2af20d7ae}\label{atrac3_8c_a3eff8c1ba8efd36c88a47df2af20d7ae}} 
+\index{atrac3.c@{atrac3.c}!reverse\_matrixing@{reverse\_matrixing}}
+\index{reverse\_matrixing@{reverse\_matrixing}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{reverse\_matrixing()}{reverse\_matrixing()}}
+{\footnotesize\ttfamily static \mbox{\hyperlink{rematrix__template_8c_a4dfdfbb7b69470f1152e022432ee2d45}{void}} reverse\+\_\+matrixing (\begin{DoxyParamCaption}\item[{float $\ast$}]{su1,  }\item[{float $\ast$}]{su2,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{prev\+\_\+code,  }\item[{\mbox{\hyperlink{ffmpeg__filter_8c_a61569f2965b7a369eb10b6d75d410d11}{int}} $\ast$}]{curr\+\_\+code }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Definition at line 472 of file atrac3.\+c.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{atrac3_8c_a3eff8c1ba8efd36c88a47df2af20d7ae_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{atrac3_8c_a8ef5f1b7c6fe10cfcf93cfff18386db2}\label{atrac3_8c_a8ef5f1b7c6fe10cfcf93cfff18386db2}} 
+\index{atrac3.c@{atrac3.c}!ff\_atrac3\_decoder@{ff\_atrac3\_decoder}}
+\index{ff\_atrac3\_decoder@{ff\_atrac3\_decoder}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{ff\_atrac3\_decoder}{ff\_atrac3\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+atrac3\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name             = \textcolor{stringliteral}{"{}atrac3"{}},}
+\DoxyCodeLine{    .long\_name        = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}ATRAC3 (Adaptive TRansform Acoustic Coding 3)"{}}),}
+\DoxyCodeLine{    .type             = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id               = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7ceaac96d7eb6ee2d7a2effe3a0d59154c08}{AV\_CODEC\_ID\_ATRAC3}},}
+\DoxyCodeLine{    .priv\_data\_size   = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{atrac3_8c_a75905cd18400be25776586e8ae6c4a9e}{ATRAC3Context}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}             = \mbox{\hyperlink{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234}{atrac3\_decode\_init}},}
+\DoxyCodeLine{    .close            = \mbox{\hyperlink{atrac3_8c_a574c6fd12a8797a9afd4194d10732dbe}{atrac3\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}           = \mbox{\hyperlink{atrac3_8c_aba86d10b9a0c43c6395e05c377f65670}{atrac3\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities     = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}      = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                        \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{    .caps\_internal    = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1017 of file atrac3.\+c.
+
+\mbox{\Hypertarget{atrac3_8c_a232c7f62c0c9b92131c7807ddf4b79a5}\label{atrac3_8c_a232c7f62c0c9b92131c7807ddf4b79a5}} 
+\index{atrac3.c@{atrac3.c}!ff\_atrac3al\_decoder@{ff\_atrac3al\_decoder}}
+\index{ff\_atrac3al\_decoder@{ff\_atrac3al\_decoder}!atrac3.c@{atrac3.c}}
+\doxysubsubsection{\texorpdfstring{ff\_atrac3al\_decoder}{ff\_atrac3al\_decoder}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_a_v_codec}{A\+V\+Codec}} ff\+\_\+atrac3al\+\_\+decoder}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .name             = \textcolor{stringliteral}{"{}atrac3al"{}},}
+\DoxyCodeLine{    .long\_name        = \mbox{\hyperlink{libavutil_2internal_8h_a3c0fa12fafe59c44d4b16e60d8385637}{NULL\_IF\_CONFIG\_SMALL}}(\textcolor{stringliteral}{"{}ATRAC3 AL (Adaptive TRansform Acoustic Coding 3 Advanced Lossless)"{}}),}
+\DoxyCodeLine{    .type             = \mbox{\hyperlink{group__lavu__misc_gga9a84bba4713dfced21a1a56163be1f48a7b4e33b8f30ac94d34ce8d9f7c33927a}{AVMEDIA\_TYPE\_AUDIO}},}
+\DoxyCodeLine{    .id               = \mbox{\hyperlink{group__lavc__core_ggaadca229ad2c20e060a14fec08a5cc7cea8fab24a8737c7d60c9e1b70e706054fa}{AV\_CODEC\_ID\_ATRAC3AL}},}
+\DoxyCodeLine{    .priv\_data\_size   = \textcolor{keyword}{sizeof}(\mbox{\hyperlink{atrac3_8c_a75905cd18400be25776586e8ae6c4a9e}{ATRAC3Context}}),}
+\DoxyCodeLine{    .\mbox{\hyperlink{avrndec_8c_a41c0c9c8aa8e1fd12d65b18dd6948b09}{init}}             = \mbox{\hyperlink{atrac3_8c_a9d22e0751a6a9d08efb1d606a47a3234}{atrac3\_decode\_init}},}
+\DoxyCodeLine{    .close            = \mbox{\hyperlink{atrac3_8c_a574c6fd12a8797a9afd4194d10732dbe}{atrac3\_decode\_close}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{decode__audio_8c_a1704ae53d7f426e1b67341785b5b2b58}{decode}}           = \mbox{\hyperlink{atrac3_8c_a1d18f5ac7212ef0d3d7e84f22764f994}{atrac3al\_decode\_frame}},}
+\DoxyCodeLine{    .capabilities     = \mbox{\hyperlink{group__lavc__core_ga6503701220892f061eca2355cadee3c8}{AV\_CODEC\_CAP\_SUBFRAMES}} | \mbox{\hyperlink{group__lavc__core_ga5f35425595395c76cfa406c883f78aed}{AV\_CODEC\_CAP\_DR1}},}
+\DoxyCodeLine{    .\mbox{\hyperlink{adpcmenc_8c_a0b94bda9858853d90b77d15331ca0ae1}{sample\_fmts}}      = (\textcolor{keyword}{const} \textcolor{keyword}{enum} \mbox{\hyperlink{group__lavu__sampfmts_gaf9a51ca15301871723577c730b5865c5}{AVSampleFormat}}[]) \{ \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5a2d21c520e4ab21100b6440ec2d81ba1b}{AV\_SAMPLE\_FMT\_FLTP}},}
+\DoxyCodeLine{                                                        \mbox{\hyperlink{group__lavu__sampfmts_ggaf9a51ca15301871723577c730b5865c5ac5d4bb5b0fb0dc7316fb3c7a73029912}{AV\_SAMPLE\_FMT\_NONE}} \},}
+\DoxyCodeLine{    .caps\_internal    = \mbox{\hyperlink{libavcodec_2internal_8h_ab4ca16b0fda02840383d0b6d08a44660}{FF\_CODEC\_CAP\_INIT\_CLEANUP}},}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Definition at line 1032 of file atrac3.\+c.
+
